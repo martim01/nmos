@@ -6,17 +6,17 @@
 #include "avahipublisher.h"
 
 
-Node& Node::Get()
+NodeApi& NodeApi::Get()
 {
-    static Node aNode;
+    static NodeApi aNode;
     return aNode;
 }
 
-Node::Node() : m_pNodeApi(0)
+NodeApi::NodeApi() : m_pNodeApiPublisher(0)
 {
 }
 
-Node::~Node()
+NodeApi::~NodeApi()
 {
     StopHttpServer();
     StopmDNSServer();
@@ -24,57 +24,57 @@ Node::~Node()
 
 
 
-void Node::Init(std::string sHostname, std::string sUrl, std::string sLabel, std::string sDescription)
+void NodeApi::Init(std::string sHostname, std::string sUrl, std::string sLabel, std::string sDescription)
 {
     m_self = Self(sHostname, sUrl, sLabel, sDescription);
 }
 
-bool Node::StartHttpServer(unsigned short nPort)
+bool NodeApi::StartHttpServer(unsigned short nPort)
 {
     StopHttpServer();
 
     return MicroServer::Get().Init(nPort);
 }
 
-void Node::StopHttpServer()
+void NodeApi::StopHttpServer()
 {
     MicroServer::Get().Stop();
 }
 
-bool Node::StartmDNSServer(unsigned short nPort)
+bool NodeApi::StartmDNSServer(unsigned short nPort)
 {
     StopmDNSServer();
-    m_pNodeApi = new ServicePublisher("nodeapi", "_nmos-node._tcp", nPort);
+    m_pNodeApiPublisher = new ServicePublisher("nodeapi", "_nmos-node._tcp", nPort);
 
     SetmDNSTxt();
 
 
-    return m_pNodeApi->Start();
+    return m_pNodeApiPublisher->Start();
 }
 
-void Node::StopmDNSServer()
+void NodeApi::StopmDNSServer()
 {
-    if(m_pNodeApi)
+    if(m_pNodeApiPublisher)
     {
-        m_pNodeApi->Stop();
-        delete m_pNodeApi;
-        m_pNodeApi = 0;
+        m_pNodeApiPublisher->Stop();
+        delete m_pNodeApiPublisher;
+        m_pNodeApiPublisher = 0;
     }
 }
 
 
-bool Node::StartServices(unsigned short nPort)
+bool NodeApi::StartServices(unsigned short nPort)
 {
     return (StartmDNSServer(nPort) && StartHttpServer(nPort));
 }
 
-void Node::StopServices()
+void NodeApi::StopServices()
 {
     StopmDNSServer();
     StopHttpServer();
 }
 
-int Node::GetJson(std::string sPath, std::string& sReturn)
+int NodeApi::GetJson(std::string sPath, std::string& sReturn)
 {
     std::transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
 
@@ -106,7 +106,7 @@ int Node::GetJson(std::string sPath, std::string& sReturn)
     return nCode;
 }
 
-int Node::GetJsonNmos(std::string& sReturn)
+int NodeApi::GetJsonNmos(std::string& sReturn)
 {
     Json::StyledWriter stw;
     if(m_vPath.size() == SZ_NMOS)
@@ -124,7 +124,7 @@ int Node::GetJsonNmos(std::string& sReturn)
     return 404;
 }
 
-int Node::GetJsonNmosNodeApi(std::string& sReturn)
+int NodeApi::GetJsonNmosNodeApi(std::string& sReturn)
 {
     Json::StyledWriter stw;
     int nCode = 200;
@@ -189,7 +189,7 @@ int Node::GetJsonNmosNodeApi(std::string& sReturn)
     return nCode;
 }
 
-Json::Value Node::GetJsonSources()
+Json::Value NodeApi::GetJsonSources()
 {
     if(m_vPath.size() == SZ_ENDPOINT)
     {
@@ -206,7 +206,7 @@ Json::Value Node::GetJsonSources()
     return GetJsonError();
 }
 
-Json::Value Node::GetJsonDevices()
+Json::Value NodeApi::GetJsonDevices()
 {
     if(m_vPath.size() == SZ_ENDPOINT)
     {
@@ -223,7 +223,7 @@ Json::Value Node::GetJsonDevices()
     return GetJsonError();
 }
 
-Json::Value Node::GetJsonFlows()
+Json::Value NodeApi::GetJsonFlows()
 {
     if(m_vPath.size() == SZ_ENDPOINT)
     {
@@ -240,7 +240,7 @@ Json::Value Node::GetJsonFlows()
     return GetJsonError();
 }
 
-Json::Value Node::GetJsonReceivers()
+Json::Value NodeApi::GetJsonReceivers()
 {
     if(m_vPath.size() == SZ_ENDPOINT)
     {
@@ -257,7 +257,7 @@ Json::Value Node::GetJsonReceivers()
     return GetJsonError();
 }
 
-Json::Value Node::GetJsonSenders()
+Json::Value NodeApi::GetJsonSenders()
 {
     if(m_vPath.size() == SZ_ENDPOINT)
     {
@@ -275,7 +275,7 @@ Json::Value Node::GetJsonSenders()
 }
 
 
-Json::Value Node::GetJsonError(unsigned long nCode, std::string sError)
+Json::Value NodeApi::GetJsonError(unsigned long nCode, std::string sError)
 {
     Json::Value jsError(Json::objectValue);
     jsError["code"] = (int)nCode;
@@ -285,7 +285,7 @@ Json::Value Node::GetJsonError(unsigned long nCode, std::string sError)
 }
 
 
-int Node::PutJson(std::string sPath, std::string sJson, std::string& sResponse)
+int NodeApi::PutJson(std::string sPath, std::string sJson, std::string& sResponse)
 {
     //make sure path is correct
     std::transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
@@ -328,37 +328,37 @@ int Node::PutJson(std::string sPath, std::string sJson, std::string& sResponse)
 
 
 
-Self& Node::GetSelf()
+Self& NodeApi::GetSelf()
 {
     return m_self;
 }
 
-ResourceHolder& Node::GetSources()
+ResourceHolder& NodeApi::GetSources()
 {
     return m_sources;
 }
 
-ResourceHolder& Node::GetDevices()
+ResourceHolder& NodeApi::GetDevices()
 {
     return m_devices;
 }
 
-ResourceHolder& Node::GetFlows()
+ResourceHolder& NodeApi::GetFlows()
 {
     return m_flows;
 }
 
-ResourceHolder& Node::GetReceivers()
+ResourceHolder& NodeApi::GetReceivers()
 {
     return m_receivers;
 }
 
-ResourceHolder& Node::GetSenders()
+ResourceHolder& NodeApi::GetSenders()
 {
     return m_senders;
 }
 
-bool Node::Commit()
+bool NodeApi::Commit()
 {
     std::cout << "Node: Commit" << std::endl;
     bool bChange = m_self.Commit();
@@ -367,10 +367,10 @@ bool Node::Commit()
     bChange |= m_flows.Commit();
     bChange |= m_receivers.Commit();
     bChange |= m_senders.Commit();
-    if(bChange && m_pNodeApi)
+    if(bChange && m_pNodeApiPublisher)
     {
         SetmDNSTxt();
-        m_pNodeApi->Modify();
+        m_pNodeApiPublisher->Modify();
     }
     return bChange;
 }
@@ -379,7 +379,7 @@ bool Node::Commit()
 
 
 
-void Node::SplitPath(std::string str, char cSplit)
+void NodeApi::SplitPath(std::string str, char cSplit)
 {
     m_vPath.clear();
 
@@ -393,17 +393,17 @@ void Node::SplitPath(std::string str, char cSplit)
 
 
 
-void Node::SetmDNSTxt()
+void NodeApi::SetmDNSTxt()
 {
-    if(m_pNodeApi)
+    if(m_pNodeApiPublisher)
     {
-        m_pNodeApi->AddTxt("api_proto", "http");
-        m_pNodeApi->AddTxt("api_ver", "v1.2");
-        m_pNodeApi->AddTxt("ver_slf", std::to_string(m_self.GetDnsVersion()));
-        m_pNodeApi->AddTxt("ver_src", std::to_string(m_sources.GetVersion()));
-        m_pNodeApi->AddTxt("ver_flw", std::to_string(m_flows.GetVersion()));
-        m_pNodeApi->AddTxt("ver_dvc", std::to_string(m_devices.GetVersion()));
-        m_pNodeApi->AddTxt("ver_snd", std::to_string(m_senders.GetVersion()));
-        m_pNodeApi->AddTxt("ver_rcv", std::to_string(m_receivers.GetVersion()));
+        m_pNodeApiPublisher->AddTxt("api_proto", "http");
+        m_pNodeApiPublisher->AddTxt("api_ver", "v1.2");
+        m_pNodeApiPublisher->AddTxt("ver_slf", std::to_string(m_self.GetDnsVersion()));
+        m_pNodeApiPublisher->AddTxt("ver_src", std::to_string(m_sources.GetVersion()));
+        m_pNodeApiPublisher->AddTxt("ver_flw", std::to_string(m_flows.GetVersion()));
+        m_pNodeApiPublisher->AddTxt("ver_dvc", std::to_string(m_devices.GetVersion()));
+        m_pNodeApiPublisher->AddTxt("ver_snd", std::to_string(m_senders.GetVersion()));
+        m_pNodeApiPublisher->AddTxt("ver_rcv", std::to_string(m_receivers.GetVersion()));
     }
 }

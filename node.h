@@ -6,11 +6,11 @@
 class ServicePublisher;
 class MicroServer;
 
-class Node
+class NodeApi
 {
     public:
 
-        static Node& Get();
+        static NodeApi& Get();
 
         void Init(std::string sHostname, std::string sUrl, std::string sLabel, std::string sDescription);
 
@@ -30,8 +30,8 @@ class Node
         int PutJson(std::string sPath, std::string sJson, std::string& sRepsonse);
 
     private:
-        Node();
-        ~Node();
+        NodeApi();
+        ~NodeApi();
 
         bool StartHttpServer(unsigned short nPort);
         void StopHttpServer();
@@ -62,7 +62,7 @@ class Node
         std::vector<std::string> m_vPath;
 
 
-        ServicePublisher* m_pNodeApi;
+        ServicePublisher* m_pNodeApiPublisher;
 
         enum {BASE=0, NMOS=1, API_TYPE=2,VERSION=3,ENDPOINT=4, RESOURCE=5};
         enum {SZ_BASE=1, SZ_NMOS=2, SZ_API_TYPE=3,SZ_VERSION=4,SZ_ENDPOINT=5};

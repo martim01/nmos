@@ -16,21 +16,21 @@ using namespace std;
 
 int main()
 {
-    Node::Get().Init("host1", "http://172.29.80.65:8080/", "host1", "host1");
+    NodeApi::Get().Init("host1", "http://172.29.80.65:8080/", "host1", "host1");
 
-//    Node::Get().GetSelf().AddVersion("v1.0");
-//    Node::Get().GetSelf().AddVersion("v1.1");
-    Node::Get().GetSelf().AddApiVersion("v1.2");
-    Node::Get().GetSelf().AddEndpoint("172.29.80.65", 8080, false);
-    Node::Get().GetSelf().AddEndpoint("172.29.80.65", 443, true);
-    Node::Get().GetSelf().AddInternalClock("clk0");
-    Node::Get().GetSelf().AddPTPClock("clk1", true, "IEEE1588-2008", "08-00-11-ff-fe-21-e1-b0", true);
-    Node::Get().GetSelf().AddInterface("eth0" ,"74-26-96-db-87-31", "74-26-96-db-87-31");
-    Node::Get().GetSelf().AddInterface("eth1" ,"74-26-96-db-87-31", "74-26-96-db-87-32");
+//    NodeApi::Get().GetSelf().AddVersion("v1.0");
+//    NodeApi::Get().GetSelf().AddVersion("v1.1");
+    NodeApi::Get().GetSelf().AddApiVersion("v1.2");
+    NodeApi::Get().GetSelf().AddEndpoint("172.29.80.65", 8080, false);
+    NodeApi::Get().GetSelf().AddEndpoint("172.29.80.65", 443, true);
+    NodeApi::Get().GetSelf().AddInternalClock("clk0");
+    NodeApi::Get().GetSelf().AddPTPClock("clk1", true, "IEEE1588-2008", "08-00-11-ff-fe-21-e1-b0", true);
+    NodeApi::Get().GetSelf().AddInterface("eth0" ,"74-26-96-db-87-31", "74-26-96-db-87-31");
+    NodeApi::Get().GetSelf().AddInterface("eth1" ,"74-26-96-db-87-31", "74-26-96-db-87-32");
 
 
 
-    Device* pDevice = new Device("TestDevice", "TestDescription", Device::GENERIC,Node::Get().GetSelf().GetId());
+    Device* pDevice = new Device("TestDevice", "TestDescription", Device::GENERIC,NodeApi::Get().GetSelf().GetId());
     SourceAudio* pSource = new SourceAudio("TestAudio", "TestDescription", pDevice->GetId());
     FlowAudioRaw* pFlow = new FlowAudioRaw("TestFlow", "TestDescription", pSource->GetId(), pDevice->GetId(),48000, FlowAudioRaw::L24);
     Sender* pSender(new Sender("TestSender", "Description", pFlow->GetId(), Sender::RTP_MCAST, pDevice->GetId(), "http://172.29.80.65/by-name/pam.sdp"));
@@ -43,19 +43,19 @@ int main()
     pReceiver->AddCap("audio/L16");
     pReceiver->AddInterfaceBinding("eth0");
 
-    Node::Get().GetDevices().AddResource(pDevice);
-    Node::Get().GetSources().AddResource(pSource);
-    Node::Get().GetFlows().AddResource(pFlow);
-    Node::Get().GetReceivers().AddResource(pReceiver);
-    Node::Get().GetSenders().AddResource(pSender);
-    Node::Get().Commit();
+    NodeApi::Get().GetDevices().AddResource(pDevice);
+    NodeApi::Get().GetSources().AddResource(pSource);
+    NodeApi::Get().GetFlows().AddResource(pFlow);
+    NodeApi::Get().GetReceivers().AddResource(pReceiver);
+    NodeApi::Get().GetSenders().AddResource(pSender);
+    NodeApi::Get().Commit();
 
-    Node::Get().StartServices(8080);
+    NodeApi::Get().StartServices(8080);
 
 
     getchar ();
 
-    Node::Get().StopServices();
+    NodeApi::Get().StopServices();
     return 0;
 
 }

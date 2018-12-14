@@ -38,7 +38,7 @@ static void RequestCompleted (void *cls, MHD_Connection* pConnection, void **ptr
 static int DoHttpGet(MHD_Connection* pConnection, std::string sUrl)
 {
     std::string sResponse;
-    int nCode = Node::Get().GetJson(sUrl, sResponse);
+    int nCode = NodeApi::Get().GetJson(sUrl, sResponse);
 
     std::cout << "Response: " << sResponse << std::endl;
 
@@ -52,7 +52,7 @@ static int DoHttpGet(MHD_Connection* pConnection, std::string sUrl)
 static int DoHttpPut(MHD_Connection* pConnection, std::string sUrl)
 {
     std::string sResponse;
-    int nCode = Node::Get().PutJson(sUrl, MicroServer::Get().GetPutData(), sResponse);
+    int nCode = NodeApi::Get().PutJson(sUrl, MicroServer::Get().GetPutData(), sResponse);
     MicroServer::Get().ResetPutData();
 
 
