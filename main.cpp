@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "node.h"
+#include "nodeapi.h"
 #include "sourceaudio.h"
 #include "flowaudioraw.h"
 #include "device.h"
