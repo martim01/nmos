@@ -7,12 +7,19 @@ FlowData::FlowData(std::string sLabel, std::string sDescription, std::string sSo
 
 }
 
-Json::Value FlowData::ToJson() const
+bool FlowData::Commit()
 {
-    Json::Value jsFlow(Flow::ToJson());
+    if(Flow::Commit())
+    {
+        m_json["media_type"] = m_sMediaType;
+        return true;
+    }
+    return false;
+}
 
 
-    jsFlow["media_type"] = m_sMediaType;
-
-    return jsFlow;
+void FlowData::SetMediaType(std::string sMediaType)
+{
+    m_sMediaType = sMediaType;
+    UpdateVersionTime();
 }

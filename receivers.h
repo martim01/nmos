@@ -11,7 +11,7 @@ class Receivers : public ResourceHolder
         void AddReceiver(Receiver* aReceiver);
         void RemoveReceiver(Receiver* aReceiver);
 
-        Json::Value ToJson() const;
+        Json::Value Commit() const;
 
         std::map<std::string, Receiver*>::const_iterator GetReceiverBegin()
         {

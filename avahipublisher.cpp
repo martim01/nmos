@@ -35,7 +35,7 @@ void ServicePublisher::EntryGroupCallback(AvahiEntryGroup *pGroup, AvahiEntryGro
     case AVAHI_ENTRY_GROUP_FAILURE :
         cout << "Entry group failure: " << avahi_strerror(avahi_client_errno(avahi_entry_group_get_client(m_pGroup))) << endl;
         /* Some kind of failure happened while we were registering our services */
-        Stop();
+        ThreadQuit();
         break;
     case AVAHI_ENTRY_GROUP_UNCOMMITED:
     case AVAHI_ENTRY_GROUP_REGISTERING:
@@ -56,7 +56,7 @@ void ServicePublisher::CreateServices()
             if (!(m_pGroup = avahi_entry_group_new(m_pClient, entry_group_callback, reinterpret_cast<void*>(this))))
             {
                 cout << "avahi_entry_group_new() failed: " << avahi_strerror(avahi_client_errno(m_pClient)) << endl;
-                Stop();
+                ThreadQuit();
                 return;
             }
         }
@@ -82,7 +82,7 @@ void ServicePublisher::CreateServices()
                 else
                 {
                     cout << "Failed to add '" << m_sService << "' service: " << avahi_strerror(ret) << endl;
-                    Stop();
+                    ThreadQuit();
                     return;
                 }
             }
@@ -91,7 +91,7 @@ void ServicePublisher::CreateServices()
             if ((ret = avahi_entry_group_commit(m_pGroup)) < 0)
             {
                 cout << "Failed to commit entry group: " << avahi_strerror(ret);
-                Stop();
+                ThreadQuit();
                 return;
             }
         }
@@ -115,7 +115,7 @@ void ServicePublisher::Stop()
 {
     if(m_pThreadedPoll)
     {
-        avahi_threaded_poll_quit(m_pThreadedPoll);
+        avahi_threaded_poll_stop(m_pThreadedPoll);
     }
 
     if (m_pClient)
@@ -135,6 +135,13 @@ void ServicePublisher::Stop()
     }
 }
 
+void ServicePublisher::ThreadQuit()
+{
+    avahi_threaded_poll_quit(m_pThreadedPoll);
+    m_pThreadedPoll = NULL;
+    Stop();
+}
+
 void ServicePublisher::ClientCallback(AvahiClient* pClient, AvahiClientState state)
 {
     if(pClient)
@@ -151,7 +158,7 @@ void ServicePublisher::ClientCallback(AvahiClient* pClient, AvahiClientState sta
             break;
         case AVAHI_CLIENT_FAILURE:
             cout << "Client failure: " <<  avahi_strerror(avahi_client_errno(pClient)) << endl;
-            Stop();
+            ThreadQuit();
             break;
         case AVAHI_CLIENT_S_COLLISION:
         /* Let's drop our registered services. When the server is back
@@ -263,16 +270,23 @@ AvahiStringList* ServicePublisher::GetTxtList()
 
 void ServicePublisher::Modify()
 {
-     /* If the server is currently running, we need to remove our
-     * service and create it anew */
-    if (m_pClient && avahi_client_get_state(m_pClient) == AVAHI_CLIENT_S_RUNNING)
+    if(m_pThreadedPoll)
     {
-        /* Remove the old services */
-        if (m_pGroup)
+        avahi_threaded_poll_lock(m_pThreadedPoll);
+         /* If the server is currently running, we need to remove our
+         * service and create it anew */
+        if (m_pClient && avahi_client_get_state(m_pClient) == AVAHI_CLIENT_S_RUNNING)
         {
-            avahi_entry_group_reset(m_pGroup);
+            /* Remove the old services */
+            if (m_pGroup)
+            {
+                avahi_entry_group_reset(m_pGroup);
+            }
+            /* And create them again with the new name */
+            CreateServices();
         }
-        /* And create them again with the new name */
-        CreateServices();
+        avahi_threaded_poll_unlock(m_pThreadedPoll);
     }
 }
+
+

@@ -11,8 +11,11 @@ class Sender : public Resource
         void AddInterfaceBinding(std::string sInterface);
         void RemoveInterfaceBinding(std::string sInterface);
 
+        void SetTransport(enumTransport eTransport);
+        void SetManifestHref(std::string sHref);
+
         void SetReceiverId(std::string sReceiverId, bool bActive);
-        virtual Json::Value ToJson() const;
+        virtual bool Commit();
     private:
         std::string m_sFlowId;
         enumTransport m_eTransport;

@@ -25,12 +25,12 @@ void Sources::RemoveSource(Source* pSource)
     delete pSource;
 }
 
-Json::Value Sources::ToJson() const
+Json::Value Sources::Commit() const
 {
     Json::Value json(Json::arrayValue);
     for(std::map<std::string, Source*>::const_iterator itSource = m_mSource.begin(); itSource != m_mSource.end(); ++itSource)
     {
-        json.append(itSource->second->ToJson());
+        json.append(itSource->second->Commit());
     }
     return json;
 }

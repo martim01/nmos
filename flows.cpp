@@ -23,12 +23,12 @@ void Flows::RemoveFlow(Flow* pFlow)
     m_mFlow.erase(pFlow->GetId());
 }
 
-Json::Value Flows::ToJson() const
+Json::Value Flows::Commit() const
 {
     Json::Value json(Json::arrayValue);
     for(std::map<std::string, Flow*>::const_iterator itFlow = m_mFlow.begin(); itFlow != m_mFlow.end(); ++itFlow)
     {
-        json.append(itFlow->second->ToJson());
+        json.append(itFlow->second->Commit());
     }
     return json;
 }

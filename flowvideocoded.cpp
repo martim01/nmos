@@ -7,9 +7,20 @@ FlowVideoCoded::FlowVideoCoded(std::string sLabel, std::string sDescription, std
 
 }
 
-Json::Value FlowVideoCoded::ToJson() const
+bool FlowVideoCoded::Commit()
 {
-    Json::Value jsFlow(FlowVideo::ToJson());
-    jsFlow["media_type"] = m_sMediaType;
-    return jsFlow;
+    if(FlowVideo::Commit())
+    {
+        m_json["media_type"] = m_sMediaType;
+        return true;
+    }
+    return false;
 }
+
+
+void FlowVideoCoded::SetMediaType(std::string sMediaType)
+{
+    m_sMediaType = sMediaType;
+    UpdateVersionTime();
+}
+

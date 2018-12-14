@@ -24,12 +24,12 @@ void Receivers::RemoveReceiver(Receiver* pReceiver)
     delete pReceiver;
 }
 
-Json::Value Receivers::ToJson() const
+Json::Value Receivers::Commit() const
 {
     Json::Value json(Json::arrayValue);
     for(std::map<std::string, Receiver*>::const_iterator itReceiver = m_mReceiver.begin(); itReceiver != m_mReceiver.end(); ++itReceiver)
     {
-        json.append(itReceiver->second->ToJson());
+        json.append(itReceiver->second->Commit());
     }
     return json;
 }

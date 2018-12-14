@@ -34,6 +34,7 @@ class ServicePublisher
         void CreateServices();
         void Collision();
 
+        void ThreadQuit();
 
         AvahiStringList* GetTxtList();
 

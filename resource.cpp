@@ -21,25 +21,31 @@ Resource::Resource(std::string sLabel, std::string sDescription) :
 void Resource::AddTag(std::string sTag)
 {
     m_lstTag.push_back(sTag);
+    UpdateVersionTime();
 }
 
 
-Json::Value Resource::ToJson() const
+bool Resource::Commit()
 {
-    Json::Value json;
-    json["label"] = m_sLabel;
-    json["description"] = m_sDescription;
-    json["id"] = m_sId;
+    if(m_sVersion == m_sLastVersion)
+    {   //no changes to resource
+        return false;
+    }
 
-    //@todo should be time of last change
-    json["version"] = m_sVersion;
+    m_json.clear();
 
-    return json;
+    m_json["label"] = m_sLabel;
+    m_json["description"] = m_sDescription;
+    m_json["id"] = m_sId;
+
+    m_json["version"] = m_sVersion;
+
+    m_sLastVersion = m_sVersion;
+    return true;
 }
 
 void Resource::CreateGuid()
 {
-
 
 #ifdef __WIN__
     UUID guid;
@@ -89,7 +95,7 @@ void Resource::UpdateLabel(std::string sLabel)
 
 void Resource::UpdateDescription(std::string sDescription)
 {
-    m_sDescription;
+    m_sDescription = sDescription;
     UpdateVersionTime();
 }
 
@@ -103,5 +109,13 @@ void Resource::UpdateVersionTime()
     nNano*=1000;
 
     strs << tvNow.tv_sec << ":" << nNano;
+
+    m_sLastVersion = m_sVersion;
+
     m_sVersion = strs.str();
+}
+
+const Json::Value& Resource::GetJson() const
+{
+    return m_json;
 }

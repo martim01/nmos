@@ -18,15 +18,49 @@ FlowVideo::FlowVideo(std::string sLabel, std::string sDescription, std::string s
 }
 
 
-Json::Value FlowVideo::ToJson() const
+bool FlowVideo::Commit()
 {
-    Json::Value jsFlow(Flow::ToJson());
-    jsFlow["frame_width"] = m_nFrameWidth;
-    jsFlow["frame_height"] = m_nFrameHeight;
-    jsFlow["interlace_mode"] = STR_INTERLACE[m_eInterlace];
-    jsFlow["colorspace"] = STR_COLOUR[m_eColour];
-    jsFlow["transfer_characteristic"] = STR_TRANSFER[m_eTransfer];
+    if(Flow::Commit())
+    {
+        m_json["frame_width"] = m_nFrameWidth;
+        m_json["frame_height"] = m_nFrameHeight;
+        m_json["interlace_mode"] = STR_INTERLACE[m_eInterlace];
+        m_json["colorspace"] = STR_COLOUR[m_eColour];
+        m_json["transfer_characteristic"] = STR_TRANSFER[m_eTransfer];
 
-    return jsFlow;
+        return true;
+    }
+    return false;
+}
+
+
+void FlowVideo::SetFrameWidth(unsigned int nWidth)
+{
+    m_nFrameWidth = nWidth;
+    UpdateVersionTime();
+}
+
+void FlowVideo::SetFrameHeight(unsigned int nHeight)
+{
+    m_nFrameHeight = nHeight;
+    UpdateVersionTime();
+}
+
+void FlowVideo::SetColour(enumColour eColour)
+{
+    m_eColour = eColour;
+    UpdateVersionTime();
+}
+
+void FlowVideo::SetInterlace(enumInterlace eInterlace)
+{
+    m_eInterlace = eInterlace;
+    UpdateVersionTime();
+}
+
+void FlowVideo::SetTransfer(enumTransfer eTransfer)
+{
+    m_eTransfer = eTransfer;
+    UpdateVersionTime();
 }
 

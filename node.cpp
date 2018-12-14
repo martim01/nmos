@@ -82,7 +82,6 @@ int Node::GetJson(std::string sPath, std::string& sReturn)
     SplitPath(sPath, '/');
 
 
-
     if(m_vPath.size() <= SZ_BASE)
     {
         Json::StyledWriter stw;
@@ -153,7 +152,7 @@ int Node::GetJsonNmosNodeApi(std::string& sReturn)
             }
             else if(m_vPath[ENDPOINT] == "self")
             {
-                sReturn  = stw.write(m_self.ToJson());
+                sReturn  = stw.write(m_self.GetJson());
             }
             else if(m_vPath[ENDPOINT] == "sources")
             {
@@ -194,14 +193,14 @@ Json::Value Node::GetJsonSources()
 {
     if(m_vPath.size() == SZ_ENDPOINT)
     {
-        return m_sources.ToJson();
+        return m_sources.GetJson();
     }
     else
     {
-        std::map<std::string, Source*>::const_iterator itSource = m_sources.FindSource(m_vPath[RESOURCE]);
-        if(itSource != m_sources.GetSourceEnd())
+        std::map<std::string, Resource*>::const_iterator itSource = m_sources.FindResource(m_vPath[RESOURCE]);
+        if(itSource != m_sources.GetResourceEnd())
         {
-            return itSource->second->ToJson();
+            return itSource->second->GetJson();
         }
     }
     return GetJsonError();
@@ -211,14 +210,14 @@ Json::Value Node::GetJsonDevices()
 {
     if(m_vPath.size() == SZ_ENDPOINT)
     {
-        return m_devices.ToJson();
+        return m_devices.GetJson();
     }
     else
     {
-        std::map<std::string, Device*>::const_iterator itDevice = m_devices.FindDevice(m_vPath[RESOURCE]);
-        if(itDevice != m_devices.GetDeviceEnd())
+        std::map<std::string, Resource*>::const_iterator itDevice = m_devices.FindResource(m_vPath[RESOURCE]);
+        if(itDevice != m_devices.GetResourceEnd())
         {
-            return itDevice->second->ToJson();
+            return itDevice->second->GetJson();
         }
     }
     return GetJsonError();
@@ -228,14 +227,14 @@ Json::Value Node::GetJsonFlows()
 {
     if(m_vPath.size() == SZ_ENDPOINT)
     {
-        return m_flows.ToJson();
+        return m_flows.GetJson();
     }
     else
     {
-        std::map<std::string, Flow*>::const_iterator itFlow = m_flows.FindFlow(m_vPath[RESOURCE]);
-        if(itFlow != m_flows.GetFlowEnd())
+        std::map<std::string, Resource*>::const_iterator itFlow = m_flows.FindResource(m_vPath[RESOURCE]);
+        if(itFlow != m_flows.GetResourceEnd())
         {
-            return itFlow->second->ToJson();
+            return itFlow->second->GetJson();
         }
     }
     return GetJsonError();
@@ -245,14 +244,14 @@ Json::Value Node::GetJsonReceivers()
 {
     if(m_vPath.size() == SZ_ENDPOINT)
     {
-        return m_receivers.ToJson();
+        return m_receivers.GetJson();
     }
     else
     {
-        std::map<std::string, Receiver*>::const_iterator itReceiver = m_receivers.FindReceiver(m_vPath[RESOURCE]);
-        if(itReceiver != m_receivers.GetReceiverEnd())
+        std::map<std::string, Resource*>::const_iterator itReceiver = m_receivers.FindResource(m_vPath[RESOURCE]);
+        if(itReceiver != m_receivers.GetResourceEnd())
         {
-            return itReceiver->second->ToJson();
+            return itReceiver->second->GetJson();
         }
     }
     return GetJsonError();
@@ -262,14 +261,14 @@ Json::Value Node::GetJsonSenders()
 {
     if(m_vPath.size() == SZ_ENDPOINT)
     {
-        return m_senders.ToJson();
+        return m_senders.GetJson();
     }
     else
     {
-        std::map<std::string, Sender*>::const_iterator itSender = m_senders.FindSender(m_vPath[RESOURCE]);
-        if(itSender != m_senders.GetSenderEnd())
+        std::map<std::string, Resource*>::const_iterator itSender = m_senders.FindResource(m_vPath[RESOURCE]);
+        if(itSender != m_senders.GetResourceEnd())
         {
-            return itSender->second->ToJson();
+            return itSender->second->GetJson();
         }
     }
     return GetJsonError();
@@ -303,8 +302,8 @@ int Node::PutJson(std::string sPath, std::string sJson, std::string& sResponse)
     else
     {
         //does the receiver exist?
-        std::map<std::string, Receiver*>::const_iterator itReceiver = m_receivers.FindReceiver(m_vPath[RESOURCE]);
-        if(itReceiver == m_receivers.GetReceiverEnd())
+        std::map<std::string, Resource*>::const_iterator itReceiver = m_receivers.FindResource(m_vPath[RESOURCE]);
+        if(itReceiver == m_receivers.GetResourceEnd())
         {
             nCode = 404;
             sResponse = stw.write(GetJsonError(nCode, "Resource does not exist."));
@@ -334,29 +333,46 @@ Self& Node::GetSelf()
     return m_self;
 }
 
-Sources& Node::GetSources()
+ResourceHolder& Node::GetSources()
 {
     return m_sources;
 }
 
-Devices& Node::GetDevices()
+ResourceHolder& Node::GetDevices()
 {
     return m_devices;
 }
 
-Flows& Node::GetFlows()
+ResourceHolder& Node::GetFlows()
 {
     return m_flows;
 }
 
-Receivers& Node::GetReceivers()
+ResourceHolder& Node::GetReceivers()
 {
     return m_receivers;
 }
 
-Senders& Node::GetSenders()
+ResourceHolder& Node::GetSenders()
 {
     return m_senders;
+}
+
+bool Node::Commit()
+{
+    std::cout << "Node: Commit" << std::endl;
+    bool bChange = m_self.Commit();
+    bChange |= m_sources.Commit();
+    bChange |= m_devices.Commit();
+    bChange |= m_flows.Commit();
+    bChange |= m_receivers.Commit();
+    bChange |= m_senders.Commit();
+    if(bChange && m_pNodeApi)
+    {
+        SetmDNSTxt();
+        m_pNodeApi->Modify();
+    }
+    return bChange;
 }
 
 
@@ -376,14 +392,6 @@ void Node::SplitPath(std::string str, char cSplit)
 }
 
 
-bool Node::ResourceUpdated()
-{
-    if(m_pNodeApi)
-    {
-        SetmDNSTxt();
-        m_pNodeApi->Modify();
-    }
-}
 
 void Node::SetmDNSTxt()
 {
@@ -391,7 +399,7 @@ void Node::SetmDNSTxt()
     {
         m_pNodeApi->AddTxt("api_proto", "http");
         m_pNodeApi->AddTxt("api_ver", "v1.2");
-        m_pNodeApi->AddTxt("ver_slf", std::to_string(m_self.GetVersion()));
+        m_pNodeApi->AddTxt("ver_slf", std::to_string(m_self.GetDnsVersion()));
         m_pNodeApi->AddTxt("ver_src", std::to_string(m_sources.GetVersion()));
         m_pNodeApi->AddTxt("ver_flw", std::to_string(m_flows.GetVersion()));
         m_pNodeApi->AddTxt("ver_dvc", std::to_string(m_devices.GetVersion()));

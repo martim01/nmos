@@ -11,7 +11,7 @@ class SourceAudio : public Source
         void RemoveChannel(std::string sSymbol);
 
 
-        Json::Value ToJson() const;
+        bool Commit();
 
 
 

@@ -9,6 +9,9 @@ class Receiver : public Resource
         enum enumType {AUDIO, VIDEO, DATA, MUX};
         Receiver(std::string sLabel, std::string sDescription, enumTransport eTransport, std::string sDeviceId, enumType eType);
 
+        void SetTransport(enumTransport eTransport);
+        void SetType(enumType eType);
+
         void AddInterfaceBinding(std::string sInterface);
         void RemoveInterfaceBinding(std::string sInterface);
 
@@ -16,7 +19,7 @@ class Receiver : public Resource
         void RemoveCap(std::string sCap);
 
         void SetSubscription(std::string sSenderId, bool bActive);
-        virtual Json::Value ToJson() const;
+        virtual bool Commit();
     private:
         std::string m_sFlowId;
         enumTransport m_eTransport;

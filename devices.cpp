@@ -31,12 +31,12 @@ void Devices::RemoveDevice(std::string sDeviceId)
     }
 }
 
-Json::Value Devices::ToJson() const
+bool Devices::Commit() const
 {
     Json::Value json(Json::arrayValue);
     for(std::map<std::string, Device*>::const_iterator itDevice = m_mDevice.begin(); itDevice != m_mDevice.end(); ++itDevice)
     {
-        json.append(itDevice->second->ToJson());
+        json.append(itDevice->second->Commit());
     }
     return json;
 }

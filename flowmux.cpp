@@ -7,12 +7,20 @@ FlowMux::FlowMux(std::string sLabel, std::string sDescription, std::string sSour
 
 }
 
-Json::Value FlowMux::ToJson() const
+bool FlowMux::Commit()
 {
-    Json::Value jsFlow(Flow::ToJson());
+    if(Flow::Commit())
+    {
+        m_json["media_type"] = m_sMediaType;
+        return true;
+    }
+
+    return false;
+}
 
 
-    jsFlow["media_type"] = m_sMediaType;
-
-    return jsFlow;
+void FlowMux::SetMediaType(std::string sMediaType)
+{
+    m_sMediaType = sMediaType;
+    UpdateVersionTime();
 }

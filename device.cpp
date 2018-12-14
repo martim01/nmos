@@ -10,29 +10,39 @@ Device::Device(std::string sLabel, std::string sDescription, enumType eType, std
 
 }
 
-Json::Value Device::ToJson() const
+bool Device::Commit()
 {
-    Json::Value jsDevice(Resource::ToJson());
+    if(Resource::Commit())
+    {   //something has changed
+        m_json["type"] = TYPE[m_eType];
+        m_json["node_id"] = m_sNodeId;
 
-    jsDevice["type"] = TYPE[m_eType];
-    jsDevice["node_id"] = m_sNodeId;
-
-    jsDevice["controls"] = Json::Value(Json::arrayValue);
-    for(std::set<std::pair<std::string, std::string> >::iterator itControl = m_setControls.begin(); itControl != m_setControls.end(); ++itControl)
-    {
-        Json::Value jsControl = Json::Value(Json::objectValue);
-        jsControl["type"] = (*itControl).first;
-        jsControl["href"] = (*itControl).second;
-        jsDevice["controls"].append(jsControl);
+        m_json["controls"] = Json::Value(Json::arrayValue);
+        for(std::set<std::pair<std::string, std::string> >::iterator itControl = m_setControls.begin(); itControl != m_setControls.end(); ++itControl)
+        {
+            Json::Value jsControl = Json::Value(Json::objectValue);
+            jsControl["type"] = (*itControl).first;
+            jsControl["href"] = (*itControl).second;
+            m_json["controls"].append(jsControl);
+        }
+        return true;
     }
-    return jsDevice;
+    return false;
 }
 
 void Device::AddControl(std::string sType, std::string sUri)
 {
     m_setControls.insert(make_pair(sType, sUri));
+    UpdateVersionTime();
 }
 void Device::RemoveControl(std::string sType, std::string sUri)
 {
     m_setControls.erase(make_pair(sType, sUri));
+    UpdateVersionTime();
+}
+
+void Device::ChangeType(enumType eType)
+{
+    m_eType = eType;
+    UpdateVersionTime();
 }

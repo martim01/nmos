@@ -10,45 +10,56 @@
 void Source::AddParentId(std::string sId)
 {
     m_setParent.insert(sId);
+    UpdateVersionTime();
 }
 
 void Source::RemoveParentId(std::string sId)
 {
     m_setParent.erase(sId);
+    UpdateVersionTime();
 }
 
 void Source::SetClock(std::string sClock)
 {
     m_sClock = sClock;
+    UpdateVersionTime();
 }
 
-Json::Value Source::ToJson() const
+bool Source::Commit()
 {
-    Json::Value jsonSource(Resource::ToJson());
-
-    jsonSource["device_id"] = m_sDeviceId;
-    jsonSource["clock_id"] = m_sClock;
-
-    switch(m_eFormat)
+    if(Resource::Commit())
     {
-        case AUDIO:
-            jsonSource["format"] = "urn:x-nmos:format:audio";
-            break;
-        case VIDEO:
-            jsonSource["format"] = "urn:x-nmos:format:video";
-            break;
-        case DATA:
-            jsonSource["format"] = "urn:x-nmos:format:data";
-            break;
-        case MUX:
-            jsonSource["format"] = "urn:x-nmos:format:mux";
-            break;
-    }
+        m_json["device_id"] = m_sDeviceId;
+        m_json["clock_id"] = m_sClock;
 
-    jsonSource["parents"] = Json::Value(Json::objectValue);
-    for(std::set<std::string>::iterator itParent = m_setParent.begin(); itParent != m_setParent.end(); ++itParent)
-    {
-        jsonSource["parents"].append((*itParent));
+        switch(m_eFormat)
+        {
+            case AUDIO:
+                m_json["format"] = "urn:x-nmos:format:audio";
+                break;
+            case VIDEO:
+                m_json["format"] = "urn:x-nmos:format:video";
+                break;
+            case DATA:
+                m_json["format"] = "urn:x-nmos:format:data";
+                break;
+            case MUX:
+                m_json["format"] = "urn:x-nmos:format:mux";
+                break;
+        }
+
+        m_json["parents"] = Json::Value(Json::objectValue);
+        for(std::set<std::string>::iterator itParent = m_setParent.begin(); itParent != m_setParent.end(); ++itParent)
+        {
+            m_json["parents"].append((*itParent));
+        }
+        return true;
     }
-    return jsonSource;
+    return false;
+}
+
+void Source::SetFormat(enumFormat eFormat)
+{
+    m_eFormat = eFormat;
+    UpdateVersionTime();
 }

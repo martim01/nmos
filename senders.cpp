@@ -24,12 +24,12 @@ void Senders::RemoveSender(Sender* pSender)
     delete pSender;
 }
 
-Json::Value Senders::ToJson() const
+Json::Value Senders::Commit() const
 {
     Json::Value json(Json::arrayValue);
     for(std::map<std::string, Sender*>::const_iterator itSender = m_mSender.begin(); itSender != m_mSender.end(); ++itSender)
     {
-        json.append(itSender->second->ToJson());
+        json.append(itSender->second->Commit());
     }
     return json;
 }

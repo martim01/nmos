@@ -99,8 +99,6 @@
 		</Unit>
 		<Unit filename="device.cpp" />
 		<Unit filename="device.h" />
-		<Unit filename="devices.cpp" />
-		<Unit filename="devices.h" />
 		<Unit filename="flow.cpp" />
 		<Unit filename="flow.h" />
 		<Unit filename="flowaudio.cpp" />
@@ -115,8 +113,6 @@
 		<Unit filename="flowdatasdianc.h" />
 		<Unit filename="flowmux.cpp" />
 		<Unit filename="flowmux.h" />
-		<Unit filename="flows.cpp" />
-		<Unit filename="flows.h" />
 		<Unit filename="flowvideo.cpp" />
 		<Unit filename="flowvideo.h" />
 		<Unit filename="flowvideocoded.cpp" />
@@ -130,25 +126,20 @@
 		<Unit filename="node.h" />
 		<Unit filename="receiver.cpp" />
 		<Unit filename="receiver.h" />
-		<Unit filename="receivers.cpp" />
-		<Unit filename="receivers.h" />
 		<Unit filename="resource.cpp" />
 		<Unit filename="resource.h" />
+		<Unit filename="resourceholder.cpp" />
 		<Unit filename="resourceholder.h" />
 		<Unit filename="self.cpp" />
 		<Unit filename="self.h" />
 		<Unit filename="sender.cpp" />
 		<Unit filename="sender.h" />
-		<Unit filename="senders.cpp" />
-		<Unit filename="senders.h" />
 		<Unit filename="source.cpp" />
 		<Unit filename="source.h" />
 		<Unit filename="sourceaudio.cpp" />
 		<Unit filename="sourceaudio.h" />
 		<Unit filename="sourcegeneric.cpp" />
 		<Unit filename="sourcegeneric.h" />
-		<Unit filename="sources.cpp" />
-		<Unit filename="sources.h" />
 		<Unit filename="timeofday.h">
 			<Option target="Windows Debug" />
 			<Option target="Windows Release" />

@@ -7,9 +7,18 @@ FlowAudioCoded::FlowAudioCoded(std::string sLabel, std::string sDescription, std
 
 }
 
-Json::Value FlowAudioCoded::ToJson() const
+bool FlowAudioCoded::Commit()
 {
-    Json::Value jsFlow(FlowAudio::ToJson());
-    jsFlow["media_type"] = m_sMediaType;
-    return jsFlow;
+    if(FlowAudio::Commit())
+    {
+        m_json["media_type"] = m_sMediaType;
+        return true;
+    }
+    return false;
+}
+
+void FlowAudioCoded::SetMediaType(std::string sMediaType)
+{
+    m_sMediaType = sMediaType;
+    UpdateVersionTime();
 }

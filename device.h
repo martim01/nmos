@@ -11,8 +11,9 @@ class Device : public Resource
         virtual ~Device(){}
         void AddControl(std::string sType, std::string sUri);
         void RemoveControl(std::string sType, std::string sUri);
+        void ChangeType(enumType eType);
 
-        virtual Json::Value ToJson() const;
+        virtual bool Commit();
     private:
         enumType m_eType;
         std::string m_sNodeId;

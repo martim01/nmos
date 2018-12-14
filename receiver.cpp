@@ -17,62 +17,82 @@ Receiver::Receiver(std::string sLabel, std::string sDescription, enumTransport e
 void Receiver::AddInterfaceBinding(std::string sInterface)
 {
     m_setInterfaces.insert(sInterface);
+    UpdateVersionTime();
 }
 
 void Receiver::RemoveInterfaceBinding(std::string sInterface)
 {
     m_setInterfaces.erase(sInterface);
+    UpdateVersionTime();
 }
 
 void Receiver::AddCap(std::string sCap)
 {
     m_setCaps.insert(sCap);
+    UpdateVersionTime();
 }
 
 void Receiver::RemoveCap(std::string sCap)
 {
     m_setCaps.erase(sCap);
+    UpdateVersionTime();
 }
 
 void Receiver::SetSubscription(std::string sSenderId, bool bActive)
 {
     m_sSenderId = sSenderId;
     m_bSenderActive = bActive;
+    UpdateVersionTime();
 }
 
-Json::Value Receiver::ToJson() const
+void Receiver::SetTransport(enumTransport eTransport)
 {
-    Json::Value jsReceiver(Resource::ToJson());
+    m_eTransport = eTransport;
+    UpdateVersionTime();
+}
 
-    jsReceiver["device_id"] = m_sDeviceId;
-    jsReceiver["transport"] = TRANSPORT[m_eTransport];
-    jsReceiver["format"] = TYPE[m_eType];
+void Receiver::SetType(enumType eType)
+{
+    m_eType = eType;
+    UpdateVersionTime();
+}
 
-    jsReceiver["interface_bindings"] = Json::Value(Json::arrayValue);
-    for(std::set<std::string>::iterator itInterface = m_setInterfaces.begin(); itInterface != m_setInterfaces.end(); ++itInterface)
+bool Receiver::Commit()
+{
+    if(Resource::Commit())
     {
-        jsReceiver["interface_bindings"].append((*itInterface));
-    }
 
-    jsReceiver["caps"] = Json::Value(Json::objectValue);
-    jsReceiver["caps"]["media_types"] = Json::Value(Json::arrayValue);
-    for(std::set<std::string>::iterator itCap = m_setCaps.begin(); itCap != m_setCaps.end(); ++itCap)
-    {
-        jsReceiver["caps"]["media_types"].append((*itCap));
-    }
+        m_json["device_id"] = m_sDeviceId;
+        m_json["transport"] = TRANSPORT[m_eTransport];
+        m_json["format"] = TYPE[m_eType];
+
+        m_json["interface_bindings"] = Json::Value(Json::arrayValue);
+        for(std::set<std::string>::iterator itInterface = m_setInterfaces.begin(); itInterface != m_setInterfaces.end(); ++itInterface)
+        {
+            m_json["interface_bindings"].append((*itInterface));
+        }
+
+        m_json["caps"] = Json::Value(Json::objectValue);
+        m_json["caps"]["media_types"] = Json::Value(Json::arrayValue);
+        for(std::set<std::string>::iterator itCap = m_setCaps.begin(); itCap != m_setCaps.end(); ++itCap)
+        {
+            m_json["caps"]["media_types"].append((*itCap));
+        }
 
 
-    jsReceiver["subscription"] = Json::Value(Json::objectValue);
-    jsReceiver["subscription"]["sender_id"] = m_sSenderId;
-    if(m_bSenderActive)
-    {
-        jsReceiver["subscription"]["active"] = true;
+        m_json["subscription"] = Json::Value(Json::objectValue);
+        m_json["subscription"]["sender_id"] = m_sSenderId;
+        if(m_bSenderActive)
+        {
+            m_json["subscription"]["active"] = true;
+        }
+        else
+        {
+            m_json["subscription"]["active"] = false;
+        }
+        return true;
     }
-    else
-    {
-        jsReceiver["subscription"]["active"] = false;
-    }
-    return jsReceiver;
+    return false;
 }
 
 

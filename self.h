@@ -12,8 +12,8 @@ class Self : public Resource
     public:
         Self(std::string sHostname, std::string sUrl,std::string sLabel, std::string sDescription);
         Self(){}
-        void AddVersion(std::string sVersion);
-        void RemoveVersion(std::string sVersion);
+        void AddApiVersion(std::string sVersion);
+        void RemoveApiVersion(std::string sVersion);
 
         void AddEndpoint(std::string sHost, unsigned int nPort, bool bSecure);
         void RemoveEndpoint(std::string sHost, unsigned int nPort);
@@ -35,17 +35,13 @@ class Self : public Resource
         bool IsVersionSupported(std::string sVersion) const;
         Json::Value JsonVersions() const;
 
-        virtual Json::Value ToJson() const;
+        virtual bool Commit();
 
-        unsigned char GetVersion() const
-        {
-            return m_nVersion;
-        }
+        unsigned char GetDnsVersion() const;
     private:
         std::string m_sHostname;
         std::string m_sUrl;
-        unsigned char m_nVersion;
-
+        unsigned char m_nDnsVersion;
 
         struct endpoint
         {
@@ -59,7 +55,7 @@ class Self : public Resource
                 return (sHost==endp.sHost && nPort == endp.nPort);
             }
 
-            Json::Value ToJson() const
+            Json::Value Commit() const
             {
                 Json::Value jsonEnd;
                 jsonEnd["host"] = sHost;
@@ -91,7 +87,7 @@ class Self : public Resource
         {
             clock(int nT, std::string sV="", std::string sG="", bool bL = true, bool bT=false ) : nType(nT), sVersion(sV), sGmid(sG), bLocked(bL), bTraceable(bT){}
 
-            Json::Value ToJson() const
+            Json::Value Commit()
             {
                 Json::Value jsClock;
                 if(nType == INTERNAL)

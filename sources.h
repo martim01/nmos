@@ -24,7 +24,7 @@ class Sources : public ResourceHolder
         }
 
 
-        Json::Value ToJson() const;
+        Json::Value Commit() const;
     private:
         std::map<std::string, Source*> m_mSource;
 

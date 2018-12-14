@@ -9,28 +9,32 @@ Flow::Flow(std::string sLabel, std::string sDescription, std::string sFormat, st
 
 }
 
-Json::Value Flow::ToJson() const
+bool Flow::Commit()
 {
-    Json::Value jsFlow(Resource::ToJson());
-
-    jsFlow["format"] = m_sFormat;
-    jsFlow["device_id"] = m_sDeviceId;
-    jsFlow["source_id"] = m_sSourceId;
-
-    jsFlow["parents"] = Json::Value(Json::objectValue);
-    for(std::set<std::string>::iterator itParent = m_setParent.begin(); itParent != m_setParent.end(); ++itParent)
+    if(Resource::Commit())
     {
-        jsFlow["parents"].append((*itParent));
+        m_json["format"] = m_sFormat;
+        m_json["device_id"] = m_sDeviceId;
+        m_json["source_id"] = m_sSourceId;
+
+        m_json["parents"] = Json::Value(Json::objectValue);
+        for(std::set<std::string>::iterator itParent = m_setParent.begin(); itParent != m_setParent.end(); ++itParent)
+        {
+            m_json["parents"].append((*itParent));
+        }
+        return true;
     }
-    return jsFlow;
+    return false;
 }
 
 void Flow::AddParentId(std::string sId)
 {
     m_setParent.insert(sId);
+    UpdateVersionTime();
 }
 
 void Flow::RemoveParentId(std::string sId)
 {
     m_setParent.erase(sId);
+    UpdateVersionTime();
 }

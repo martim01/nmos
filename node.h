@@ -1,10 +1,6 @@
 #pragma once
 #include "self.h"
-#include "sources.h"
-#include "devices.h"
-#include "flows.h"
-#include "receivers.h"
-#include "senders.h"
+#include "resourceholder.h"
 #include <vector>
 
 class ServicePublisher;
@@ -21,14 +17,14 @@ class Node
         bool StartServices(unsigned short nPort);
         void StopServices();
 
-        bool ResourceUpdated();
+        bool Commit();
 
         Self& GetSelf();
-        Sources& GetSources();
-        Devices& GetDevices();
-        Flows& GetFlows();
-        Receivers& GetReceivers();
-        Senders& GetSenders();
+        ResourceHolder& GetSources();
+        ResourceHolder& GetDevices();
+        ResourceHolder& GetFlows();
+        ResourceHolder& GetReceivers();
+        ResourceHolder& GetSenders();
 
         int GetJson(std::string sPath, std::string& sResponse);
         int PutJson(std::string sPath, std::string sJson, std::string& sRepsonse);
@@ -58,11 +54,11 @@ class Node
         Json::Value GetJsonError(unsigned long nCode = 404, std::string sError="Resource not found");
 
         Self m_self;
-        Sources m_sources;
-        Devices m_devices;
-        Flows m_flows;
-        Receivers m_receivers;
-        Senders m_senders;
+        ResourceHolder m_sources;
+        ResourceHolder m_devices;
+        ResourceHolder m_flows;
+        ResourceHolder m_receivers;
+        ResourceHolder m_senders;
         std::vector<std::string> m_vPath;
 
 

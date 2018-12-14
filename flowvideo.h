@@ -11,8 +11,13 @@ class FlowVideo : public Flow
 
         FlowVideo(std::string sLabel, std::string sDescription, std::string sSourceId, std::string sDeviceId, unsigned int nFrameWidth, unsigned int nFrameHeight, enumColour eColour, enumInterlace eInterlace=PROGRESSIVE, enumTransfer eTransfer=SDR);
 
+        virtual bool Commit();
 
-        virtual Json::Value ToJson() const;
+        void SetFrameWidth(unsigned int nWidth);
+        void SetFrameHeight(unsigned int nHeight);
+        void SetColour(enumColour eColour);
+        void SetInterlace(enumInterlace eInterlace);
+        void SetTransfer(enumTransfer eTransfer);
 
     private:
         unsigned int m_nFrameWidth;

@@ -10,7 +10,7 @@ class Flows : public ResourceHolder
         void AddFlow(Flow* pFlow);
         void RemoveFlow(Flow* pFlow);
 
-        Json::Value ToJson() const;
+        Json::Value Commit() const;
 
         std::map<std::string, Flow*>::const_iterator GetFlowBegin()
         {

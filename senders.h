@@ -10,7 +10,7 @@ class Senders : public ResourceHolder
         void AddSender(Sender* pSender);
         void RemoveSender(Sender* pSender);
 
-        Json::Value ToJson() const;
+        Json::Value Commit() const;
 
         std::map<std::string, Sender*>::const_iterator GetSenderBegin()
         {

@@ -10,7 +10,7 @@ class Flow : public Resource
         void AddParentId(std::string sId);
         void RemoveParentId(std::string sId);
 
-        virtual Json::Value ToJson() const;
+        virtual bool Commit();
     private:
         std::string m_sFormat;
         std::string m_sSourceId;

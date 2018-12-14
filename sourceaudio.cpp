@@ -10,27 +10,31 @@ SourceAudio::SourceAudio(std::string sLabel, std::string sDescription, std::stri
 void SourceAudio::AddChannel(std::string sLabel, std::string sSymbol)
 {
     m_mChannel.insert(make_pair(sSymbol, sLabel));
+    UpdateVersionTime();
 }
 
 void SourceAudio::RemoveChannel(std::string sSymbol)
 {
     m_mChannel.erase(sSymbol);
+    UpdateVersionTime();
 }
 
 
-Json::Value SourceAudio::ToJson() const
+bool SourceAudio::Commit()
 {
-    Json::Value jsAudio(Source::ToJson());
-
-    jsAudio["channels"] = Json::Value(Json::arrayValue);
-
-    for(std::map<std::string, std::string>::const_iterator itChannel = m_mChannel.begin(); itChannel != m_mChannel.end(); ++itChannel)
+    if(Source::Commit())
     {
-        Json::Value jsChannel;
-        jsChannel["label"] = itChannel->second;
-        jsChannel["symbol"] =  itChannel->first;
+        m_json["channels"] = Json::Value(Json::arrayValue);
 
-        jsAudio["channels"].append(jsChannel);
+        for(std::map<std::string, std::string>::const_iterator itChannel = m_mChannel.begin(); itChannel != m_mChannel.end(); ++itChannel)
+        {
+            Json::Value jsChannel;
+            jsChannel["label"] = itChannel->second;
+            jsChannel["symbol"] =  itChannel->first;
+
+            m_json["channels"].append(jsChannel);
+        }
+        return true;
     }
-    return jsAudio;
+    return false;
 }

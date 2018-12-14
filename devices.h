@@ -10,7 +10,7 @@ class Devices : public ResourceHolder
         std::string AddDevice(std::string sLabel, std::string sDescription, Device::enumType eType, std::string sNodeId);
         void RemoveDevice(std::string sDeviceId);
 
-        Json::Value ToJson() const;
+        Json::Value Commit() const;
 
         std::map<std::string, Device*>::const_iterator GetDeviceBegin()
         {

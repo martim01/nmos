@@ -10,17 +10,14 @@ class Source : public Resource
 
         Source(std::string sLabel, std::string sDescription, std::string sDeviceId, enumFormat eFormat);
         virtual ~Source(){}
-        //Not yet defined
-        void AddCap(){}
-        void RemoveCap(){}
 
-
+        void SetFormat(enumFormat eFormat);
         void AddParentId(std::string sId);
         void RemoveParentId(std::string sId);
 
         void SetClock(std::string sClock);
 
-        virtual Json::Value ToJson() const;
+        virtual bool Commit();
 
     private:
         std::string m_sDeviceId;

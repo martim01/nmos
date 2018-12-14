@@ -6,9 +6,8 @@ FlowDataSdiAnc::FlowDataSdiAnc(std::string sLabel, std::string sDescription, std
 
 }
 
-Json::Value FlowDataSdiAnc::ToJson() const
+bool FlowDataSdiAnc::Commit()
 {
-    Json::Value jsFlow(FlowData::ToJson());
+    return FlowData::Commit();
 
-    return jsFlow;
 }
