@@ -1,0 +1,15 @@
+#pragma once
+#include "flow.h"
+
+
+class FlowAudio : public Flow
+{
+    public:
+        FlowAudio(std::string sLabel, std::string sDescription, std::string sSourceId, std::string sDeviceId, unsigned int nSampleRate);
+        virtual Json::Value ToJson() const;
+
+    private:
+        unsigned int m_nSampleRate;
+};
+
+

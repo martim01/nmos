@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="nmos_node_test" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Windows Debug">
+				<Option platforms="Windows;" />
+				<Option output="bin/Debug/nmos_node_test" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-std=c++0x" />
+					<Add option="-g" />
+					<Add option="-D__WIN__" />
+					<Add directory="$(#microhttp.include)" />
+				</Compiler>
+				<Linker>
+					<Add library="ole32" />
+					<Add library="libmicrohttpd-12" />
+					<Add directory="$(#microhttp.lib)" />
+				</Linker>
+			</Target>
+			<Target title="Windows Release">
+				<Option platforms="Windows;" />
+				<Option output="bin/Release/nmos_node_test" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-std=c++0x" />
+					<Add option="-D__WIN__" />
+					<Add directory="$(#microhttp.include)" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="ole32" />
+					<Add library="libmicrohttpd-12" />
+					<Add directory="$(#microhttp.lib)" />
+				</Linker>
+			</Target>
+			<Target title="Linux Debug">
+				<Option platforms="Unix;" />
+				<Option output="bin/Linux Debug/nmos_node_test" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-std=c++0x" />
+					<Add option="-g" />
+					<Add option="-D__GNU__" />
+					<Add directory="$(#microhttp.include)" />
+				</Compiler>
+				<Linker>
+					<Add option="`pkg-config --libs libmicrohttpd`" />
+					<Add option="`pkg-config --libs avahi-client`" />
+					<Add option="`pkg-config --libs uuid`" />
+					<Add directory="$(#microhttp.lib)" />
+				</Linker>
+			</Target>
+			<Target title="Linux Release">
+				<Option platforms="Unix;" />
+				<Option output="bin/Linux Release/nmos_node_test" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-std=c++0x" />
+					<Add option="-D__GNU__" />
+					<Add directory="$(#microhttp.include)" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="`pkg-config --libs libmicrohttpd`" />
+					<Add option="`pkg-config --libs avahi-client`" />
+					<Add option="`pkg-config --libs uuid`" />
+					<Add directory="$(#microhttp.lib)" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-fexceptions" />
+			<Add directory="$(#json.include)" />
+		</Compiler>
+		<Unit filename="../jsoncpp-master/dist/jsoncpp.cpp" />
+		<Unit filename="avahipublisher.cpp">
+			<Option target="Linux Debug" />
+			<Option target="Linux Release" />
+		</Unit>
+		<Unit filename="avahipublisher.h">
+			<Option target="Linux Debug" />
+			<Option target="Linux Release" />
+		</Unit>
+		<Unit filename="device.cpp" />
+		<Unit filename="device.h" />
+		<Unit filename="devices.cpp" />
+		<Unit filename="devices.h" />
+		<Unit filename="flow.cpp" />
+		<Unit filename="flow.h" />
+		<Unit filename="flowaudio.cpp" />
+		<Unit filename="flowaudio.h" />
+		<Unit filename="flowaudiocoded.cpp" />
+		<Unit filename="flowaudiocoded.h" />
+		<Unit filename="flowaudioraw.cpp" />
+		<Unit filename="flowaudioraw.h" />
+		<Unit filename="flowdata.cpp" />
+		<Unit filename="flowdata.h" />
+		<Unit filename="flowdatasdianc.cpp" />
+		<Unit filename="flowdatasdianc.h" />
+		<Unit filename="flowmux.cpp" />
+		<Unit filename="flowmux.h" />
+		<Unit filename="flows.cpp" />
+		<Unit filename="flows.h" />
+		<Unit filename="flowvideo.cpp" />
+		<Unit filename="flowvideo.h" />
+		<Unit filename="flowvideocoded.cpp" />
+		<Unit filename="flowvideocoded.h" />
+		<Unit filename="flowvideoraw.cpp" />
+		<Unit filename="flowvideoraw.h" />
+		<Unit filename="main.cpp" />
+		<Unit filename="microserver.cpp" />
+		<Unit filename="microserver.h" />
+		<Unit filename="node.cpp" />
+		<Unit filename="node.h" />
+		<Unit filename="receiver.cpp" />
+		<Unit filename="receiver.h" />
+		<Unit filename="receivers.cpp" />
+		<Unit filename="receivers.h" />
+		<Unit filename="resource.cpp" />
+		<Unit filename="resource.h" />
+		<Unit filename="resourceholder.h" />
+		<Unit filename="self.cpp" />
+		<Unit filename="self.h" />
+		<Unit filename="sender.cpp" />
+		<Unit filename="sender.h" />
+		<Unit filename="senders.cpp" />
+		<Unit filename="senders.h" />
+		<Unit filename="source.cpp" />
+		<Unit filename="source.h" />
+		<Unit filename="sourceaudio.cpp" />
+		<Unit filename="sourceaudio.h" />
+		<Unit filename="sourcegeneric.cpp" />
+		<Unit filename="sourcegeneric.h" />
+		<Unit filename="sources.cpp" />
+		<Unit filename="sources.h" />
+		<Unit filename="timeofday.h">
+			<Option target="Windows Debug" />
+			<Option target="Windows Release" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
