@@ -32,14 +32,15 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-std=c++0x" />
-					<Add option="-D__WIN__" />
+					<Add option="-std=c++11" />
+					<Add option="-D__GNU__" />
 					<Add directory="$(#microhttp.include)" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
-					<Add library="ole32" />
-					<Add library="libmicrohttpd-12" />
+					<Add option="`pkg-config --libs libmicrohttpd`" />
+					<Add option="`pkg-config --libs avahi-client`" />
+					<Add option="`pkg-config --libs uuid`" />
 					<Add directory="$(#microhttp.lib)" />
 				</Linker>
 			</Target>
@@ -50,7 +51,7 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-std=c++0x" />
+					<Add option="-std=c++14" />
 					<Add option="-g" />
 					<Add option="-D__GNU__" />
 					<Add directory="$(#microhttp.include)" />
@@ -70,7 +71,7 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-std=c++0x" />
+					<Add option="-std=c++11" />
 					<Add option="-D__GNU__" />
 					<Add directory="$(#microhttp.include)" />
 				</Compiler>
@@ -89,6 +90,14 @@
 			<Add directory="$(#json.include)" />
 		</Compiler>
 		<Unit filename="../jsoncpp-master/dist/jsoncpp.cpp" />
+		<Unit filename="avahibrowser.cpp">
+			<Option target="Linux Debug" />
+			<Option target="Linux Release" />
+		</Unit>
+		<Unit filename="avahibrowser.h">
+			<Option target="Linux Debug" />
+			<Option target="Linux Release" />
+		</Unit>
 		<Unit filename="avahipublisher.cpp">
 			<Option target="Linux Debug" />
 			<Option target="Linux Release" />
@@ -119,11 +128,13 @@
 		<Unit filename="flowvideocoded.h" />
 		<Unit filename="flowvideoraw.cpp" />
 		<Unit filename="flowvideoraw.h" />
+		<Unit filename="log.cpp" />
+		<Unit filename="log.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="microserver.cpp" />
 		<Unit filename="microserver.h" />
-		<Unit filename="node.cpp" />
-		<Unit filename="node.h" />
+		<Unit filename="nodeapi.cpp" />
+		<Unit filename="nodeapi.h" />
 		<Unit filename="receiver.cpp" />
 		<Unit filename="receiver.h" />
 		<Unit filename="resource.cpp" />

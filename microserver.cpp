@@ -2,6 +2,7 @@
 #include "nodeapi.h"
 #include "microhttpd.h"
 #include <iostream>
+#include "log.h"
 
 using namespace std;
 
@@ -18,7 +19,7 @@ static int IteratePost (void * ptr, MHD_ValueKind kind, const char *key, const c
 
 static void RequestCompleted (void *cls, MHD_Connection* pConnection, void **ptr, enum MHD_RequestTerminationCode toe)
 {
-    std::cout << "Request completed" << std::endl;
+    Log::Get() << "Request completed" << endl;
     ConnectionInfo *pInfo = reinterpret_cast<ConnectionInfo*>(*ptr);
     if (pInfo)
     {
@@ -31,16 +32,16 @@ static void RequestCompleted (void *cls, MHD_Connection* pConnection, void **ptr
     }
     else
     {
-        std::cout << "Request completed: ERROR" << std::endl;
+        Log::Get(Log::ERROR) << "Request completed: Failed" << endl;
     }
 }
 
-static int DoHttpGet(MHD_Connection* pConnection, std::string sUrl)
+static int DoHttpGet(MHD_Connection* pConnection, string sUrl)
 {
-    std::string sResponse;
+    string sResponse;
     int nCode = NodeApi::Get().GetJson(sUrl, sResponse);
 
-    std::cout << "Response: " << sResponse << std::endl;
+    Log::Get() << "Response: " << sResponse << endl;
 
     MHD_Response* pResponse = MHD_create_response_from_buffer (sResponse.length(), (void *) sResponse.c_str(), MHD_RESPMEM_MUST_COPY);
     MHD_add_response_header(pResponse, "Content-Type", "application/json");
@@ -49,9 +50,9 @@ static int DoHttpGet(MHD_Connection* pConnection, std::string sUrl)
     return ret;
 }
 
-static int DoHttpPut(MHD_Connection* pConnection, std::string sUrl)
+static int DoHttpPut(MHD_Connection* pConnection, string sUrl)
 {
-    std::string sResponse;
+    string sResponse;
     int nCode = NodeApi::Get().PutJson(sUrl, MicroServer::Get().GetPutData(), sResponse);
     MicroServer::Get().ResetPutData();
 
@@ -65,10 +66,10 @@ static int DoHttpPut(MHD_Connection* pConnection, std::string sUrl)
 
 static int AnswerToConnection(void *cls, MHD_Connection* pConnection, const char * url, const char * method, const char * sVersion, const char * upload_data, size_t * upload_data_size, void **ptr)
 {
-    std::string sMethod(method);
+    string sMethod(method);
     if (NULL == *ptr)
     {
-        std::cout << "Initial connection" << std::endl;
+        Log::Get(Log::DEBUG) << "Initial connection" << endl;
         ConnectionInfo* pInfo = new ConnectionInfo();
         if(pInfo == 0)
         {
@@ -76,7 +77,7 @@ static int AnswerToConnection(void *cls, MHD_Connection* pConnection, const char
         }
         if("PUT" == sMethod || "POST" == sMethod)
         {
-            std::cout << "Initial connection: PUT" << std::endl;
+            Log::Get(Log::DEBUG) << "Initial connection: PUT" << endl;
             pInfo->pPost = MHD_create_post_processor (pConnection, 65536, IteratePost, (void *)pInfo);
             if(NULL == pInfo->pPost)
             {
@@ -87,20 +88,20 @@ static int AnswerToConnection(void *cls, MHD_Connection* pConnection, const char
         }
         else
         {
-            std::cout << "Initial connection: GET" << std::endl;
+            Log::Get(Log::DEBUG) << "Initial connection: GET" << endl;
         }
         *ptr = (void *) pInfo;
         return MHD_YES;
     }
 
-    if("GET" == std::string(sMethod))
+    if("GET" == string(sMethod))
     {
-        std::cout << "Actual connection: GET" << std::endl;
+        Log::Get(Log::DEBUG) << "Actual connection: GET" << endl;
         return DoHttpGet(pConnection, url);
     }
-    else if("PUT" == std::string(sMethod))
+    else if("PUT" == string(sMethod))
     {
-        std::cout << "Actual connection: PUT" << std::endl;
+        Log::Get(Log::DEBUG) << "Actual connection: PUT" << endl;
         ConnectionInfo* pInfo = reinterpret_cast<ConnectionInfo*>(*ptr);
         if (*upload_data_size != 0)
         {
@@ -154,11 +155,11 @@ MicroServer::~MicroServer()
     Stop();
 }
 
-void MicroServer::AddPutData(std::string sData)
+void MicroServer::AddPutData(string sData)
 {
     m_sPut += sData;
 }
-std::string MicroServer::GetPutData() const
+string MicroServer::GetPutData() const
 {
     return m_sPut;
 }

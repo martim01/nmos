@@ -4,7 +4,8 @@
 #include "microserver.h"
 #include <algorithm>
 #include "avahipublisher.h"
-
+#include "avahibrowser.h"
+#include "log.h"
 
 NodeApi& NodeApi::Get()
 {
@@ -12,7 +13,8 @@ NodeApi& NodeApi::Get()
     return aNode;
 }
 
-NodeApi::NodeApi() : m_pNodeApiPublisher(0)
+NodeApi::NodeApi() : m_pNodeApiPublisher(0),
+m_pRegistrationBrowser(0)
 {
 }
 
@@ -20,6 +22,7 @@ NodeApi::~NodeApi()
 {
     StopHttpServer();
     StopmDNSServer();
+    StopRegistrationBrowser();
 }
 
 
@@ -65,7 +68,7 @@ void NodeApi::StopmDNSServer()
 
 bool NodeApi::StartServices(unsigned short nPort)
 {
-    return (StartmDNSServer(nPort) && StartHttpServer(nPort));
+    return (StartmDNSServer(nPort) && StartHttpServer(nPort) && BrowseForRegistrationNode());
 }
 
 void NodeApi::StopServices()
@@ -360,7 +363,7 @@ ResourceHolder& NodeApi::GetSenders()
 
 bool NodeApi::Commit()
 {
-    std::cout << "Node: Commit" << std::endl;
+    Log::Get() << "Node: Commit" << std::endl;
     bool bChange = m_self.Commit();
     bChange |= m_sources.Commit();
     bChange |= m_devices.Commit();
@@ -405,5 +408,29 @@ void NodeApi::SetmDNSTxt()
         m_pNodeApiPublisher->AddTxt("ver_dvc", std::to_string(m_devices.GetVersion()));
         m_pNodeApiPublisher->AddTxt("ver_snd", std::to_string(m_senders.GetVersion()));
         m_pNodeApiPublisher->AddTxt("ver_rcv", std::to_string(m_receivers.GetVersion()));
+    }
+}
+
+
+bool NodeApi::BrowseForRegistrationNode()
+{
+    if(m_pRegistrationBrowser == 0)
+    {
+        m_pRegistrationBrowser = new ServiceBrowser();
+        std::set<std::string> setService;
+        setService.insert("_nmos-registration._tcp");
+        return m_pRegistrationBrowser->StartBrowser(setService);
+    }
+    return false;
+}
+
+
+void NodeApi::StopRegistrationBrowser()
+{
+    if(m_pRegistrationBrowser)
+    {
+        delete m_pRegistrationBrowser;
+        m_pRegistrationBrowser = 0;
+//        m_pRegistrationBrowser->Stop();
     }
 }

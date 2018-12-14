@@ -5,6 +5,7 @@
 
 class ServicePublisher;
 class MicroServer;
+class ServiceBrowser;
 
 class NodeApi
 {
@@ -40,6 +41,9 @@ class NodeApi
         void StopmDNSServer();
         void SetmDNSTxt();
 
+        bool BrowseForRegistrationNode();
+        void StopRegistrationBrowser();
+
         void SplitPath(std::string str, char cSplit);
 
         int GetJsonNmos(std::string& sReturn);
@@ -63,6 +67,7 @@ class NodeApi
 
 
         ServicePublisher* m_pNodeApiPublisher;
+        ServiceBrowser* m_pRegistrationBrowser;
 
         enum {BASE=0, NMOS=1, API_TYPE=2,VERSION=3,ENDPOINT=4, RESOURCE=5};
         enum {SZ_BASE=1, SZ_NMOS=2, SZ_API_TYPE=3,SZ_VERSION=4,SZ_ENDPOINT=5};
