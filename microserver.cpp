@@ -12,7 +12,7 @@ static int IteratePost (void * ptr, MHD_ValueKind kind, const char *key, const c
 
     if(size > 0)
     {
-        MicroServer::Get().AddPutData(data);
+        pInfo->pServer->AddPutData(data);
     }
     return MHD_YES;
 }
@@ -50,11 +50,11 @@ static int DoHttpGet(MHD_Connection* pConnection, string sUrl)
     return ret;
 }
 
-static int DoHttpPut(MHD_Connection* pConnection, string sUrl)
+static int DoHttpPut(MHD_Connection* pConnection, string sUrl, ConnectionInfo* pInfo)
 {
     string sResponse;
-    int nCode = NodeApi::Get().PutJson(sUrl, MicroServer::Get().GetPutData(), sResponse);
-    MicroServer::Get().ResetPutData();
+    int nCode = NodeApi::Get().PutJson(sUrl, pInfo->pServer->GetPutData(), sResponse);
+    pInfo->pServer->ResetPutData();
 
 
     MHD_Response* pResponse = MHD_create_response_from_buffer (sResponse.length(), (void *) sResponse.c_str(), MHD_RESPMEM_MUST_COPY);
@@ -75,6 +75,7 @@ static int AnswerToConnection(void *cls, MHD_Connection* pConnection, const char
         {
             return MHD_NO;
         }
+        pInfo->pServer = reinterpret_cast<MicroServer*>(cls);
         if("PUT" == sMethod || "POST" == sMethod)
         {
             Log::Get(Log::DEBUG) << "Initial connection: PUT" << endl;
@@ -111,7 +112,7 @@ static int AnswerToConnection(void *cls, MHD_Connection* pConnection, const char
         }
         else
         {
-            return DoHttpPut(pConnection, url);
+            return DoHttpPut(pConnection, url, pInfo);
         }
     }
 
@@ -123,12 +124,6 @@ static int AnswerToConnection(void *cls, MHD_Connection* pConnection, const char
 
 
 
-MicroServer& MicroServer::Get()
-{
-    static MicroServer ms;
-    return ms;
-}
-
 
 bool MicroServer::Init(unsigned int nPort)
 {
@@ -136,11 +131,11 @@ bool MicroServer::Init(unsigned int nPort)
     m_pmhd = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY, nPort, NULL, NULL, &AnswerToConnection, this, MHD_OPTION_NOTIFY_COMPLETED, RequestCompleted, NULL, MHD_OPTION_END);
     if(m_pmhd)
     {
-        Log::Get() << "MicroServer: Init: OK";
+        Log::Get() << "MicroServer: " << nPort << " Init: OK" << std::endl;
     }
     else
     {
-        Log::Get() << "MicroServer: Init: Failed";
+        Log::Get() << "MicroServer: " << nPort << " Init: Failed" << std::endl;
     }
 
     return (m_pmhd!=0);

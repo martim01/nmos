@@ -18,6 +18,12 @@ Resource::Resource(std::string sLabel, std::string sDescription) :
     UpdateVersionTime();
 }
 
+Resource::Resource()
+{
+    CreateGuid();
+    UpdateVersionTime();
+}
+
 void Resource::AddTag(std::string sTag)
 {
     m_lstTag.push_back(sTag);

@@ -7,13 +7,14 @@ wxCurlEventPoster::wxCurlEventPoster(wxEvtHandler* pHandler) : m_pHandler(pHandl
 
 }
 
-void wxCurlEventPoster::CurlDone(unsigned long nResult, const std::string& sResult)
+void wxCurlEventPoster::CurlDone(unsigned long nResult, const std::string& sResult, long nUserType)
 {
     if(m_pHandler)
     {
         wxCommandEvent* pEvent(new wxCommandEvent(wxEVT_CURL_DONE));
         pEvent->SetInt(nResult);
         pEvent->SetString(wxString::FromAscii(sResult.c_str()));
+        pEvent->SetExtraLong(nUserType);
         wxQueueEvent(m_pHandler, pEvent);
     }
 }

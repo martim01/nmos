@@ -1,7 +1,6 @@
 #include "nodeapi.h"
 #include <iostream>
 #include <sstream>
-#include "microserver.h"
 #include <algorithm>
 #include "avahipublisher.h"
 #include "avahibrowser.h"
@@ -9,6 +8,15 @@
 #include "curlregister.h"
 #include <thread>
 
+#ifdef __GNU__
+#include <unistd.h>
+#include <sys/types.h>
+#include <ifaddrs.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <arpa/inet.h>
+#endif // __GNU__
 using namespace std;
 
 
@@ -33,7 +41,7 @@ m_nRegisterNext(REG_START)
 
 NodeApi::~NodeApi()
 {
-    StopHttpServer();
+    StopHttpServers();
     StopmDNSServer();
     StopRegistrationBrowser();
     if(m_pRegisterCurl)
@@ -44,29 +52,70 @@ NodeApi::~NodeApi()
 
 
 
-void NodeApi::Init(string sHostname, string sUrl, string sLabel, string sDescription)
+void NodeApi::Init(unsigned short nApiPort, const string& sLabel, const string& sDescription)
 {
-    m_self = Self(sHostname, sUrl, sLabel, sDescription);
+    char sHost[256];
+    gethostname(sHost, 256);
+
+    set<string> setEndpoints;
+    struct ifaddrs *interfaces = NULL;
+    struct ifaddrs *temp_addr = NULL;
+    int success = getifaddrs(&interfaces);
+    if (success == 0)
+    {
+        // Loop through linked list of interfaces
+        temp_addr = interfaces;
+        while(temp_addr != NULL)
+        {
+            if(temp_addr->ifa_addr->sa_family == AF_INET)
+            {
+                // Check if interface is en0 which is the wifi connection on the iPhone
+                string sAddress(inet_ntoa(((sockaddr_in*)temp_addr->ifa_addr)->sin_addr));
+                if(sAddress != "127.0.0.1")
+                {
+                    setEndpoints.insert(sAddress);
+                    m_self.AddEndpoint(sAddress, nApiPort, false);
+                }
+            }
+            temp_addr = temp_addr->ifa_next;
+        }
+    }
+    // Free memory
+    freeifaddrs(interfaces);
+
+    if(setEndpoints.empty() == false)
+    {
+        stringstream sstr;
+        sstr << "http://" << *setEndpoints.begin() << ":" << nApiPort;
+
+        m_self.Init(sHost, sstr.str(), sLabel, sDescription);
+    }
+
+
 }
 
-bool NodeApi::StartHttpServer(unsigned short nPort)
+bool NodeApi::StartHttpServers()
 {
-    StopHttpServer();
-
-    return MicroServer::Get().Init(nPort);
+    Log::Get(Log::DEBUG) << "Start Http Servers" << endl;
+    m_self.StartServers();
+    Log::Get(Log::DEBUG) << "Start Http Servers: Done" << endl;
+    return true;
 }
 
-void NodeApi::StopHttpServer()
+void NodeApi::StopHttpServers()
 {
-    MicroServer::Get().Stop();
+    m_self.StopServers();
 }
 
-bool NodeApi::StartmDNSServer(unsigned short nPort)
+bool NodeApi::StartmDNSServer()
 {
     StopmDNSServer();
-    m_pNodeApiPublisher = new ServicePublisher("nodeapi", "_nmos-node._tcp", nPort);
-
-    SetmDNSTxt();
+    set<endpoint>::const_iterator itEndpoint = m_self.GetEndpointsBegin();
+    if(itEndpoint != m_self.GetEndpointsEnd())
+    {
+        m_pNodeApiPublisher = new ServicePublisher("nodeapi", "_nmos-node._tcp", itEndpoint->nPort);
+        SetmDNSTxt(itEndpoint->bSecure);
+    }
 
 
     return m_pNodeApiPublisher->Start();
@@ -83,16 +132,16 @@ void NodeApi::StopmDNSServer()
 }
 
 
-bool NodeApi::StartServices(unsigned short nPort,ServiceBrowserEvent* pPoster, CurlEvent* pCurlPoster)
+bool NodeApi::StartServices(ServiceBrowserEvent* pPoster, CurlEvent* pCurlPoster)
 {
     m_pRegisterCurl = new CurlRegister(pCurlPoster);
-    return (StartmDNSServer(nPort) && StartHttpServer(nPort) && BrowseForRegistrationNode(pPoster));
+    return (StartmDNSServer() && StartHttpServers() && BrowseForRegistrationNode(pPoster));
 }
 
 void NodeApi::StopServices()
 {
     StopmDNSServer();
-    StopHttpServer();
+    StopHttpServers();
 }
 
 int NodeApi::GetJson(string sPath, string& sReturn)
@@ -390,7 +439,11 @@ bool NodeApi::Commit()
     bChange |= m_senders.Commit();
     if(bChange && m_pNodeApiPublisher)
     {
-        SetmDNSTxt();
+        set<endpoint>::const_iterator itEndpoint = m_self.GetEndpointsBegin();
+        if(itEndpoint != m_self.GetEndpointsEnd())
+        {
+            SetmDNSTxt(itEndpoint->bSecure);
+        }
         m_pNodeApiPublisher->Modify();
     }
     return bChange;
@@ -414,11 +467,18 @@ void NodeApi::SplitString(vector<string>& vSplit, string str, char cSplit)
 
 
 
-void NodeApi::SetmDNSTxt()
+void NodeApi::SetmDNSTxt(bool bSecure)
 {
     if(m_pNodeApiPublisher)
     {
-        m_pNodeApiPublisher->AddTxt("api_proto", "http");
+        if(bSecure)
+        {
+            m_pNodeApiPublisher->AddTxt("api_proto", "https");
+        }
+        else
+        {
+            m_pNodeApiPublisher->AddTxt("api_proto", "http");
+        }
         m_pNodeApiPublisher->AddTxt("api_ver", "v1.2");
         m_pNodeApiPublisher->AddTxt("ver_slf", to_string(m_self.GetDnsVersion()));
         m_pNodeApiPublisher->AddTxt("ver_src", to_string(m_sources.GetVersion()));
@@ -432,14 +492,17 @@ void NodeApi::SetmDNSTxt()
 
 bool NodeApi::BrowseForRegistrationNode(ServiceBrowserEvent* pPoster)
 {
-    if(m_pRegistrationBrowser == 0)
+    if(m_pRegistrationBrowser != 0)
     {
-        m_pRegistrationBrowser = new ServiceBrowser(pPoster);
-        set<string> setService;
-        setService.insert("_nmos-registration._tcp");
-        return m_pRegistrationBrowser->StartBrowser(setService);
+        StopRegistrationBrowser();
     }
-    return false;
+
+    m_pRegistrationBrowser = new ServiceBrowser(pPoster);
+    set<string> setService;
+    setService.insert("_nmos-registration._tcp");
+    setService.insert("_nmos-query._tcp");
+    return m_pRegistrationBrowser->StartBrowser(setService);
+
 }
 
 
@@ -458,6 +521,7 @@ int NodeApi::Register()
     switch(m_nRegisterNext)
     {
         case REG_START:
+        case REG_FAILED:
             StartRegistration();
             break;
         case REG_DEVICES:
@@ -568,7 +632,7 @@ bool NodeApi::RegisterResource(const string& sType, const Json::Value& json)
 
     if(m_pRegisterCurl)
     {
-        m_pRegisterCurl->Post(m_sRegistrationNode+"/resource", sPost);
+        m_pRegisterCurl->Post(m_sRegistrationNode+"/resource", sPost, CURL_REGISTER);
         return true;
     }
     return false;
@@ -579,7 +643,7 @@ bool NodeApi::RegistrationHeartbeat()
     string sResponse;
     if(m_pRegisterCurl)
     {
-        m_pRegisterCurl->Post(m_sRegistrationNode+"/health/nodes/"+m_self.GetId(), "");
+        m_pRegisterCurl->Post(m_sRegistrationNode+"/health/nodes/"+m_self.GetId(), "", CURL_HEARTBEAT);
     }
     return true;
 }
@@ -591,3 +655,143 @@ bool NodeApi::RegisterSelf()
     return RegisterResource("node", m_self.GetJson());
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+int NodeApi::Unregister()
+{
+    Log::Get() << "Unregister: " << m_nRegisterNext << endl;
+    switch(m_nRegisterNext)
+    {
+        case REG_RECEIVERS:
+        case REG_DONE:
+            StartUnregistration();
+            break;
+        case REG_SENDERS:
+            UnregisterResources(m_senders, m_flows);
+            break;
+        case REG_FLOWS:
+            UnregisterResources(m_flows, m_sources);
+            break;
+        case REG_SOURCES:
+            UnregisterResources(m_sources, m_devices);
+            break;
+        case REG_DEVICES:
+            UnregisterResources(m_devices, m_receivers);
+            break;
+        case REG_START:
+            UnregisterResource("nodes", m_self.GetId());
+            break;
+
+
+    }
+    return m_nRegisterNext;
+}
+
+bool NodeApi::StartUnregistration()
+{
+    m_itRegisterNext = m_receivers.GetResourceBegin();
+    m_nRegisterNext = REG_RECEIVERS;
+    UnregisterResources(m_receivers, m_senders);
+
+    return true;
+}
+
+
+void NodeApi::UnregisterResources(ResourceHolder& holder, ResourceHolder& next)
+{
+    if(m_itRegisterNext != holder.GetResourceEnd())
+    {
+        Log::Get(Log::INFO) << "NodeApi: Unregister. " << holder.GetType() << " : " << m_itRegisterNext->first << endl;
+        UnregisterResource(holder.GetType()+"s", m_itRegisterNext->first);
+        ++m_itRegisterNext;
+
+    }
+    else
+    {
+        m_nRegisterNext--;
+        m_itRegisterNext = next.GetResourceBegin();
+        Unregister();
+    }
+
+}
+
+
+bool NodeApi::UnregisterResource(const string& sType, const std::string& sId)
+{
+    if(m_pRegisterCurl)
+    {
+        m_pRegisterCurl->Delete(m_sRegistrationNode+"/resource", sType, sId, CURL_DELETE);
+        return true;
+    }
+    return false;
+}
+
+
+bool NodeApi::Query(const std::string& sQueryPath)
+{
+    if(m_sQueryNode.empty())
+    {
+        map<string, dnsService*>::const_iterator itService = m_pRegistrationBrowser->FindService("_nmos-query._tcp");
+        if(itService != m_pRegistrationBrowser->GetServiceEnd())
+        {
+            Log::Get(Log::INFO) << "NodeApi: Query. Found nmos query service." << endl;
+            const dnsInstance* pInstance(0);
+            string sApiVersion;
+            for(list<dnsInstance*>::const_iterator itInstance = itService->second->lstInstances.begin(); itInstance != itService->second->lstInstances.end(); ++itInstance)
+            {   //get the registration node with smallest priority number
+
+                Log::Get(Log::INFO) << "NodeApi: Query. Found nmos query node: " << (*itInstance)->sName << endl;
+                //get top priority
+                unsigned long nPriority(200);
+                map<string, string>::const_iterator itPriority = (*itInstance)->mTxt.find("pri");
+                map<string, string>::const_iterator itVersion = (*itInstance)->mTxt.find("api_ver");
+                if(itPriority != (*itInstance)->mTxt.end() && itVersion != (*itInstance)->mTxt.end())
+                {
+                    if(stoi(itPriority->second) < nPriority && itVersion->second.find("v1.2") != string::npos)
+                    {//for now only doing v1.2
+
+                        pInstance = (*itInstance);
+                        nPriority = stoi(itPriority->second);
+
+                        Log::Get(Log::INFO) << "NodeApi: Query. Found nmos query node with v1.2 and low priority: " << (*itInstance)->sName << " " << nPriority << endl;
+
+                        //vector<string> vApi;
+                        //SplitString(vApi, itVersion->second, ',');
+                    }
+                }
+            }
+
+            if(pInstance)
+            {
+                //build the registration url
+                stringstream ssUrl;
+                ssUrl <<  pInstance->sHostIP << ":" << pInstance->nPort << "/x-nmos/query/v1.2";
+                m_sQueryNode = ssUrl.str();
+
+            }
+        }
+    }
+
+    if(m_pRegisterCurl && m_sQueryNode.empty() == false)
+    {
+        m_pRegisterCurl->Query(m_sQueryNode, sQueryPath, CURL_QUERY);
+    }
+}

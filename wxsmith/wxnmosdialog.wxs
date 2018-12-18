@@ -2,6 +2,7 @@
 <wxsmith>
 	<object class="wxDialog" name="wxnmosDialog">
 		<title>wxWidgets app</title>
+		<handler function="OnClose" entry="EVT_CLOSE" />
 		<object class="wxBoxSizer" variable="BoxSizer1" member="yes">
 			<object class="sizeritem">
 				<object class="wxBoxSizer" variable="BoxSizer2" member="yes">

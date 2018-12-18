@@ -1,4 +1,5 @@
 #include "self.h"
+#include "microserver.h"
 
 using namespace std;
 
@@ -8,6 +9,26 @@ Self::Self(string sHostname, string sUrl,string sLabel, string sDescription) : R
     m_sUrl(sUrl),
     m_nDnsVersion(0)
 {
+
+}
+
+Self::~Self()
+{
+    for(set<endpoint>::iterator itEndpoint = m_setEndpoint.begin(); itEndpoint != m_setEndpoint.end(); ++itEndpoint)
+    {
+        if(itEndpoint->pServer)
+        {
+            delete itEndpoint->pServer;
+        }
+    }
+}
+
+void Self::Init(std::string sHostname, std::string sUrl,std::string sLabel, std::string sDescription)
+{
+    m_sHostname = sHostname;
+    m_sUrl = sUrl;
+    UpdateLabel(sLabel);
+    UpdateDescription(sDescription);
 
 }
 
@@ -30,13 +51,26 @@ void Self::RemoveApiVersion(string sVersion)
 
 void Self::AddEndpoint(string sHost, unsigned int nPort, bool bSecure)
 {
-    m_setEndpoint.insert(endpoint(sHost, nPort, bSecure));
+    MicroServer* pServer = new MicroServer();
+    pair<set<endpoint>::iterator, bool> ins = m_setEndpoint.insert(endpoint(sHost, nPort, bSecure, pServer));
+    if(ins.second == false)
+    {
+        delete pServer;
+    }
     UpdateVersionTime();
 }
 
 void Self::RemoveEndpoint(string sHost, unsigned int nPort)
 {
-    m_setEndpoint.erase(endpoint(sHost, nPort, false));
+    set<endpoint>::iterator itEndpoint = m_setEndpoint.find(endpoint(sHost, nPort, false,0));
+    if(itEndpoint != m_setEndpoint.end())
+    {
+        if(itEndpoint->pServer)
+        {
+            delete itEndpoint->pServer;
+        }
+        m_setEndpoint.erase(itEndpoint);
+    }
     UpdateVersionTime();
 }
 
@@ -162,4 +196,41 @@ Json::Value Self::JsonVersions() const
 bool Self::IsVersionSupported(std::string sVersion) const
 {
     return (m_setVersion.find(sVersion) != m_setVersion.end());
+}
+
+
+
+bool Self::StartServers()
+{
+    for(set<endpoint>::iterator itEndpoint = m_setEndpoint.begin(); itEndpoint != m_setEndpoint.end(); ++itEndpoint)
+    {
+        if(itEndpoint->pServer)
+        {
+            itEndpoint->pServer->Init(itEndpoint->nPort);
+        }
+    }
+    return true;
+}
+
+
+bool Self::StopServers()
+{
+    for(set<endpoint>::iterator itEndpoint = m_setEndpoint.begin(); itEndpoint != m_setEndpoint.end(); ++itEndpoint)
+    {
+        if(itEndpoint->pServer)
+        {
+            itEndpoint->pServer->Stop();
+        }
+    }
+    return true;
+}
+
+set<endpoint>::const_iterator Self::GetEndpointsBegin() const
+{
+    return m_setEndpoint.begin();
+}
+
+set<endpoint>::const_iterator Self::GetEndpointsEnd() const
+{
+    return m_setEndpoint.end();
 }

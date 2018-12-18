@@ -56,7 +56,9 @@ class CurlRegister
         ///< @brief Destructor
         ~CurlRegister();
 
-        void Post(const std::string& sUrl, const std::string& sJson);
+        void Post(const std::string& sBaseUrl, const std::string& sJson, long nUserType);
+        void Delete(const std::string& sBaseUrl, const std::string& sType, const std::string& sId, long nUserType);
+        void Query(const std::string& sBaseUrl, const std::string& sQueryPath, long nUserType);
 
     private:
 

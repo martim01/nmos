@@ -8,6 +8,6 @@ class NMOS_EXPOSE CurlEvent
     public:
         CurlEvent(){}
         virtual ~CurlEvent(){}
-        virtual void CurlDone(unsigned long nResult, const std::string& sResponse){}
+        virtual void CurlDone(unsigned long nResult, const std::string& sResponse, long nType){}
 
 };

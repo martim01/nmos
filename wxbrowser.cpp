@@ -29,8 +29,9 @@ void wxBrowserEvent::AllForNow(const std::string& sService)
     Log::Get() << "wxBrowserEvent: All for now" << std::endl;
     if(m_pHandler)
     {
-        wxCommandEvent event(wxEVT_BROWSER_ALLFORNOW);
-        wxPostEvent(m_pHandler, event);
+        wxCommandEvent* pEvent = new wxCommandEvent(wxEVT_BROWSER_ALLFORNOW);
+        pEvent->SetString(wxString::FromAscii(sService.c_str()));
+        wxQueueEvent(m_pHandler, pEvent);
     }
 }
 

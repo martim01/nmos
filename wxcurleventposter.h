@@ -6,7 +6,7 @@ class wxCurlEventPoster : public CurlEvent
 {
     public:
         wxCurlEventPoster(wxEvtHandler* pHandler);
-        void CurlDone(unsigned long nResult, const std::string& sResponse);
+        void CurlDone(unsigned long nResult, const std::string& sResponse, long nUserType);
 
     private:
         wxEvtHandler* m_pHandler;

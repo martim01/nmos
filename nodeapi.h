@@ -7,7 +7,6 @@
 
 class ServiceBrowser;
 class ServicePublisher;
-class MicroServer;
 class ServiceBrowserEvent;
 class CurlRegister;
 class CurlEvent;
@@ -18,12 +17,14 @@ class NMOS_EXPOSE NodeApi
 
         static NodeApi& Get();
 
-        void Init(std::string sHostname, std::string sUrl, std::string sLabel, std::string sDescription);
+        void Init(unsigned short nApiPort, const std::string& sLabel, const std::string& sDescription);
 
-        bool StartServices(unsigned short nPort, ServiceBrowserEvent* pPoster, CurlEvent* pCurlPoster);
+        bool StartServices(ServiceBrowserEvent* pPoster, CurlEvent* pCurlPoster);
         void StopServices();
 
         bool Commit();
+
+        bool BrowseForRegistrationNode(ServiceBrowserEvent* pPoster);
 
         Self& GetSelf();
         ResourceHolder& GetSources();
@@ -37,26 +38,31 @@ class NMOS_EXPOSE NodeApi
 
         int Register();
         bool RegistrationHeartbeat();
-
-        enum {REG_FAILED = 0, REG_START, REG_DEVICES, REG_SOURCES, REG_FLOWS, REG_SENDERS, REG_RECEIVERS, REG_DONE};
-
+        int Unregister();
         int GetRegistrationStatus() const
         {
             return m_nRegisterNext;
         }
 
+        bool Query(const std::string& sQueryPath);
+
+        enum {REG_FAILED = 0, REG_START, REG_DEVICES, REG_SOURCES, REG_FLOWS, REG_SENDERS, REG_RECEIVERS, REG_DONE};
+        enum {CURL_REGISTER=1, CURL_HEARTBEAT, CURL_DELETE, CURL_QUERY};
+
+
+
     private:
         NodeApi();
         ~NodeApi();
 
-        bool StartHttpServer(unsigned short nPort);
-        void StopHttpServer();
+        bool StartHttpServers();
+        void StopHttpServers();
 
-        bool StartmDNSServer(unsigned short nPort);
+        bool StartmDNSServer();
         void StopmDNSServer();
-        void SetmDNSTxt();
+        void SetmDNSTxt(bool bSecure);
 
-        bool BrowseForRegistrationNode(ServiceBrowserEvent* pPoster);
+
         void StopRegistrationBrowser();
 
         void SplitString(std::vector<std::string>& vSplit, std::string str, char cSplit);
@@ -76,14 +82,13 @@ class NMOS_EXPOSE NodeApi
         bool StartRegistration();
         void RegisterResources(ResourceHolder& holder, ResourceHolder& next);
 
+        bool StartUnregistration();
+        void UnregisterResources(ResourceHolder& holder, ResourceHolder& next);
+
         bool RegisterSelf();
-        bool RegisterDevice(const std::string& sId);
-        bool RegisterSender(const std::string& sId);
-        bool RegisterReceiver(const std::string& sId);
-        bool RegisterSource(const std::string& sId);
-        bool RegisterFlow(const std::string& sId);
 
         bool RegisterResource(const std::string& sType, const Json::Value& json);
+        bool UnregisterResource(const std::string& sType, const std::string& sId);
 
         Self m_self;
 
@@ -96,6 +101,7 @@ class NMOS_EXPOSE NodeApi
 
         std::vector<std::string> m_vPath;
         std::string m_sRegistrationNode;
+        std::string m_sQueryNode;
 
         ServicePublisher* m_pNodeApiPublisher;
         ServiceBrowser* m_pRegistrationBrowser;

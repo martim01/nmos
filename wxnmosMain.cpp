@@ -76,6 +76,7 @@ wxnmosDialog::wxnmosDialog(wxWindow* parent,wxWindowID id)
     BoxSizer1->SetSizeHints(this);
 
     Connect(ID_TIMER1,wxEVT_TIMER,(wxObjectEventFunction)&wxnmosDialog::OntimerHeartbeatTrigger);
+    Connect(wxID_ANY,wxEVT_CLOSE_WINDOW,(wxObjectEventFunction)&wxnmosDialog::OnClose);
     //*)
     Connect(wxID_ANY, wxEVT_BROWSER_ALLFORNOW, (wxObjectEventFunction)&wxnmosDialog::OnBrowserAllForNow);
     Connect(wxID_ANY, wxEVT_BROWSER_FINISHED, (wxObjectEventFunction)&wxnmosDialog::OnBrowserFinished);
@@ -85,18 +86,17 @@ wxnmosDialog::wxnmosDialog(wxWindow* parent,wxWindowID id)
 
     Log::Get().SetOutput(new wxLogOutput(this));
 
-    NodeApi::Get().Init("host1", "http://172.29.80.65:8080/", "host1", "host1");
 
+    NodeApi::Get().Init(8080, "host1", "host1");
+    NodeApi::Get().GetSelf().AddApiVersion("v1.2");
 //    NodeApi::Get().GetSelf().AddVersion("v1.0");
 //    NodeApi::Get().GetSelf().AddVersion("v1.1");
-    NodeApi::Get().GetSelf().AddApiVersion("v1.2");
-    NodeApi::Get().GetSelf().AddEndpoint("172.29.80.65", 8080, false);
-    NodeApi::Get().GetSelf().AddEndpoint("172.29.80.65", 443, true);
+
+
+    //NodeApi::Get().GetSelf().AddEndpoint("192.168.1.35", 8080, false);
     NodeApi::Get().GetSelf().AddInternalClock("clk0");
     NodeApi::Get().GetSelf().AddPTPClock("clk1", true, "IEEE1588-2008", "08-00-11-ff-fe-21-e1-b0", true);
-    NodeApi::Get().GetSelf().AddInterface("eth0" ,"74-26-96-db-87-31", "74-26-96-db-87-31");
-    NodeApi::Get().GetSelf().AddInterface("eth1" ,"74-26-96-db-87-31", "74-26-96-db-87-32");
-
+    NodeApi::Get().GetSelf().AddInterface("eth0", "74-26-96-db-87-31", "74-26-96-db-87-32");
 
 
     Device* pDevice = new Device("TestDevice", "TestDescription", Device::GENERIC,NodeApi::Get().GetSelf().GetId());
@@ -105,7 +105,7 @@ wxnmosDialog::wxnmosDialog(wxWindow* parent,wxWindowID id)
     pSource->AddChannel("Right", "R");
 
     FlowAudioRaw* pFlow = new FlowAudioRaw("TestFlow", "TestDescription", pSource->GetId(), pDevice->GetId(),48000, FlowAudioRaw::L24);
-    Sender* pSender(new Sender("TestSender", "Description", pFlow->GetId(), Sender::RTP_MCAST, pDevice->GetId(), "http://172.29.80.65/by-name/pam.sdp"));
+    Sender* pSender(new Sender("TestSender", "Description", pFlow->GetId(), Sender::RTP_MCAST, pDevice->GetId(), "http://192.168.1.35/by-name/pam.sdp"));
     pSender->AddInterfaceBinding("eth0");
 
 
@@ -122,7 +122,7 @@ wxnmosDialog::wxnmosDialog(wxWindow* parent,wxWindowID id)
     NodeApi::Get().GetSenders().AddResource(pSender);
     NodeApi::Get().Commit();
 
-    NodeApi::Get().StartServices(8080, new wxBrowserEvent(this), new wxCurlEventPoster(this));
+    NodeApi::Get().StartServices(new wxBrowserEvent(this), new wxCurlEventPoster(this));
 
 }
 
@@ -156,22 +156,66 @@ void wxnmosDialog::OnBrowserResolved(wxCommandEvent& event)
 
 void wxnmosDialog::OnBrowserAllForNow(wxCommandEvent& event)
 {
-    Log(wxT("Browser - all for now"));
-
-    m_nRegisterState = NodeApi::Get().Register();
+    Log(wxT("Browser - all for now "));
+    if(event.GetString() == "_nmos-registration._tcp")
+    {
+        m_nRegisterState = NodeApi::Get().Register();
+        if(m_nRegisterState == NodeApi::REG_FAILED)
+        {
+            Log("No registration nodes found. Browse again in 30 seconds");
+            m_timerHeartbeat.Start(30000, true);
+        }
+    }
 
 }
 
 void wxnmosDialog::OnCurlDone(wxCommandEvent& event)
 {
-    Log(wxString::Format(wxT("%d %s"), event.GetInt(), event.GetString().c_str()));
-    if(event.GetInt() == 200 || event.GetInt() == 201)
+    switch(event.GetExtraLong())
     {
-        m_nRegisterState = NodeApi::Get().Register();
-        if(m_nRegisterState == NodeApi::REG_DONE)
-        {//node finished registering
-            m_timerHeartbeat.Start(5000);
-        }
+        case NodeApi::CURL_REGISTER:
+            Log(wxString::Format(wxT("Register: %d %s"), event.GetInt(), event.GetString().c_str()));
+            if(event.GetInt() == 201)
+            {
+                m_nRegisterState = NodeApi::Get().Register();
+                if(m_nRegisterState == NodeApi::REG_DONE)
+                {//node finished registering
+                    m_timerHeartbeat.Start(5000);
+
+                    //let's also do a query here
+                    NodeApi::Get().Query("nodes");
+                }
+                else if(m_nRegisterState == NodeApi::REG_FAILED)
+                {
+                    Log("No registration nodes found. Browse again in 30 seconds");
+                    m_timerHeartbeat.Start(30000, true);
+                }
+            }
+            else if(event.GetInt() == 200)
+            {   //node already exists delete it.
+                m_nRegisterState = NodeApi::Get().Unregister();
+            }
+            break;
+        case NodeApi::CURL_DELETE:
+            Log(wxString::Format(wxT("Delete: %d %s"), event.GetInt(), event.GetString().c_str()));
+            if(event.GetInt() == 204)
+            {
+                m_nRegisterState = NodeApi::Get().Unregister();
+            }
+            break;
+        case NodeApi::CURL_HEARTBEAT:
+            if(event.GetInt() != 200)
+            {   //SOMETHING HAS GONE WRONG
+                Log(wxString::Format(wxT("Heartbeat: %d %s"), event.GetInt(), event.GetString().c_str()));
+                //We need to try and register again - or go peer-to-peer
+                Log("Registration node gone. Browse again in 30 seconds");
+                m_nRegisterState = NodeApi::REG_FAILED;
+                m_timerHeartbeat.Start(30000, true);
+            }
+            break;
+        case NodeApi::CURL_QUERY:
+            Log(wxString::Format(wxT("Query: %d %s"), event.GetInt(), event.GetString().c_str()));
+            break;
     }
 }
 
@@ -190,5 +234,27 @@ void wxnmosDialog::OnLog(wxCommandEvent& event)
 
 void wxnmosDialog::OntimerHeartbeatTrigger(wxTimerEvent& event)
 {
-    NodeApi::Get().RegistrationHeartbeat();
+
+    if(m_nRegisterState == NodeApi::REG_DONE)
+    {
+        NodeApi::Get().RegistrationHeartbeat();
+    }
+    else
+    {
+        Log::Get(Log::DEBUG) << "Ontimer: " << m_nRegisterState << std::endl;
+        NodeApi::Get().BrowseForRegistrationNode(new wxBrowserEvent(this));
+    }
+}
+
+void wxnmosDialog::OnClose(wxCloseEvent& event)
+{
+//    if(m_nRegisterState != NodeApi::REG_START)
+//    {
+//        NodeApi::Get().Unregister();
+//        event.Veto();
+//    }
+//    else
+    {
+        event.Skip();
+    }
 }

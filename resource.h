@@ -8,7 +8,7 @@ class NMOS_EXPOSE Resource
 {
     public:
         Resource(std::string sLabel, std::string sDescription);
-        Resource(){}
+        Resource();
         virtual ~Resource(){}
         void AddTag(std::string sTag);
 

@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <map>
-
+#include <set>
 #include <avahi-client/client.h>
 #include <avahi-client/publish.h>
 #include <avahi-common/alternative.h>
@@ -16,7 +16,7 @@ static void client_callback(AvahiClient *c, AvahiClientState state, AVAHI_GCC_UN
 class ServicePublisher
 {
     public:
-        ServicePublisher(std::string sName, std::string sService, unsigned int nPort);
+        ServicePublisher(std::string sName, std::string sService, unsigned short nPort);
         ~ServicePublisher();
 
         bool Start();

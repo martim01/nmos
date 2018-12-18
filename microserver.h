@@ -5,12 +5,14 @@ struct MHD_Daemon;
 struct MHD_PostProcessor;
 struct MHD_Connection;
 
+class MicroServer;
 
 struct ConnectionInfo
 {
     enum {GET=0, PUT=1};
     ConnectionInfo() : nType(GET), pPost(0){}
     int nType;
+    MicroServer* pServer;
     MHD_PostProcessor *pPost;
 };
 
@@ -18,7 +20,9 @@ class MicroServer
 {
     public:
 
-        static MicroServer& Get();
+        MicroServer();
+        ~MicroServer();
+
         bool Init(unsigned int nPort=80);
         void Stop();
 
@@ -27,8 +31,7 @@ class MicroServer
         void ResetPutData();
 
     private:
-        MicroServer();
-        ~MicroServer();
+
 
         MHD_Daemon* m_pmhd;
 

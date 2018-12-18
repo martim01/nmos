@@ -66,27 +66,31 @@ void ServicePublisher::CreateServices()
         if (avahi_entry_group_is_empty(m_pGroup))
         {
             Log::Get() << "ServicePublisher: Adding service " << m_psName << endl;
+
             AvahiStringList* pList = GetTxtList();
             if(!pList)
             {
                 Log::Get(Log::ERROR) << "ServicePublisher: Failed to create list" << endl;
             }
-
-            if ((ret = avahi_entry_group_add_service_strlst(m_pGroup, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, (AvahiPublishFlags)0, m_psName, m_sService.c_str(), NULL, NULL, m_nPort, pList)) < 0)
+            else
             {
-                if (ret == AVAHI_ERR_COLLISION)
+                if ((ret = avahi_entry_group_add_service_strlst(m_pGroup, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, (AvahiPublishFlags)0, m_psName, m_sService.c_str(), NULL, NULL, m_nPort, pList)) < 0)
                 {
-                    Collision();
-                    return;
+                    if (ret == AVAHI_ERR_COLLISION)
+                    {
+                        Collision();
+                        return;
+                    }
+                    else
+                    {
+                        Log::Get(Log::ERROR) << "ServicePublisher: Failed to add '" << m_sService << "' service: " << avahi_strerror(ret) << endl;
+                        ThreadQuit();
+                        return;
+                    }
                 }
-                else
-                {
-                    Log::Get(Log::ERROR) << "ServicePublisher: Failed to add '" << m_sService << "' service: " << avahi_strerror(ret) << endl;
-                    ThreadQuit();
-                    return;
-                }
-            }
             avahi_string_list_free(pList);
+            }
+
             /* Tell the server to register the service */
             if ((ret = avahi_entry_group_commit(m_pGroup)) < 0)
             {
@@ -214,7 +218,7 @@ bool ServicePublisher::Start()
     return true;
 }
 
-ServicePublisher::ServicePublisher(string sName, string sService, unsigned int nPort) :
+ServicePublisher::ServicePublisher(string sName, string sService, unsigned short nPort) :
     m_pClient(0),
     m_pGroup(0),
     m_pThreadedPoll(0),
@@ -288,5 +292,8 @@ void ServicePublisher::Modify()
         avahi_threaded_poll_unlock(m_pThreadedPoll);
     }
 }
+
+
+
 
 

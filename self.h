@@ -6,12 +6,52 @@
 #include "resource.h"
 #include "dlldefine.h"
 
+class MicroServer;
+
+
+struct endpoint
+{
+    endpoint(std::string sH, unsigned int nP, bool bP, MicroServer* pS) : sHost(sH), nPort(nP), bSecure(bP), pServer(pS){}
+    bool operator<(const endpoint& endp) const
+    {
+        return (sHost < endp.sHost || (sHost == endp.sHost && nPort < endp.nPort));
+    }
+    bool operator==(const endpoint& endp) const
+    {
+        return (sHost==endp.sHost && nPort == endp.nPort);
+    }
+
+    Json::Value Commit() const
+    {
+        Json::Value jsonEnd;
+        jsonEnd["host"] = sHost;
+        jsonEnd["port"] = nPort;
+        if(bSecure)
+        {
+            jsonEnd["protocol"] = "https";
+        }
+        else
+        {
+            jsonEnd["protocol"] = "http";
+        }
+        return jsonEnd;
+    }
+
+    std::string sHost;
+    unsigned int nPort;
+    bool bSecure;
+    MicroServer* pServer;
+};
 
 class NMOS_EXPOSE Self : public Resource
 {
     public:
         Self(std::string sHostname, std::string sUrl,std::string sLabel, std::string sDescription);
-        Self(){}
+        Self() : Resource(){}
+        ~Self();
+
+        void Init(std::string sHostname, std::string sUrl,std::string sLabel, std::string sDescription);
+
         void AddApiVersion(std::string sVersion);
         void RemoveApiVersion(std::string sVersion);
 
@@ -38,43 +78,19 @@ class NMOS_EXPOSE Self : public Resource
         virtual bool Commit();
 
         unsigned char GetDnsVersion() const;
+
+        bool StartServers();
+        bool StopServers();
+
+        std::set<endpoint>::const_iterator GetEndpointsBegin() const;
+        std::set<endpoint>::const_iterator GetEndpointsEnd() const;
+
     private:
         std::string m_sHostname;
         std::string m_sUrl;
         unsigned char m_nDnsVersion;
 
-        struct endpoint
-        {
-            endpoint(std::string sH, unsigned int nP, bool bP) : sHost(sH), nPort(nP), bSecure(bP){}
-            bool operator<(const endpoint& endp) const
-            {
-                return (sHost < endp.sHost || (sHost == endp.sHost && nPort < endp.nPort));
-            }
-            bool operator==(const endpoint& endp) const
-            {
-                return (sHost==endp.sHost && nPort == endp.nPort);
-            }
 
-            Json::Value Commit() const
-            {
-                Json::Value jsonEnd;
-                jsonEnd["host"] = sHost;
-                jsonEnd["port"] = nPort;
-                if(bSecure)
-                {
-                    jsonEnd["protocol"] = "https";
-                }
-                else
-                {
-                    jsonEnd["protocol"] = "http";
-                }
-                return jsonEnd;
-            }
-
-            std::string sHost;
-            unsigned int nPort;
-            bool bSecure;
-        };
 
         struct interface
         {
