@@ -49,7 +49,15 @@ bool Sender::Commit()
         }
 
         m_json["subscription"] = Json::Value(Json::objectValue);
-        m_json["subscription"]["receiver_id"] = m_sReceiverId;
+        if(m_sReceiverId.empty())
+        {
+             m_json["subscription"]["receiver_id"] = Json::nullValue;
+        }
+        else
+        {
+            m_json["subscription"]["receiver_id"] = m_sReceiverId;
+        }
+
         if(m_bReceiverActive)
         {
             m_json["subscription"]["active"] = true;

@@ -4,10 +4,10 @@
 #include <map>
 #include <string>
 #include "resource.h"
+#include "dlldefine.h"
 
 
-
-class Self : public Resource
+class NMOS_EXPOSE Self : public Resource
 {
     public:
         Self(std::string sHostname, std::string sUrl,std::string sLabel, std::string sDescription);

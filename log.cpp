@@ -11,3 +11,8 @@ Log& Log::Get(LogLevel eLevel)
 }
 
 
+void LogOutput::Flush(int nLogLevel, const std::stringstream&  logStream)
+{
+    std::cout << Log::STR_LEVEL[nLogLevel] << "\t" << logStream.str();
+}
+

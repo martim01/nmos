@@ -2,7 +2,9 @@
 #include "resource.h"
 #include <iostream>
 
-ResourceHolder::ResourceHolder() : m_nVersion(0),
+ResourceHolder::ResourceHolder(const std::string& sType) :
+    m_sType(sType),
+    m_nVersion(0),
     m_json(Json::arrayValue)
 {
 

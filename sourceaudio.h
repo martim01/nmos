@@ -1,7 +1,9 @@
 #pragma once
 #include "source.h"
+#include "dlldefine.h"
 
-class SourceAudio : public Source
+
+class NMOS_EXPOSE SourceAudio : public Source
 {
     public:
 

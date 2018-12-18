@@ -1,8 +1,9 @@
 #pragma once
 #include "resource.h"
 #include <set>
+#include "dlldefine.h"
 
-class Flow : public Resource
+class NMOS_EXPOSE Flow : public Resource
 {
     public:
         Flow(std::string sLabel, std::string sDescription, std::string sFormat, std::string sSourceId, std::string sDeviceId);

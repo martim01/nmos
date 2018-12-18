@@ -94,10 +94,10 @@ bool Self::Commit()
         m_json["tags"] = Json::Value(Json::objectValue);
         m_json["caps"] = Json::Value(Json::objectValue);
 
-        m_json["api"]["version"] = Json::Value(Json::arrayValue);
+        m_json["api"]["versions"] = Json::Value(Json::arrayValue);
         for(set<string>::iterator itVersion = m_setVersion.begin(); itVersion != m_setVersion.end(); ++itVersion)
         {
-            m_json["api"]["version"].append(*itVersion);
+            m_json["api"]["versions"].append(*itVersion);
         }
 
         m_json["api"]["endpoints"] = Json::Value(Json::arrayValue);

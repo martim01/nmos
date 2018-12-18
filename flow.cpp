@@ -17,7 +17,7 @@ bool Flow::Commit()
         m_json["device_id"] = m_sDeviceId;
         m_json["source_id"] = m_sSourceId;
 
-        m_json["parents"] = Json::Value(Json::objectValue);
+        m_json["parents"] = Json::Value(Json::arrayValue);
         for(std::set<std::string>::iterator itParent = m_setParent.begin(); itParent != m_setParent.end(); ++itParent)
         {
             m_json["parents"].append((*itParent));

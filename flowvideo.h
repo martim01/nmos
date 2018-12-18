@@ -1,8 +1,8 @@
 #pragma once
 #include "flow.h"
+#include "dlldefine.h"
 
-
-class FlowVideo : public Flow
+class NMOS_EXPOSE FlowVideo : public Flow
 {
     public:
         enum enumInterlace{PROGRESSIVE, INTERLACED_TFF, INTERLACED_BFF, INTERLACED_PSF};

@@ -132,7 +132,17 @@ MicroServer& MicroServer::Get()
 
 bool MicroServer::Init(unsigned int nPort)
 {
+
     m_pmhd = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY, nPort, NULL, NULL, &AnswerToConnection, this, MHD_OPTION_NOTIFY_COMPLETED, RequestCompleted, NULL, MHD_OPTION_END);
+    if(m_pmhd)
+    {
+        Log::Get() << "MicroServer: Init: OK";
+    }
+    else
+    {
+        Log::Get() << "MicroServer: Init: Failed";
+    }
+
     return (m_pmhd!=0);
 }
 

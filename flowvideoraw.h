@@ -1,7 +1,8 @@
 #pragma once
 #include "flowvideo.h"
+#include "dlldefine.h"
 
-class FlowVideoRaw : public FlowVideo
+class NMOS_EXPOSE FlowVideoRaw : public FlowVideo
 {
     public:
         FlowVideoRaw(std::string sLabel, std::string sDescription, std::string sSourceId, std::string sDeviceId, unsigned int nFrameWidth, unsigned int nFrameHeight, enumColour eColour, enumInterlace eInterlace=PROGRESSIVE, enumTransfer eTransfer=SDR);

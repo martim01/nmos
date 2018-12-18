@@ -1,7 +1,8 @@
 #pragma once
 #include "flowaudio.h"
+#include "dlldefine.h"
 
-class FlowAudioRaw : public FlowAudio
+class NMOS_EXPOSE FlowAudioRaw : public FlowAudio
 {
     public:
         enum enumFormat { L24, L20, L16, L8};

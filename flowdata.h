@@ -1,8 +1,8 @@
 #pragma once
 #include "flow.h"
+#include "dlldefine.h"
 
-
-class FlowData : public Flow
+class NMOS_EXPOSE FlowData : public Flow
 {
     public:
         FlowData(std::string sLabel, std::string sDescription, std::string sSourceId, std::string sDeviceId, std::string sMediaType);

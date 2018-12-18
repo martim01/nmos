@@ -1,8 +1,9 @@
 #pragma once
 #include "resource.h"
 #include <set>
+#include "dlldefine.h"
 
-class Source : public Resource
+class NMOS_EXPOSE Source : public Resource
 {
     public:
         enum enumFormat{AUDIO, VIDEO, DATA, MUX};

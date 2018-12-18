@@ -38,6 +38,9 @@ bool Resource::Commit()
     m_json["description"] = m_sDescription;
     m_json["id"] = m_sId;
 
+    m_json["tags"] = Json::Value(Json::objectValue);
+
+
     m_json["version"] = m_sVersion;
 
     m_sLastVersion = m_sVersion;

@@ -2,13 +2,25 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include "dlldefine.h"
 
 
-class Log
+class NMOS_EXPOSE LogOutput
+{
+    public:
+        LogOutput(){}
+        virtual ~LogOutput(){}
+        virtual void Flush(int nLogLevel, const std::stringstream&  logStream);
+
+};
+
+class NMOS_EXPOSE Log
 {
 public:
     typedef std::ostream&  (*ManipFn)(std::ostream&);
     typedef std::ios_base& (*FlagsFn)(std::ios_base&);
+
+    static const std::string STR_LEVEL[4];
 
     enum LogLevel
     {
@@ -20,6 +32,14 @@ public:
 
     static Log& Get(LogLevel eLevel=INFO);
 
+    void SetOutput(LogOutput* pLogout)
+    {
+        if(m_pOutput)
+        {
+            delete m_pOutput;
+        }
+        m_pOutput = pLogout;
+    }
 
     template<class T>  // int, double, strings, etc
     Log& operator<<(const T& output)
@@ -63,18 +83,25 @@ public:
       Good place to prepend time, log-level.
       Send to console, file, socket, or whatever you like here.
     */
-
-        std::cout << STR_LEVEL[m_logLevel] << "\t" << m_stream.str();
-        m_stream.str( std::string() );
+        m_pOutput->Flush(m_logLevel, m_stream);
+        m_stream.str(std::string());
         m_stream.clear();
     }
 
 private:
-    Log() : m_logLevel(INFO) {}
+    Log() : m_logLevel(INFO) , m_pOutput(new LogOutput()){}
+    ~Log()
+    {
+        if(m_pOutput)
+        {
+            delete m_pOutput;
+        }
+    }
 
     std::stringstream  m_stream;
     int                m_logLevel;
+    LogOutput* m_pOutput;
 
-    static const std::string STR_LEVEL[4];
+
 };
 

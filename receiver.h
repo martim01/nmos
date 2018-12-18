@@ -1,8 +1,9 @@
 #pragma once
 #include "resource.h"
 #include <set>
+#include "dlldefine.h"
 
-class Receiver : public Resource
+class NMOS_EXPOSE Receiver : public Resource
 {
     public:
         enum enumTransport {RTP, RPT_UCAST, RTP_MCAST, DASH};

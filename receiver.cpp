@@ -7,7 +7,7 @@ Receiver::Receiver(std::string sLabel, std::string sDescription, enumTransport e
     Resource(sLabel, sDescription),
     m_eTransport(eTransport),
     m_sDeviceId(sDeviceId),
-    m_sSenderId("null"),
+    m_sSenderId(""),
     m_bSenderActive(false),
     m_eType(eFormat)
 {
@@ -81,7 +81,16 @@ bool Receiver::Commit()
 
 
         m_json["subscription"] = Json::Value(Json::objectValue);
-        m_json["subscription"]["sender_id"] = m_sSenderId;
+
+        if(m_sSenderId.empty())
+        {
+             m_json["subscription"]["sender_id"] = Json::nullValue;
+        }
+        else
+        {
+            m_json["subscription"]["sender_id"] = m_sSenderId;
+        }
+
         if(m_bSenderActive)
         {
             m_json["subscription"]["active"] = true;

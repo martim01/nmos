@@ -2,13 +2,14 @@
 #include <string>
 #include "json/json.h"
 #include <list>
+#include "dlldefine.h"
 
-
-class Resource
+class NMOS_EXPOSE Resource
 {
     public:
         Resource(std::string sLabel, std::string sDescription);
         Resource(){}
+        virtual ~Resource(){}
         void AddTag(std::string sTag);
 
         std::string GetId() const

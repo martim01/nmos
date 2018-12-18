@@ -1,12 +1,17 @@
 #pragma once
 #include "json/json.h"
+#include "dlldefine.h"
+
 class Resource;
 
-class ResourceHolder
+class NMOS_EXPOSE ResourceHolder
 {
     public:
-        ResourceHolder();
-
+        ResourceHolder(const std::string& sType);
+        const std::string& GetType() const
+        {
+            return m_sType;
+        }
 
         unsigned char GetVersion() const;
 
@@ -24,6 +29,7 @@ class ResourceHolder
 
     protected:
         void ResourceUpdated();
+        std::string m_sType;
         unsigned char m_nVersion;
         Json::Value m_json;
         std::map<std::string, Resource*> m_mResource;

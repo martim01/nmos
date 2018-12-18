@@ -30,7 +30,14 @@ bool Source::Commit()
     if(Resource::Commit())
     {
         m_json["device_id"] = m_sDeviceId;
-        m_json["clock_id"] = m_sClock;
+        if(m_sClock.empty())
+        {
+            m_json["clock_name"] = Json::nullValue;
+        }
+        else
+        {
+            m_json["clock_name"] = m_sClock;
+        }
 
         switch(m_eFormat)
         {
@@ -47,8 +54,8 @@ bool Source::Commit()
                 m_json["format"] = "urn:x-nmos:format:mux";
                 break;
         }
-
-        m_json["parents"] = Json::Value(Json::objectValue);
+        m_json["caps"] = Json::objectValue;
+        m_json["parents"] = Json::Value(Json::arrayValue);
         for(std::set<std::string>::iterator itParent = m_setParent.begin(); itParent != m_setParent.end(); ++itParent)
         {
             m_json["parents"].append((*itParent));

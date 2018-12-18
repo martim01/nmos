@@ -60,6 +60,7 @@
 					<Add option="`pkg-config --libs libmicrohttpd`" />
 					<Add option="`pkg-config --libs avahi-client`" />
 					<Add option="`pkg-config --libs uuid`" />
+					<Add option="`pkg-config --libs libcurl`" />
 					<Add directory="$(#microhttp.lib)" />
 				</Linker>
 			</Target>
@@ -80,6 +81,7 @@
 					<Add option="`pkg-config --libs libmicrohttpd`" />
 					<Add option="`pkg-config --libs avahi-client`" />
 					<Add option="`pkg-config --libs uuid`" />
+					<Add option="`pkg-config --libs libcurl`" />
 					<Add directory="$(#microhttp.lib)" />
 				</Linker>
 			</Target>
@@ -106,6 +108,8 @@
 			<Option target="Linux Debug" />
 			<Option target="Linux Release" />
 		</Unit>
+		<Unit filename="curlregister.cpp" />
+		<Unit filename="curlregister.h" />
 		<Unit filename="device.cpp" />
 		<Unit filename="device.h" />
 		<Unit filename="flow.cpp" />

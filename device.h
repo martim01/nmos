@@ -1,8 +1,9 @@
 #pragma once
 #include "resource.h"
 #include <set>
+#include "dlldefine.h"
 
-class Device : public Resource
+class NMOS_EXPOSE Device : public Resource
 {
     public:
         enum enumType {GENERIC, PIPELINE};

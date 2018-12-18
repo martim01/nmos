@@ -2,7 +2,7 @@
 #include "avahibrowser.h"
 #include <iostream>
 #include "log.h"
-
+#include "servicebrowserevent.h"
 
 using namespace std;
 
@@ -37,7 +37,8 @@ void resolve_callback(AvahiServiceResolver *r, AVAHI_GCC_UNUSED AvahiIfIndex int
 
 
 
-ServiceBrowser::ServiceBrowser() :
+ServiceBrowser::ServiceBrowser(ServiceBrowserEvent* pPoster) :
+    m_pPoster(pPoster),
     m_pThreadedPoll(0),
     m_pClient(0),
     m_pTypeBrowser(0),
@@ -51,6 +52,7 @@ ServiceBrowser::~ServiceBrowser()
 {
     Stop();
     DeleteAllServices();
+    delete m_pPoster;
 }
 
 void ServiceBrowser::DeleteAllServices()
@@ -71,7 +73,7 @@ bool ServiceBrowser::StartBrowser(const set<string>& setServices)
     /* Allocate main loop object */
     if (!(m_pThreadedPoll = avahi_threaded_poll_new()))
     {
-        Log::Get(Log::ERROR) << "Failed to create Threaded poll object." << endl;
+        Log::Get(Log::ERROR) << "ServiceBrowser: Failed to create Threaded poll object." << endl;
         return false;
     }
 
@@ -79,6 +81,7 @@ bool ServiceBrowser::StartBrowser(const set<string>& setServices)
     avahi_client_new(avahi_threaded_poll_get(m_pThreadedPoll), AVAHI_CLIENT_NO_FAIL, client_callback, reinterpret_cast<void*>(this), &error);
     avahi_threaded_poll_start(m_pThreadedPoll);
 
+    Log::Get() << "ServiceBrowser: Started" << endl;
     return true;
 }
 
@@ -108,7 +111,7 @@ void ServiceBrowser::Stop()
     {
         avahi_threaded_poll_free(m_pThreadedPoll);
         m_pThreadedPoll = 0;
-
+        m_pPoster->Finished();
 //        if(m_pHandler)
 //        {   //only send if we are actually stopping not already stopped and now deleting
 //            wxCommandEvent event(wxEVT_BROWSE_FINISHED);
@@ -137,16 +140,16 @@ bool ServiceBrowser::Start(AvahiClient* pClient)
 
 void ServiceBrowser::ClientCallback(AvahiClient * pClient, AvahiClientState state)
 {
-    Log::Get(Log::DEBUG) << "ClientCallback" << endl;
+    Log::Get(Log::DEBUG) << "ServiceBrowser: ClientCallback" << endl;
     switch (state)
     {
         case AVAHI_CLIENT_FAILURE:
-            Log::Get(Log::ERROR) << "ClientCallback: failure" << endl;
+            Log::Get(Log::ERROR) << "ServiceBrowser: ClientCallback: failure" << endl;
             if (avahi_client_errno(pClient) == AVAHI_ERR_DISCONNECTED)
             {
                 int error;
                 /* We have been disconnected, so let reconnect */
-                Log::Get(Log::WARN) << "Avahi: Disconnected, reconnecting ..." << endl;
+                Log::Get(Log::WARN) << "ServiceBrowser:  Disconnected, reconnecting ..." << endl;
 
                 avahi_client_free(pClient);
                 m_pClient = NULL;
@@ -155,28 +158,28 @@ void ServiceBrowser::ClientCallback(AvahiClient * pClient, AvahiClientState stat
 
                 if (!(avahi_client_new(avahi_threaded_poll_get(m_pThreadedPoll), AVAHI_CLIENT_NO_FAIL, client_callback, reinterpret_cast<void*>(this), &error)))
                 {
-                    Log::Get(Log::ERROR) << "Failed to create client object: " << avahi_strerror(avahi_client_errno(m_pClient));// << endl;
+                    Log::Get(Log::ERROR) << "ServiceBrowser: Failed to create client object: " << avahi_strerror(avahi_client_errno(m_pClient));// << endl;
                     Stop();
 
                 }
             }
             else
             {
-                Log::Get(Log::ERROR) << "Server connection failure" << endl;
+                Log::Get(Log::ERROR) << "ServiceBrowser: Server connection failure" << endl;
                 Stop();
             }
             break;
         case AVAHI_CLIENT_S_REGISTERING:
         case AVAHI_CLIENT_S_RUNNING:
         case AVAHI_CLIENT_S_COLLISION:
-            Log::Get(Log::DEBUG) << "S_" << endl;
+            Log::Get(Log::DEBUG) << "ServiceBrowser: S_" << endl;
             if (!m_bBrowsing)
             {
                 Start(pClient);
             }
             break;
         case AVAHI_CLIENT_CONNECTING:
-            Log::Get() << "Waiting for daemon ..." << endl;
+            Log::Get() << "ServiceBrowser: Waiting for daemon ..." << endl;
             break;
     }
 
@@ -192,24 +195,26 @@ void ServiceBrowser::TypeCallback(AvahiIfIndex interface, AvahiProtocol protocol
 
                 if(m_setServices.find(sService) != m_setServices.end())
                 {
-                    Log::Get() << "Service '" << type << "' found" << endl;
-                    m_mServices.insert(make_pair(sService, new dnsService(sService)));
-
-                    AvahiServiceBrowser* psb = NULL;
-                    /* Create the service browser */
-                    if (!(psb = avahi_service_browser_new(m_pClient, interface, protocol, type, domain, (AvahiLookupFlags)0, browse_callback, reinterpret_cast<void*>(this))))
+                    Log::Get() << "ServiceBrowser: Service '" << type << "' found in domain '" << domain << "'" << endl;
+                    if(m_mServices.insert(make_pair(sService, new dnsService(sService))).second)
                     {
-                        Log::Get(Log::ERROR) << "Failed to create service browser" << endl;
-                    }
-                    else
-                    {
-                        m_setBrowser.insert(psb);
-                        m_nWaitingOn++;
+                            AvahiServiceBrowser* psb = NULL;
+                        /* Create the service browser */
+                        if (!(psb = avahi_service_browser_new(m_pClient, interface, protocol, type, domain, (AvahiLookupFlags)0, browse_callback, reinterpret_cast<void*>(this))))
+                        {
+                            Log::Get(Log::ERROR) << "ServiceBrowser: Failed to create service browser" << endl;
+                        }
+                        else
+                        {
+                            Log::Get(Log::DEBUG) << "ServiceBrowser: Service '" << type << "' browse" << endl;
+                            m_setBrowser.insert(psb);
+                            m_nWaitingOn++;
+                        }
                     }
                 }
                 else
                 {
-                    Log::Get(Log::DEBUG) << "Service '" << type << "' not for us" << endl;
+                    Log::Get(Log::DEBUG) << "ServiceBrowser: Service '" << type << "' not for us" << endl;
                 }
             }
             break;
@@ -217,14 +222,14 @@ void ServiceBrowser::TypeCallback(AvahiIfIndex interface, AvahiProtocol protocol
                 /* We're dirty and never remove the browser again */
                 break;
         case AVAHI_BROWSER_FAILURE:
-            Log::Get(Log::ERROR) << "service_type_browser failed" << endl;
+            Log::Get(Log::ERROR) << "ServiceBrowser: service_type_browser failed" << endl;
             Stop();
             break;
         case AVAHI_BROWSER_CACHE_EXHAUSTED:
-            Log::Get() << "(TypeBrowser) CACHE_EXHAUSTED" << endl;
+            Log::Get() << "ServiceBrowser: (TypeBrowser) CACHE_EXHAUSTED" << endl;
             break;
         case AVAHI_BROWSER_ALL_FOR_NOW:
-            Log::Get() << "(TypeBrowser) ALL_FOR_NOW" << endl;
+            Log::Get() << "ServiceBrowser: (TypeBrowser) ALL_FOR_NOW" << endl;
             CheckStop();
             break;
     }
@@ -236,7 +241,7 @@ void ServiceBrowser::BrowseCallback(AvahiServiceBrowser* pBrowser, AvahiIfIndex 
     switch (event)
     {
         case AVAHI_BROWSER_FAILURE:
-            Log::Get(Log::ERROR) << "Browser Failure: " << avahi_strerror(avahi_client_errno(m_pClient)) << endl;
+            Log::Get(Log::ERROR) << "ServiceBrowser: Browser Failure: " << avahi_strerror(avahi_client_errno(m_pClient)) << endl;
             Stop();
             break;
         case AVAHI_BROWSER_NEW:
@@ -244,7 +249,7 @@ void ServiceBrowser::BrowseCallback(AvahiServiceBrowser* pBrowser, AvahiIfIndex 
                 string sService(type);
                 string sName(name);
 
-                Log::Get() << "(Browser) NEW: service '" << name << "' of type '" << type << "' in domain '" << domain << "'" << endl;
+                Log::Get() << "ServiceBrowser: (Browser) NEW: service '" << name << "' of type '" << type << "' in domain '" << domain << "'" << endl;
 
                 /* We ignore the returned resolver object. In the callback
                    function we free it. If the server is terminated before
@@ -252,7 +257,7 @@ void ServiceBrowser::BrowseCallback(AvahiServiceBrowser* pBrowser, AvahiIfIndex 
                    the resolver for us. */
                 if (!(avahi_service_resolver_new(m_pClient, interface, protocol, name, type, domain, AVAHI_PROTO_UNSPEC, (AvahiLookupFlags)0, resolve_callback, reinterpret_cast<void*>(this))))
                 {
-                    Log::Get(Log::ERROR) << "Failed to resolve service " << name << ": " << avahi_strerror(avahi_client_errno(m_pClient)) << endl;
+                    Log::Get(Log::ERROR) << "ServiceBrowser: Failed to resolve service " << name << ": " << avahi_strerror(avahi_client_errno(m_pClient)) << endl;
                 }
                 else
                 {
@@ -261,23 +266,27 @@ void ServiceBrowser::BrowseCallback(AvahiServiceBrowser* pBrowser, AvahiIfIndex 
             }
             break;
         case AVAHI_BROWSER_REMOVE:
-            Log::Get() << "(Browser) REMOVE: service '" << name << "' of type '" << type << "' in domain '" << domain << "'" << endl;
+            Log::Get() << "ServiceBrowser: (Browser) REMOVE: service '" << name << "' of type '" << type << "' in domain '" << domain << "'" << endl;
             break;
         case AVAHI_BROWSER_ALL_FOR_NOW:
             {
-                Log::Get() << "(Browser) ALL_FOR_NOW" << endl;
+                Log::Get() << "ServiceBrowser: (Browser) '" << type << "' in domain '" << domain << "' ALL_FOR_NOW" << endl;
+                m_pPoster->AllForNow(type);
+
                 set<AvahiServiceBrowser*>::iterator itBrowser = m_setBrowser.find(pBrowser);
                 if(itBrowser != m_setBrowser.end())
                 {
                     avahi_service_browser_free((*itBrowser));
                     m_setBrowser.erase(itBrowser);
                 }
+
+
                 CheckStop();
             }
             break;
         case AVAHI_BROWSER_CACHE_EXHAUSTED:
             {
-                Log::Get() << "(Browser) CACHE_EXHAUSTED" << endl;
+                Log::Get() << "ServiceBrowser: (Browser) CACHE_EXHAUSTED" << endl;
             }
             break;
     }
@@ -295,7 +304,7 @@ void ServiceBrowser::ResolveCallback(AvahiServiceResolver* pResolver, AvahiResol
         switch (event)
         {
             case AVAHI_RESOLVER_FAILURE:
-                Log::Get(Log::ERROR) << "(Resolver) Failed to resolve service '" << name << "' of type '" << type << "' in domain '" << domain << "': " << avahi_strerror(avahi_client_errno(m_pClient)) << endl;
+                Log::Get(Log::ERROR) << "ServiceBrowser: (Resolver) Failed to resolve service '" << name << "' of type '" << type << "' in domain '" << domain << "': " << avahi_strerror(avahi_client_errno(m_pClient)) << endl;
                 break;
             case AVAHI_RESOLVER_FOUND:
             {
@@ -313,20 +322,14 @@ void ServiceBrowser::ResolveCallback(AvahiServiceResolver* pResolver, AvahiResol
                 {
                     string sPair(reinterpret_cast<char*>(avahi_string_list_get_text(pIterator)));
                     size_t nFind = sPair.find("=");
-                    if(nFind != std::string::npos)
+                    if(nFind != string::npos)
                     {
                         pInstance->mTxt.insert(make_pair(sPair.substr(0,nFind), sPair.substr(nFind+1)));
                     }
                 }
                 itService->second->lstInstances.push_back(pInstance);
-//                if(m_pHandler)
-//                {
-//
-//                    wxCommandEvent event(wxEVT_BROWSE_RESOLVED);
-//                    event.SetClientData(reinterpret_cast<void*>(pInstance));
-//                    wxPostEvent(m_pHandler, event);
-//                }
-                Log::Get() << "Instance '" << pInstance->sName << "' resolved at '" << pInstance->sHostIP << "'" << endl;
+                m_pPoster->InstanceResolved(pInstance);
+                Log::Get() << "ServiceBrowser: Instance '" << pInstance->sName << "' resolved at '" << pInstance->sHostIP << "'" << endl;
 
             }
         }
@@ -345,7 +348,19 @@ void ServiceBrowser::CheckStop()
     }
 }
 
+map<string, dnsService*>::const_iterator ServiceBrowser::GetServiceBegin()
+{
+    return m_mServices.begin();
+}
 
+map<string, dnsService*>::const_iterator ServiceBrowser::GetServiceEnd()
+{
+    return m_mServices.end();
+}
 
+map<string, dnsService*>::const_iterator ServiceBrowser::FindService(const string& sService)
+{
+    return m_mServices.find(sService);
+}
 
 #endif // __WXGTK

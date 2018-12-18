@@ -1,8 +1,8 @@
 #pragma once
 #include "flow.h"
+#include "dlldefine.h"
 
-
-class FlowAudio : public Flow
+class NMOS_EXPOSE FlowAudio : public Flow
 {
     public:
         FlowAudio(std::string sLabel, std::string sDescription, std::string sSourceId, std::string sDeviceId, unsigned int nSampleRate);

@@ -9,8 +9,10 @@
 #include <map>
 #include <list>
 
+#include "dlldefine.h"
 
-struct dnsInstance
+
+struct NMOS_EXPOSE dnsInstance
 {
     dnsInstance(){}
     dnsInstance(std::string sN) : sName(sN){}
@@ -26,7 +28,7 @@ struct dnsInstance
 };
 
 
-struct dnsService
+struct NMOS_EXPOSE dnsService
 {
     dnsService(){}
     dnsService(std::string ss) : sService(ss){}
@@ -44,7 +46,7 @@ struct dnsService
 
 };
 
-
+class ServiceBrowserEvent;
 
 
 static void client_callback(AvahiClient * pClient, AvahiClientState state, AVAHI_GCC_UNUSED void * userdata);
@@ -56,16 +58,22 @@ class ServiceBrowser
 {
 // Construction
     public:
-        ServiceBrowser();
-        ~ServiceBrowser();
+        ServiceBrowser(ServiceBrowserEvent* pPoster);
+        virtual ~ServiceBrowser();
 
 
         bool StartBrowser(const std::set<std::string>& setServices);
+
+
 
         void ClientCallback(AvahiClient* pClient, AvahiClientState state);
         void TypeCallback(AvahiIfIndex interface, AvahiProtocol protocol, AvahiBrowserEvent event, const char* type, const char* domain);
         void BrowseCallback(AvahiServiceBrowser* pBrowser, AvahiIfIndex interface, AvahiProtocol protocol, AvahiBrowserEvent event, const char *name, const char *type, const char *domain);
         void ResolveCallback(AvahiServiceResolver* pResolver, AvahiResolverEvent event,const char *name, const char *type, const char *domain, const char *host_name, const AvahiAddress *address, uint16_t port, AvahiStringList *txt);
+
+        std::map<std::string, dnsService*>::const_iterator GetServiceBegin();
+        std::map<std::string, dnsService*>::const_iterator GetServiceEnd();
+        std::map<std::string, dnsService*>::const_iterator FindService(const std::string& sService);
 
 
     protected:
@@ -75,6 +83,7 @@ class ServiceBrowser
         void Stop();
         void CheckStop();
 //        void OnStop(wxCommandEvent& event);
+        ServiceBrowserEvent* m_pPoster;
 
         AvahiThreadedPoll* m_pThreadedPoll;
         AvahiClient * m_pClient;

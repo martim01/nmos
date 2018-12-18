@@ -50,9 +50,13 @@ int main()
     NodeApi::Get().GetSenders().AddResource(pSender);
     NodeApi::Get().Commit();
 
-    NodeApi::Get().StartServices(8080);
+    NodeApi::Get().StartServices(8080, new ServiceBrowser());
 
 
+    getchar ();
+
+
+    NodeApi::Get().Register();
     getchar ();
 
     NodeApi::Get().StopServices();

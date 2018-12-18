@@ -16,7 +16,8 @@ bool Device::Commit()
     {   //something has changed
         m_json["type"] = TYPE[m_eType];
         m_json["node_id"] = m_sNodeId;
-
+        m_json["senders"] = Json::Value(Json::arrayValue);
+        m_json["receivers"] = Json::Value(Json::arrayValue);
         m_json["controls"] = Json::Value(Json::arrayValue);
         for(std::set<std::pair<std::string, std::string> >::iterator itControl = m_setControls.begin(); itControl != m_setControls.end(); ++itControl)
         {
