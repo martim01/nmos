@@ -12,7 +12,9 @@
 
 //(*Headers(wxnmosDialog)
 #include <wx/sizer.h>
+#include <wx/checkbox.h>
 #include <wx/listbox.h>
+#include <wx/button.h>
 #include <wx/dialog.h>
 #include <wx/timer.h>
 //*)
@@ -31,16 +33,22 @@ class wxnmosDialog: public wxDialog
         void OnAbout(wxCommandEvent& event);
         void OntimerHeartbeatTrigger(wxTimerEvent& event);
         void OnClose(wxCloseEvent& event);
+        void OnbtnQueryNodesClick(wxCommandEvent& event);
+        void OnchbxScrollClick(wxCommandEvent& event);
         //*)
 
         //(*Identifiers(wxnmosDialog)
+        static const long ID_BUTTON1;
+        static const long ID_CHECKBOX1;
         static const long ID_LISTBOX1;
         static const long ID_TIMER1;
         //*)
 
         //(*Declarations(wxnmosDialog)
         wxListBox* m_plbxLog;
+        wxCheckBox* m_pchbxScroll;
         wxBoxSizer* BoxSizer2;
+        wxButton* m_pbtnQueryNodes;
         wxBoxSizer* BoxSizer1;
         wxTimer m_timerHeartbeat;
         //*)
@@ -55,6 +63,7 @@ class wxnmosDialog: public wxDialog
         void Log(const wxString& sLog);
 
         int m_nRegisterState;
+        bool m_bScroll;
 
         DECLARE_EVENT_TABLE()
 };

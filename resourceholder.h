@@ -8,16 +8,23 @@ class NMOS_EXPOSE ResourceHolder
 {
     public:
         ResourceHolder(const std::string& sType);
+        ~ResourceHolder();
         const std::string& GetType() const
         {
             return m_sType;
+        }
+        void SetType(const std::string& sType)
+        {
+            m_sType = sType;
         }
 
         unsigned char GetVersion() const;
 
         void AddResource(Resource* pResource);
         void RemoveResource(Resource* pResource);
-        void RemoveReosource(std::string sUuid);
+        void RemoveResource(std::string sUuid);
+
+        void RemoveAllResources();
 
         virtual bool Commit();
 
@@ -26,7 +33,7 @@ class NMOS_EXPOSE ResourceHolder
         std::map<std::string, Resource*>::const_iterator GetResourceBegin() const;
         std::map<std::string, Resource*>::const_iterator GetResourceEnd() const;
         std::map<std::string, Resource*>::const_iterator FindResource(std::string sUuid) const;
-
+        size_t GetResourceCount() const;
     protected:
         void ResourceUpdated();
         std::string m_sType;

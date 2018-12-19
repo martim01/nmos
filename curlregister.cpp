@@ -5,6 +5,8 @@
 #include <thread>
 #include "eventposter.h"
 
+const std::string CurlRegister::STR_RESOURCE[7] = {"nodes", "devices", "sources", "flows", "senders", "receivers", "subscriptions"};
+
 
 static void PostThreaded(const std::string& sUrl, const std::string& sJson, CurlRegister* pRegister, long nUserType)
 {
@@ -20,11 +22,10 @@ static void DeleteThreaded(const std::string& sUrl, const std::string& sType, co
     pRegister->GetPoster()->CurlDone(nResponseCode, sResponse, nUserType);
 }
 
-static void QueryThreaded(const std::string& sBaseUrl, const std::string& sQueryPath, CurlRegister* pRegister, long nUserType)
+static void QueryThreaded(const std::string& sBaseUrl, NodeApi::enumResource eResource, const std::string& sQuery, ResourceHolder* pResults, CurlRegister* pRegister, long nUserType)
 {
-    std::string sResponse;
-    long nResponseCode = pRegister->Query(sBaseUrl, sQueryPath, sResponse);
-    pRegister->GetPoster()->CurlDone(nResponseCode, sResponse, nUserType);
+    long nResponseCode = pRegister->Query(sBaseUrl, eResource, sQuery, pResults);
+    pRegister->GetPoster()->CurlDone(nResponseCode, "", nUserType);
 }
 
 
@@ -169,22 +170,27 @@ long CurlRegister::Delete(const std::string& sUrl, const std::string& sType, con
 }
 
 
-void CurlRegister::Query(const std::string& sBaseUrl, const std::string& sQueryPath, long nUserType)
+void CurlRegister::Query(const std::string& sBaseUrl, NodeApi::enumResource eResource, const std::string& sQuery, ResourceHolder* pResults, long nUserType)
 {
-    std::thread threadPost(QueryThreaded, sBaseUrl, sQueryPath, this, nUserType);
+
+    std::thread threadPost(QueryThreaded, sBaseUrl, eResource, sQuery, pResults, this, nUserType);
     threadPost.detach();
 }
 
-long CurlRegister::Query(const std::string& sBaseUrl, const std::string& sQueryPath, std::string& sResponse)
+long CurlRegister::Query(const std::string& sBaseUrl, NodeApi::enumResource eResource, const std::string& sQuery, ResourceHolder* pResults)
 {
     char sError[CURL_ERROR_SIZE];
     CURLcode res;
     long nResponseCode(500);
 
+
+
     std::stringstream ssUrl;
-    ssUrl << sBaseUrl << "/" << sQueryPath;
+    ssUrl << sBaseUrl << "/" << STR_RESOURCE[eResource] << "/" << sQuery;
+
     Log::Get(Log::DEBUG) << "CurlRegister: Query: " << ssUrl.str() << std::endl;
 
+    std::string sResponse;
 
     CURL* pCurl = curl_easy_init();
     if(pCurl)
@@ -219,6 +225,8 @@ long CurlRegister::Query(const std::string& sBaseUrl, const std::string& sQueryP
         else
         {
             sResponse.assign(chunk.pMemory, chunk.nSize);
+            Log::Get(Log::DEBUG) << sResponse << std::endl;
+            ParseResults(eResource, sResponse, pResults);
             curl_easy_getinfo(pCurl, CURLINFO_RESPONSE_CODE, &nResponseCode);
         }
         curl_slist_free_all(headers);
@@ -228,6 +236,27 @@ long CurlRegister::Query(const std::string& sBaseUrl, const std::string& sQueryP
 }
 
 
+
+void CurlRegister::ParseResults(NodeApi::enumResource eResource, const std::string& sResponse, ResourceHolder* pResults)
+{
+    Json::Reader jsReader;
+    Json::Value jsResult;
+    if(jsReader.parse(sResponse, jsResult))
+    {
+
+        for(Json::ArrayIndex n = 0; n < jsResult.size(); n++)
+        {
+
+            Resource* pResource = new Resource(jsResult[n]);
+            pResults->AddResource(pResource);
+        }
+        pResults->Commit();
+    }
+    else
+    {
+        Log::Get(Log::ERROR) << "Query: Could not parse response" << std::endl;
+    }
+}
 
 
 

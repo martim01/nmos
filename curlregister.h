@@ -1,6 +1,7 @@
 #pragma once
 #include <curl/curl.h>
 #include <string>
+#include "nodeapi.h"
 
 class CurlEvent;
 /** @brief Struct that keeps the return Curl data in memory until we've finished getting stuff
@@ -66,14 +67,16 @@ class CurlRegister
         void Delete(const std::string& sBaseUrl, const std::string& sType, const std::string& sId, long nUserType);
         long Delete(const std::string& sBaseUrl, const std::string& sType, const std::string& sId, std::string& sResponse);
 
-        void Query(const std::string& sBaseUrl, const std::string& sQueryPath, long nUserType);
-        long Query(const std::string& sBaseUrl, const std::string& sQueryPath, std::string& sResponse);
+        void Query(const std::string& sBaseUrl, NodeApi::enumResource eResource, const std::string& sQuery, ResourceHolder* pResults, long nUserType);
+        long Query(const std::string& sBaseUrl, NodeApi::enumResource eResource, const std::string& sQuery, ResourceHolder* pResults);
 
     private:
 
         //void PostStatic(const std::string& sUrl, const std::string& sJson, EventPoster* pPoster);
-
+        void ParseResults(NodeApi::enumResource eResource, const std::string& sResponse, ResourceHolder* pResults);
         EventPoster* m_pPoster;
+
+        static const std::string STR_RESOURCE[7];
 
 };
 

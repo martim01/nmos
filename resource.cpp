@@ -24,6 +24,27 @@ Resource::Resource()
     UpdateVersionTime();
 }
 
+Resource::Resource(const Json::Value& jsValue)
+{
+    m_json = jsValue;
+    if(m_json["id"].isString())
+    {
+        m_sId = m_json["id"].asString();
+    }
+    if(m_json["label"].isString())
+    {
+        m_sLabel = m_json["label"].asString();
+    }
+    if(m_json["description"].isString())
+    {
+        m_sDescription = m_json["description"].asString();
+    }
+    if(m_json["version"].isString())
+    {
+        m_sVersion = m_json["version"].asString();
+    }
+}
+
 void Resource::AddTag(std::string sTag)
 {
     m_lstTag.push_back(sTag);
@@ -127,4 +148,25 @@ void Resource::UpdateVersionTime()
 const Json::Value& Resource::GetJson() const
 {
     return m_json;
+}
+
+
+const std::string& Resource::GetId() const
+{
+    return m_sId;
+}
+
+const std::string& Resource::GetLabel() const
+{
+    return m_sLabel;
+}
+
+const std::string& Resource::GetDescription() const
+{
+    return m_sDescription;
+}
+
+const std::string& Resource::GetVersion() const
+{
+    return m_sVersion;
 }

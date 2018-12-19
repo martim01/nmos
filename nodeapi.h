@@ -22,11 +22,10 @@ class NMOS_EXPOSE NodeApi
         void Init(unsigned short nApiPort, const std::string& sLabel, const std::string& sDescription);
         bool StartServices(EventPoster* pPoster);
         void StopServices();
-
-        bool BrowseForRegistrationNode();
-
         bool Commit();
 
+
+        bool BrowseForRegistrationNode();
         bool FindRegistrationNode();
 
         Self& GetSelf();
@@ -35,6 +34,7 @@ class NMOS_EXPOSE NodeApi
         ResourceHolder& GetFlows();
         ResourceHolder& GetReceivers();
         ResourceHolder& GetSenders();
+        const ResourceHolder& GetQueryResults();
 
         int GetJson(std::string sPath, std::string& sResponse);
         int PutJson(std::string sPath, std::string sJson, std::string& sRepsonse);
@@ -42,19 +42,18 @@ class NMOS_EXPOSE NodeApi
         void RegisterThreaded();
         void UnregisterThreaded();
 
-        //These are all called in the thread and so don't need to be called by the user
+
         int RegisterSimple();
         int UnregisterSimple();
         long RegistrationHeartbeat();
-
-
 
 
         bool IsRunning();
         void StopRun();
 
 
-        bool Query(const std::string& sQueryPath);
+        enum enumResource{NR_NODES, NR_DEVICES, NR_SOURCES, NR_FLOWS, NR_SENDERS, NR_RECEIVERS, NR_SUBSCRIPTIONS};
+        bool Query(enumResource eResource, const std::string& sQuery);
 
         enum {REG_FAILED = 0, REG_START, REG_DEVICES, REG_SOURCES, REG_FLOWS, REG_SENDERS, REG_RECEIVERS, REG_DONE};
         enum {CURL_REGISTER=1, CURL_HEARTBEAT, CURL_DELETE, CURL_QUERY};
@@ -108,6 +107,8 @@ class NMOS_EXPOSE NodeApi
         ResourceHolder m_sources;
         ResourceHolder m_flows;
 
+        ResourceHolder m_query;
+
 
         std::vector<std::string> m_vPath;
         std::string m_sRegistrationNode;
@@ -127,5 +128,5 @@ class NMOS_EXPOSE NodeApi
         enum {BASE=0, NMOS=1, API_TYPE=2,VERSION=3,ENDPOINT=4, RESOURCE=5};
         enum {SZ_BASE=1, SZ_NMOS=2, SZ_API_TYPE=3,SZ_VERSION=4,SZ_ENDPOINT=5};
 
-
+        static const std::string STR_RESOURCE[7];
 };

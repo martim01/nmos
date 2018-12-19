@@ -22,6 +22,7 @@
 #endif // __GNU__
 using namespace std;
 
+const std::string NodeApi::STR_RESOURCE[7] = {"node", "device", "source", "flow", "sender", "receiver", "subscription"};
 
 static bool Reregister(EventPoster* pPoster)
 {
@@ -96,6 +97,7 @@ m_senders("sender"),
 m_receivers("receiver"),
 m_sources("source"),
 m_flows("flow"),
+m_query("query"),
 m_pNodeApiPublisher(0),
 m_pRegistrationBrowser(0),
 m_pRegisterCurl(0),
@@ -848,11 +850,20 @@ bool NodeApi::FindQueryNode()
     return true;
 }
 
-bool NodeApi::Query(const std::string& sQueryPath)
+const ResourceHolder& NodeApi::GetQueryResults()
 {
+    Log::Get() << "GetQueryResults: " << m_query.GetResourceCount() << " " << (int)&m_query << std::endl;
+    return m_query;
+}
+
+bool NodeApi::Query(NodeApi::enumResource eResource, const std::string& sQuery)
+{
+    m_query.RemoveAllResources();
+    m_query.SetType(STR_RESOURCE[eResource]);
+
     if(m_pRegisterCurl && FindQueryNode())
     {
-        m_pRegisterCurl->Query(m_sQueryNode, sQueryPath, CURL_QUERY);
+        m_pRegisterCurl->Query(m_sQueryNode, eResource, sQuery, &m_query, CURL_QUERY);
     }
 }
 

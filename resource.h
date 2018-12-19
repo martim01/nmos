@@ -9,11 +9,18 @@ class NMOS_EXPOSE Resource
     public:
         Resource(std::string sLabel, std::string sDescription);
         Resource();
+        Resource(const Json::Value& jsValue);
+
         virtual ~Resource(){}
         void AddTag(std::string sTag);
 
-        std::string GetId() const
-        {   return m_sId;   }
+        const std::string& GetId() const;
+        const std::string& GetLabel() const;
+        const std::string& GetDescription() const;
+        const std::string& GetVersion() const;
+        //std::string GetJsonValue() const;
+
+
 
         const Json::Value& GetJson() const;
         virtual bool Commit();

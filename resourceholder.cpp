@@ -1,6 +1,8 @@
 #include "resourceholder.h"
 #include "resource.h"
 #include <iostream>
+#include "log.h"
+
 
 ResourceHolder::ResourceHolder(const std::string& sType) :
     m_sType(sType),
@@ -8,6 +10,11 @@ ResourceHolder::ResourceHolder(const std::string& sType) :
     m_json(Json::arrayValue)
 {
 
+}
+
+ResourceHolder::~ResourceHolder()
+{
+    RemoveAllResources();
 }
 
 void ResourceHolder::ResourceUpdated()
@@ -40,11 +47,11 @@ void ResourceHolder::RemoveResource(Resource* pResource)
 {
     if(pResource)
     {
-        RemoveReosource(pResource->GetId());
+        RemoveResource(pResource->GetId());
     }
 }
 
-void ResourceHolder::RemoveReosource(std::string sUuid)
+void ResourceHolder::RemoveResource(std::string sUuid)
 {
     std::map<std::string, Resource*>::iterator itResource = m_mResourceStaging.find(sUuid);
     if(itResource != m_mResourceStaging.end())
@@ -93,4 +100,20 @@ std::map<std::string, Resource*>::const_iterator ResourceHolder::GetResourceEnd(
 std::map<std::string, Resource*>::const_iterator ResourceHolder::FindResource(std::string sUuid) const
 {
     return m_mResource.find(sUuid);
+}
+
+
+void ResourceHolder::RemoveAllResources()
+{
+    Log::Get(Log::DEBUG) << "ResourceHolder: RemoveAllResources" << std::endl;
+    for(std::map<std::string, Resource*>::iterator itResource = m_mResource.begin(); itResource != m_mResource.end(); ++itResource)
+    {
+        delete itResource->second;
+    }
+    m_mResource.clear();
+}
+
+size_t ResourceHolder::GetResourceCount() const
+{
+    return m_mResource.size();
 }

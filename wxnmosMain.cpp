@@ -51,6 +51,8 @@ wxString wxbuildinfo(wxbuildinfoformat format)
 }
 
 //(*IdInit(wxnmosDialog)
+const long wxnmosDialog::ID_BUTTON1 = wxNewId();
+const long wxnmosDialog::ID_CHECKBOX1 = wxNewId();
 const long wxnmosDialog::ID_LISTBOX1 = wxNewId();
 const long wxnmosDialog::ID_TIMER1 = wxNewId();
 //*)
@@ -63,8 +65,17 @@ END_EVENT_TABLE()
 wxnmosDialog::wxnmosDialog(wxWindow* parent,wxWindowID id)
 {
     //(*Initialize(wxnmosDialog)
+    wxBoxSizer* BoxSizer3;
+
     Create(parent, id, _("wxWidgets app"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE, _T("id"));
-    BoxSizer1 = new wxBoxSizer(wxHORIZONTAL);
+    BoxSizer1 = new wxBoxSizer(wxVERTICAL);
+    BoxSizer3 = new wxBoxSizer(wxHORIZONTAL);
+    m_pbtnQueryNodes = new wxButton(this, ID_BUTTON1, _("Query Nodes"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON1"));
+    BoxSizer3->Add(m_pbtnQueryNodes, 0, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    m_pchbxScroll = new wxCheckBox(this, ID_CHECKBOX1, _("Scroll"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX1"));
+    m_pchbxScroll->SetValue(true);
+    BoxSizer3->Add(m_pchbxScroll, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    BoxSizer1->Add(BoxSizer3, 0, wxALL|wxEXPAND, 5);
     BoxSizer2 = new wxBoxSizer(wxVERTICAL);
     m_plbxLog = new wxListBox(this, ID_LISTBOX1, wxDefaultPosition, wxSize(1280,600), 0, 0, 0, wxDefaultValidator, _T("ID_LISTBOX1"));
     BoxSizer2->Add(m_plbxLog, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
@@ -74,6 +85,8 @@ wxnmosDialog::wxnmosDialog(wxWindow* parent,wxWindowID id)
     BoxSizer1->Fit(this);
     BoxSizer1->SetSizeHints(this);
 
+    Connect(ID_BUTTON1,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxnmosDialog::OnbtnQueryNodesClick);
+    Connect(ID_CHECKBOX1,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&wxnmosDialog::OnchbxScrollClick);
     Connect(ID_TIMER1,wxEVT_TIMER,(wxObjectEventFunction)&wxnmosDialog::OntimerHeartbeatTrigger);
     Connect(wxID_ANY,wxEVT_CLOSE_WINDOW,(wxObjectEventFunction)&wxnmosDialog::OnClose);
     //*)
@@ -86,6 +99,7 @@ wxnmosDialog::wxnmosDialog(wxWindow* parent,wxWindowID id)
 
     Log::Get().SetOutput(new wxLogOutput(this));
 
+    m_bScroll = true;
 
     NodeApi::Get().Init(8080, "host1", "host1");
     NodeApi::Get().GetSelf().AddApiVersion("v1.2");
@@ -146,7 +160,10 @@ void wxnmosDialog::OnAbout(wxCommandEvent& event)
 void wxnmosDialog::Log(const wxString& sLog)
 {
     int nItem = m_plbxLog->Append(sLog);
-    m_plbxLog->SetFirstItem(nItem);
+    if(m_bScroll)
+    {
+        m_plbxLog->SetFirstItem(nItem);
+    }
 }
 
 void wxnmosDialog::OnBrowserResolved(wxCommandEvent& event)
@@ -170,6 +187,16 @@ void wxnmosDialog::OnRegistrationError(wxCommandEvent& event)
 
 void wxnmosDialog::OnCurlDone(wxCommandEvent& event)
 {
+    switch(event.GetExtraLong())
+    {
+        case NodeApi::CURL_QUERY:
+            for(std::map<std::string, Resource*>::const_iterator itResource = NodeApi::Get().GetQueryResults().GetResourceBegin(); itResource != NodeApi::Get().GetQueryResults().GetResourceEnd(); ++itResource)
+            {
+                Log(wxString::Format(wxT("QUERY: %s found %s"), wxString::FromAscii(NodeApi::Get().GetQueryResults().GetType().c_str()).c_str(), wxString::FromAscii(itResource->first.c_str()).c_str()));
+            }
+            break;
+
+    }
 }
 
 
@@ -194,4 +221,14 @@ void wxnmosDialog::OnClose(wxCloseEvent& event)
     NodeApi::Get().StopServices();
     NodeApi::Get().UnregisterSimple();
     event.Skip();
+}
+
+void wxnmosDialog::OnbtnQueryNodesClick(wxCommandEvent& event)
+{
+    NodeApi::Get().Query(NodeApi::NR_NODES, "");
+}
+
+void wxnmosDialog::OnchbxScrollClick(wxCommandEvent& event)
+{
+    m_bScroll = event.IsChecked();
 }
