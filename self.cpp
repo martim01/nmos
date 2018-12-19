@@ -14,13 +14,7 @@ Self::Self(string sHostname, string sUrl,string sLabel, string sDescription) : R
 
 Self::~Self()
 {
-    for(set<endpoint>::iterator itEndpoint = m_setEndpoint.begin(); itEndpoint != m_setEndpoint.end(); ++itEndpoint)
-    {
-        if(itEndpoint->pServer)
-        {
-            delete itEndpoint->pServer;
-        }
-    }
+    StopServers();
 }
 
 void Self::Init(std::string sHostname, std::string sUrl,std::string sLabel, std::string sDescription)
@@ -51,26 +45,19 @@ void Self::RemoveApiVersion(string sVersion)
 
 void Self::AddEndpoint(string sHost, unsigned int nPort, bool bSecure)
 {
-    MicroServer* pServer = new MicroServer();
-    pair<set<endpoint>::iterator, bool> ins = m_setEndpoint.insert(endpoint(sHost, nPort, bSecure, pServer));
-    if(ins.second == false)
-    {
-        delete pServer;
-    }
+    pair<set<endpoint>::iterator, bool> ins = m_setEndpoint.insert(endpoint(sHost, nPort, bSecure));
     UpdateVersionTime();
 }
 
 void Self::RemoveEndpoint(string sHost, unsigned int nPort)
 {
-    set<endpoint>::iterator itEndpoint = m_setEndpoint.find(endpoint(sHost, nPort, false,0));
-    if(itEndpoint != m_setEndpoint.end())
+    map<unsigned short, MicroServer*>::iterator itServer = m_mServers.find(nPort);
+    if(itServer != m_mServers.end())
     {
-        if(itEndpoint->pServer)
-        {
-            delete itEndpoint->pServer;
-        }
-        m_setEndpoint.erase(itEndpoint);
+        delete itServer->second;
+        m_mServers.erase(itServer);
     }
+    m_setEndpoint.erase(endpoint(sHost, nPort, false));
     UpdateVersionTime();
 }
 
@@ -204,9 +191,12 @@ bool Self::StartServers()
 {
     for(set<endpoint>::iterator itEndpoint = m_setEndpoint.begin(); itEndpoint != m_setEndpoint.end(); ++itEndpoint)
     {
-        if(itEndpoint->pServer)
+        map<unsigned short, MicroServer*>::iterator itServer = m_mServers.find(itEndpoint->nPort);
+        if(itServer == m_mServers.end())
         {
-            itEndpoint->pServer->Init(itEndpoint->nPort);
+            MicroServer* pServer(new MicroServer());
+            m_mServers.insert(make_pair(itEndpoint->nPort, pServer));
+            pServer->Init(itEndpoint->nPort);
         }
     }
     return true;
@@ -215,13 +205,12 @@ bool Self::StartServers()
 
 bool Self::StopServers()
 {
-    for(set<endpoint>::iterator itEndpoint = m_setEndpoint.begin(); itEndpoint != m_setEndpoint.end(); ++itEndpoint)
+    for(map<unsigned short, MicroServer*>::iterator itServer = m_mServers.begin(); itServer != m_mServers.end(); ++itServer)
     {
-        if(itEndpoint->pServer)
-        {
-            itEndpoint->pServer->Stop();
-        }
+        itServer->second->Stop();
+        delete itServer->second;
     }
+    m_mServers.clear();
     return true;
 }
 

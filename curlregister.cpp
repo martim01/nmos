@@ -3,14 +3,63 @@
 #include <cstring>
 #include "log.h"
 #include <thread>
-#include "curlevent.h"
+#include "eventposter.h"
 
-static void PostStatic(const std::string& sUrl, const std::string& sJson, CurlEvent* pPoster, long nUserType)
+
+static void PostThreaded(const std::string& sUrl, const std::string& sJson, CurlRegister* pRegister, long nUserType)
 {
+    std::string sResponse;
+    long nResponseCode = pRegister->Post(sUrl, sJson, sResponse);
+    pRegister->GetPoster()->CurlDone(nResponseCode, sResponse, nUserType);
+}
+
+static void DeleteThreaded(const std::string& sUrl, const std::string& sType, const std::string& sId, CurlRegister* pRegister, long nUserType)
+{
+    std::string sResponse;
+    long nResponseCode = pRegister->Delete(sUrl, sType, sId, sResponse);
+    pRegister->GetPoster()->CurlDone(nResponseCode, sResponse, nUserType);
+}
+
+static void QueryThreaded(const std::string& sBaseUrl, const std::string& sQueryPath, CurlRegister* pRegister, long nUserType)
+{
+    std::string sResponse;
+    long nResponseCode = pRegister->Query(sBaseUrl, sQueryPath, sResponse);
+    pRegister->GetPoster()->CurlDone(nResponseCode, sResponse, nUserType);
+}
+
+
+CurlRegister::CurlRegister(EventPoster* pPoster) :
+    m_pPoster(pPoster)
+{
+
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+
+}
+
+CurlRegister::~CurlRegister()
+{
+    curl_global_cleanup();
+}
+
+EventPoster* CurlRegister::GetPoster()
+{
+    return m_pPoster;
+}
+
+void CurlRegister::Post(const std::string& sBaseUrl, const std::string& sJson, long nUserType)
+{
+    std::thread threadPost(PostThreaded, sBaseUrl, sJson, this, nUserType);
+    threadPost.detach();
+}
+
+long CurlRegister::Post(const std::string& sUrl, const std::string& sJson, std::string& sResponse)
+{
+    Log::Get(Log::DEBUG) << "CurlRegister: Post '" << sUrl << "'" << std::endl;
+    Log::Get(Log::DEBUG) << "CurlRegster: Json '" << sJson << "'" << std::endl;
+
     char sError[CURL_ERROR_SIZE];
     CURLcode res;
     long nResponseCode(500);
-    std::string sResponse;
 
     CURL* pCurl = curl_easy_init();
     if(pCurl)
@@ -51,16 +100,31 @@ static void PostStatic(const std::string& sUrl, const std::string& sJson, CurlEv
         curl_slist_free_all(headers);
         curl_easy_cleanup(pCurl);
     }
-    pPoster->CurlDone(nResponseCode, sResponse, nUserType);
+    return nResponseCode;
 }
 
 
-static void DeleteStatic(const std::string& sUrl, CurlEvent* pPoster, long nUserType)
+
+
+void CurlRegister::Delete(const std::string& sUrl, const std::string& sType, const std::string& sId, long nUserType)
 {
+    std::thread threadPost(DeleteThreaded, sUrl, sType, sId, this, nUserType);
+    threadPost.detach();
+}
+
+
+
+long CurlRegister::Delete(const std::string& sUrl, const std::string& sType, const std::string& sId, std::string& sResponse)
+{
+    std::stringstream ssUrl;
+    ssUrl << sUrl << "/" << sType << "/" << sId;
+    Log::Get(Log::DEBUG) << "CurlRegister: Delete " << ssUrl.str() << std::endl;
+
+
     char sError[CURL_ERROR_SIZE];
     CURLcode res;
     long nResponseCode(500);
-    std::string sResponse;
+
 
     CURL* pCurl = curl_easy_init();
     if(pCurl)
@@ -76,7 +140,7 @@ static void DeleteStatic(const std::string& sUrl, CurlEvent* pPoster, long nUser
         MemoryStruct chunk;
 
         /* what call to write: */
-        curl_easy_setopt(pCurl, CURLOPT_URL, sUrl.c_str());
+        curl_easy_setopt(pCurl, CURLOPT_URL, ssUrl.str().c_str());
         curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &chunk);
 
         struct curl_slist *headers = NULL;
@@ -101,18 +165,26 @@ static void DeleteStatic(const std::string& sUrl, CurlEvent* pPoster, long nUser
         curl_slist_free_all(headers);
         curl_easy_cleanup(pCurl);
     }
-    pPoster->CurlDone(nResponseCode, sResponse, nUserType);
+    return nResponseCode;
 }
 
 
+void CurlRegister::Query(const std::string& sBaseUrl, const std::string& sQueryPath, long nUserType)
+{
+    std::thread threadPost(QueryThreaded, sBaseUrl, sQueryPath, this, nUserType);
+    threadPost.detach();
+}
 
-
-static void QueryStatic(const std::string& sUrl, CurlEvent* pPoster, long nUserType)
+long CurlRegister::Query(const std::string& sBaseUrl, const std::string& sQueryPath, std::string& sResponse)
 {
     char sError[CURL_ERROR_SIZE];
     CURLcode res;
     long nResponseCode(500);
-    std::string sResponse;
+
+    std::stringstream ssUrl;
+    ssUrl << sBaseUrl << "/" << sQueryPath;
+    Log::Get(Log::DEBUG) << "CurlRegister: Query: " << ssUrl.str() << std::endl;
+
 
     CURL* pCurl = curl_easy_init();
     if(pCurl)
@@ -128,7 +200,7 @@ static void QueryStatic(const std::string& sUrl, CurlEvent* pPoster, long nUserT
         MemoryStruct chunk;
 
         /* what call to write: */
-        curl_easy_setopt(pCurl, CURLOPT_URL, sUrl.c_str());
+        curl_easy_setopt(pCurl, CURLOPT_URL, ssUrl.str().c_str());
         curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &chunk);
 
         struct curl_slist *headers = NULL;
@@ -152,61 +224,8 @@ static void QueryStatic(const std::string& sUrl, CurlEvent* pPoster, long nUserT
         curl_slist_free_all(headers);
         curl_easy_cleanup(pCurl);
     }
-    pPoster->CurlDone(nResponseCode, sResponse, nUserType);
+    return nResponseCode;
 }
-
-
-CurlRegister::CurlRegister(CurlEvent* pPoster) :
-    m_pPoster(pPoster)
-{
-
-    curl_global_init(CURL_GLOBAL_DEFAULT);
-
-}
-
-CurlRegister::~CurlRegister()
-{
-    if(m_pPoster)
-    {
-        delete m_pPoster;
-    }
-    curl_global_cleanup();
-}
-
-
-void CurlRegister::Post(const std::string& sUrl, const std::string& sJson, long nUserType)
-{
-    Log::Get(Log::DEBUG) << "CurlRegister: Post '" << sUrl << "'" << std::endl;
-    Log::Get(Log::DEBUG) << "CurlRegster: Json '" << sJson << "'" << std::endl;
-    std::thread threadPost(PostStatic, sUrl, sJson, m_pPoster, nUserType);
-    threadPost.detach();
-}
-
-
-
-
-void CurlRegister::Delete(const std::string& sUrl, const std::string& sType, const std::string& sId, long nUserType)
-{
-
-    std::stringstream ssUrl;
-    ssUrl << sUrl << "/" << sType << "/" << sId;
-
-    Log::Get(Log::DEBUG) << "CurlRegister: Delete " << ssUrl.str() << std::endl;
-    std::thread threadPost(PostStatic, ssUrl.str(), "", m_pPoster, nUserType);
-    threadPost.detach();
-}
-
-
-void CurlRegister::Query(const std::string& sBaseUrl, const std::string& sQueryPath, long nUserType)
-{
-    std::stringstream ssUrl;
-    ssUrl << sBaseUrl << "/" << sQueryPath;
-
-    Log::Get(Log::DEBUG) << "CurlRegister: Query: " << ssUrl.str() << std::endl;
-    std::thread threadPost(QueryStatic, ssUrl.str(), m_pPoster, nUserType);
-    threadPost.detach();
-}
-
 
 
 

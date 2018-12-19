@@ -4,12 +4,14 @@
 #include <vector>
 #include <string>
 #include "dlldefine.h"
+#include <mutex>
 
 class ServiceBrowser;
 class ServicePublisher;
 class ServiceBrowserEvent;
 class CurlRegister;
 class CurlEvent;
+class EventPoster;
 
 class NMOS_EXPOSE NodeApi
 {
@@ -18,13 +20,14 @@ class NMOS_EXPOSE NodeApi
         static NodeApi& Get();
 
         void Init(unsigned short nApiPort, const std::string& sLabel, const std::string& sDescription);
-
-        bool StartServices(ServiceBrowserEvent* pPoster, CurlEvent* pCurlPoster);
+        bool StartServices(EventPoster* pPoster);
         void StopServices();
+
+        bool BrowseForRegistrationNode();
 
         bool Commit();
 
-        bool BrowseForRegistrationNode(ServiceBrowserEvent* pPoster);
+        bool FindRegistrationNode();
 
         Self& GetSelf();
         ResourceHolder& GetSources();
@@ -36,13 +39,20 @@ class NMOS_EXPOSE NodeApi
         int GetJson(std::string sPath, std::string& sResponse);
         int PutJson(std::string sPath, std::string sJson, std::string& sRepsonse);
 
-        int Register();
-        bool RegistrationHeartbeat();
-        int Unregister();
-        int GetRegistrationStatus() const
-        {
-            return m_nRegisterNext;
-        }
+        void RegisterThreaded();
+        void UnregisterThreaded();
+
+        //These are all called in the thread and so don't need to be called by the user
+        int RegisterSimple();
+        int UnregisterSimple();
+        long RegistrationHeartbeat();
+
+
+
+
+        bool IsRunning();
+        void StopRun();
+
 
         bool Query(const std::string& sQueryPath);
 
@@ -79,19 +89,19 @@ class NMOS_EXPOSE NodeApi
         Json::Value GetJsonError(unsigned long nCode = 404, std::string sError="Resource not found");
 
 
-        bool StartRegistration();
-        void RegisterResources(ResourceHolder& holder, ResourceHolder& next);
+
+        long RegisterResources(ResourceHolder& holder);
+        long RegisterResource(const std::string& sType, const Json::Value& json);
 
         bool StartUnregistration();
-        void UnregisterResources(ResourceHolder& holder, ResourceHolder& next);
-
-        bool RegisterSelf();
-
-        bool RegisterResource(const std::string& sType, const Json::Value& json);
+        void UnregisterResources(ResourceHolder& holder);
         bool UnregisterResource(const std::string& sType, const std::string& sId);
 
-        Self m_self;
+        bool FindQueryNode();
 
+
+
+        Self m_self;
         ResourceHolder m_devices;
         ResourceHolder m_senders;
         ResourceHolder m_receivers;
@@ -107,8 +117,12 @@ class NMOS_EXPOSE NodeApi
         ServiceBrowser* m_pRegistrationBrowser;
 
         CurlRegister* m_pRegisterCurl;
-        unsigned int m_nRegisterNext;
-        std::map<std::string, Resource*>::const_iterator m_itRegisterNext;
+        unsigned int m_nRegistrationStatus;
+
+        std::mutex m_mutex;
+
+        bool m_bRun;
+        EventPoster* m_pPoster;
 
         enum {BASE=0, NMOS=1, API_TYPE=2,VERSION=3,ENDPOINT=4, RESOURCE=5};
         enum {SZ_BASE=1, SZ_NMOS=2, SZ_API_TYPE=3,SZ_VERSION=4,SZ_ENDPOINT=5};

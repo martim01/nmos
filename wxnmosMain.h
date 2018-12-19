@@ -48,6 +48,7 @@ class wxnmosDialog: public wxDialog
         void OnBrowserResolved(wxCommandEvent& event);
         void OnBrowserAllForNow(wxCommandEvent& event);
         void OnBrowserFinished(wxCommandEvent& event);
+        void OnRegistrationError(wxCommandEvent& event);
         void OnLog(wxCommandEvent& event);
         void OnCurlDone(wxCommandEvent& event);
 

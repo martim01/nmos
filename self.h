@@ -11,7 +11,7 @@ class MicroServer;
 
 struct endpoint
 {
-    endpoint(std::string sH, unsigned int nP, bool bP, MicroServer* pS) : sHost(sH), nPort(nP), bSecure(bP), pServer(pS){}
+    endpoint(std::string sH, unsigned int nP, bool bP) : sHost(sH), nPort(nP), bSecure(bP){}
     bool operator<(const endpoint& endp) const
     {
         return (sHost < endp.sHost || (sHost == endp.sHost && nPort < endp.nPort));
@@ -40,7 +40,6 @@ struct endpoint
     std::string sHost;
     unsigned int nPort;
     bool bSecure;
-    MicroServer* pServer;
 };
 
 class NMOS_EXPOSE Self : public Resource
@@ -135,5 +134,7 @@ class NMOS_EXPOSE Self : public Resource
         std::map<std::string, std::string> m_mService;
         std::map<std::string, interface> m_mInterface;
         std::map<std::string, clock> m_mClock;
+
+        std::map<unsigned short, MicroServer*> m_mServers;
 
 };

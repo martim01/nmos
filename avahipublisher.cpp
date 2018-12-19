@@ -276,20 +276,29 @@ void ServicePublisher::Modify()
 {
     if(m_pThreadedPoll)
     {
-        avahi_threaded_poll_lock(m_pThreadedPoll);
-         /* If the server is currently running, we need to remove our
-         * service and create it anew */
-        if (m_pClient && avahi_client_get_state(m_pClient) == AVAHI_CLIENT_S_RUNNING)
+        AvahiStringList* pList = GetTxtList();
+        if(!pList)
         {
-            /* Remove the old services */
-            if (m_pGroup)
-            {
-                avahi_entry_group_reset(m_pGroup);
-            }
-            /* And create them again with the new name */
-            CreateServices();
+            Log::Get(Log::ERROR) << "ServicePublisher: Failed to create list" << endl;
         }
-        avahi_threaded_poll_unlock(m_pThreadedPoll);
+        else
+        {
+            int ret;
+            if ((ret = avahi_entry_group_update_service_txt_strlst(m_pGroup, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, (AvahiPublishFlags)0, m_psName, m_sService.c_str(), NULL, pList)) < 0)
+            {
+                if (ret == AVAHI_ERR_COLLISION)
+                {
+                    return;
+                }
+                else
+                {
+                    Log::Get(Log::ERROR) << "ServicePublisher: Failed to update '" << m_sService << "' service: " << avahi_strerror(ret) << endl;
+                    ThreadQuit();
+                    return;
+                }
+            }
+            avahi_string_list_free(pList);
+        }
     }
 }
 

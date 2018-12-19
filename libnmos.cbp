@@ -56,11 +56,11 @@
 		<Unit filename="avahibrowser.h" />
 		<Unit filename="avahipublisher.cpp" />
 		<Unit filename="avahipublisher.h" />
-		<Unit filename="curlevent.h" />
 		<Unit filename="curlregister.cpp" />
 		<Unit filename="curlregister.h" />
 		<Unit filename="device.cpp" />
 		<Unit filename="device.h" />
+		<Unit filename="eventposter.h" />
 		<Unit filename="flow.cpp" />
 		<Unit filename="flow.h" />
 		<Unit filename="flowaudio.cpp" />
@@ -83,6 +83,7 @@
 		<Unit filename="flowvideoraw.h" />
 		<Unit filename="log.cpp" />
 		<Unit filename="log.h" />
+		<Unit filename="mdns.h" />
 		<Unit filename="microserver.cpp" />
 		<Unit filename="microserver.h" />
 		<Unit filename="nodeapi.cpp" />

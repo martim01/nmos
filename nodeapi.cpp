@@ -6,7 +6,10 @@
 #include "avahibrowser.h"
 #include "log.h"
 #include "curlregister.h"
+#include "eventposter.h"
 #include <thread>
+#include <chrono>
+#include "mdns.h"
 
 #ifdef __GNU__
 #include <unistd.h>
@@ -19,6 +22,67 @@
 #endif // __GNU__
 using namespace std;
 
+
+static bool Reregister(EventPoster* pPoster)
+{
+    if(NodeApi::Get().RegisterSimple() != NodeApi::REG_DONE)
+    {
+        //tell the main thread and exit this one
+        if(pPoster)
+        {
+            pPoster->RegistrationNodeError();
+        }
+        return false;
+    }
+    return true;
+}
+
+
+static void RegisterThread(EventPoster* pPoster)
+{
+    if(NodeApi::Get().RegisterSimple() == NodeApi::REG_DONE)
+    {
+        bool bError(false);
+        while(NodeApi::Get().IsRunning())
+        {
+            this_thread::sleep_for(chrono::seconds(5));
+            long nResponse = NodeApi::Get().RegistrationHeartbeat();
+            switch(nResponse)
+            {
+                case 200:
+                    //this is ok
+                    break;
+                case 0:
+                    //this means the server has gone
+                    //Do we have any other nodes?
+                    if(NodeApi::Get().FindRegistrationNode() == false || Reregister(pPoster) == false)
+                    {
+                        bError = true;
+                        NodeApi::Get().StopRun();
+                    }
+                    break;
+                case 404:
+                    //this means the node has been garbaged by the server
+                    //reregister
+                    if(!Reregister(pPoster))
+                    {
+                        bError = true;
+                        NodeApi::Get().StopRun();
+                    }
+                    break;
+            }
+        }
+        if(!bError)
+        {   //still registered
+            NodeApi::Get().UnregisterSimple();
+        }
+    }
+}
+
+static void UnregisterThread(EventPoster* pPoster)
+{
+    NodeApi::Get().UnregisterSimple();
+}
 
 NodeApi& NodeApi::Get()
 {
@@ -35,7 +99,9 @@ m_flows("flow"),
 m_pNodeApiPublisher(0),
 m_pRegistrationBrowser(0),
 m_pRegisterCurl(0),
-m_nRegisterNext(REG_START)
+m_nRegistrationStatus(REG_START),
+m_bRun(false),
+m_pPoster(0)
 {
 }
 
@@ -47,6 +113,10 @@ NodeApi::~NodeApi()
     if(m_pRegisterCurl)
     {
         delete m_pRegisterCurl;
+    }
+    if(m_pPoster)
+    {
+        delete m_pPoster;
     }
 }
 
@@ -132,16 +202,18 @@ void NodeApi::StopmDNSServer()
 }
 
 
-bool NodeApi::StartServices(ServiceBrowserEvent* pPoster, CurlEvent* pCurlPoster)
+bool NodeApi::StartServices(EventPoster* pPoster)
 {
-    m_pRegisterCurl = new CurlRegister(pCurlPoster);
-    return (StartmDNSServer() && StartHttpServers() && BrowseForRegistrationNode(pPoster));
+    m_pPoster = pPoster;
+    m_pRegisterCurl = new CurlRegister(pPoster);
+    return (StartmDNSServer() && StartHttpServers() && BrowseForRegistrationNode());
 }
 
 void NodeApi::StopServices()
 {
     StopmDNSServer();
     StopHttpServers();
+    StopRun();
 }
 
 int NodeApi::GetJson(string sPath, string& sReturn)
@@ -430,6 +502,7 @@ ResourceHolder& NodeApi::GetSenders()
 
 bool NodeApi::Commit()
 {
+    m_mutex.lock();
     Log::Get() << "Node: Commit" << endl;
     bool bChange = m_self.Commit();
     bChange |= m_sources.Commit();
@@ -437,6 +510,8 @@ bool NodeApi::Commit()
     bChange |= m_flows.Commit();
     bChange |= m_receivers.Commit();
     bChange |= m_senders.Commit();
+    m_mutex.unlock();
+
     if(bChange && m_pNodeApiPublisher)
     {
         set<endpoint>::const_iterator itEndpoint = m_self.GetEndpointsBegin();
@@ -446,6 +521,7 @@ bool NodeApi::Commit()
         }
         m_pNodeApiPublisher->Modify();
     }
+
     return bChange;
 }
 
@@ -490,14 +566,14 @@ void NodeApi::SetmDNSTxt(bool bSecure)
 }
 
 
-bool NodeApi::BrowseForRegistrationNode(ServiceBrowserEvent* pPoster)
+bool NodeApi::BrowseForRegistrationNode()
 {
     if(m_pRegistrationBrowser != 0)
     {
         StopRegistrationBrowser();
     }
 
-    m_pRegistrationBrowser = new ServiceBrowser(pPoster);
+    m_pRegistrationBrowser = new ServiceBrowser(m_pPoster);
     set<string> setService;
     setService.insert("_nmos-registration._tcp");
     setService.insert("_nmos-query._tcp");
@@ -512,40 +588,55 @@ void NodeApi::StopRegistrationBrowser()
     {
         delete m_pRegistrationBrowser;
         m_pRegistrationBrowser = 0;
-//        m_pRegistrationBrowser->Stop();
     }
 }
 
-int NodeApi::Register()
+
+void NodeApi::RegisterThreaded()
 {
-    switch(m_nRegisterNext)
-    {
-        case REG_START:
-        case REG_FAILED:
-            StartRegistration();
-            break;
-        case REG_DEVICES:
-            RegisterResources(m_devices, m_sources);
-            break;
-        case REG_SOURCES:
-            RegisterResources(m_sources, m_flows);
-            break;
-        case REG_FLOWS:
-            RegisterResources(m_flows, m_senders);
-            break;
-        case REG_SENDERS:
-            RegisterResources(m_senders, m_receivers);
-            break;
-        case REG_RECEIVERS:
-            RegisterResources(m_receivers, m_devices);
-            break;
-
-
-    }
-    return m_nRegisterNext;
+    thread th(RegisterThread, m_pPoster);
+    th.detach();
 }
 
-bool NodeApi::StartRegistration()
+void NodeApi::UnregisterThreaded()
+{
+    thread th(UnregisterThread, m_pPoster);
+    th.detach();
+}
+
+int NodeApi::RegisterSimple()
+{
+    m_nRegistrationStatus = REG_FAILED;
+    if(FindRegistrationNode())
+    {
+        long nResponse = RegisterResource("node", m_self.GetJson());
+        if(nResponse == 200)
+        {   //Node already registered. Unregister and start again
+            UnregisterSimple();
+            RegisterSimple();
+        }
+        else if(nResponse == 201)
+        {
+            if(RegisterResources(m_devices) == 201 && RegisterResources(m_sources) == 201 && RegisterResources(m_flows) == 201 && RegisterResources(m_senders) == 201 && RegisterResources(m_receivers))
+            {
+                m_nRegistrationStatus = REG_DONE;
+                m_bRun = true;
+            }
+            else
+            {//something gone wrong
+                UnregisterSimple();
+                m_nRegistrationStatus = REG_FAILED;
+            }
+        }
+        else
+        {//something gone wrong
+            m_nRegistrationStatus = REG_FAILED;
+        }
+    }
+    return m_nRegistrationStatus;
+}
+
+bool NodeApi::FindRegistrationNode()
 {
     Log::Get(Log::INFO) << "NodeApi: Start Registration" << endl;
     map<string, dnsService*>::const_iterator itService = m_pRegistrationBrowser->FindService("_nmos-registration._tcp");
@@ -586,41 +677,33 @@ bool NodeApi::StartRegistration()
             ssUrl <<  pInstance->sHostIP << ":" << pInstance->nPort << "/x-nmos/registration/v1.2";
             m_sRegistrationNode = ssUrl.str();
 
-            m_itRegisterNext = m_devices.GetResourceBegin();
-            m_nRegisterNext = REG_DEVICES;
-            RegisterSelf();
-
             return true;
         }
     }
     m_sRegistrationNode.clear();
     Log::Get(Log::INFO) << "NodeApi: Register: No nmos registration nodes found. Go peer-to-peer" << endl;
-    m_nRegisterNext = REG_FAILED;
+    m_nRegistrationStatus = REG_FAILED;
 
     return false;
 }
 
 
-void NodeApi::RegisterResources(ResourceHolder& holder, ResourceHolder& next)
+long NodeApi::RegisterResources(ResourceHolder& holder)
 {
-    if(m_itRegisterNext != holder.GetResourceEnd())
+    for(map<string, Resource*>::const_iterator itResource = holder.GetResourceBegin(); itResource != holder.GetResourceEnd(); ++itResource)
     {
-        Log::Get(Log::INFO) << "NodeApi: Register. " << holder.GetType() << " : " << m_itRegisterNext->first << endl;
-        RegisterResource(holder.GetType(), m_itRegisterNext->second->GetJson());
-        ++m_itRegisterNext;
-
+        Log::Get(Log::INFO) << "NodeApi: Register. " << holder.GetType() << " : " << itResource->first << endl;
+        long nResult = RegisterResource(holder.GetType(), itResource->second->GetJson());
+        if(nResult != 201)
+        {
+            return nResult;
+        }
     }
-    else
-    {
-        m_nRegisterNext++;
-        m_itRegisterNext = next.GetResourceBegin();
-        Register();
-    }
-
+    return 201;
 }
 
 
-bool NodeApi::RegisterResource(const string& sType, const Json::Value& json)
+long NodeApi::RegisterResource(const string& sType, const Json::Value& json)
 {
     Json::Value jsonRegister;
     jsonRegister["type"] = sType;
@@ -632,27 +715,25 @@ bool NodeApi::RegisterResource(const string& sType, const Json::Value& json)
 
     if(m_pRegisterCurl)
     {
-        m_pRegisterCurl->Post(m_sRegistrationNode+"/resource", sPost, CURL_REGISTER);
-        return true;
+        long nResponse = m_pRegisterCurl->Post(m_sRegistrationNode+"/resource", sPost, sResponse);
+        Log::Get(Log::INFO) << "RegisterApi: returned [" << nResponse << "] " << sResponse << endl;
+
+        return nResponse;
     }
-    return false;
+    return 500;
 }
 
-bool NodeApi::RegistrationHeartbeat()
+long NodeApi::RegistrationHeartbeat()
 {
     string sResponse;
     if(m_pRegisterCurl)
     {
-        m_pRegisterCurl->Post(m_sRegistrationNode+"/health/nodes/"+m_self.GetId(), "", CURL_HEARTBEAT);
+        string sResponse;
+        long nResponse = m_pRegisterCurl->Post(m_sRegistrationNode+"/health/nodes/"+m_self.GetId(), "", sResponse);
+        Log::Get(Log::INFO) << "RegisterApi: returned [" << nResponse << "] " << sResponse << endl;
+        return nResponse;
     }
-    return true;
-}
-
-
-bool NodeApi::RegisterSelf()
-{
-    Log::Get(Log::INFO) << "NodeApi: Register. RegisterSelf" << endl;
-    return RegisterResource("node", m_self.GetJson());
+    return 500;
 }
 
 
@@ -675,62 +756,34 @@ bool NodeApi::RegisterSelf()
 
 
 
-int NodeApi::Unregister()
+
+
+int NodeApi::UnregisterSimple()
 {
-    Log::Get() << "Unregister: " << m_nRegisterNext << endl;
-    switch(m_nRegisterNext)
+    Log::Get() << "Unregister: " << m_nRegistrationStatus << endl;
+
+    if(m_sRegistrationNode.empty() == false)
     {
-        case REG_RECEIVERS:
-        case REG_DONE:
-            StartUnregistration();
-            break;
-        case REG_SENDERS:
-            UnregisterResources(m_senders, m_flows);
-            break;
-        case REG_FLOWS:
-            UnregisterResources(m_flows, m_sources);
-            break;
-        case REG_SOURCES:
-            UnregisterResources(m_sources, m_devices);
-            break;
-        case REG_DEVICES:
-            UnregisterResources(m_devices, m_receivers);
-            break;
-        case REG_START:
-            UnregisterResource("nodes", m_self.GetId());
-            break;
+        UnregisterResources(m_receivers);
+        UnregisterResources(m_senders);
+        UnregisterResources(m_flows);
+        UnregisterResources(m_sources);
+        UnregisterResources(m_devices);
+        UnregisterResource("nodes", m_self.GetId());
 
-
+        m_nRegistrationStatus = REG_START;
     }
-    return m_nRegisterNext;
-}
-
-bool NodeApi::StartUnregistration()
-{
-    m_itRegisterNext = m_receivers.GetResourceBegin();
-    m_nRegisterNext = REG_RECEIVERS;
-    UnregisterResources(m_receivers, m_senders);
-
-    return true;
+    return m_nRegistrationStatus;
 }
 
 
-void NodeApi::UnregisterResources(ResourceHolder& holder, ResourceHolder& next)
+void NodeApi::UnregisterResources(ResourceHolder& holder)
 {
-    if(m_itRegisterNext != holder.GetResourceEnd())
+    for(map<string, Resource*>::const_iterator itResource = holder.GetResourceBegin(); itResource != holder.GetResourceEnd(); ++itResource)
     {
-        Log::Get(Log::INFO) << "NodeApi: Unregister. " << holder.GetType() << " : " << m_itRegisterNext->first << endl;
-        UnregisterResource(holder.GetType()+"s", m_itRegisterNext->first);
-        ++m_itRegisterNext;
-
+        Log::Get(Log::INFO) << "NodeApi: Unregister. " << holder.GetType() << " : " << itResource->first << endl;
+        UnregisterResource(holder.GetType()+"s", itResource->first);
     }
-    else
-    {
-        m_nRegisterNext--;
-        m_itRegisterNext = next.GetResourceBegin();
-        Unregister();
-    }
-
 }
 
 
@@ -738,14 +791,16 @@ bool NodeApi::UnregisterResource(const string& sType, const std::string& sId)
 {
     if(m_pRegisterCurl)
     {
-        m_pRegisterCurl->Delete(m_sRegistrationNode+"/resource", sType, sId, CURL_DELETE);
+        string sResponse;
+        long nResponse = m_pRegisterCurl->Delete(m_sRegistrationNode+"/resource", sType, sId, sResponse);
+        Log::Get(Log::INFO) << "RegisterApi: returned [" << nResponse << "] " << sResponse << endl;
         return true;
     }
     return false;
 }
 
 
-bool NodeApi::Query(const std::string& sQueryPath)
+bool NodeApi::FindQueryNode()
 {
     if(m_sQueryNode.empty())
     {
@@ -785,13 +840,31 @@ bool NodeApi::Query(const std::string& sQueryPath)
                 stringstream ssUrl;
                 ssUrl <<  pInstance->sHostIP << ":" << pInstance->nPort << "/x-nmos/query/v1.2";
                 m_sQueryNode = ssUrl.str();
-
+                return true;
             }
+            return false;
         }
     }
+    return true;
+}
 
-    if(m_pRegisterCurl && m_sQueryNode.empty() == false)
+bool NodeApi::Query(const std::string& sQueryPath)
+{
+    if(m_pRegisterCurl && FindQueryNode())
     {
         m_pRegisterCurl->Query(m_sQueryNode, sQueryPath, CURL_QUERY);
     }
+}
+
+
+bool NodeApi::IsRunning()
+{
+    return m_bRun;
+}
+
+void NodeApi::StopRun()
+{
+    m_mutex.lock();
+    m_bRun = false;
+    m_mutex.unlock();
 }

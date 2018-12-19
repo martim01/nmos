@@ -13,4 +13,4 @@ class wxCurlEventPoster : public CurlEvent
 
 };
 
-DECLARE_EXPORTED_EVENT_TYPE(WXEXPORT, wxEVT_CURL_DONE, -1)
+

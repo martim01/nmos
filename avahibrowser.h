@@ -8,45 +8,14 @@
 #include <set>
 #include <map>
 #include <list>
+#include <mutex>
 
 #include "dlldefine.h"
 
 
-struct NMOS_EXPOSE dnsInstance
-{
-    dnsInstance(){}
-    dnsInstance(std::string sN) : sName(sN){}
-
-    std::string sName;
-    std::string sHostName;
-    std::string sHostIP;
-    std::string sService;
-    unsigned long nPort;
-    std::string sInterface;
-    std::map<std::string, std::string> mTxt;
-
-};
-
-
-struct NMOS_EXPOSE dnsService
-{
-    dnsService(){}
-    dnsService(std::string ss) : sService(ss){}
-
-    ~dnsService()
-    {
-        for(std::list<dnsInstance*>::iterator itInstance = lstInstances.begin(); itInstance != lstInstances.end(); ++itInstance)
-        {
-            delete (*itInstance);
-        }
-    }
-
-    std::string sService;
-    std::list<dnsInstance*> lstInstances;
-
-};
-
-class ServiceBrowserEvent;
+struct dnsService;
+struct dnsInstance;
+class EventPoster;
 
 
 static void client_callback(AvahiClient * pClient, AvahiClientState state, AVAHI_GCC_UNUSED void * userdata);
@@ -58,7 +27,7 @@ class ServiceBrowser
 {
 // Construction
     public:
-        ServiceBrowser(ServiceBrowserEvent* pPoster);
+        ServiceBrowser(EventPoster* pPoster);
         virtual ~ServiceBrowser();
 
 
@@ -71,6 +40,8 @@ class ServiceBrowser
         void BrowseCallback(AvahiServiceBrowser* pBrowser, AvahiIfIndex interface, AvahiProtocol protocol, AvahiBrowserEvent event, const char *name, const char *type, const char *domain);
         void ResolveCallback(AvahiServiceResolver* pResolver, AvahiResolverEvent event,const char *name, const char *type, const char *domain, const char *host_name, const AvahiAddress *address, uint16_t port, AvahiStringList *txt);
 
+        void RemoveServiceInstance(const std::string& sService, const std::string& sInstance);
+
         std::map<std::string, dnsService*>::const_iterator GetServiceBegin();
         std::map<std::string, dnsService*>::const_iterator GetServiceEnd();
         std::map<std::string, dnsService*>::const_iterator FindService(const std::string& sService);
@@ -82,8 +53,10 @@ class ServiceBrowser
         bool Start(AvahiClient* pClient);
         void Stop();
         void CheckStop();
+
+        std::mutex m_mutex;
 //        void OnStop(wxCommandEvent& event);
-        ServiceBrowserEvent* m_pPoster;
+        EventPoster* m_pPoster;
 
         AvahiThreadedPoll* m_pThreadedPoll;
         AvahiClient * m_pClient;

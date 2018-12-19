@@ -44,6 +44,7 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, voi
 **/
 static int debug_callback(CURL *handle, curl_infotype type, char *data, size_t size, void *userptr);
 
+class EventPoster;
 /** @brief class that does all the curl requests to PIPs and decodes the returned data. This class is contained in curlthread
 **/
 class CurlRegister
@@ -51,20 +52,28 @@ class CurlRegister
 
     public:
         ///< @brief constructor
-        CurlRegister(CurlEvent* pPoster);
+        CurlRegister(EventPoster* pPoster);
 
         ///< @brief Destructor
         ~CurlRegister();
 
+        EventPoster* GetPoster();
+        //threaded version
         void Post(const std::string& sBaseUrl, const std::string& sJson, long nUserType);
+        //simple versions
+        long Post(const std::string& sBaseUrl, const std::string& sJson, std::string& sResponse);
+
         void Delete(const std::string& sBaseUrl, const std::string& sType, const std::string& sId, long nUserType);
+        long Delete(const std::string& sBaseUrl, const std::string& sType, const std::string& sId, std::string& sResponse);
+
         void Query(const std::string& sBaseUrl, const std::string& sQueryPath, long nUserType);
+        long Query(const std::string& sBaseUrl, const std::string& sQueryPath, std::string& sResponse);
 
     private:
 
-        //void PostStatic(const std::string& sUrl, const std::string& sJson, CurlEvent* pPoster);
+        //void PostStatic(const std::string& sUrl, const std::string& sJson, EventPoster* pPoster);
 
-        CurlEvent* m_pPoster;
+        EventPoster* m_pPoster;
 
 };
 
