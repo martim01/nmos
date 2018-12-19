@@ -47,3 +47,13 @@ void Device::ChangeType(enumType eType)
     m_eType = eType;
     UpdateVersionTime();
 }
+
+std::set<std::pair<std::string, std::string> >::const_iterator Device::GetControlsBegin() const
+{
+    return m_setControls.begin();
+}
+
+std::set<std::pair<std::string, std::string> >::const_iterator Device::GetControlsEnd() const
+{
+    return m_setControls.end();
+}

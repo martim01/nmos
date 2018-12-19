@@ -13,31 +13,43 @@ class CurlRegister;
 class CurlEvent;
 class EventPoster;
 
+class Device;
+class Source;
+class Flow;
+class Receiver;
+class Sender;
+
 class NMOS_EXPOSE NodeApi
 {
     public:
 
         static NodeApi& Get();
 
-        void Init(unsigned short nApiPort, const std::string& sLabel, const std::string& sDescription);
+        void Init(unsigned short nDiscoveryPort, unsigned short nConnectionPort, const std::string& sLabel, const std::string& sDescription);
         bool StartServices(EventPoster* pPoster);
         void StopServices();
         bool Commit();
-
 
         bool BrowseForRegistrationNode();
         bool FindRegistrationNode();
 
         Self& GetSelf();
-        ResourceHolder& GetSources();
-        ResourceHolder& GetDevices();
-        ResourceHolder& GetFlows();
-        ResourceHolder& GetReceivers();
-        ResourceHolder& GetSenders();
+
+        bool AddSource(Source* pResource);
+        bool AddDevice(Device* pResource);
+        bool AddFlow(Flow* pResource);
+        bool AddReceiver(Receiver* pResource);
+        bool AddSender(Sender* pResource);
+
+        const ResourceHolder& GetSources();
+        const ResourceHolder& GetDevices();
+        const ResourceHolder& GetFlows();
+        const ResourceHolder& GetReceivers();
+        const ResourceHolder& GetSenders();
         const ResourceHolder& GetQueryResults();
 
-        int GetJson(std::string sPath, std::string& sResponse);
-        int PutJson(std::string sPath, std::string sJson, std::string& sRepsonse);
+        int GetJson(std::string sPath, std::string& sResponse, unsigned short nPort);
+        int PutJson(std::string sPath, std::string sJson, std::string& sRepsonse, unsigned short nPort);
 
         void RegisterThreaded();
         void UnregisterThreaded();
@@ -76,8 +88,9 @@ class NMOS_EXPOSE NodeApi
 
         void SplitString(std::vector<std::string>& vSplit, std::string str, char cSplit);
 
-        int GetJsonNmos(std::string& sReturn);
+        int GetJsonNmos(std::string& sReturn, unsigned short nPort);
         int GetJsonNmosNodeApi(std::string& sReturn);
+        int GetJsonNmosConnectionApi(std::string& sReturn);
 
         Json::Value GetJsonSources();
         Json::Value GetJsonDevices();
@@ -124,9 +137,14 @@ class NMOS_EXPOSE NodeApi
 
         bool m_bRun;
         EventPoster* m_pPoster;
+        unsigned short m_nConnectionPort;
+
+        std::map<unsigned short, MicroServer*> m_mConnectionServers;
 
         enum {BASE=0, NMOS=1, API_TYPE=2,VERSION=3,ENDPOINT=4, RESOURCE=5};
         enum {SZ_BASE=1, SZ_NMOS=2, SZ_API_TYPE=3,SZ_VERSION=4,SZ_ENDPOINT=5};
+
+        enum {SZC_TYPE=5, SZC_DIRECTION=6};
 
         static const std::string STR_RESOURCE[7];
 };

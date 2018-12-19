@@ -12,6 +12,15 @@ class NMOS_EXPOSE Flow : public Resource
         void RemoveParentId(std::string sId);
 
         virtual bool Commit();
+
+        const std::string& GetDeviceId() const
+        {
+            return m_sDeviceId;
+        }
+        const std::string& GetSourceId() const
+        {
+            return m_sSourceId;
+        }
     private:
         std::string m_sFormat;
         std::string m_sSourceId;

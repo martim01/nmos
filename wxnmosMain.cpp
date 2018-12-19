@@ -101,7 +101,7 @@ wxnmosDialog::wxnmosDialog(wxWindow* parent,wxWindowID id)
 
     m_bScroll = true;
 
-    NodeApi::Get().Init(8080, "host1", "host1");
+    NodeApi::Get().Init(8080, 8081, "host1", "host1");
     NodeApi::Get().GetSelf().AddApiVersion("v1.2");
 //    NodeApi::Get().GetSelf().AddVersion("v1.0");
 //    NodeApi::Get().GetSelf().AddVersion("v1.1");
@@ -114,6 +114,7 @@ wxnmosDialog::wxnmosDialog(wxWindow* parent,wxWindowID id)
 
 
     Device* pDevice = new Device("TestDevice", "TestDescription", Device::GENERIC,NodeApi::Get().GetSelf().GetId());
+
     SourceAudio* pSource = new SourceAudio("TestAudio", "TestDescription", pDevice->GetId());
     pSource->AddChannel("Left", "L");
     pSource->AddChannel("Right", "R");
@@ -129,11 +130,11 @@ wxnmosDialog::wxnmosDialog(wxWindow* parent,wxWindowID id)
     pReceiver->AddCap("audio/L16");
     pReceiver->AddInterfaceBinding("eth0");
 
-    NodeApi::Get().GetDevices().AddResource(pDevice);
-    NodeApi::Get().GetSources().AddResource(pSource);
-    NodeApi::Get().GetFlows().AddResource(pFlow);
-    NodeApi::Get().GetReceivers().AddResource(pReceiver);
-    NodeApi::Get().GetSenders().AddResource(pSender);
+    NodeApi::Get().AddDevice(pDevice);
+    NodeApi::Get().AddSource(pSource);
+    NodeApi::Get().AddFlow(pFlow);
+    NodeApi::Get().AddReceiver(pReceiver);
+    NodeApi::Get().AddSender(pSender);
     NodeApi::Get().Commit();
 
     NodeApi::Get().StartServices(new wxEventPoster(this));

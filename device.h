@@ -14,6 +14,14 @@ class NMOS_EXPOSE Device : public Resource
         void RemoveControl(std::string sType, std::string sUri);
         void ChangeType(enumType eType);
 
+        std::set<std::pair<std::string, std::string> >::const_iterator GetControlsBegin() const;
+        std::set<std::pair<std::string, std::string> >::const_iterator GetControlsEnd() const;
+
+
+        const std::string& GetNodeId() const
+        {
+            return m_sNodeId;
+        }
         virtual bool Commit();
     private:
         enumType m_eType;

@@ -10,6 +10,12 @@
 #include <thread>
 #include <chrono>
 #include "mdns.h"
+#include "device.h"
+#include "source.h"
+#include "flow.h"
+#include "receiver.h"
+#include "sender.h"
+#include "microserver.h"
 
 #ifdef __GNU__
 #include <unistd.h>
@@ -124,7 +130,7 @@ NodeApi::~NodeApi()
 
 
 
-void NodeApi::Init(unsigned short nApiPort, const string& sLabel, const string& sDescription)
+void NodeApi::Init(unsigned short nDiscoveryPort, unsigned short nConnectionPort, const string& sLabel, const string& sDescription)
 {
     char sHost[256];
     gethostname(sHost, 256);
@@ -146,7 +152,7 @@ void NodeApi::Init(unsigned short nApiPort, const string& sLabel, const string& 
                 if(sAddress != "127.0.0.1")
                 {
                     setEndpoints.insert(sAddress);
-                    m_self.AddEndpoint(sAddress, nApiPort, false);
+                    m_self.AddEndpoint(sAddress, nDiscoveryPort, false);
                 }
             }
             temp_addr = temp_addr->ifa_next;
@@ -158,18 +164,25 @@ void NodeApi::Init(unsigned short nApiPort, const string& sLabel, const string& 
     if(setEndpoints.empty() == false)
     {
         stringstream sstr;
-        sstr << "http://" << *setEndpoints.begin() << ":" << nApiPort;
+        sstr << "http://" << *setEndpoints.begin() << ":" << nDiscoveryPort;
 
         m_self.Init(sHost, sstr.str(), sLabel, sDescription);
     }
 
-
+    m_nConnectionPort = nConnectionPort;
 }
 
 bool NodeApi::StartHttpServers()
 {
     Log::Get(Log::DEBUG) << "Start Http Servers" << endl;
     m_self.StartServers();
+
+    //start the connection servers
+    MicroServer* pServer = new MicroServer();
+    pServer->Init(m_nConnectionPort);
+    m_mConnectionServers.insert(make_pair(m_nConnectionPort, pServer));
+
+
     Log::Get(Log::DEBUG) << "Start Http Servers: Done" << endl;
     return true;
 }
@@ -177,6 +190,12 @@ bool NodeApi::StartHttpServers()
 void NodeApi::StopHttpServers()
 {
     m_self.StopServers();
+    for(map<unsigned short, MicroServer*>::iterator itServer = m_mConnectionServers.begin(); itServer != m_mConnectionServers.end(); ++itServer)
+    {
+        itServer->second->Stop();
+        delete itServer->second;
+    }
+    m_mConnectionServers.clear();
 }
 
 bool NodeApi::StartmDNSServer()
@@ -218,7 +237,7 @@ void NodeApi::StopServices()
     StopRun();
 }
 
-int NodeApi::GetJson(string sPath, string& sReturn)
+int NodeApi::GetJson(string sPath, string& sReturn, unsigned short nPort)
 {
     transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
 
@@ -238,7 +257,7 @@ int NodeApi::GetJson(string sPath, string& sReturn)
         if(m_vPath[NMOS] == "x-nmos")
         {   //check on nmos
 
-            nCode = GetJsonNmos(sReturn);
+            nCode = GetJsonNmos(sReturn, nPort);
         }
         else
         {
@@ -250,19 +269,33 @@ int NodeApi::GetJson(string sPath, string& sReturn)
     return nCode;
 }
 
-int NodeApi::GetJsonNmos(string& sReturn)
+int NodeApi::GetJsonNmos(string& sReturn, unsigned short nPort)
 {
     Json::StyledWriter stw;
     if(m_vPath.size() == SZ_NMOS)
     {
         Json::Value jsNode;
-        jsNode.append("node/");
+        if(nPort == m_nConnectionPort)
+        {
+            jsNode.append("connection/");
+        }
+        else
+        {
+            jsNode.append("node/");
+        }
         sReturn = stw.write(jsNode);
         return 200;
     }
     else if(m_vPath[API_TYPE] == "node")
     {
-        return GetJsonNmosNodeApi(sReturn);
+        if(nPort == m_nConnectionPort)
+        {
+            GetJsonNmosConnectionApi(sReturn);
+        }
+        else
+        {
+            return GetJsonNmosNodeApi(sReturn);
+        }
     }
     sReturn = stw.write(GetJsonError(404, "API not found"));
     return 404;
@@ -419,6 +452,56 @@ Json::Value NodeApi::GetJsonSenders()
 }
 
 
+int NodeApi::GetJsonNmosConnectionApi(string& sReturn)
+{
+    Json::StyledWriter stw;
+    int nCode = 200;
+    if(m_vPath.size() == SZ_API_TYPE)
+    {
+        sReturn = stw.write("v1.0");
+    }
+    else
+    {
+
+        if(m_self.IsVersionSupported(m_vPath[VERSION]))
+        {
+            if(m_vPath.size() == SZ_VERSION)
+            {
+                //check the version::
+                Json::Value jsNode;
+                jsNode.append("bulk/");
+                jsNode.append("single/");
+                sReturn = stw.write(jsNode);
+            }
+            else if(m_vPath.size() == SZC_DIRECTION)
+            {
+                Json::Value jsNode;
+                jsNode.append("senders/");
+                jsNode.append("receivers/");
+                sReturn = stw.write(jsNode);
+            }
+            else if(m_vPath[SZC_DIRECTION] == "senders")
+            {
+            }
+            else if(m_vPath[SZC_DIRECTION] == "receivers")
+            {
+            }
+            else
+            {
+                nCode = 404;
+                sReturn = stw.write(GetJsonError(404, "Endpoint not found"));
+            }
+        }
+        else
+        {
+            nCode = 404;
+            sReturn = stw.write(GetJsonError(404, "Version not supported"));
+        }
+    }
+    return nCode;
+}
+
+
 Json::Value NodeApi::GetJsonError(unsigned long nCode, string sError)
 {
     Json::Value jsError(Json::objectValue);
@@ -429,7 +512,10 @@ Json::Value NodeApi::GetJsonError(unsigned long nCode, string sError)
 }
 
 
-int NodeApi::PutJson(string sPath, string sJson, string& sResponse)
+
+
+
+int NodeApi::PutJson(string sPath, string sJson, string& sResponse, unsigned short nPort)
 {
     //make sure path is correct
     transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
@@ -477,27 +563,27 @@ Self& NodeApi::GetSelf()
     return m_self;
 }
 
-ResourceHolder& NodeApi::GetSources()
+const ResourceHolder& NodeApi::GetSources()
 {
     return m_sources;
 }
 
-ResourceHolder& NodeApi::GetDevices()
+const ResourceHolder& NodeApi::GetDevices()
 {
     return m_devices;
 }
 
-ResourceHolder& NodeApi::GetFlows()
+const ResourceHolder& NodeApi::GetFlows()
 {
     return m_flows;
 }
 
-ResourceHolder& NodeApi::GetReceivers()
+const ResourceHolder& NodeApi::GetReceivers()
 {
     return m_receivers;
 }
 
-ResourceHolder& NodeApi::GetSenders()
+const ResourceHolder& NodeApi::GetSenders()
 {
     return m_senders;
 }
@@ -878,4 +964,65 @@ void NodeApi::StopRun()
     m_mutex.lock();
     m_bRun = false;
     m_mutex.unlock();
+}
+
+
+
+
+bool NodeApi::AddDevice(Device* pResource)
+{
+    //make sure the node id agress
+    if(pResource->GetNodeId() == m_self.GetId())
+    {
+        m_devices.AddResource(pResource);
+        //add the control endpoints for is/05
+        for(set<endpoint>::const_iterator itEndpoint = m_self.GetEndpointsBegin(); itEndpoint != m_self.GetEndpointsEnd(); ++itEndpoint)
+        {
+            stringstream sstr;
+            sstr << "http://" << itEndpoint->sHost << ":" << m_nConnectionPort << "/x-nmos/connection/v1.0";
+            pResource->AddControl("urn:x-nmos:control:sr-ctrl/v1.0", sstr.str());
+        }
+        return true;
+    }
+    return false;
+}
+
+bool NodeApi::AddSource(Source* pResource)
+{
+    if(m_devices.FindResource(pResource->GetDeviceId()) != m_devices.GetResourceEnd())
+    {
+        m_sources.AddResource(pResource);
+        return true;
+    }
+    return false;
+}
+
+bool NodeApi::AddFlow(Flow* pResource)
+{
+    if(m_devices.FindResource(pResource->GetDeviceId()) != m_devices.GetResourceEnd() && m_sources.FindResource(pResource->GetSourceId()) != m_sources.GetResourceEnd())
+    {
+        m_flows.AddResource(pResource);
+        return true;
+    }
+    return false;
+}
+
+bool NodeApi::AddReceiver(Receiver* pResource)
+{
+    if(m_devices.FindResource(pResource->GetDeviceId()) != m_devices.GetResourceEnd() && m_flows.FindResource(pResource->GetFlowId()) != m_flows.GetResourceEnd())
+    {
+        m_receivers.AddResource(pResource);
+        return true;
+    }
+    return false;
+}
+
+bool NodeApi::AddSender(Sender* pResource)
+{
+    if(m_devices.FindResource(pResource->GetDeviceId()) != m_devices.GetResourceEnd() && m_flows.FindResource(pResource->GetFlowId()) != m_flows.GetResourceEnd())
+    {
+        m_senders.AddResource(pResource);
+        return true;
+    }
+    return false;
 }

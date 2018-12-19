@@ -21,6 +21,16 @@ class NMOS_EXPOSE Receiver : public Resource
 
         void SetSubscription(std::string sSenderId, bool bActive);
         virtual bool Commit();
+
+        const std::string& GetDeviceId() const
+        {
+            return m_sDeviceId;
+        }
+        const std::string& GetFlowId() const
+        {
+            return m_sFlowId;
+        }
+
     private:
         std::string m_sFlowId;
         enumTransport m_eTransport;

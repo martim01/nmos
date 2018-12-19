@@ -19,6 +19,10 @@ class NMOS_EXPOSE Source : public Resource
         void SetClock(std::string sClock);
 
         virtual bool Commit();
+        const std::string& GetDeviceId() const
+        {
+            return m_sDeviceId;
+        }
 
     private:
         std::string m_sDeviceId;

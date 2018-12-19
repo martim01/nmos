@@ -36,10 +36,10 @@ static void RequestCompleted (void *cls, MHD_Connection* pConnection, void **ptr
     }
 }
 
-static int DoHttpGet(MHD_Connection* pConnection, string sUrl)
+static int DoHttpGet(MHD_Connection* pConnection, string sUrl, ConnectionInfo* pInfo)
 {
     string sResponse;
-    int nCode = NodeApi::Get().GetJson(sUrl, sResponse);
+    int nCode = NodeApi::Get().GetJson(sUrl, sResponse, pInfo->pServer->GetPort());
 
     Log::Get() << "Response: " << sResponse << endl;
 
@@ -53,7 +53,7 @@ static int DoHttpGet(MHD_Connection* pConnection, string sUrl)
 static int DoHttpPut(MHD_Connection* pConnection, string sUrl, ConnectionInfo* pInfo)
 {
     string sResponse;
-    int nCode = NodeApi::Get().PutJson(sUrl, pInfo->pServer->GetPutData(), sResponse);
+    int nCode = NodeApi::Get().PutJson(sUrl, pInfo->pServer->GetPutData(), sResponse, pInfo->pServer->GetPort());
     pInfo->pServer->ResetPutData();
 
 
@@ -97,8 +97,9 @@ static int AnswerToConnection(void *cls, MHD_Connection* pConnection, const char
 
     if("GET" == string(sMethod))
     {
+        ConnectionInfo* pInfo = reinterpret_cast<ConnectionInfo*>(*ptr);
         Log::Get(Log::DEBUG) << "Actual connection: GET" << endl;
-        return DoHttpGet(pConnection, url);
+        return DoHttpGet(pConnection, url, pInfo);
     }
     else if("PUT" == string(sMethod))
     {
@@ -127,7 +128,7 @@ static int AnswerToConnection(void *cls, MHD_Connection* pConnection, const char
 
 bool MicroServer::Init(unsigned int nPort)
 {
-
+    m_nPort = nPort;
     m_pmhd = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY, nPort, NULL, NULL, &AnswerToConnection, this, MHD_OPTION_NOTIFY_COMPLETED, RequestCompleted, NULL, MHD_OPTION_END);
     if(m_pmhd)
     {

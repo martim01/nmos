@@ -30,8 +30,12 @@ class MicroServer
         std::string GetPutData() const;
         void ResetPutData();
 
+        unsigned short GetPort() const
+        {
+            return m_nPort;
+        }
     private:
-
+        unsigned short m_nPort;
 
         MHD_Daemon* m_pmhd;
 
