@@ -1,12 +1,12 @@
 #include "microserver.h"
 #include "nodeapi.h"
-#include "microhttpd.h"
+
 #include <iostream>
 #include "log.h"
 
 using namespace std;
 
-static int IteratePost (void * ptr, MHD_ValueKind kind, const char *key, const char *filename, const char *content_type, const char *transfer_encoding, const char *data, uint64_t off, size_t size)
+int MicroServer::IteratePost (void * ptr, MHD_ValueKind kind, const char *key, const char *filename, const char *content_type, const char *transfer_encoding, const char *data, uint64_t off, size_t size)
 {
     ConnectionInfo* pInfo = reinterpret_cast<ConnectionInfo*>(ptr);
 
@@ -17,7 +17,7 @@ static int IteratePost (void * ptr, MHD_ValueKind kind, const char *key, const c
     return MHD_YES;
 }
 
-static void RequestCompleted (void *cls, MHD_Connection* pConnection, void **ptr, enum MHD_RequestTerminationCode toe)
+void MicroServer::RequestCompleted (void *cls, MHD_Connection* pConnection, void **ptr, enum MHD_RequestTerminationCode toe)
 {
     Log::Get() << "Request completed" << endl;
     ConnectionInfo *pInfo = reinterpret_cast<ConnectionInfo*>(*ptr);
@@ -36,7 +36,7 @@ static void RequestCompleted (void *cls, MHD_Connection* pConnection, void **ptr
     }
 }
 
-static int DoHttpGet(MHD_Connection* pConnection, string sUrl, ConnectionInfo* pInfo)
+int MicroServer::DoHttpGet(MHD_Connection* pConnection, string sUrl, ConnectionInfo* pInfo)
 {
     string sResponse;
     int nCode = NodeApi::Get().GetJson(sUrl, sResponse, pInfo->pServer->GetPort());
@@ -50,7 +50,7 @@ static int DoHttpGet(MHD_Connection* pConnection, string sUrl, ConnectionInfo* p
     return ret;
 }
 
-static int DoHttpPut(MHD_Connection* pConnection, string sUrl, ConnectionInfo* pInfo)
+int MicroServer::DoHttpPut(MHD_Connection* pConnection, string sUrl, ConnectionInfo* pInfo)
 {
     string sResponse;
     int nCode = NodeApi::Get().PutJson(sUrl, pInfo->pServer->GetPutData(), sResponse, pInfo->pServer->GetPort());
@@ -64,7 +64,7 @@ static int DoHttpPut(MHD_Connection* pConnection, string sUrl, ConnectionInfo* p
     return ret;
 }
 
-static int AnswerToConnection(void *cls, MHD_Connection* pConnection, const char * url, const char * method, const char * sVersion, const char * upload_data, size_t * upload_data_size, void **ptr)
+int MicroServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, const char * url, const char * method, const char * sVersion, const char * upload_data, size_t * upload_data_size, void **ptr)
 {
     string sMethod(method);
     if (NULL == *ptr)
@@ -129,7 +129,7 @@ static int AnswerToConnection(void *cls, MHD_Connection* pConnection, const char
 bool MicroServer::Init(unsigned int nPort)
 {
     m_nPort = nPort;
-    m_pmhd = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY, nPort, NULL, NULL, &AnswerToConnection, this, MHD_OPTION_NOTIFY_COMPLETED, RequestCompleted, NULL, MHD_OPTION_END);
+    m_pmhd = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY, nPort, NULL, NULL, &MicroServer::AnswerToConnection, this, MHD_OPTION_NOTIFY_COMPLETED, RequestCompleted, NULL, MHD_OPTION_END);
     if(m_pmhd)
     {
         Log::Get() << "MicroServer: " << nPort << " Init: OK" << std::endl;

@@ -16,7 +16,7 @@
 #include "receiver.h"
 #include "sender.h"
 #include "microserver.h"
-
+#include "nmosthread.h"
 #ifdef __GNU__
 #include <unistd.h>
 #include <sys/types.h>
@@ -30,66 +30,7 @@ using namespace std;
 
 const std::string NodeApi::STR_RESOURCE[7] = {"node", "device", "source", "flow", "sender", "receiver", "subscription"};
 
-static bool Reregister(EventPoster* pPoster)
-{
-    if(NodeApi::Get().RegisterSimple() != NodeApi::REG_DONE)
-    {
-        //tell the main thread and exit this one
-        if(pPoster)
-        {
-            pPoster->RegistrationNodeError();
-        }
-        return false;
-    }
-    return true;
-}
 
-
-static void RegisterThread(EventPoster* pPoster)
-{
-    if(NodeApi::Get().RegisterSimple() == NodeApi::REG_DONE)
-    {
-        bool bError(false);
-        while(NodeApi::Get().IsRunning())
-        {
-            this_thread::sleep_for(chrono::seconds(5));
-            long nResponse = NodeApi::Get().RegistrationHeartbeat();
-            switch(nResponse)
-            {
-                case 200:
-                    //this is ok
-                    break;
-                case 0:
-                    //this means the server has gone
-                    //Do we have any other nodes?
-                    if(NodeApi::Get().FindRegistrationNode() == false || Reregister(pPoster) == false)
-                    {
-                        bError = true;
-                        NodeApi::Get().StopRun();
-                    }
-                    break;
-                case 404:
-                    //this means the node has been garbaged by the server
-                    //reregister
-                    if(!Reregister(pPoster))
-                    {
-                        bError = true;
-                        NodeApi::Get().StopRun();
-                    }
-                    break;
-            }
-        }
-        if(!bError)
-        {   //still registered
-            NodeApi::Get().UnregisterSimple();
-        }
-    }
-}
-
-static void UnregisterThread(EventPoster* pPoster)
-{
-    NodeApi::Get().UnregisterSimple();
-}
 
 NodeApi& NodeApi::Get()
 {
@@ -108,7 +49,7 @@ m_pNodeApiPublisher(0),
 m_pRegistrationBrowser(0),
 m_pRegisterCurl(0),
 m_nRegistrationStatus(REG_START),
-m_bRun(false),
+m_bRun(true),
 m_pPoster(0)
 {
 }
@@ -225,15 +166,17 @@ void NodeApi::StopmDNSServer()
 
 bool NodeApi::StartServices(EventPoster* pPoster)
 {
+
     m_pPoster = pPoster;
-    m_pRegisterCurl = new CurlRegister(pPoster);
-    return (StartmDNSServer() && StartHttpServers() && BrowseForRegistrationNode());
+    m_pRegisterCurl = new CurlRegister(m_pPoster);
+
+    thread thMain(NmosThread::Main);
+    thMain.detach();
+
 }
 
 void NodeApi::StopServices()
 {
-    StopmDNSServer();
-    StopHttpServers();
     StopRun();
 }
 
@@ -286,16 +229,14 @@ int NodeApi::GetJsonNmos(string& sReturn, unsigned short nPort)
         sReturn = stw.write(jsNode);
         return 200;
     }
-    else if(m_vPath[API_TYPE] == "node")
+    else if(m_vPath[API_TYPE] == "node" && nPort != m_nConnectionPort)
     {
-        if(nPort == m_nConnectionPort)
-        {
-            GetJsonNmosConnectionApi(sReturn);
-        }
-        else
-        {
-            return GetJsonNmosNodeApi(sReturn);
-        }
+        return GetJsonNmosNodeApi(sReturn);
+
+    }
+    else if(m_vPath[API_TYPE] == "connection" && nPort == m_nConnectionPort)
+    {
+        return GetJsonNmosConnectionApi(sReturn);
     }
     sReturn = stw.write(GetJsonError(404, "API not found"));
     return 404;
@@ -458,12 +399,11 @@ int NodeApi::GetJsonNmosConnectionApi(string& sReturn)
     int nCode = 200;
     if(m_vPath.size() == SZ_API_TYPE)
     {
-        sReturn = stw.write("v1.0");
+        sReturn = stw.write("v1.0/");
     }
     else
     {
-
-        if(m_self.IsVersionSupported(m_vPath[VERSION]))
+        if(m_vPath[VERSION] == "v1.0")
         {
             if(m_vPath.size() == SZ_VERSION)
             {
@@ -473,23 +413,22 @@ int NodeApi::GetJsonNmosConnectionApi(string& sReturn)
                 jsNode.append("single/");
                 sReturn = stw.write(jsNode);
             }
-            else if(m_vPath.size() == SZC_DIRECTION)
-            {
-                Json::Value jsNode;
-                jsNode.append("senders/");
-                jsNode.append("receivers/");
-                sReturn = stw.write(jsNode);
-            }
-            else if(m_vPath[SZC_DIRECTION] == "senders")
-            {
-            }
-            else if(m_vPath[SZC_DIRECTION] == "receivers")
-            {
-            }
             else
             {
-                nCode = 404;
-                sReturn = stw.write(GetJsonError(404, "Endpoint not found"));
+                if(m_vPath[SZ_VERSION] == "bulk")
+                {
+                    return GetJsonNmosConnectionBulkApi(sReturn);
+                }
+                else if(m_vPath[SZ_VERSION] == "single")
+                {
+                    return GetJsonNmosConnectionSingleApi(sReturn);
+
+                }
+                else
+                {
+                    nCode = 404;
+                    sReturn = stw.write(GetJsonError(404, "Type not supported"));
+                }
             }
         }
         else
@@ -501,6 +440,57 @@ int NodeApi::GetJsonNmosConnectionApi(string& sReturn)
     return nCode;
 }
 
+int NodeApi::GetJsonNmosConnectionSingleApi(std::string& sReturn)
+{
+    int nCode(200);
+    Json::StyledWriter stw;
+    if(m_vPath.size() == SZC_TYPE)
+    {
+        Json::Value jsNode;
+        jsNode.append("senders/");
+        jsNode.append("receivers/");
+        sReturn = stw.write(jsNode);
+    }
+    else if(m_vPath[SZC_TYPE] == "senders")
+    {
+        sReturn = stw.write(m_senders.GetConnectionJson());
+    }
+    else if(m_vPath[SZC_TYPE] == "receivers")
+    {
+        sReturn = stw.write(m_receivers.GetConnectionJson());
+    }
+    else
+    {
+        nCode = 404;
+        sReturn = stw.write(GetJsonError(404, "Endpoint not found"));
+    }
+    return nCode;
+}
+
+int NodeApi::GetJsonNmosConnectionBulkApi(std::string& sReturn)
+{
+    int nCode(200);
+    Json::StyledWriter stw;
+    if(m_vPath.size() == SZC_TYPE)
+    {
+        Json::Value jsNode;
+        jsNode.append("senders/");
+        jsNode.append("receivers/");
+        sReturn = stw.write(jsNode);
+    }
+    else if(m_vPath[SZC_TYPE] == "senders")
+    {
+    }
+    else if(m_vPath[SZC_TYPE] == "receivers")
+    {
+    }
+    else
+    {
+        nCode = 404;
+        sReturn = stw.write(GetJsonError(404, "Endpoint not found"));
+    }
+    return nCode;
+}
 
 Json::Value NodeApi::GetJsonError(unsigned long nCode, string sError)
 {
@@ -600,20 +590,36 @@ bool NodeApi::Commit()
     bChange |= m_senders.Commit();
     m_mutex.unlock();
 
-    if(bChange && m_pNodeApiPublisher)
+
+    if(bChange)
     {
-        set<endpoint>::const_iterator itEndpoint = m_self.GetEndpointsBegin();
-        if(itEndpoint != m_self.GetEndpointsEnd())
-        {
-            SetmDNSTxt(itEndpoint->bSecure);
+        if(m_sRegistrationNode.empty())
+        {   //update the ver_ text records in peer-to-peer mode
+            ModifyTxtRecords();
         }
-        m_pNodeApiPublisher->Modify();
+        else
+        {
+            //signal the register thread that we need to post resources
+            SignalCommit();
+        }
     }
 
     return bChange;
 }
 
 
+void NodeApi::ModifyTxtRecords()
+{
+    set<endpoint>::const_iterator itEndpoint = m_self.GetEndpointsBegin();
+    if(itEndpoint != m_self.GetEndpointsEnd())
+    {
+        SetmDNSTxt(itEndpoint->bSecure);
+    }
+    if(m_pNodeApiPublisher)
+    {
+        m_pNodeApiPublisher->Modify();
+    }
+}
 
 
 
@@ -633,6 +639,7 @@ void NodeApi::SplitString(vector<string>& vSplit, string str, char cSplit)
 
 void NodeApi::SetmDNSTxt(bool bSecure)
 {
+    lock_guard<mutex> guard(m_mutex);
     if(m_pNodeApiPublisher)
     {
         if(bSecure)
@@ -644,12 +651,16 @@ void NodeApi::SetmDNSTxt(bool bSecure)
             m_pNodeApiPublisher->AddTxt("api_proto", "http");
         }
         m_pNodeApiPublisher->AddTxt("api_ver", "v1.2");
-        m_pNodeApiPublisher->AddTxt("ver_slf", to_string(m_self.GetDnsVersion()));
-        m_pNodeApiPublisher->AddTxt("ver_src", to_string(m_sources.GetVersion()));
-        m_pNodeApiPublisher->AddTxt("ver_flw", to_string(m_flows.GetVersion()));
-        m_pNodeApiPublisher->AddTxt("ver_dvc", to_string(m_devices.GetVersion()));
-        m_pNodeApiPublisher->AddTxt("ver_snd", to_string(m_senders.GetVersion()));
-        m_pNodeApiPublisher->AddTxt("ver_rcv", to_string(m_receivers.GetVersion()));
+
+        if(m_sRegistrationNode.empty())
+        {
+            m_pNodeApiPublisher->AddTxt("ver_slf", to_string(m_self.GetDnsVersion()));
+            m_pNodeApiPublisher->AddTxt("ver_src", to_string(m_sources.GetVersion()));
+            m_pNodeApiPublisher->AddTxt("ver_flw", to_string(m_flows.GetVersion()));
+            m_pNodeApiPublisher->AddTxt("ver_dvc", to_string(m_devices.GetVersion()));
+            m_pNodeApiPublisher->AddTxt("ver_snd", to_string(m_senders.GetVersion()));
+            m_pNodeApiPublisher->AddTxt("ver_rcv", to_string(m_receivers.GetVersion()));
+        }
     }
 }
 
@@ -665,10 +676,29 @@ bool NodeApi::BrowseForRegistrationNode()
     set<string> setService;
     setService.insert("_nmos-registration._tcp");
     setService.insert("_nmos-query._tcp");
-    return m_pRegistrationBrowser->StartBrowser(setService);
-
+    Log::Get() << "Browse for register and query nodes" << endl;
+    if(m_pRegistrationBrowser->StartBrowser(setService))
+    {
+        std::unique_lock<std::mutex> lk(m_mutex);
+        m_cvBrowse.wait(lk);
+    }
 }
 
+void NodeApi::SignalBrowse()
+{
+    m_cvBrowse.notify_one();
+}
+
+bool NodeApi::WaitForCommit(unsigned long nMilliseconds)
+{
+    unique_lock<mutex> ul(m_mutex);
+    return (m_cvCommit.wait_for(ul, chrono::milliseconds(nMilliseconds)) == cv_status::no_timeout);
+}
+
+void NodeApi::SignalCommit()
+{
+    m_cvCommit.notify_one();
+}
 
 void NodeApi::StopRegistrationBrowser()
 {
@@ -679,23 +709,10 @@ void NodeApi::StopRegistrationBrowser()
     }
 }
 
-
-void NodeApi::RegisterThreaded()
-{
-    thread th(RegisterThread, m_pPoster);
-    th.detach();
-}
-
-void NodeApi::UnregisterThreaded()
-{
-    thread th(UnregisterThread, m_pPoster);
-    th.detach();
-}
-
 int NodeApi::RegisterSimple()
 {
     m_nRegistrationStatus = REG_FAILED;
-    if(FindRegistrationNode())
+    if(m_sRegistrationNode.empty() == false)
     {
         long nResponse = RegisterResource("node", m_self.GetJson());
         if(nResponse == 200)
@@ -708,7 +725,6 @@ int NodeApi::RegisterSimple()
             if(RegisterResources(m_devices) == 201 && RegisterResources(m_sources) == 201 && RegisterResources(m_flows) == 201 && RegisterResources(m_senders) == 201 && RegisterResources(m_receivers))
             {
                 m_nRegistrationStatus = REG_DONE;
-                m_bRun = true;
             }
             else
             {//something gone wrong
@@ -724,9 +740,18 @@ int NodeApi::RegisterSimple()
     return m_nRegistrationStatus;
 }
 
+int NodeApi::UpdateRegisterSimple()
+{
+    long nResponse = RegisterResource("node", m_self.GetJson());
+    ReregisterResources(m_devices);
+    ReregisterResources(m_sources);
+    ReregisterResources(m_flows);
+    ReregisterResources(m_senders);
+}
+
 bool NodeApi::FindRegistrationNode()
 {
-    Log::Get(Log::INFO) << "NodeApi: Start Registration" << endl;
+    Log::Get(Log::INFO) << "NodeApi: Find best registration node" << endl;
     map<string, dnsService*>::const_iterator itService = m_pRegistrationBrowser->FindService("_nmos-registration._tcp");
     if(itService != m_pRegistrationBrowser->GetServiceEnd())
     {
@@ -790,6 +815,19 @@ long NodeApi::RegisterResources(ResourceHolder& holder)
     return 201;
 }
 
+long NodeApi::ReregisterResources(ResourceHolder& holder)
+{
+    for(map<string, Resource*>::const_iterator itResource = holder.GetChangedResourceBegin(); itResource != holder.GetChangedResourceEnd(); ++itResource)
+    {
+        Log::Get(Log::INFO) << "NodeApi: Register. " << holder.GetType() << " : " << itResource->first << endl;
+        long nResult = RegisterResource(holder.GetType(), itResource->second->GetJson());
+        if(nResult != 200 && nResult != 201)
+        {
+            return nResult;
+        }
+    }
+    return 201;
+}
 
 long NodeApi::RegisterResource(const string& sType, const Json::Value& json)
 {
@@ -950,20 +988,23 @@ bool NodeApi::Query(NodeApi::enumResource eResource, const std::string& sQuery)
     if(m_pRegisterCurl && FindQueryNode())
     {
         m_pRegisterCurl->Query(m_sQueryNode, eResource, sQuery, &m_query, CURL_QUERY);
+        return true;
     }
+    return false;
 }
 
 
 bool NodeApi::IsRunning()
 {
+    lock_guard<mutex> lg(m_mutex);
     return m_bRun;
 }
 
 void NodeApi::StopRun()
 {
-    m_mutex.lock();
+    lock_guard<mutex> lg(m_mutex);
     m_bRun = false;
-    m_mutex.unlock();
+
 }
 
 
@@ -989,7 +1030,7 @@ bool NodeApi::AddDevice(Device* pResource)
 
 bool NodeApi::AddSource(Source* pResource)
 {
-    if(m_devices.FindResource(pResource->GetDeviceId()) != m_devices.GetResourceEnd())
+    if(m_devices.ResourceExists(pResource->GetDeviceId()))
     {
         m_sources.AddResource(pResource);
         return true;
@@ -999,7 +1040,7 @@ bool NodeApi::AddSource(Source* pResource)
 
 bool NodeApi::AddFlow(Flow* pResource)
 {
-    if(m_devices.FindResource(pResource->GetDeviceId()) != m_devices.GetResourceEnd() && m_sources.FindResource(pResource->GetSourceId()) != m_sources.GetResourceEnd())
+    if(m_devices.ResourceExists(pResource->GetDeviceId()) && m_sources.ResourceExists(pResource->GetSourceId()))
     {
         m_flows.AddResource(pResource);
         return true;
@@ -1009,7 +1050,7 @@ bool NodeApi::AddFlow(Flow* pResource)
 
 bool NodeApi::AddReceiver(Receiver* pResource)
 {
-    if(m_devices.FindResource(pResource->GetDeviceId()) != m_devices.GetResourceEnd() && m_flows.FindResource(pResource->GetFlowId()) != m_flows.GetResourceEnd())
+    if(m_devices.ResourceExists(pResource->GetDeviceId())  && m_flows.ResourceExists(pResource->GetFlowId()))
     {
         m_receivers.AddResource(pResource);
         return true;
@@ -1019,7 +1060,7 @@ bool NodeApi::AddReceiver(Receiver* pResource)
 
 bool NodeApi::AddSender(Sender* pResource)
 {
-    if(m_devices.FindResource(pResource->GetDeviceId()) != m_devices.GetResourceEnd() && m_flows.FindResource(pResource->GetFlowId()) != m_flows.GetResourceEnd())
+    if(m_devices.ResourceExists(pResource->GetDeviceId())  && m_flows.ResourceExists(pResource->GetFlowId()) )
     {
         m_senders.AddResource(pResource);
         return true;

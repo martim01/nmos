@@ -12,20 +12,29 @@ static void PostThreaded(const std::string& sUrl, const std::string& sJson, Curl
 {
     std::string sResponse;
     long nResponseCode = pRegister->Post(sUrl, sJson, sResponse);
-    pRegister->GetPoster()->CurlDone(nResponseCode, sResponse, nUserType);
+    if(pRegister->GetPoster())
+    {
+        pRegister->GetPoster()->CurlDone(nResponseCode, sResponse, nUserType);
+    }
 }
 
 static void DeleteThreaded(const std::string& sUrl, const std::string& sType, const std::string& sId, CurlRegister* pRegister, long nUserType)
 {
     std::string sResponse;
     long nResponseCode = pRegister->Delete(sUrl, sType, sId, sResponse);
-    pRegister->GetPoster()->CurlDone(nResponseCode, sResponse, nUserType);
+    if(pRegister->GetPoster())
+    {
+        pRegister->GetPoster()->CurlDone(nResponseCode, sResponse, nUserType);
+    }
 }
 
 static void QueryThreaded(const std::string& sBaseUrl, NodeApi::enumResource eResource, const std::string& sQuery, ResourceHolder* pResults, CurlRegister* pRegister, long nUserType)
 {
     long nResponseCode = pRegister->Query(sBaseUrl, eResource, sQuery, pResults);
-    pRegister->GetPoster()->CurlDone(nResponseCode, "", nUserType);
+    if(pRegister->GetPoster())
+    {
+        pRegister->GetPoster()->CurlDone(nResponseCode, "", nUserType);
+    }
 }
 
 

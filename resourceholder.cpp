@@ -65,20 +65,26 @@ bool ResourceHolder::Commit()
 {
     std::cout << "ResourceHolder: Commit" << std::endl;
     m_mResource = m_mResourceStaging;
+    m_mResourceChanged.clear();
+
 
     m_json.clear();
-    bool bChanged(false);
+
     for(std::map<std::string, Resource*>::const_iterator itResource = m_mResource.begin(); itResource != m_mResource.end(); ++itResource)
     {
         std::cout << "Resource: " << itResource->first << " committed" << std::endl;
-        bChanged |= itResource->second->Commit();
+        if(itResource->second->Commit())
+        {
+            m_mResourceChanged.insert(make_pair(itResource->first, itResource->second));
+        }
         m_json.append(itResource->second->GetJson());
     }
-    if(bChanged)
+    if(m_mResourceChanged.empty() == false)
     {
         ResourceUpdated();
+        return true;
     }
-    return bChanged;
+    return false;
 }
 
 const Json::Value& ResourceHolder::GetJson() const
@@ -86,6 +92,15 @@ const Json::Value& ResourceHolder::GetJson() const
     return m_json;
 }
 
+Json::Value ResourceHolder::GetConnectionJson() const
+{
+    Json::Value jsArray(Json::arrayValue);
+    for(std::map<std::string, Resource*>::const_iterator itResource = m_mResource.begin(); itResource != m_mResource.end(); ++itResource)
+    {
+        jsArray.append(itResource->first);
+    }
+    return jsArray;
+}
 
 std::map<std::string, Resource*>::const_iterator ResourceHolder::GetResourceBegin() const
 {
@@ -103,9 +118,34 @@ std::map<std::string, Resource*>::const_iterator ResourceHolder::FindResource(st
 }
 
 
+std::map<std::string, Resource*>::const_iterator ResourceHolder::GetStagedResourceBegin() const
+{
+    return m_mResourceStaging.begin();
+}
+
+std::map<std::string, Resource*>::const_iterator ResourceHolder::GetStagedResourceEnd() const
+{
+    return m_mResourceStaging.end();
+}
+
+std::map<std::string, Resource*>::const_iterator ResourceHolder::FindStagedResource(std::string sUuid) const
+{
+    return m_mResourceStaging.find(sUuid);
+}
+
+std::map<std::string, Resource*>::const_iterator ResourceHolder::GetChangedResourceBegin() const
+{
+    return m_mResourceChanged.begin();
+}
+
+std::map<std::string, Resource*>::const_iterator ResourceHolder::GetChangedResourceEnd() const
+{
+    return m_mResourceChanged.end();
+}
+
+
 void ResourceHolder::RemoveAllResources()
 {
-    Log::Get(Log::DEBUG) << "ResourceHolder: RemoveAllResources" << std::endl;
     for(std::map<std::string, Resource*>::iterator itResource = m_mResource.begin(); itResource != m_mResource.end(); ++itResource)
     {
         delete itResource->second;
@@ -116,4 +156,10 @@ void ResourceHolder::RemoveAllResources()
 size_t ResourceHolder::GetResourceCount() const
 {
     return m_mResource.size();
+}
+
+
+bool ResourceHolder::ResourceExists(const std::string& sUuid) const
+{
+    return (m_mResource.find(sUuid) != m_mResource.end() || m_mResourceStaging.find(sUuid) != m_mResourceStaging.end());
 }

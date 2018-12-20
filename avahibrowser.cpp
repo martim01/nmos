@@ -5,6 +5,8 @@
 #include "eventposter.h"
 #include "mdns.h"
 #include <mutex>
+#include "nodeapi.h"
+
 
 using namespace std;
 
@@ -114,7 +116,10 @@ void ServiceBrowser::Stop()
     {
         avahi_threaded_poll_free(m_pThreadedPoll);
         m_pThreadedPoll = 0;
-        m_pPoster->Finished();
+        if(m_pPoster)
+        {
+            m_pPoster->Finished();
+        }
 //        if(m_pHandler)
 //        {   //only send if we are actually stopping not already stopped and now deleting
 //            wxCommandEvent event(wxEVT_BROWSE_FINISHED);
@@ -278,15 +283,19 @@ void ServiceBrowser::BrowseCallback(AvahiServiceBrowser* pBrowser, AvahiIfIndex 
         case AVAHI_BROWSER_ALL_FOR_NOW:
             {
                 Log::Get() << "ServiceBrowser: (Browser) '" << type << "' in domain '" << domain << "' ALL_FOR_NOW" << endl;
-                m_pPoster->AllForNow(type);
+                if(m_pPoster)
+                {
+                    m_pPoster->AllForNow(type);
+                }
 
-//                set<AvahiServiceBrowser*>::iterator itBrowser = m_setBrowser.find(pBrowser);
-//                if(itBrowser != m_setBrowser.end())
-//                {
-//                    avahi_service_browser_free((*itBrowser));
-//                    m_setBrowser.erase(itBrowser);
-//                }
-//                CheckStop();
+
+               set<AvahiServiceBrowser*>::iterator itBrowser = m_setBrowser.find(pBrowser);
+                if(itBrowser != m_setBrowser.end())
+                {
+                    avahi_service_browser_free((*itBrowser));
+                    m_setBrowser.erase(itBrowser);
+                }
+                CheckStop();
             }
             break;
         case AVAHI_BROWSER_CACHE_EXHAUSTED:
@@ -333,7 +342,10 @@ void ServiceBrowser::ResolveCallback(AvahiServiceResolver* pResolver, AvahiResol
                     }
                 }
                 itService->second->lstInstances.push_back(pInstance);
-                m_pPoster->InstanceResolved(pInstance);
+                if(m_pPoster)
+                {
+                    m_pPoster->InstanceResolved(pInstance);
+                }
                 m_mutex.unlock();
 
                 Log::Get() << "ServiceBrowser: Instance '" << pInstance->sName << "' resolved at '" << pInstance->sHostIP << "'" << endl;
@@ -360,7 +372,10 @@ void ServiceBrowser::RemoveServiceInstance(const std::string& sService, const st
                 list<dnsInstance*>::iterator itDelete(itInstance);
                 ++itInstance;
                 itService->second->lstInstances.erase(itDelete);
-                m_pPoster->InstanceRemoved(sInstance);
+                if(m_pPoster)
+                {
+                    m_pPoster->InstanceRemoved(sInstance);
+                }
             }
             else
             {
@@ -376,8 +391,7 @@ void ServiceBrowser::CheckStop()
     --m_nWaitingOn;
     if(m_nWaitingOn == 0)
     {
-        //wxCommandEvent event(wxEVT_BROWSE_FINISHED);
-        //wxPostEvent(this, event);
+        NodeApi::Get().SignalBrowse();
     }
 }
 

@@ -103,11 +103,6 @@ wxnmosDialog::wxnmosDialog(wxWindow* parent,wxWindowID id)
 
     NodeApi::Get().Init(8080, 8081, "host1", "host1");
     NodeApi::Get().GetSelf().AddApiVersion("v1.2");
-//    NodeApi::Get().GetSelf().AddVersion("v1.0");
-//    NodeApi::Get().GetSelf().AddVersion("v1.1");
-
-
-    //NodeApi::Get().GetSelf().AddEndpoint("192.168.1.35", 8080, false);
     NodeApi::Get().GetSelf().AddInternalClock("clk0");
     NodeApi::Get().GetSelf().AddPTPClock("clk1", true, "IEEE1588-2008", "08-00-11-ff-fe-21-e1-b0", true);
     NodeApi::Get().GetSelf().AddInterface("eth0", "74-26-96-db-87-31", "74-26-96-db-87-32");
@@ -175,10 +170,7 @@ void wxnmosDialog::OnBrowserResolved(wxCommandEvent& event)
 void wxnmosDialog::OnBrowserAllForNow(wxCommandEvent& event)
 {
     Log(wxT("Browser - all for now "));
-    if(event.GetString() == "_nmos-registration._tcp")
-    {
-        NodeApi::Get().RegisterThreaded();
-    }
+
 }
 
 void wxnmosDialog::OnRegistrationError(wxCommandEvent& event)
