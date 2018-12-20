@@ -451,11 +451,11 @@ int NodeApi::GetJsonNmosConnectionSingleApi(std::string& sReturn)
         jsNode.append("receivers/");
         sReturn = stw.write(jsNode);
     }
-    else if(m_vPath[SZC_TYPE] == "senders")
+    else if(m_vPath[C_DIRECTION] == "senders")
     {
-        sReturn = stw.write(m_senders.GetConnectionJson());
+        return GetJsonNmosConnectionSingleSenders(sReturn);
     }
-    else if(m_vPath[SZC_TYPE] == "receivers")
+    else if(m_vPath[C_DIRECTION] == "receivers")
     {
         sReturn = stw.write(m_receivers.GetConnectionJson());
     }
@@ -466,6 +466,119 @@ int NodeApi::GetJsonNmosConnectionSingleApi(std::string& sReturn)
     }
     return nCode;
 }
+
+
+int NodeApi::GetJsonNmosConnectionSingleSenders(std::string& sReturn)
+{
+    int nCode(200);
+    Json::StyledWriter stw;
+    if(m_vPath.size() == SZC_DIRECTION)
+    {
+        sReturn = stw.write(m_senders.GetConnectionJson());
+    }
+    else
+    {
+        map<string, Resource*>::const_iterator itResource = m_senders.FindResource(m_vPath[SZC_DIRECTION]);
+        if(itResource != m_senders.GetResourceEnd())
+        {
+            if(m_vPath.size() == SZC_ID)
+            {
+                Json::Value jsNode;
+                jsNode.append("constraints/");
+                jsNode.append("staged/");
+                jsNode.append("active/");
+                jsNode.append("transportfile/");
+                sReturn = stw.write(jsNode);
+            }
+            else
+            {
+                if(m_vPath[C_LAST] == "constraints")
+                {
+
+                }
+                else if(m_vPath[C_LAST] == "staged")
+                {
+                    sReturn = stw.write(dynamic_cast<Sender*>(itResource->second)->GetConnectionStagedJson());
+                }
+                else if(m_vPath[C_LAST] == "active")
+                {
+                    sReturn = stw.write(dynamic_cast<Sender*>(itResource->second)->GetConnectionActiveJson());
+                }
+                else if(m_vPath[C_LAST] == "transportfile")
+                {
+
+                }
+                else
+                {
+                    nCode = 404;
+                    sReturn = stw.write(GetJsonError(404, "Endpoint not found"));
+                }
+            }
+        }
+        else
+        {
+            nCode = 404;
+            sReturn = stw.write(GetJsonError(404, "Sender not found"));
+        }
+    }
+    return nCode;
+}
+
+int NodeApi::GetJsonNmosConnectionSingleReceivers(std::string& sReturn)
+{
+    int nCode(200);
+    Json::StyledWriter stw;
+    if(m_vPath.size() == SZC_DIRECTION)
+    {
+        sReturn = stw.write(m_receivers.GetConnectionJson());
+    }
+    else
+    {
+        map<string, Resource*>::const_iterator itResource = m_receivers.FindResource(m_vPath[SZC_DIRECTION]);
+        if(itResource != m_receivers.GetResourceEnd())
+        {
+            if(m_vPath.size() == SZC_ID)
+            {
+                Json::Value jsNode;
+                jsNode.append("constraints/");
+                jsNode.append("staged/");
+                jsNode.append("active/");
+                sReturn = stw.write(jsNode);
+            }
+            else
+            {
+                if(m_vPath[C_LAST] == "constraints")
+                {
+
+                }
+                else if(m_vPath[C_LAST] == "staged")
+                {
+
+                }
+                else if(m_vPath[C_LAST] == "active")
+                {
+
+                }
+                else if(m_vPath[C_LAST] == "transportfile")
+                {
+
+                }
+                else
+                {
+                    nCode = 404;
+                    sReturn = stw.write(GetJsonError(404, "Endpoint not found"));
+                }
+            }
+        }
+        else
+        {
+            nCode = 404;
+            sReturn = stw.write(GetJsonError(404, "Receiver not found"));
+        }
+    }
+    return nCode;
+}
+
 
 int NodeApi::GetJsonNmosConnectionBulkApi(std::string& sReturn)
 {

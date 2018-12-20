@@ -5,5 +5,8 @@
 		<Project filename="wxnmos.cbp">
 			<Depends filename="libnmos.cbp" />
 		</Project>
+		<Project filename="nmos_node_test.cbp">
+			<Depends filename="libnmos.cbp" />
+		</Project>
 	</Workspace>
 </CodeBlocks_workspace_file>

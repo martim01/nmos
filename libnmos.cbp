@@ -107,6 +107,8 @@
 		<Unit filename="sourcegeneric.cpp" />
 		<Unit filename="sourcegeneric.h" />
 		<Unit filename="timeofday.h" />
+		<Unit filename="transportparams.cpp" />
+		<Unit filename="transportparams.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

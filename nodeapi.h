@@ -194,6 +194,9 @@ class NMOS_EXPOSE NodeApi
         int GetJsonNmosConnectionSingleApi(std::string& sReturn);
         int GetJsonNmosConnectionBulkApi(std::string& sReturn);
 
+        int GetJsonNmosConnectionSingleSenders(std::string& sReturn);
+        int GetJsonNmosConnectionSingleReceivers(std::string& sReturn);
+
         Json::Value GetJsonSources();
         Json::Value GetJsonDevices();
         Json::Value GetJsonFlows();
@@ -252,7 +255,8 @@ class NMOS_EXPOSE NodeApi
         enum {BASE=0, NMOS=1, API_TYPE=2,VERSION=3,ENDPOINT=4, RESOURCE=5};
         enum {SZ_BASE=1, SZ_NMOS=2, SZ_API_TYPE=3,SZ_VERSION=4,SZ_ENDPOINT=5};
 
-        enum {SZC_TYPE=5, SZC_DIRECTION=6};
+        enum {SZC_TYPE=5, SZC_DIRECTION=6, SZC_ID=7, SZC_LAST=8};
+        enum {C_TYPE = 4, C_DIRECTION=5, C_ID=6, C_LAST=7};
 
         static const std::string STR_RESOURCE[7];
 };

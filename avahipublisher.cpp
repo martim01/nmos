@@ -65,7 +65,7 @@ void ServicePublisher::CreateServices()
          * because it was reset previously, add our entries.  */
         if (avahi_entry_group_is_empty(m_pGroup))
         {
-            Log::Get() << "ServicePublisher: Adding service " << m_psName << endl;
+            Log::Get(Log::DEBUG) << "ServicePublisher: Adding service " << m_psName << endl;
 
             AvahiStringList* pList = GetTxtList();
             if(!pList)
@@ -110,7 +110,7 @@ void ServicePublisher::Collision()
     char *n = avahi_alternative_service_name(m_psName);
     avahi_free(m_psName);
     m_psName = n;
-    Log::Get() << "ServicePublisher: Service name collision, renaming service to " << m_psName << endl;
+    Log::Get(Log::DEBUG) << "ServicePublisher: Service name collision, renaming service to " << m_psName << endl;
     avahi_entry_group_reset(m_pGroup);
     CreateServices();
 }
@@ -154,7 +154,7 @@ void ServicePublisher::ClientCallback(AvahiClient* pClient, AvahiClientState sta
         switch (state)
         {
         case AVAHI_CLIENT_S_RUNNING:
-            Log::Get() << "ServicePublisher: Client: Running" << endl;
+            Log::Get(Log::DEBUG) << "ServicePublisher: Client: Running" << endl;
             /* The server has startup successfully and registered its host
              * name on the network, so it's time to create our services */
              m_pClient = pClient;
@@ -173,14 +173,14 @@ void ServicePublisher::ClientCallback(AvahiClient* pClient, AvahiClientState sta
              * might be caused by a host name change. We need to wait
              * for our own records to register until the host name is
              * properly esatblished. */
-             Log::Get() << "ServicePublisher: Client: Collison or registering" << endl;
+             Log::Get(Log::DEBUG) << "ServicePublisher: Client: Collison or registering" << endl;
             if (m_pGroup)
             {
                 avahi_entry_group_reset(m_pGroup);
             }
             break;
         case AVAHI_CLIENT_CONNECTING:
-            Log::Get() << "ServicePublisher: Client: Connecting" << endl;
+            Log::Get(Log::DEBUG) << "ServicePublisher: Client: Connecting" << endl;
         }
     }
 }
@@ -210,7 +210,7 @@ bool ServicePublisher::Start()
         Stop();
         return false;
     }
-    Log::Get() << "ServicePublisher: Started" << endl;
+    Log::Get(Log::DEBUG) << "ServicePublisher: Started" << endl;
     /* After 10s do some weird modification to the service */
     //avahi_thread_poll_get(thread_poll)->timeout_new(avahi_thread_poll_get(thread_poll),avahi_elapse_time(&tv, 1000*10, 0),modify_callback,client);
     /* Run the main loop */
@@ -252,11 +252,11 @@ void ServicePublisher::RemoveTxt(string sKey, string sValue)
 
 AvahiStringList* ServicePublisher::GetTxtList()
 {
-    Log::Get() << "ServicePublisher: Create string list" << endl;
+    Log::Get(Log::DEBUG) << "ServicePublisher: Create string list" << endl;
     AvahiStringList* pList = NULL;
     for(map<string, string>::iterator itTxt = m_mTxt.begin(); itTxt != m_mTxt.end(); ++itTxt)
     {
-        Log::Get() << itTxt->first << "=" << itTxt->second << endl;
+        Log::Get(Log::DEBUG) << itTxt->first << "=" << itTxt->second << endl;
         if(pList == NULL)
         {
             std::string sPair(itTxt->first);

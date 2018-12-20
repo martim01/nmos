@@ -2,6 +2,7 @@
 #include "resource.h"
 #include <set>
 #include "dlldefine.h"
+#include "transportparams.h"
 
 class NMOS_EXPOSE Sender : public Resource
 {
@@ -28,6 +29,9 @@ class NMOS_EXPOSE Sender : public Resource
             return m_sFlowId;
         }
 
+        Json::Value GetConnectionStagedJson() const;
+        Json::Value GetConnectionActiveJson() const;
+
     private:
         std::string m_sFlowId;
         enumTransport m_eTransport;
@@ -36,6 +40,28 @@ class NMOS_EXPOSE Sender : public Resource
         std::string m_sReceiverId;
         bool m_bReceiverActive;
         std::set<std::string> m_setInterfaces;
+
+
+        //Connection API
+        struct connection
+        {
+            enum enumActivate {ACT_NULL, ACT_NOW, ACT_ABSOLUTE, ACT_RELATIVE};
+            connection() : bMasterEnable(true), eActivate(ACT_NULL){}
+            TransportParamsRTPSender tpSender;
+            std::string sReceiverId;
+            bool bMasterEnable;
+            enumActivate eActivate;
+            std::string sActivationTime;
+            static const std::string STR_ACTIVATE[4];
+
+        };
+        connection m_Staged;
+        connection m_Active;
+
+        Json::Value GetConnectionJson(const connection& con) const;
+
+
+
 
         static const std::string TRANSPORT[4];
 };

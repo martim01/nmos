@@ -97,7 +97,7 @@ Json::Value ResourceHolder::GetConnectionJson() const
     Json::Value jsArray(Json::arrayValue);
     for(std::map<std::string, Resource*>::const_iterator itResource = m_mResource.begin(); itResource != m_mResource.end(); ++itResource)
     {
-        jsArray.append(itResource->first);
+        jsArray.append(itResource->first+"/");
     }
     return jsArray;
 }
