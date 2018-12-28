@@ -1,5 +1,4 @@
 #include "self.h"
-#include "microserver.h"
 
 using namespace std;
 
@@ -14,7 +13,6 @@ Self::Self(string sHostname, string sUrl,string sLabel, string sDescription) : R
 
 Self::~Self()
 {
-    StopServers();
 }
 
 void Self::Init(std::string sHostname, std::string sUrl,std::string sLabel, std::string sDescription)
@@ -51,12 +49,6 @@ void Self::AddEndpoint(string sHost, unsigned int nPort, bool bSecure)
 
 void Self::RemoveEndpoint(string sHost, unsigned int nPort)
 {
-    map<unsigned short, MicroServer*>::iterator itServer = m_mServers.find(nPort);
-    if(itServer != m_mServers.end())
-    {
-        delete itServer->second;
-        m_mServers.erase(itServer);
-    }
     m_setEndpoint.erase(endpoint(sHost, nPort, false));
     UpdateVersionTime();
 }
@@ -187,32 +179,32 @@ bool Self::IsVersionSupported(std::string sVersion) const
 
 
 
-bool Self::StartServers()
-{
-    for(set<endpoint>::iterator itEndpoint = m_setEndpoint.begin(); itEndpoint != m_setEndpoint.end(); ++itEndpoint)
-    {
-        map<unsigned short, MicroServer*>::iterator itServer = m_mServers.find(itEndpoint->nPort);
-        if(itServer == m_mServers.end())
-        {
-            MicroServer* pServer(new MicroServer());
-            m_mServers.insert(make_pair(itEndpoint->nPort, pServer));
-            pServer->Init(itEndpoint->nPort);
-        }
-    }
-    return true;
-}
+//bool Self::StartServers()
+//{
+//    for(set<endpoint>::iterator itEndpoint = m_setEndpoint.begin(); itEndpoint != m_setEndpoint.end(); ++itEndpoint)
+//    {
+//        map<unsigned short, MicroServer*>::iterator itServer = m_mServers.find(itEndpoint->nPort);
+//        if(itServer == m_mServers.end())
+//        {
+//            MicroServer* pServer(new MicroServer());
+//            m_mServers.insert(make_pair(itEndpoint->nPort, pServer));
+//            pServer->Init(itEndpoint->nPort);
+//        }
+//    }
+//    return true;
+//}
 
 
-bool Self::StopServers()
-{
-    for(map<unsigned short, MicroServer*>::iterator itServer = m_mServers.begin(); itServer != m_mServers.end(); ++itServer)
-    {
-        itServer->second->Stop();
-        delete itServer->second;
-    }
-    m_mServers.clear();
-    return true;
-}
+//bool Self::StopServers()
+//{
+//    for(map<unsigned short, MicroServer*>::iterator itServer = m_mServers.begin(); itServer != m_mServers.end(); ++itServer)
+//    {
+//        itServer->second->Stop();
+//        delete itServer->second;
+//    }
+//    m_mServers.clear();
+//    return true;
+//}
 
 set<endpoint>::const_iterator Self::GetEndpointsBegin() const
 {

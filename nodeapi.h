@@ -20,6 +20,7 @@ class Flow;
 class Receiver;
 class Sender;
 class NmosThread;
+class MicroServer;
 
 
 class NMOS_EXPOSE NodeApi
@@ -129,6 +130,15 @@ class NMOS_EXPOSE NodeApi
         **/
         const ResourceHolder& GetSenders();
 
+
+
+        /** @brief Signal a paused HttpServer that it may continue and reply to the question asked. Should be called by the main thread on handling a server blocking eventblocker event
+        *   @param nPort the port of the server
+        *   @param nCode the response code to return
+        **/
+        void SignalServer(unsigned short nPort, unsigned char nCode);
+
+
         /** @brief Returns a const reference to the ResourceHolder that contains all the resources returned from a query
         *   @return </i>const ResourceHolder&</i>
         **/
@@ -145,6 +155,8 @@ class NMOS_EXPOSE NodeApi
 
 
 
+
+
     protected:
         friend class NmosThread;
         friend class ServiceBrowser;
@@ -156,6 +168,7 @@ class NMOS_EXPOSE NodeApi
         bool BrowseForRegistrationNode();
         void SignalBrowse();
         void SignalCommit();
+
 
         bool WaitForCommit(unsigned long nMilliseconds);
 
@@ -170,7 +183,8 @@ class NMOS_EXPOSE NodeApi
         int UpdateRegisterSimple();
 
         int GetJson(std::string sPath, std::string& sResponse, unsigned short nPort);
-        int PutJson(std::string sPath, std::string sJson, std::string& sRepsonse, unsigned short nPort);
+        int PutJson(std::string sPath, const std::string& sJson, std::string& sRepsonse, unsigned short nPort);
+        int PatchJson(std::string sPath, const std::string& sJson, std::string& sRepsonse, unsigned short nPort);
 
     private:
         NodeApi();
@@ -197,6 +211,9 @@ class NMOS_EXPOSE NodeApi
         int GetJsonNmosConnectionSingleSenders(std::string& sReturn);
         int GetJsonNmosConnectionSingleReceivers(std::string& sReturn);
 
+        int PatchJsonSender(const std::string& sJson, std::string& sResponse, unsigned short nPort);
+        int PatchJsonReceiver(const std::string& sJson, std::string& sResponse, unsigned short nPort);
+
         Json::Value GetJsonSources();
         Json::Value GetJsonDevices();
         Json::Value GetJsonFlows();
@@ -217,7 +234,7 @@ class NMOS_EXPOSE NodeApi
 
         bool FindQueryNode();
 
-
+        bool CheckNodeApiPath();
 
         Self m_self;
         ResourceHolder m_devices;
@@ -243,17 +260,19 @@ class NMOS_EXPOSE NodeApi
         unsigned int m_nRegistrationStatus;
 
         std::mutex m_mutex;
-        std::condition_variable m_cvBrowse;
-        std::condition_variable m_cvCommit;
+        std::condition_variable m_cvBrowse; //sync between nmos thread and ServiceBrowser thread
+        std::condition_variable m_cvCommit; //sync between nmos thread and main thread (used to sleep until a Commit is called)
+
 
         bool m_bRun;
         EventPoster* m_pPoster;
         unsigned short m_nConnectionPort;
+        unsigned short m_nDiscoveryPort;
 
-        std::map<unsigned short, MicroServer*> m_mConnectionServers;
+        std::map<unsigned short, MicroServer*> m_mServers;
 
-        enum {BASE=0, NMOS=1, API_TYPE=2,VERSION=3,ENDPOINT=4, RESOURCE=5};
-        enum {SZ_BASE=1, SZ_NMOS=2, SZ_API_TYPE=3,SZ_VERSION=4,SZ_ENDPOINT=5};
+        enum {BASE=0, NMOS=1, API_TYPE=2,VERSION=3,ENDPOINT=4, RESOURCE=5, TARGET=6};
+        enum {SZ_BASE=1, SZ_NMOS=2, SZ_API_TYPE=3,SZ_VERSION=4,SZ_ENDPOINT=5, SZ_RESOURCE=6, SZ_TARGET=7};
 
         enum {SZC_TYPE=5, SZC_DIRECTION=6, SZC_ID=7, SZC_LAST=8};
         enum {C_TYPE = 4, C_DIRECTION=5, C_ID=6, C_LAST=7};

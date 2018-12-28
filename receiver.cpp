@@ -1,7 +1,9 @@
 #include "receiver.h"
+#include "sender.h"
 
 const std::string Receiver::TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash"};
 const std::string Receiver::TYPE[4] = {"urn:x-nmos:format:audio", "urn:x-nmos:format:video", "urn:x-nmos:format:data", "urn:x-nmos:format:mux"};
+
 
 Receiver::Receiver(std::string sLabel, std::string sDescription, enumTransport eTransport, std::string sDeviceId, enumType eFormat) :
     Resource(sLabel, sDescription),
@@ -9,9 +11,18 @@ Receiver::Receiver(std::string sLabel, std::string sDescription, enumTransport e
     m_sDeviceId(sDeviceId),
     m_sSenderId(""),
     m_bSenderActive(false),
-    m_eType(eFormat)
+    m_eType(eFormat),
+    m_pSender(0)
 {
 
+}
+
+Receiver::~Receiver()
+{
+    if(m_pSender)
+    {
+        delete m_pSender;
+    }
 }
 
 void Receiver::AddInterfaceBinding(std::string sInterface)
@@ -61,7 +72,6 @@ bool Receiver::Commit()
 {
     if(Resource::Commit())
     {
-
         m_json["device_id"] = m_sDeviceId;
         m_json["transport"] = TRANSPORT[m_eTransport];
         m_json["format"] = TYPE[m_eType];
@@ -106,3 +116,69 @@ bool Receiver::Commit()
 
 
 
+Json::Value Receiver::GetConnectionStagedJson() const
+{
+    return m_Staged.GetJson();
+}
+
+
+Json::Value Receiver::GetConnectionActiveJson() const
+{
+    return m_Active.GetJson();
+}
+
+
+
+const Sender* Receiver::GetSender() const
+{
+    return m_pSender;
+}
+
+void Receiver::SetSender(const Sender* pSender)
+{
+    if(m_pSender)
+    {
+        delete m_pSender;
+    }
+    m_pSender = pSender;
+}
+
+
+Json::Value Receiver::GetConnectionConstraintsJson() const
+{
+    Json::Value jsArray(Json::arrayValue);
+    jsArray.append(m_constraints.GetJson());
+    return jsArray;
+}
+
+
+bool Receiver::CheckConstraints(const connectionReceiver& conRequest)
+{
+    bool bMeets = m_constraints.destination_port.MeetsConstraint(conRequest.tpReceiver.nDestinationPort);
+    bMeets &= m_constraints.fec_destination_ip.MeetsConstraint(conRequest.tpReceiver.sFecDestinationIp);
+    bMeets &= m_constraints.fec_enabled.MeetsConstraint(conRequest.tpReceiver.bFecEnabled);
+    bMeets &= m_constraints.fec_mode.MeetsConstraint(TransportParamsRTP::STR_FEC_MODE[conRequest.tpReceiver.eFecMode]);
+    bMeets &= m_constraints.fec1D_destination_port.MeetsConstraint(conRequest.tpReceiver.nFec1DDestinationPort);
+    bMeets &= m_constraints.fec2D_destination_port.MeetsConstraint(conRequest.tpReceiver.nFec2DDestinationPort);
+    bMeets &= m_constraints.rtcp_destination_ip.MeetsConstraint(conRequest.tpReceiver.sRtcpDestinationIp);
+    bMeets &= m_constraints.rtcp_destination_port.MeetsConstraint(conRequest.tpReceiver.nRtcpDestinationPort);
+    bMeets &= m_constraints.interface_ip.MeetsConstraint(conRequest.tpReceiver.sInterfaceIp);
+
+    return bMeets;
+}
+
+
+bool Receiver::IsLocked()
+{
+    return (m_Staged.eActivate == connection::ACT_ABSOLUTE || m_Staged.eActivate == connection::ACT_RELATIVE);
+}
+
+void Receiver::Stage(const connectionReceiver& conRequest)
+{
+    m_Staged = conRequest;
+}
+
+const connectionReceiver& Receiver::GetStaged() const
+{
+    return m_Staged;
+}

@@ -56,6 +56,10 @@
 		<Unit filename="avahibrowser.h" />
 		<Unit filename="avahipublisher.cpp" />
 		<Unit filename="avahipublisher.h" />
+		<Unit filename="connection.cpp" />
+		<Unit filename="connection.h" />
+		<Unit filename="constraint.cpp" />
+		<Unit filename="constraint.h" />
 		<Unit filename="curlregister.cpp" />
 		<Unit filename="curlregister.h" />
 		<Unit filename="device.cpp" />

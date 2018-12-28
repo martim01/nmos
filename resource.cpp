@@ -12,37 +12,39 @@
 
 Resource::Resource(std::string sLabel, std::string sDescription) :
     m_sLabel(sLabel),
-    m_sDescription(sDescription)
+    m_sDescription(sDescription),
+    m_bIsOk(true)
 {
     CreateGuid();
     UpdateVersionTime();
 }
 
-Resource::Resource()
+Resource::Resource() :
+    m_bIsOk(true)
 {
     CreateGuid();
     UpdateVersionTime();
 }
 
-Resource::Resource(const Json::Value& jsValue)
+Resource::Resource(const Json::Value& jsValue) :
+    m_bIsOk(false)
 {
     m_json = jsValue;
-    if(m_json["id"].isString())
+
+    m_bIsOk = (m_json["id"].isString() && m_json["label"].isString() && m_json["description"].isString() && m_json["version"].isString());
+    if(m_bIsOk)
     {
         m_sId = m_json["id"].asString();
-    }
-    if(m_json["label"].isString())
-    {
         m_sLabel = m_json["label"].asString();
-    }
-    if(m_json["description"].isString())
-    {
         m_sDescription = m_json["description"].asString();
-    }
-    if(m_json["version"].isString())
-    {
         m_sVersion = m_json["version"].asString();
     }
+}
+
+
+bool Resource::IsOk() const
+{
+    return m_bIsOk;
 }
 
 void Resource::AddTag(std::string sTag)

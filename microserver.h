@@ -1,12 +1,14 @@
 #pragma once
 #include <string>
-
+#include <condition_variable>
 #include "microhttpd.h"
+#include <thread>
+
 class MicroServer;
 
 struct ConnectionInfo
 {
-    enum {GET=0, PUT=1};
+    enum {GET=0, POST = 1, PUT=2, PATCH = 3};
     ConnectionInfo() : nType(GET), pPost(0){}
     int nType;
     MicroServer* pServer;
@@ -36,14 +38,25 @@ class MicroServer
         static void RequestCompleted (void *cls, MHD_Connection* pConnection, void **ptr, enum MHD_RequestTerminationCode toe);
         static int DoHttpGet(MHD_Connection* pConnection, std::string sUrl, ConnectionInfo* pInfo);
         static int DoHttpPut(MHD_Connection* pConnection, std::string sUrl, ConnectionInfo* pInfo);
+        static int DoHttpPatch(MHD_Connection* pConnection, std::string sUrl, ConnectionInfo* pInfo);
         static int AnswerToConnection(void *cls, MHD_Connection* pConnection, const char * url, const char * method, const char * sVersion, const char * upload_data, size_t * upload_data_size, void **ptr);
 
+
+        unsigned char GetResponseCode() const;
+
+    protected:
+        friend class NodeApi;
+        void Wait();
+        void Signal(unsigned char nCode);
 
     private:
         unsigned short m_nPort;
 
         MHD_Daemon* m_pmhd;
-
         std::string m_sPut;
+
+        std::mutex m_mutex;
+        std::condition_variable m_cvSync;
+        unsigned char m_nCode;
 };
 

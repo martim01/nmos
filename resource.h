@@ -18,8 +18,8 @@ class NMOS_EXPOSE Resource
         const std::string& GetLabel() const;
         const std::string& GetDescription() const;
         const std::string& GetVersion() const;
-        //std::string GetJsonValue() const;
 
+        bool IsOk() const;
 
 
         const Json::Value& GetJson() const;
@@ -31,6 +31,8 @@ class NMOS_EXPOSE Resource
     protected:
         void UpdateVersionTime();
         Json::Value m_json;
+        bool m_bIsOk;
+
 
     private:
         void CreateGuid();
@@ -40,4 +42,6 @@ class NMOS_EXPOSE Resource
         std::string m_sVersion;
         std::string m_sLastVersion;
         std::list<std::string> m_lstTag;
+
+
 };

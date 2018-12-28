@@ -1,7 +1,6 @@
 #include "sender.h"
 
 const std::string Sender::TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash"};
-const std::string Sender::connection::STR_ACTIVATE[4] = {"", "activate_immediate", "activate_scheduled_absolute", "activate_scheduled_relative"};
 
 
 Sender::Sender(std::string sLabel, std::string sDescription, std::string sFlowId, enumTransport eTransport, std::string sDeviceId, std::string sManifestHref) :
@@ -14,6 +13,56 @@ Sender::Sender(std::string sLabel, std::string sDescription, std::string sFlowId
     m_bReceiverActive(false)
 {
 
+}
+
+
+Sender::Sender(const Json::Value& jsData) : Resource(jsData)
+{
+    m_bIsOk = m_bIsOk && (m_json["flow_id"].isString() && m_json["device_id"].isString() && m_json["manifest_href"].isString() &&  m_json["transport"].isString()
+                   && m_json["interface_bindings"].isArray() && m_json["subscription"].isObject() && m_json["subscription"]["receiver_id"].isString() && m_json["subscription"]["active"].isBool());
+
+    if(m_bIsOk)
+    {
+        m_sFlowId = m_json["flow_id"].asString();
+        m_sDeviceId = m_json["device_id"].asString();
+        m_sManifest = m_json["manifest_href"].asString();
+
+        if(m_json["transport"].asString() == TRANSPORT[RTP])
+        {
+            m_eTransport = RTP;
+        }
+        else if(m_json["transport"].asString() == TRANSPORT[RTP_UCAST])
+        {
+            m_eTransport = RTP_UCAST;
+        }
+        else if(m_json["transport"].asString() == TRANSPORT[RTP_MCAST])
+        {
+            m_eTransport = RTP_MCAST;
+        }
+        else if(m_json["transport"].asString() == TRANSPORT[DASH])
+        {
+            m_eTransport = DASH;
+        }
+        else
+        {
+            m_bIsOk = false;
+        }
+        for(Json::ArrayIndex n = 0; n < m_json["interface_bindings"].size(); n++)
+        {
+            if(m_json["interface_bindings"][n].isString())
+            {
+                m_setInterfaces.insert(m_json["interface_bindings"][n].asString());
+            }
+            else
+            {
+                m_bIsOk = false;
+                break;
+            }
+        }
+
+        m_sReceiverId = m_json["subscription"]["receiver_id"].asString();
+        m_bReceiverActive = m_json["subscription"]["active"].asBool();
+    }
 }
 
 void Sender::AddInterfaceBinding(std::string sInterface)
@@ -89,48 +138,63 @@ void Sender::SetManifestHref(std::string sHref)
 
 Json::Value Sender::GetConnectionStagedJson() const
 {
-    return GetConnectionJson(m_Staged);
+    return m_Staged.GetJson();
 }
 
 
 Json::Value Sender::GetConnectionActiveJson() const
 {
-    return GetConnectionJson(m_Active);
+    return m_Active.GetJson();
 }
 
-Json::Value Sender::GetConnectionJson(const Sender::connection& con) const
+
+
+
+Json::Value Sender::GetConnectionConstraintsJson() const
 {
-    Json::Value jsConnect;
-    if(con.sReceiverId.empty())
-    {
-        jsConnect["receiver_id"] = Json::nullValue;
-    }
-    else
-    {
-        jsConnect["receiver_id"] = con.sReceiverId;
-    }
-    jsConnect["activation"] = Json::objectValue;
-    if(con.eActivate == connection::ACT_NULL)
-    {
-        jsConnect["activation"]["mode"] = Json::nullValue;
-        jsConnect["activation"]["requested_time"] = Json::nullValue;
+    Json::Value jsArray(Json::arrayValue);
+    jsArray.append(m_constraints.GetJson());
+    return jsArray;
+}
 
-    }
-    else
-    {
-        jsConnect["activation"]["mode"] = connection::STR_ACTIVATE[con.eActivate];
-        if(con.eActivate == connection::ACT_NOW)
-        {
-            jsConnect["activation"]["requested_time"] = Json::nullValue;
-        }
-        else
-        {
-            jsConnect["activation"]["requested_time"] = con.sActivationTime;
-        }
-    }
 
-    jsConnect["master_enable"] = con.bMasterEnable;
-    jsConnect["transport_params"] = Json::arrayValue;
-    jsConnect["transport_params"].append(con.tpSender.GetJson());
-    return jsConnect;
+
+bool Sender::CheckConstraints(const connectionSender& conRequest)
+{
+    bool bMeets = m_constraints.destination_port.MeetsConstraint(conRequest.tpSender.nDestinationPort);
+    bMeets &= m_constraints.fec_destination_ip.MeetsConstraint(conRequest.tpSender.sFecDestinationIp);
+    bMeets &= m_constraints.fec_enabled.MeetsConstraint(conRequest.tpSender.bFecEnabled);
+    bMeets &= m_constraints.fec_mode.MeetsConstraint(TransportParamsRTP::STR_FEC_MODE[conRequest.tpSender.eFecMode]);
+    bMeets &= m_constraints.fec1D_destination_port.MeetsConstraint(conRequest.tpSender.nFec1DDestinationPort);
+    bMeets &= m_constraints.fec2D_destination_port.MeetsConstraint(conRequest.tpSender.nFec2DDestinationPort);
+    bMeets &= m_constraints.rtcp_destination_ip.MeetsConstraint(conRequest.tpSender.sRtcpDestinationIp);
+    bMeets &= m_constraints.rtcp_destination_port.MeetsConstraint(conRequest.tpSender.nRtcpDestinationPort);
+
+    bMeets &= m_constraints.destination_ip.MeetsConstraint(conRequest.tpSender.sDestinationIp);
+    bMeets &= m_constraints.source_ip.MeetsConstraint(conRequest.tpSender.sSourceIp);
+    bMeets &= m_constraints.source_port.MeetsConstraint(conRequest.tpSender.nSourcePort);
+    bMeets &= m_constraints.fec_type.MeetsConstraint(TransportParamsRTPSender::STR_FEC_TYPE[conRequest.tpSender.eFecType]);
+    bMeets &= m_constraints.fec_block_width.MeetsConstraint(conRequest.tpSender.nFecBlockWidth);
+    bMeets &= m_constraints.fec_block_height.MeetsConstraint(conRequest.tpSender.nFecBlockHeight);
+    bMeets &= m_constraints.fec1D_source_port.MeetsConstraint(conRequest.tpSender.nFec1DSourcePort);
+    bMeets &= m_constraints.fec2D_source_port.MeetsConstraint(conRequest.tpSender.nFec2DSourcePort);
+    bMeets &= m_constraints.rtcp_enabled.MeetsConstraint(conRequest.tpSender.bRtcpEnabled);
+    bMeets &= m_constraints.rtcp_source_port.MeetsConstraint(conRequest.tpSender.nRtcpSourcePort);
+    bMeets &= m_constraints.rtp_enabled.MeetsConstraint(conRequest.tpSender.bRtpEnabled);
+    return bMeets;
+}
+
+bool Sender::IsLocked()
+{
+    return (m_Staged.eActivate == connection::ACT_ABSOLUTE || m_Staged.eActivate == connection::ACT_RELATIVE);
+}
+
+void Sender::Stage(const connectionSender& conRequest)
+{
+    m_Staged = conRequest;
+}
+
+const Sender::connectionSender& GetStaged()
+{
+    return m_Staged;
 }

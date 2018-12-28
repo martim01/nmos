@@ -64,6 +64,19 @@ int MicroServer::DoHttpPut(MHD_Connection* pConnection, string sUrl, ConnectionI
     return ret;
 }
 
+int MicroServer::DoHttpPatch(MHD_Connection* pConnection, string sUrl, ConnectionInfo* pInfo)
+{
+    string sResponse;
+    int nCode = NodeApi::Get().PatchJson(sUrl, pInfo->pServer->GetPutData(), sResponse, pInfo->pServer->GetPort());
+    pInfo->pServer->ResetPutData();
+
+    MHD_Response* pResponse = MHD_create_response_from_buffer (sResponse.length(), (void *) sResponse.c_str(), MHD_RESPMEM_MUST_COPY);
+    MHD_add_response_header(pResponse, "Content-Type", "application/json");
+    int ret = MHD_queue_response (pConnection, nCode, pResponse);
+    MHD_destroy_response (pResponse);
+    return ret;
+}
+
 int MicroServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, const char * url, const char * method, const char * sVersion, const char * upload_data, size_t * upload_data_size, void **ptr)
 {
     string sMethod(method);
@@ -76,16 +89,27 @@ int MicroServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, cons
             return MHD_NO;
         }
         pInfo->pServer = reinterpret_cast<MicroServer*>(cls);
-        if("PUT" == sMethod || "POST" == sMethod)
+        if("PUT" == sMethod || "POST" == sMethod || "PATCH" == sMethod)
         {
-            Log::Get(Log::DEBUG) << "Initial connection: PUT" << endl;
+            Log::Get(Log::DEBUG) << "Initial connection: " << sMethod << endl;
             pInfo->pPost = MHD_create_post_processor (pConnection, 65536, IteratePost, (void *)pInfo);
             if(NULL == pInfo->pPost)
             {
                 delete pInfo;
                 return MHD_NO;
             }
-            pInfo->nType = ConnectionInfo::PUT;
+            if("PUT" == sMethod)
+            {
+                pInfo->nType = ConnectionInfo::PUT;
+            }
+            else if("POST" == sMethod)
+            {
+                pInfo->nType = ConnectionInfo::POST;
+            }
+            else if("PATCH" == sMethod)
+            {
+                pInfo->nType = ConnectionInfo::PATCH;
+            }
         }
         else
         {
@@ -114,6 +138,21 @@ int MicroServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, cons
         else
         {
             return DoHttpPut(pConnection, url, pInfo);
+        }
+    }
+    else if("PATCH" == string(sMethod))
+    {
+        Log::Get(Log::DEBUG) << "Actual connection: PATCH" << endl;
+        ConnectionInfo* pInfo = reinterpret_cast<ConnectionInfo*>(*ptr);
+        if (*upload_data_size != 0)
+        {
+            MHD_post_process (pInfo->pPost, upload_data, *upload_data_size);
+            *upload_data_size = 0;
+            return MHD_YES;
+        }
+        else
+        {
+            return DoHttpPatch(pConnection, url, pInfo);
         }
     }
 
@@ -173,4 +212,22 @@ string MicroServer::GetPutData() const
 void MicroServer::ResetPutData()
 {
     m_sPut.clear();
+}
+
+void MicroServer::Wait()
+{
+    std::unique_lock<std::mutex> lk(m_mutex);
+    m_cvSync.wait(lk);
+}
+
+void MicroServer::Signal(unsigned char nCode)
+{
+    m_nCode = nCode;
+    m_cvSync.notify_one();
+}
+
+unsigned char MicroServer::GetResponseCode() const
+{
+    lock_guard<mutex> lock(m_mutex);
+    return m_nCode;
 }

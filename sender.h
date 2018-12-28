@@ -2,13 +2,17 @@
 #include "resource.h"
 #include <set>
 #include "dlldefine.h"
-#include "transportparams.h"
+#include "connection.h"
+#include "constraint.h"
 
 class NMOS_EXPOSE Sender : public Resource
 {
     public:
-        enum enumTransport {RTP, RPT_UCAST, RTP_MCAST, DASH};
+        enum enumTransport {RTP, RTP_UCAST, RTP_MCAST, DASH};
         Sender(std::string sLabel, std::string sDescription, std::string sFlowId, enumTransport eTransport, std::string sDeviceId, std::string sManifestHref);
+
+        Sender(const Json::Value& jsData);
+
 
         void AddInterfaceBinding(std::string sInterface);
         void RemoveInterfaceBinding(std::string sInterface);
@@ -31,6 +35,13 @@ class NMOS_EXPOSE Sender : public Resource
 
         Json::Value GetConnectionStagedJson() const;
         Json::Value GetConnectionActiveJson() const;
+        Json::Value GetConnectionConstraintsJson() const;
+
+        bool CheckConstraints(const connectionSender& conRequest);
+        bool IsLocked();
+
+        void Stage(const connectionSender& conRequest);
+        const connectionSender& GetStaged();
 
     private:
         std::string m_sFlowId;
@@ -42,23 +53,12 @@ class NMOS_EXPOSE Sender : public Resource
         std::set<std::string> m_setInterfaces;
 
 
-        //Connection API
-        struct connection
-        {
-            enum enumActivate {ACT_NULL, ACT_NOW, ACT_ABSOLUTE, ACT_RELATIVE};
-            connection() : bMasterEnable(true), eActivate(ACT_NULL){}
-            TransportParamsRTPSender tpSender;
-            std::string sReceiverId;
-            bool bMasterEnable;
-            enumActivate eActivate;
-            std::string sActivationTime;
-            static const std::string STR_ACTIVATE[4];
 
-        };
-        connection m_Staged;
-        connection m_Active;
+        connectionSender m_Staged;
+        connectionSender m_Active;
+        constraintsSender m_constraints;
 
-        Json::Value GetConnectionJson(const connection& con) const;
+
 
 
 

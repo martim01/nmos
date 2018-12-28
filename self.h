@@ -6,7 +6,6 @@
 #include "resource.h"
 #include "dlldefine.h"
 
-class MicroServer;
 
 
 struct endpoint
@@ -54,8 +53,7 @@ class NMOS_EXPOSE Self : public Resource
         void AddApiVersion(std::string sVersion);
         void RemoveApiVersion(std::string sVersion);
 
-        void AddEndpoint(std::string sHost, unsigned int nPort, bool bSecure);
-        void RemoveEndpoint(std::string sHost, unsigned int nPort);
+
 
         void AddService(std::string sUrl, std::string sType);
         void RemoveService(std::string sUrl);
@@ -78,11 +76,15 @@ class NMOS_EXPOSE Self : public Resource
 
         unsigned char GetDnsVersion() const;
 
-        bool StartServers();
-        bool StopServers();
 
         std::set<endpoint>::const_iterator GetEndpointsBegin() const;
         std::set<endpoint>::const_iterator GetEndpointsEnd() const;
+
+    protected:
+        friend class NodeApi;
+
+        void AddEndpoint(std::string sHost, unsigned int nPort, bool bSecure);
+        void RemoveEndpoint(std::string sHost, unsigned int nPort);
 
     private:
         std::string m_sHostname;
@@ -135,6 +137,6 @@ class NMOS_EXPOSE Self : public Resource
         std::map<std::string, interface> m_mInterface;
         std::map<std::string, clock> m_mClock;
 
-        std::map<unsigned short, MicroServer*> m_mServers;
+
 
 };
