@@ -42,7 +42,7 @@ class MicroServer
         static int AnswerToConnection(void *cls, MHD_Connection* pConnection, const char * url, const char * method, const char * sVersion, const char * upload_data, size_t * upload_data_size, void **ptr);
 
 
-        unsigned char GetResponseCode() const;
+        unsigned char GetResponseCode();
 
     protected:
         friend class NodeApi;

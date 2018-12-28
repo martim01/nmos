@@ -30,6 +30,9 @@ class NMOS_EXPOSE Resource
 
     protected:
         void UpdateVersionTime();
+
+        std::string GetCurrentTime();
+
         Json::Value m_json;
         bool m_bIsOk;
 

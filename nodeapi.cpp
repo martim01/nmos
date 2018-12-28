@@ -646,7 +646,7 @@ int NodeApi::PutJson(string sPath, const string& sJson, string& sResponse, unsig
         if(m_vPath[NMOS] == "x-nmos" && m_vPath[API_TYPE] == "node" &&  m_self.IsVersionSupported(m_vPath[VERSION]) && m_vPath[ENDPOINT] == "receivers" && m_vPath[TARGET] == "target")
         {
             //does the receiver exist?
-            map<string, Resource*>::const_iterator itReceiver = m_receivers.FindResource(m_vPath[RESOURCE]);
+            map<string, Resource*>::iterator itReceiver = m_receivers.GetResource(m_vPath[RESOURCE]);
             if(itReceiver == m_receivers.GetResourceEnd())
             {
                 nCode = 404;
@@ -678,16 +678,17 @@ int NodeApi::PutJson(string sPath, const string& sJson, string& sResponse, unsig
                         m_pPoster->Target(m_vPath[RESOURCE], pSender, nPort);
                         //Pause the HTTP thread
                         itServer->second->Wait();
+                        nCode = itServer->second->GetResponseCode();
+                        if(nCode == 202)
+                        {   //this means the main thread has connected the receiver to the sender
 
-                        //has the receiver taken the stream?
-                        if(dynamic_cast<Receiver*>(itReceiver->second)->GetSender())
-                        {
+                            dynamic_cast<Receiver*>(itReceiver->second)->SetSender(pSender);
+                            Commit();   //updates the registration node or txt records
+
                             sResponse = stw.write(dynamic_cast<Receiver*>(itReceiver->second)->GetSender()->GetJson());
-                            nCode = 202;
                         }
                         else
                         {
-                            nCode = 503;
                             sResponse = stw.write(GetJsonError(nCode, "Request okay but receiver can't connect to sender."));
                             delete pSender;
                         }
@@ -796,15 +797,15 @@ int NodeApi::PatchJsonSender(const std::string& sJson, std::string& sResponse, u
                     }
                     else
                     {
-
                         map<unsigned short, MicroServer*>::iterator itServer = m_mServers.find(nPort);
                         if(m_pPoster && itServer != m_mServers.end())
                         {   //tell the main thread and wait to see what happens
+                            //the main thread should check that it can definitely do what the patch says and simply signal true or false
                             m_pPoster->PatchSender(m_vPath[C_ID], conRequest, nPort);
                             //Pause the HTTP thread
                             itServer->second->Wait();
 
-                            nCode = itServer->second->GetCode();
+                            nCode = itServer->second->GetResponseCode();
                             if(nCode == 200 || nCode == 202)
                             {
                                 pSender->Stage(conRequest); //PATCH the sender
@@ -859,21 +860,22 @@ int NodeApi::PatchJsonReceiver(const std::string& sJson, std::string& sResponse,
         }
         else
         {
+            Receiver* pReceiver(dynamic_cast<Receiver*>(itReceiver->second));
             //can we create a connection from the json?
-            connectionReceiver conRequest(jsRequest);
-            if(conRequest.bIsOk == false)
+            connectionReceiver conRequest(pReceiver->GetStaged());
+            if(conRequest.Patch(jsRequest) == false)
             {
                 nCode = 400;
                 sResponse = stw.write(GetJsonError(nCode, "Request does not meet schema."));
             }
             else
             {
-                if(dynamic_cast<Receiver*>(itReceiver->second)->IsLocked() == true)
+                if(pReceiver->IsLocked() == true)
                 {
                     nCode = 423;
                     sResponse = stw.write(GetJsonError(nCode, "Receiver had pending activation."));
                 }
-                else if(dynamic_cast<Receiver*>(itReceiver->second)->CheckConstraints(conRequest) == false)
+                else if(pReceiver->CheckConstraints(conRequest) == false)
                 {//does the connection meet the receiver constraints?
                     nCode = 400;
                     sResponse = stw.write(GetJsonError(nCode, "Request does not meet receiver's constraints."));
@@ -1065,8 +1067,7 @@ void NodeApi::SignalServer(unsigned short nPort, unsigned char nCode)
     map<unsigned short, MicroServer*>::iterator itServer = m_mServers.find(nPort);
     if(itServer != m_mServers.end())
     {
-        itServer->second->SetRequestCode(nCode);
-        itServer->second->Signal();
+        itServer->second->Signal(nCode);
     }
 }
 

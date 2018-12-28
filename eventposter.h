@@ -73,4 +73,16 @@ class NMOS_EXPOSE EventPoster
         *   @note this is a blocking event. The target of this function should call the NodeApi::SignalServer function once it is ready for the MicroServer to continue
         **/
         virtual void PatchReceiver(const std::string& sReceiverId, const connectionReceiver& conPatch, unsigned short nPort)=0;
+
+        /** @brief Called by ActivateThread telling the main thread to activate the staged paramaters
+        *   @param sSenderId the Id of the sender to activate
+        *   @note The main thread should call the Sender's Activate function to update the connection API
+        **/
+        virtual void ActivateSender(const std::string& sSenderId)=0;
+
+        /** @brief Called by ActivateThread telling the main thread to activate the staged paramaters
+        *   @param sSenderId the Id of the receiver to activate
+        *   @note The main thread should call the Receivers's Activate function to update the connection API
+        **/
+        virtual void ActivateReceiver(const std::string& sReceiverId)=0;
 };

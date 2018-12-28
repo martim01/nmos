@@ -14,7 +14,7 @@ TransportParamsRTP::TransportParamsRTP() :
     bRtcpEnabled(false),
     sRtcpDestinationIp("auto"),
     nRtcpDestinationPort(0),
-    bRtpEnabled(false),
+    bRtpEnabled(false)
 {
 
 }

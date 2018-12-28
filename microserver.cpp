@@ -226,7 +226,7 @@ void MicroServer::Signal(unsigned char nCode)
     m_cvSync.notify_one();
 }
 
-unsigned char MicroServer::GetResponseCode() const
+unsigned char MicroServer::GetResponseCode()
 {
     lock_guard<mutex> lock(m_mutex);
     return m_nCode;

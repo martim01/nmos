@@ -1,5 +1,6 @@
 #include "receiver.h"
 #include "sender.h"
+#include <chrono>
 
 const std::string Receiver::TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash"};
 const std::string Receiver::TYPE[4] = {"urn:x-nmos:format:audio", "urn:x-nmos:format:video", "urn:x-nmos:format:data", "urn:x-nmos:format:mux"};
@@ -49,12 +50,7 @@ void Receiver::RemoveCap(std::string sCap)
     UpdateVersionTime();
 }
 
-void Receiver::SetSubscription(std::string sSenderId, bool bActive)
-{
-    m_sSenderId = sSenderId;
-    m_bSenderActive = bActive;
-    UpdateVersionTime();
-}
+
 
 void Receiver::SetTransport(enumTransport eTransport)
 {
@@ -92,23 +88,18 @@ bool Receiver::Commit()
 
         m_json["subscription"] = Json::Value(Json::objectValue);
 
-        if(m_sSenderId.empty())
+        if(m_pSender == NULL)
         {
              m_json["subscription"]["sender_id"] = Json::nullValue;
+             m_json["subscription"]["active"] = false;
         }
         else
         {
-            m_json["subscription"]["sender_id"] = m_sSenderId;
+            m_json["subscription"]["sender_id"] = m_pSender->GetId();
+            m_json["subscription"]["active"] = true;    //@todo we need to get this information from somewhere sensible
         }
 
-        if(m_bSenderActive)
-        {
-            m_json["subscription"]["active"] = true;
-        }
-        else
-        {
-            m_json["subscription"]["active"] = false;
-        }
+
         return true;
     }
     return false;
@@ -141,6 +132,8 @@ void Receiver::SetSender(const Sender* pSender)
         delete m_pSender;
     }
     m_pSender = pSender;
+    UpdateVersionTime();
+    // @todo need to update the IS-05 stage and active connection settings to match
 }
 
 
@@ -168,7 +161,7 @@ bool Receiver::CheckConstraints(const connectionReceiver& conRequest)
 }
 
 
-bool Receiver::IsLocked()
+bool Receiver::IsLocked() const
 {
     return (m_Staged.eActivate == connection::ACT_ABSOLUTE || m_Staged.eActivate == connection::ACT_RELATIVE);
 }
@@ -176,6 +169,20 @@ bool Receiver::IsLocked()
 void Receiver::Stage(const connectionReceiver& conRequest)
 {
     m_Staged = conRequest;
+
+    switch(m_Staged.eActivate)
+    {
+        case connection::ACT_NOW:
+            m_Staged.sActivationTime = GetCurrentTime();
+            // @todo Tell the main thread to do it's stuff
+            break;
+        case connection::ACT_ABSOLUTE:
+            // @todo start a thread that will sleep until the given time and then tell the main thread to do it's stuff
+            break;
+        case connection::ACT_RELATIVE:
+            // @todo start a thread that will sleep for the given time period and then tell the main thread to do its stuff
+            break;
+    }
 }
 
 const connectionReceiver& Receiver::GetStaged() const

@@ -1,13 +1,12 @@
 #include "resource.h"
 #ifdef __WIN__
 #include <objbase.h>
-#include "timeofday.h"
 #endif
 #ifdef __GNU__
 #include <uuid/uuid.h>
 #include <sys/time.h>
 #endif // __GNU__
-
+#include <chrono>
 #include <sstream>
 
 Resource::Resource(std::string sLabel, std::string sDescription) :
@@ -133,18 +132,18 @@ void Resource::UpdateDescription(std::string sDescription)
 
 void Resource::UpdateVersionTime()
 {
-    timeval tvNow;
-
-    gettimeofday(&tvNow, NULL);
-    std::stringstream strs;
-    unsigned long nNano(tvNow.tv_usec);
-    nNano*=1000;
-
-    strs << tvNow.tv_sec << ":" << nNano;
-
     m_sLastVersion = m_sVersion;
 
-    m_sVersion = strs.str();
+    m_sVersion = GetCurrentTime();
+}
+
+std::string Resource::GetCurrentTime()
+{
+    auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+    std::stringstream sstr;
+
+    sstr << (nanos/1000000000) << ":" << (nanos%1000000000);
+    return sstr.str();
 }
 
 const Json::Value& Resource::GetJson() const

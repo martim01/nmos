@@ -1,4 +1,5 @@
 #include "sender.h"
+#include "eventposter.h"
 
 const std::string Sender::TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash"};
 
@@ -192,9 +193,23 @@ bool Sender::IsLocked()
 void Sender::Stage(const connectionSender& conRequest)
 {
     m_Staged = conRequest;
+
+    switch(m_Staged.eActivate)
+    {
+        case connection::ACT_NOW:
+            m_Staged.sActivationTime = GetCurrentTime();
+            // @todo Tell the main thread to do it's stuff
+            break;
+        case connection::ACT_ABSOLUTE:
+            // @todo start a thread that will sleep until the given time and then tell the main thread to do it's stuff
+            break;
+        case connection::ACT_RELATIVE:
+            // @todo start a thread that will sleep for the given time period and then tell the main thread to do its stuff
+            break;
+    }
 }
 
-const Sender::connectionSender& GetStaged()
+const connectionSender& Sender::GetStaged()
 {
     return m_Staged;
 }

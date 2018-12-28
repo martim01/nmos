@@ -4,7 +4,7 @@ const std::string connection::STR_ACTIVATE[4] = {"", "activate_immediate", "acti
 
 connection::connection() :
     bMasterEnable(true),
-    eActivate(connection::ACT_NULL),
+    eActivate(connection::ACT_NULL)
 {
 
 }
@@ -81,7 +81,7 @@ Json::Value connection::GetJson() const
     else
     {
         jsConnect["activation"]["mode"] = STR_ACTIVATE[eActivate];
-        if(eActivate == ACT_NOW)
+        if(eActivate == ACT_NULL)
         {
             jsConnect["activation"]["requested_time"] = Json::nullValue;
         }
@@ -150,7 +150,7 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
     bool bIsOk = connection::Patch(jsData);
     if(bIsOk)
     {
-        bIsOk &= tpReceiver.Patch();
+        bIsOk &= tpReceiver.Patch(jsData["transport_params"]);
 
         if(jsData["sender_id"].isString())
         {

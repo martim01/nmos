@@ -23,7 +23,7 @@ class NMOS_EXPOSE Receiver : public Resource
         void AddCap(std::string sCap);
         void RemoveCap(std::string sCap);
 
-        void SetSubscription(std::string sSenderId, bool bActive);
+
         virtual bool Commit();
 
         const std::string& GetDeviceId() const

@@ -236,6 +236,7 @@ class NMOS_EXPOSE NodeApi
 
         bool CheckNodeApiPath();
 
+
         Self m_self;
         ResourceHolder m_devices;
         ResourceHolder m_senders;
