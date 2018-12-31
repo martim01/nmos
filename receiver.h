@@ -1,11 +1,14 @@
 #pragma once
 #include "resource.h"
 #include <set>
+#include <memory>
 #include "dlldefine.h"
 #include "constraint.h"
 #include "connection.h"
 
 class Sender;
+class EventPoster;
+
 class NMOS_EXPOSE Receiver : public Resource
 {
     public:
@@ -40,8 +43,10 @@ class NMOS_EXPOSE Receiver : public Resource
 
         bool CheckConstraints(const connectionReceiver& conRequest);
         bool IsLocked() const;
-        void Stage(const connectionReceiver& conRequest);
-        const connectionReceiver& GetStaged() const;
+        bool Stage(const connectionReceiver& conRequest, std::shared_ptr<EventPoster> pPoster);
+        connectionReceiver GetStaged() const;
+
+        void Activate();
 
     private:
         enumTransport m_eTransport;

@@ -52,9 +52,16 @@ bool NmosThread::RegisteredOperation()
     {
         while(NodeApi::Get().IsRunning())
         {
-            if(NodeApi::Get().WaitForCommit(5000))    //@todo we should be able to set heartbeat time
+            if(NodeApi::Get().Wait(5000))    //@todo we should be able to set heartbeat time
             {
-                NodeApi::Get().UpdateRegisterSimple();
+                switch(NodeApi::Get().GetSignal())
+                {
+                    case NodeApi::SIG_COMMIT:
+                        NodeApi::Get().UpdateRegisterSimple();
+                        break;
+                    default:
+                        break;
+                }
             }
             long nResponse = NodeApi::Get().RegistrationHeartbeat();
             if(nResponse == 0 || nResponse >= 500)

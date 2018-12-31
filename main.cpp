@@ -2,7 +2,7 @@
 #include "json/json.h"
 #include <iostream>
 #include <fstream>
-
+#include "threadposter.h"
 #include "nodeapi.h"
 #include "sourceaudio.h"
 #include "flowaudioraw.h"
@@ -64,8 +64,74 @@ int main()
     }
     NodeApi::Get().Commit();
 
-    NodeApi::Get().StartServices(NULL);
-    getchar();
+    std::shared_ptr<ThreadPoster> pPoster = std::make_shared<ThreadPoster>();
+    NodeApi::Get().StartServices(pPoster);
+    while(true)
+    {
+        if(pPoster->Wait(chrono::milliseconds(100)))
+        {
+            switch(pPoster->GetReason())
+            {
+                case ThreadPoster::CURL_DONE:
+                    cout << "----------------------------------------" << endl;
+                    cout << "Curl Done" << endl;
+                    cout << "----------------------------------------" << endl;
+                    break;
+                case ThreadPoster::INSTANCE_RESOLVED:
+                    cout << "----------------------------------------" << endl;
+                    cout << "Browser: Instance Resolved" << endl;
+                    cout << "----------------------------------------" << endl;
+                    break;
+                case ThreadPoster::ALLFORNOW:
+                    cout << "----------------------------------------" << endl;
+                    cout << "Browser: All For Now" << endl;
+                    cout << "----------------------------------------" << endl;
+                    break;
+                case ThreadPoster::FINISHED:
+                    cout << "----------------------------------------" << endl;
+                    cout << "Browser: Finished" << endl;
+                    cout << "----------------------------------------" << endl;
+                    break;
+                case ThreadPoster::REGERROR:
+                    cout << "----------------------------------------" << endl;
+                    cout << "Publisher: Error" << endl;
+                    cout << "----------------------------------------" << endl;
+                    break;
+                case ThreadPoster::INSTANCE_REMOVED:
+                    cout << "----------------------------------------" << endl;
+                    cout << "Browser: Instance Removed" << endl;
+                    cout << "----------------------------------------" << endl;
+                    break;
+                case ThreadPoster::TARGET:
+                    cout << "----------------------------------------" << endl;
+                    cout << "NMOS Target: " << pPoster->GetString() << endl;
+                    cout << "----------------------------------------" << endl;
+                    NodeApi::Get().SignalServer(pPoster->GetPort(), 200);
+                    break;
+                case ThreadPoster::PATCH_SENDER:
+                    cout << "----------------------------------------" << endl;
+                    cout << "NMOS Patch Sender: " << pPoster->GetString() << endl;
+                    cout << "----------------------------------------" << endl;
+                    NodeApi::Get().SignalServer(pPoster->GetPort(), 200);
+                    break;
+                case ThreadPoster::PATCH_RECEIVER:
+                    cout << "----------------------------------------" << endl;
+                    cout << "NMOS Patch Receiver: " << pPoster->GetString() << endl;
+                    cout << "----------------------------------------" << endl;
+                    NodeApi::Get().SignalServer(pPoster->GetPort(), 200);
+                    break;
+                case ThreadPoster::ACTIVATE_SENDER:
+                    cout << "----------------------------------------" << endl;
+                    cout << "NMOS Activate Sender: " << pPoster->GetString() << endl;
+                    cout << "----------------------------------------" << endl;
+                case ThreadPoster::ACTIVATE_RECEIVER:
+                    cout << "----------------------------------------" << endl;
+                    cout << "NMOS Activate Receiver: " << pPoster->GetString() << endl;
+                    cout << "----------------------------------------" << endl;
+            }
+
+        }
+    }
     NodeApi::Get().StopServices();
     return 0;
 

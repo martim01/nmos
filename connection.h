@@ -14,6 +14,7 @@ struct connection
 
     bool bMasterEnable;
     enumActivate eActivate;
+    std::string sRequestedTime;
     std::string sActivationTime;
 
     static const std::string STR_ACTIVATE[4];

@@ -1,9 +1,24 @@
 #include "receiver.h"
 #include "sender.h"
 #include <chrono>
+#include "eventposter.h"
+#include "connection.h"
+#include "activationthread.h"
+
+
+static void ActivationThreadReceiver(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sReceiverId, std::shared_ptr<EventPoster> pPoster)
+{
+    std::this_thread::sleep_until(tp);
+    if(pPoster)
+    {
+        pPoster->_ActivateReceiver(sReceiverId);
+    }
+}
+
 
 const std::string Receiver::TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash"};
 const std::string Receiver::TYPE[4] = {"urn:x-nmos:format:audio", "urn:x-nmos:format:video", "urn:x-nmos:format:data", "urn:x-nmos:format:mux"};
+
 
 
 Receiver::Receiver(std::string sLabel, std::string sDescription, enumTransport eTransport, std::string sDeviceId, enumType eFormat) :
@@ -163,29 +178,98 @@ bool Receiver::CheckConstraints(const connectionReceiver& conRequest)
 
 bool Receiver::IsLocked() const
 {
+    std::lock_guard<std::mutex> lg(m_mutex);
     return (m_Staged.eActivate == connection::ACT_ABSOLUTE || m_Staged.eActivate == connection::ACT_RELATIVE);
 }
 
-void Receiver::Stage(const connectionReceiver& conRequest)
+bool Receiver::Stage(const connectionReceiver& conRequest, std::shared_ptr<EventPoster> pPoster)
 {
+    bool bOk(true);
+    m_mutex.lock();
     m_Staged = conRequest;
+    m_mutex.unlock();
 
     switch(m_Staged.eActivate)
     {
+        case connection::ACT_NULL:
+            m_Staged.sActivationTime = GetCurrentTime();
+            // @todo Cancel any activations that were going to happen
+            break;
         case connection::ACT_NOW:
             m_Staged.sActivationTime = GetCurrentTime();
-            // @todo Tell the main thread to do it's stuff
+            // Tell the main thread to do it's stuff
+            if(pPoster)
+            {
+                pPoster->_ActivateReceiver(GetId());
+            }
+            else
+            {
+                // @todo no poster so do the activation bits ourself
+            }
             break;
         case connection::ACT_ABSOLUTE:
-            // @todo start a thread that will sleep until the given time and then tell the main thread to do it's stuff
+            if(pPoster)
+            {
+                std::chrono::time_point<std::chrono::high_resolution_clock> tp;
+                if(ConvertTaiStringToTimePoint(m_Staged.sRequestedTime, tp))
+                {
+                    std::thread thActive(ActivationThreadReceiver, tp, GetId(), pPoster);
+                    thActive.detach();
+                }
+                else
+                {
+                    bOk = false;
+                }
+            }
+            else
+            {
+                //nothing to do here -
+                bOk = false;
+            }
             break;
         case connection::ACT_RELATIVE:
-            // @todo start a thread that will sleep for the given time period and then tell the main thread to do its stuff
+            // start a thread that will sleep for the given time period and then tell the main thread to do its stuff
+            if(pPoster)
+            {
+                std::chrono::time_point<std::chrono::high_resolution_clock> tp(std::chrono::high_resolution_clock::now().time_since_epoch());
+
+                try
+                {
+                    std::chrono::nanoseconds nano(stoul(m_Staged.sActivationTime));
+                    std::thread thActive(ActivationThreadReceiver, (tp+nano), GetId(), pPoster);
+                    thActive.detach();
+                }
+                catch(std::invalid_argument& ia)
+                {
+                    bOk = false;
+                }
+            }
+            else
+            {
+                //nothing to do here
+                bOk = false;
+            }
             break;
     }
+    return bOk;
 }
 
-const connectionReceiver& Receiver::GetStaged() const
+
+connectionReceiver Receiver::GetStaged() const
 {
+    std::lock_guard<std::mutex> lg(m_mutex);
     return m_Staged;
+}
+
+
+void Receiver::Activate()
+{
+
+    //activeate - set subscription, receiverId and active on master_enable. Commit afterwards
+    m_sSenderId = m_Staged.sSenderId;
+    m_bSenderActive = m_Staged.bMasterEnable;
+
+    //move the staged parameters to active parameters
+    m_Active = m_Staged;
+    //@todo change auto settings to what they actually are
 }

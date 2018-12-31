@@ -43,7 +43,7 @@ void Self::RemoveApiVersion(string sVersion)
 
 void Self::AddEndpoint(string sHost, unsigned int nPort, bool bSecure)
 {
-    pair<set<endpoint>::iterator, bool> ins = m_setEndpoint.insert(endpoint(sHost, nPort, bSecure));
+    m_setEndpoint.insert(endpoint(sHost, nPort, bSecure));
     UpdateVersionTime();
 }
 

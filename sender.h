@@ -1,9 +1,13 @@
 #pragma once
 #include "resource.h"
 #include <set>
+#include <memory>
+
 #include "dlldefine.h"
 #include "connection.h"
 #include "constraint.h"
+
+class EventPoster;
 
 class NMOS_EXPOSE Sender : public Resource
 {
@@ -40,8 +44,12 @@ class NMOS_EXPOSE Sender : public Resource
         bool CheckConstraints(const connectionSender& conRequest);
         bool IsLocked();
 
-        void Stage(const connectionSender& conRequest);
-        const connectionSender& GetStaged();
+        bool Stage(const connectionSender& conRequest, std::shared_ptr<EventPoster> pPoster);
+        connectionSender GetStaged();
+
+        // called by the main thread as a reply to the eventposter
+        void Activate();
+
 
     private:
         std::string m_sFlowId;

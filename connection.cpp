@@ -21,7 +21,7 @@ bool connection::Patch(const Json::Value& jsData)
         }
         else
         {
-            bIsOk = false;
+            bIsOk = (jsData["master_enable"].empty());
         }
 
         if(jsData["activation"].isObject())
@@ -46,7 +46,7 @@ bool connection::Patch(const Json::Value& jsData)
             }
             if(jsData["activation"]["requested_time"].isString())
             {
-                sActivationTime = jsData["activation"]["requested_time"].asString();
+                sRequestedTime = jsData["activation"]["requested_time"].asString();
                 // @todo check time is correct
             }
             else
@@ -84,10 +84,20 @@ Json::Value connection::GetJson() const
         if(eActivate == ACT_NULL)
         {
             jsConnect["activation"]["requested_time"] = Json::nullValue;
+
+            if(sActivationTime.empty() == false)
+            {
+                jsConnect["activation"]["activation_time"] = Json::nullValue;
+            }
         }
         else
         {
-            jsConnect["activation"]["requested_time"] = sActivationTime;
+            jsConnect["activation"]["requested_time"] = sRequestedTime;
+
+            if(sActivationTime.empty() == false)
+            {
+                jsConnect["activation"]["activation_time"] = sActivationTime;
+            }
         }
     }
 
@@ -116,7 +126,7 @@ bool connectionSender::Patch(const Json::Value& jsData)
         }
         else
         {
-            bIsOk &= (jsData["receiver_id"].isNull());
+            bIsOk &= (jsData["receiver_id"].isNull() || jsData["receiver_id"].empty());
         }
     }
     return bIsOk;
@@ -158,7 +168,7 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
         }
         else
         {
-            bIsOk &= (jsData["sender_id"].isNull());
+            bIsOk &= (jsData["sender_id"].isNull() || jsData["sender_id"].empty());
         }
 
         if(jsData["transport_file"].isObject())
@@ -179,6 +189,7 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
             {
                 bIsOk &= (jsData["transport_file"]["data"].isNull());
             }
+            // @todo decode transport file and overwrite staged parameters with the relevant settings
         }
     }
     return bIsOk;

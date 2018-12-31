@@ -47,7 +47,7 @@ class NMOS_EXPOSE NodeApi
         *   @note NodeApi takes owenership of the EventPoster and will delete it on destruction
         *   @return <i>bool</i> true on succesfully starting the thread
         **/
-        bool StartServices(EventPoster* pPoster);
+        bool StartServices(std::shared_ptr<EventPoster> pPoster);
 
         /** @brief Stop the thread that is running the nmos services
         **/
@@ -131,6 +131,17 @@ class NMOS_EXPOSE NodeApi
         const ResourceHolder& GetSenders();
 
 
+        /** @brief Returns a pointer to the receiver with the given id if one exists or null.
+        *   @param sId the uuid of the receiver
+        *   @return <i>Receiver*</i> pointer to the given receiver or null
+        **/
+        Receiver* GetReceiver(const std::string& sId);
+
+        /** @brief Returns a pointer to the Sender with the given id if one exists or null.
+        *   @param sId the uuid of the Sender
+        *   @return <i>Sender*</i> pointer to the given Sender or null
+        **/
+        Sender* GetSender(const std::string& sId);
 
         /** @brief Signal a paused HttpServer that it may continue and reply to the question asked. Should be called by the main thread on handling a server blocking eventblocker event
         *   @param nPort the port of the server
@@ -153,8 +164,24 @@ class NMOS_EXPOSE NodeApi
         bool Query(enumResource eResource, const std::string& sQuery);
 
 
+        /** @brief returns the port number used for the connection api
+        *   @return <i>unsigned short</i>
+        **/
+        unsigned short GetConnectionPort() const;
 
 
+
+        /** @brief Activates the stage parameters of the Sender with the given Id and updates any IS-O4 version information
+        *   @param sId the uuid of the Sender
+        *   @return <i>bool</i> true if the Sender was found
+        **/
+        bool ActivateSender(const std::string& sId);
+
+        /** @brief Activates the stage parameters of the Receiver with the given Id and updates any IS-04 version information
+        *   @param sId the uuid of the Receiver
+        *   @return <i>bool</i> true if the Receiver was found
+        **/
+        bool ActivateReceiver(const std::string& sId);
 
 
     protected:
@@ -167,10 +194,15 @@ class NMOS_EXPOSE NodeApi
         bool StartHttpServers();
         bool BrowseForRegistrationNode();
         void SignalBrowse();
-        void SignalCommit();
 
 
-        bool WaitForCommit(unsigned long nMilliseconds);
+        enum enumSignal{SIG_NONE=0, SIG_COMMIT=1};
+
+        void Signal(enumSignal eSignal);
+        enumSignal GetSignal() const;
+
+
+        bool Wait(unsigned long nMilliseconds);
 
         bool FindRegistrationNode();
         bool IsRunning();
@@ -182,9 +214,7 @@ class NMOS_EXPOSE NodeApi
         long RegistrationHeartbeat();
         int UpdateRegisterSimple();
 
-        int GetJson(std::string sPath, std::string& sResponse, unsigned short nPort);
-        int PutJson(std::string sPath, const std::string& sJson, std::string& sRepsonse, unsigned short nPort);
-        int PatchJson(std::string sPath, const std::string& sJson, std::string& sRepsonse, unsigned short nPort);
+
 
     private:
         NodeApi();
@@ -200,27 +230,9 @@ class NMOS_EXPOSE NodeApi
 
         void StopRegistrationBrowser();
 
-        void SplitString(std::vector<std::string>& vSplit, std::string str, char cSplit);
 
-        int GetJsonNmos(std::string& sReturn, unsigned short nPort);
-        int GetJsonNmosNodeApi(std::string& sReturn);
-        int GetJsonNmosConnectionApi(std::string& sReturn);
-        int GetJsonNmosConnectionSingleApi(std::string& sReturn);
-        int GetJsonNmosConnectionBulkApi(std::string& sReturn);
 
-        int GetJsonNmosConnectionSingleSenders(std::string& sReturn);
-        int GetJsonNmosConnectionSingleReceivers(std::string& sReturn);
 
-        int PatchJsonSender(const std::string& sJson, std::string& sResponse, unsigned short nPort);
-        int PatchJsonReceiver(const std::string& sJson, std::string& sResponse, unsigned short nPort);
-
-        Json::Value GetJsonSources();
-        Json::Value GetJsonDevices();
-        Json::Value GetJsonFlows();
-        Json::Value GetJsonReceivers();
-        Json::Value GetJsonSenders();
-
-        Json::Value GetJsonError(unsigned long nCode = 404, std::string sError="Resource not found");
 
 
 
@@ -250,7 +262,7 @@ class NMOS_EXPOSE NodeApi
 
 
 
-        std::vector<std::string> m_vPath;
+
         std::string m_sRegistrationNode;
         std::string m_sQueryNode;
 
@@ -266,17 +278,13 @@ class NMOS_EXPOSE NodeApi
 
 
         bool m_bRun;
-        EventPoster* m_pPoster;
+        std::shared_ptr<EventPoster> m_pPoster;
         unsigned short m_nConnectionPort;
         unsigned short m_nDiscoveryPort;
 
         std::map<unsigned short, MicroServer*> m_mServers;
 
-        enum {BASE=0, NMOS=1, API_TYPE=2,VERSION=3,ENDPOINT=4, RESOURCE=5, TARGET=6};
-        enum {SZ_BASE=1, SZ_NMOS=2, SZ_API_TYPE=3,SZ_VERSION=4,SZ_ENDPOINT=5, SZ_RESOURCE=6, SZ_TARGET=7};
 
-        enum {SZC_TYPE=5, SZC_DIRECTION=6, SZC_ID=7, SZC_LAST=8};
-        enum {C_TYPE = 4, C_DIRECTION=5, C_ID=6, C_LAST=7};
-
+        enumSignal m_eSignal;
         static const std::string STR_RESOURCE[7];
 };

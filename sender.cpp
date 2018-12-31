@@ -1,5 +1,16 @@
 #include "sender.h"
 #include "eventposter.h"
+#include <thread>
+
+static void ActivationThreadSender(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sSenderId, std::shared_ptr<EventPoster> pPoster)
+{
+    std::this_thread::sleep_until(tp);
+
+    if(pPoster)
+    {
+        pPoster->_ActivateSender(sSenderId);
+    }
+}
 
 const std::string Sender::TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash"};
 
@@ -187,29 +198,101 @@ bool Sender::CheckConstraints(const connectionSender& conRequest)
 
 bool Sender::IsLocked()
 {
+    std::lock_guard<std::mutex> lg(m_mutex);
     return (m_Staged.eActivate == connection::ACT_ABSOLUTE || m_Staged.eActivate == connection::ACT_RELATIVE);
 }
 
-void Sender::Stage(const connectionSender& conRequest)
+bool Sender::Stage(const connectionSender& conRequest, std::shared_ptr<EventPoster> pPoster)
 {
-    m_Staged = conRequest;
+    bool bOk(true);
+
+    {
+        std::lock_guard<std::mutex> lg(m_mutex);
+        m_Staged = conRequest;
+    }
 
     switch(m_Staged.eActivate)
     {
+        case connection::ACT_NULL:
+            m_Staged.sActivationTime = GetCurrentTime();
+            // @todo Cancel any activations that were going to happen
+            break;
         case connection::ACT_NOW:
             m_Staged.sActivationTime = GetCurrentTime();
-            // @todo Tell the main thread to do it's stuff
+            // Tell the main thread to do it's stuff
+            if(pPoster)
+            {
+                pPoster->_ActivateSender(GetId());
+            }
+            else
+            {
+                // @todo no poster so do the activation bits ourself
+            }
             break;
         case connection::ACT_ABSOLUTE:
-            // @todo start a thread that will sleep until the given time and then tell the main thread to do it's stuff
+            if(pPoster)
+            {
+                std::chrono::time_point<std::chrono::high_resolution_clock> tp;
+                if(ConvertTaiStringToTimePoint(m_Staged.sRequestedTime, tp))
+                {
+                    std::thread thActive(ActivationThreadSender, tp, GetId(), pPoster);
+                    thActive.detach();
+                }
+                else
+                {
+                    bOk = false;
+                }
+            }
+            else
+            {
+                //nothing to do here -
+                bOk = false;
+            }
             break;
         case connection::ACT_RELATIVE:
-            // @todo start a thread that will sleep for the given time period and then tell the main thread to do its stuff
+            // start a thread that will sleep for the given time period and then tell the main thread to do its stuff
+            if(pPoster)
+            {
+                std::chrono::time_point<std::chrono::high_resolution_clock> tp(std::chrono::high_resolution_clock::now().time_since_epoch());
+
+                try
+                {
+                    std::chrono::nanoseconds nano(stoul(m_Staged.sActivationTime));
+                    std::thread thActive(ActivationThreadSender, (tp+nano), GetId(), pPoster);
+                    thActive.detach();
+                }
+                catch(std::invalid_argument& ia)
+                {
+                    bOk = false;
+                }
+            }
+            else
+            {
+                //nothing to do here
+                bOk = false;
+            }
             break;
     }
+    return bOk;
 }
 
-const connectionSender& Sender::GetStaged()
+connectionSender Sender::GetStaged()
 {
+    std::lock_guard<std::mutex> lg(m_mutex);
     return m_Staged;
 }
+
+
+void Sender::Activate()
+{
+    // @todo create the SDP
+
+    //activeate - set subscription, receiverId and active on master_enable. Commit afterwards
+    m_sReceiverId = m_Staged.sReceiverId;
+    m_bReceiverActive = m_Staged.bMasterEnable;
+
+    //move the staged parameters to active parameters
+    m_Active = m_Staged;
+    //@todo change auto settings to what they actually are
+}
+

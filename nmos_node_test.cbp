@@ -93,6 +93,8 @@
 			<Add directory="$(#json.include)" />
 		</Compiler>
 		<Unit filename="main.cpp" />
+		<Unit filename="threadposter.cpp" />
+		<Unit filename="threadposter.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

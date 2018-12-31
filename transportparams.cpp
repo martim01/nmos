@@ -34,7 +34,7 @@ bool TransportParamsRTP::Patch(const Json::Value& jsData)
         }
         else
         {
-            bIsOk = false;
+            bIsOk = jsData["source_ip"].empty();
         }
 
         bIsOk &= DecodePort(jsData, "destination_port", nDestinationPort);
@@ -104,7 +104,7 @@ bool TransportParamsRTP::Patch(const Json::Value& jsData)
         }
         else
         {
-            bIsOk = false;
+            bIsOk &= jsData["rtp_enabled"].empty();
         }
     }
     else
@@ -194,7 +194,7 @@ bool TransportParamsRTPSender::Patch(const Json::Value& jsData)
         }
         else
         {
-            bIsOk = false;
+            bIsOk &= (jsData["destination_ip"].empty());
         }
 
         bIsOk &= DecodePort(jsData, "source_port", nSourcePort);
@@ -288,7 +288,7 @@ bool TransportParamsRTPReceiver::Patch(const Json::Value& jsData)
         }
         else
         {
-            bIsOk = false;
+            bIsOk &= (jsData["multicast_ip"].empty());
         }
 
         if(jsData["interface_ip"].isString())

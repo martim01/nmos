@@ -1,6 +1,8 @@
 #pragma once
 #include "dlldefine.h"
 #include <string>
+#include <thread>
+#include <mutex>
 
 struct dnsInstance;
 class Sender;
@@ -12,6 +14,20 @@ class NMOS_EXPOSE EventPoster
     public:
         EventPoster(){}
         virtual ~EventPoster(){}
+
+        void _CurlDone(unsigned long nResult, const std::string& sResponse, long nType);
+        void _InstanceResolved(dnsInstance* pInstance);
+        void _AllForNow(const std::string& sService);
+        void _Finished();
+        void _RegistrationNodeError();
+        void _InstanceRemoved(const std::string& sInstance);
+        void _Target(const std::string& sReceiverId, const Sender* pSender, unsigned short nPort);
+        void _PatchSender(const std::string& sSenderId, const connectionSender& conPatch, unsigned short nPort);
+        void _PatchReceiver(const std::string& sReceiverId, const connectionReceiver& conPatch, unsigned short nPort);
+        void _ActivateSender(const std::string& sSenderId);
+        void _ActivateReceiver(const std::string& sReceiverId);
+
+    protected:
 
         /** @brief Called by CurlRegister when a request to a webserver is complete
         *   @param nResult the result of the request. 0 = means no connection, otherwise an HTTP header response code
@@ -85,4 +101,8 @@ class NMOS_EXPOSE EventPoster
         *   @note The main thread should call the Receivers's Activate function to update the connection API
         **/
         virtual void ActivateReceiver(const std::string& sReceiverId)=0;
+
+
+    private:
+        std::mutex m_mutex;
 };

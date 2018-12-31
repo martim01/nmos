@@ -65,10 +65,7 @@ NodeApi::~NodeApi()
     {
         delete m_pRegisterCurl;
     }
-    if(m_pPoster)
-    {
-        delete m_pPoster;
-    }
+
 }
 
 
@@ -122,12 +119,12 @@ bool NodeApi::StartHttpServers()
     if(m_nConnectionPort != 0 && m_nDiscoveryPort != 0)
     {
         //start the discovery servers
-        MicroServer* pServer = new MicroServer();
+        MicroServer* pServer = new MicroServer(m_pPoster);
         pServer->Init(m_nDiscoveryPort);
         m_mServers.insert(make_pair(m_nDiscoveryPort, pServer));
 
         //start the connection servers
-        pServer = new MicroServer();
+        pServer = new MicroServer(m_pPoster);
         pServer->Init(m_nConnectionPort);
         m_mServers.insert(make_pair(m_nConnectionPort, pServer));
 
@@ -174,7 +171,7 @@ void NodeApi::StopmDNSServer()
 }
 
 
-bool NodeApi::StartServices(EventPoster* pPoster)
+bool NodeApi::StartServices(shared_ptr<EventPoster> pPoster)
 {
 
     m_pPoster = pPoster;
@@ -189,722 +186,6 @@ bool NodeApi::StartServices(EventPoster* pPoster)
 void NodeApi::StopServices()
 {
     StopRun();
-}
-
-int NodeApi::GetJson(string sPath, string& sReturn, unsigned short nPort)
-{
-    transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
-
-    int nCode = 200;
-    SplitString(m_vPath, sPath, '/');
-
-
-    if(m_vPath.size() <= SZ_BASE)
-    {
-        Json::StyledWriter stw;
-        Json::Value jsNode;
-        jsNode.append("x-nmos/");
-        sReturn = stw.write(jsNode);
-    }
-    else
-    {
-        if(m_vPath[NMOS] == "x-nmos")
-        {   //check on nmos
-
-            nCode = GetJsonNmos(sReturn, nPort);
-        }
-        else
-        {
-            Json::StyledWriter stw;
-            sReturn = stw.write(GetJsonError(404, "Page not found"));
-            nCode = 404;
-        }
-    }
-    return nCode;
-}
-
-int NodeApi::GetJsonNmos(string& sReturn, unsigned short nPort)
-{
-    Json::StyledWriter stw;
-    if(m_vPath.size() == SZ_NMOS)
-    {
-        Json::Value jsNode;
-        if(nPort == m_nConnectionPort)
-        {
-            jsNode.append("connection/");
-        }
-        else
-        {
-            jsNode.append("node/");
-        }
-        sReturn = stw.write(jsNode);
-        return 200;
-    }
-    else if(m_vPath[API_TYPE] == "node" && nPort != m_nConnectionPort)
-    {
-        return GetJsonNmosNodeApi(sReturn);
-
-    }
-    else if(m_vPath[API_TYPE] == "connection" && nPort == m_nConnectionPort)
-    {
-        return GetJsonNmosConnectionApi(sReturn);
-    }
-    sReturn = stw.write(GetJsonError(404, "API not found"));
-    return 404;
-}
-
-int NodeApi::GetJsonNmosNodeApi(string& sReturn)
-{
-    Json::StyledWriter stw;
-    int nCode = 200;
-    if(m_vPath.size() == SZ_API_TYPE)
-    {
-        sReturn = stw.write(m_self.JsonVersions());
-    }
-    else
-    {
-
-        if(m_self.IsVersionSupported(m_vPath[VERSION]))
-        {
-            if(m_vPath.size() == SZ_VERSION)
-            {
-                //check the version::
-
-                Json::Value jsNode;
-                jsNode.append("self/");
-                jsNode.append("sources/");
-                jsNode.append("flows/");
-                jsNode.append("devices/");
-                jsNode.append("senders/");
-                jsNode.append("receivers/");
-                sReturn = stw.write(jsNode);
-            }
-            else if(m_vPath[ENDPOINT] == "self")
-            {
-                sReturn  = stw.write(m_self.GetJson());
-            }
-            else if(m_vPath[ENDPOINT] == "sources")
-            {
-                sReturn  = stw.write(GetJsonSources());
-            }
-            else if(m_vPath[ENDPOINT] == "flows")
-            {
-                sReturn  = stw.write(GetJsonFlows());
-            }
-            else if(m_vPath[ENDPOINT] == "devices")
-            {
-                sReturn  = stw.write(GetJsonDevices());
-            }
-            else if(m_vPath[ENDPOINT] == "senders")
-            {
-                sReturn  = stw.write(GetJsonSenders());
-            }
-            else if(m_vPath[ENDPOINT] == "receivers")
-            {
-                sReturn  = stw.write(GetJsonReceivers());
-            }
-            else
-            {
-                nCode = 404;
-                sReturn = stw.write(GetJsonError(404, "Endpoint not found"));
-            }
-        }
-        else
-        {
-            nCode = 404;
-            sReturn = stw.write(GetJsonError(404, "Version not supported"));
-        }
-    }
-    return nCode;
-}
-
-Json::Value NodeApi::GetJsonSources()
-{
-    if(m_vPath.size() == SZ_ENDPOINT)
-    {
-        return m_sources.GetJson();
-    }
-    else
-    {
-        map<string, Resource*>::const_iterator itSource = m_sources.FindResource(m_vPath[RESOURCE]);
-        if(itSource != m_sources.GetResourceEnd())
-        {
-            return itSource->second->GetJson();
-        }
-    }
-    return GetJsonError();
-}
-
-Json::Value NodeApi::GetJsonDevices()
-{
-    if(m_vPath.size() == SZ_ENDPOINT)
-    {
-        return m_devices.GetJson();
-    }
-    else
-    {
-        map<string, Resource*>::const_iterator itDevice = m_devices.FindResource(m_vPath[RESOURCE]);
-        if(itDevice != m_devices.GetResourceEnd())
-        {
-            return itDevice->second->GetJson();
-        }
-    }
-    return GetJsonError();
-}
-
-Json::Value NodeApi::GetJsonFlows()
-{
-    if(m_vPath.size() == SZ_ENDPOINT)
-    {
-        return m_flows.GetJson();
-    }
-    else
-    {
-        map<string, Resource*>::const_iterator itFlow = m_flows.FindResource(m_vPath[RESOURCE]);
-        if(itFlow != m_flows.GetResourceEnd())
-        {
-            return itFlow->second->GetJson();
-        }
-    }
-    return GetJsonError();
-}
-
-Json::Value NodeApi::GetJsonReceivers()
-{
-    if(m_vPath.size() == SZ_ENDPOINT)
-    {
-        return m_receivers.GetJson();
-    }
-    else
-    {
-        map<string, Resource*>::const_iterator itReceiver = m_receivers.FindResource(m_vPath[RESOURCE]);
-        if(itReceiver != m_receivers.GetResourceEnd())
-        {
-            return itReceiver->second->GetJson();
-        }
-    }
-    return GetJsonError();
-}
-
-Json::Value NodeApi::GetJsonSenders()
-{
-    if(m_vPath.size() == SZ_ENDPOINT)
-    {
-        return m_senders.GetJson();
-    }
-    else
-    {
-        map<string, Resource*>::const_iterator itSender = m_senders.FindResource(m_vPath[RESOURCE]);
-        if(itSender != m_senders.GetResourceEnd())
-        {
-            return itSender->second->GetJson();
-        }
-    }
-    return GetJsonError();
-}
-
-
-int NodeApi::GetJsonNmosConnectionApi(string& sReturn)
-{
-    Json::StyledWriter stw;
-    int nCode = 200;
-    if(m_vPath.size() == SZ_API_TYPE)
-    {
-        sReturn = stw.write("v1.0/");
-    }
-    else
-    {
-        if(m_vPath[VERSION] == "v1.0")
-        {
-            if(m_vPath.size() == SZ_VERSION)
-            {
-                //check the version::
-                Json::Value jsNode;
-                jsNode.append("bulk/");
-                jsNode.append("single/");
-                sReturn = stw.write(jsNode);
-            }
-            else
-            {
-                if(m_vPath[SZ_VERSION] == "bulk")
-                {
-                    return GetJsonNmosConnectionBulkApi(sReturn);
-                }
-                else if(m_vPath[SZ_VERSION] == "single")
-                {
-                    return GetJsonNmosConnectionSingleApi(sReturn);
-
-                }
-                else
-                {
-                    nCode = 404;
-                    sReturn = stw.write(GetJsonError(404, "Type not supported"));
-                }
-            }
-        }
-        else
-        {
-            nCode = 404;
-            sReturn = stw.write(GetJsonError(404, "Version not supported"));
-        }
-    }
-    return nCode;
-}
-
-int NodeApi::GetJsonNmosConnectionSingleApi(std::string& sReturn)
-{
-    int nCode(200);
-    Json::StyledWriter stw;
-    if(m_vPath.size() == SZC_TYPE)
-    {
-        Json::Value jsNode;
-        jsNode.append("senders/");
-        jsNode.append("receivers/");
-        sReturn = stw.write(jsNode);
-    }
-    else if(m_vPath[C_DIRECTION] == "senders")
-    {
-        return GetJsonNmosConnectionSingleSenders(sReturn);
-    }
-    else if(m_vPath[C_DIRECTION] == "receivers")
-    {
-        return GetJsonNmosConnectionSingleReceivers(sReturn);
-    }
-    else
-    {
-        nCode = 404;
-        sReturn = stw.write(GetJsonError(404, "Endpoint not found"));
-    }
-    return nCode;
-}
-
-
-int NodeApi::GetJsonNmosConnectionSingleSenders(std::string& sReturn)
-{
-    int nCode(200);
-    Json::StyledWriter stw;
-    if(m_vPath.size() == SZC_DIRECTION)
-    {
-        sReturn = stw.write(m_senders.GetConnectionJson());
-    }
-    else
-    {
-        map<string, Resource*>::const_iterator itResource = m_senders.FindResource(m_vPath[SZC_DIRECTION]);
-        if(itResource != m_senders.GetResourceEnd())
-        {
-            if(m_vPath.size() == SZC_ID)
-            {
-                Json::Value jsNode;
-                jsNode.append("constraints/");
-                jsNode.append("staged/");
-                jsNode.append("active/");
-                jsNode.append("transportfile/");
-                sReturn = stw.write(jsNode);
-            }
-            else
-            {
-                if(m_vPath[C_LAST] == "constraints")
-                {
-                    sReturn = stw.write(dynamic_cast<Sender*>(itResource->second)->GetConnectionConstraintsJson());
-                }
-                else if(m_vPath[C_LAST] == "staged")
-                {
-                    sReturn = stw.write(dynamic_cast<Sender*>(itResource->second)->GetConnectionStagedJson());
-                }
-                else if(m_vPath[C_LAST] == "active")
-                {
-                    sReturn = stw.write(dynamic_cast<Sender*>(itResource->second)->GetConnectionActiveJson());
-                }
-                else if(m_vPath[C_LAST] == "transportfile")
-                {
-                    // @todo transportfile get
-                }
-                else
-                {
-                    nCode = 404;
-                    sReturn = stw.write(GetJsonError(404, "Endpoint not found"));
-                }
-            }
-        }
-        else
-        {
-            nCode = 404;
-            sReturn = stw.write(GetJsonError(404, "Sender not found"));
-        }
-    }
-    return nCode;
-}
-
-int NodeApi::GetJsonNmosConnectionSingleReceivers(std::string& sReturn)
-{
-    int nCode(200);
-    Json::StyledWriter stw;
-    if(m_vPath.size() == SZC_DIRECTION)
-    {
-        sReturn = stw.write(m_receivers.GetConnectionJson());
-    }
-    else
-    {
-        map<string, Resource*>::const_iterator itResource = m_receivers.FindResource(m_vPath[SZC_DIRECTION]);
-        if(itResource != m_receivers.GetResourceEnd())
-        {
-            if(m_vPath.size() == SZC_ID)
-            {
-                Json::Value jsNode;
-                jsNode.append("constraints/");
-                jsNode.append("staged/");
-                jsNode.append("active/");
-                sReturn = stw.write(jsNode);
-            }
-            else
-            {
-                if(m_vPath[C_LAST] == "constraints")
-                {
-                    sReturn = stw.write(dynamic_cast<Receiver*>(itResource->second)->GetConnectionConstraintsJson());
-                }
-                else if(m_vPath[C_LAST] == "staged")
-                {
-                    sReturn = stw.write(dynamic_cast<Receiver*>(itResource->second)->GetConnectionStagedJson());
-                }
-                else if(m_vPath[C_LAST] == "active")
-                {
-                    sReturn = stw.write(dynamic_cast<Receiver*>(itResource->second)->GetConnectionActiveJson());
-                }
-                else
-                {
-                    nCode = 404;
-                    sReturn = stw.write(GetJsonError(404, "Endpoint not found"));
-                }
-            }
-        }
-        else
-        {
-            nCode = 404;
-            sReturn = stw.write(GetJsonError(404, "Receiver not found"));
-        }
-    }
-    return nCode;
-}
-
-
-int NodeApi::GetJsonNmosConnectionBulkApi(std::string& sReturn)
-{
-    int nCode(200);
-    Json::StyledWriter stw;
-    if(m_vPath.size() == SZC_TYPE)
-    {
-        Json::Value jsNode;
-        jsNode.append("senders/");
-        jsNode.append("receivers/");
-        sReturn = stw.write(jsNode);
-    }
-    else if(m_vPath[SZC_TYPE] == "senders")
-    {
-        // @todo bulk get senders
-    }
-    else if(m_vPath[SZC_TYPE] == "receivers")
-    {
-        // @todo bulk get receivers
-    }
-    else
-    {
-        nCode = 404;
-        sReturn = stw.write(GetJsonError(404, "Endpoint not found"));
-    }
-    return nCode;
-}
-
-Json::Value NodeApi::GetJsonError(unsigned long nCode, string sError)
-{
-    Json::Value jsError(Json::objectValue);
-    jsError["code"] = (int)nCode;
-    jsError["error"] = sError;
-    jsError["debug"] = "null";
-    return jsError;
-}
-
-
-
-
-
-int NodeApi::PutJson(string sPath, const string& sJson, string& sResponse, unsigned short nPort)
-{
-    //make sure path is correct
-    transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
-
-    Json::StyledWriter stw;
-
-    int nCode = 202;
-    SplitString(m_vPath, sPath, '/');
-    if(m_vPath.size() < SZ_TARGET)
-    {
-        nCode = 405;
-        sResponse = stw.write(GetJsonError(nCode, "Method not allowed here."));
-    }
-    else
-    {
-        if(m_vPath[NMOS] == "x-nmos" && m_vPath[API_TYPE] == "node" &&  m_self.IsVersionSupported(m_vPath[VERSION]) && m_vPath[ENDPOINT] == "receivers" && m_vPath[TARGET] == "target")
-        {
-            //does the receiver exist?
-            map<string, Resource*>::iterator itReceiver = m_receivers.GetResource(m_vPath[RESOURCE]);
-            if(itReceiver == m_receivers.GetResourceEnd())
-            {
-                nCode = 404;
-                sResponse = stw.write(GetJsonError(nCode, "Resource does not exist."));
-            }
-            else
-            {
-                Json::Value jsRequest;
-                Json::Reader jsReader;
-                if(jsReader.parse(sJson, jsRequest) == false)
-                {
-                    nCode = 400;
-                    sResponse = stw.write(GetJsonError(nCode, "Request is ill defined."));
-                }
-                else
-                {
-                    //Have we been sent a sender??
-                    Sender* pSender = new Sender(jsRequest);
-                    if(pSender->IsOk() == false)
-                    {
-                        nCode = 400;
-                        sResponse = stw.write(GetJsonError(nCode, "Request is ill defined or missing mandatory attributes."));
-                    }
-
-                    map<unsigned short, MicroServer*>::iterator itServer = m_mServers.find(nPort);
-                    if(m_pPoster && itServer != m_mServers.end())
-                    {
-                        //Tell the main thread to connect
-                        m_pPoster->Target(m_vPath[RESOURCE], pSender, nPort);
-                        //Pause the HTTP thread
-                        itServer->second->Wait();
-                        nCode = itServer->second->GetResponseCode();
-                        if(nCode == 202)
-                        {   //this means the main thread has connected the receiver to the sender
-
-                            dynamic_cast<Receiver*>(itReceiver->second)->SetSender(pSender);
-                            Commit();   //updates the registration node or txt records
-
-                            sResponse = stw.write(dynamic_cast<Receiver*>(itReceiver->second)->GetSender()->GetJson());
-                        }
-                        else
-                        {
-                            sResponse = stw.write(GetJsonError(nCode, "Request okay but receiver can't connect to sender."));
-                            delete pSender;
-                        }
-                    }
-                    else
-                    {   //no way of telling main thread to do this so we'll simply assume it's been done
-                        nCode = 202;
-                        sResponse = stw.write(pSender->GetJson());
-                        delete pSender;
-                    }
-                }
-            }
-        }
-        else
-        {
-            nCode = 404;
-            sResponse = stw.write(GetJsonError(404, "Page not found"));
-        }
-    }
-    return nCode;
-}
-
-
-int NodeApi::PatchJson(string sPath, const string& sJson, string& sResponse, unsigned short nPort)
-{
-    //make sure path is correct
-    transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
-
-    Json::StyledWriter stw;
-
-    int nCode = 202;
-    SplitString(m_vPath, sPath, '/');
-
-    if(m_vPath.size() < SZC_LAST || m_nConnectionPort != nPort || m_vPath[NMOS] != "x-nmos" || m_vPath[API_TYPE] != "connection" || m_vPath[VERSION] != "v1.0" || m_vPath[C_TYPE] != "single" || (m_vPath[C_DIRECTION] != "senders" && m_vPath[C_DIRECTION] != "receivers") || m_vPath[C_LAST] != "staged")
-    {
-        nCode = 405;
-        sResponse = stw.write(GetJsonError(nCode, "Method not allowed here."));
-    }
-    else
-    {
-        if(m_vPath[C_DIRECTION] == "senders")
-        {
-            return PatchJsonSender(sJson, sResponse, nPort);
-        }
-        else
-        {
-            return PatchJsonReceiver(sJson, sResponse, nPort);
-        }
-    }
-    return nCode;
-}
-
-int NodeApi::PatchJsonSender(const std::string& sJson, std::string& sResponse, unsigned short nPort)
-{
-    int nCode(200);
-    Json::StyledWriter stw;
-    //does the sender exist?
-    map<string, Resource*>::const_iterator itSender = m_senders.GetResource(m_vPath[C_ID]);
-    if(itSender == m_senders.GetChangedResourceEnd())
-    {
-        nCode = 404;
-        sResponse = stw.write(GetJsonError(nCode, "Resource does not exist."));
-    }
-    else
-    {
-        //is the json valid?
-        Json::Value jsRequest;
-        Json::Reader jsReader;
-        if(jsReader.parse(sJson, jsRequest) == false)
-        {
-            nCode = 400;
-            sResponse = stw.write(GetJsonError(nCode, "Request is ill defined."));
-        }
-        else
-        {
-            Sender* pSender = dynamic_cast<Sender*>(itSender->second);
-
-
-            connectionSender conRequest(pSender->GetStaged());
-            //can we patch a connection from the json?
-            if(conRequest.Patch(jsRequest) == false)
-            {
-                nCode = 400;
-                sResponse = stw.write(GetJsonError(nCode, "Request does not meet schema."));
-            }
-            else
-            {
-                if(pSender->CheckConstraints(conRequest) == false)
-                {//does the patched connection meet the sender constraints?
-                    nCode = 400;
-                    sResponse = stw.write(GetJsonError(nCode, "Request does not meet sender's constraints."));
-                }
-                else
-                {
-                    //if we've got no activation mode then we can stage these settings straight away
-                    if(conRequest.eActivate == connection::ACT_NULL)
-                    {
-                        pSender->Stage(conRequest);
-                        nCode = 200;
-                        sResponse = stw.write(pSender->GetConnectionStagedJson());
-                    }
-                    else if(pSender->IsLocked() == true)
-                    {   //locked by previous staged activation
-                        nCode = 423;
-                        sResponse = stw.write(GetJsonError(nCode, "Sender had pending activation."));
-                    }
-                    else
-                    {
-                        map<unsigned short, MicroServer*>::iterator itServer = m_mServers.find(nPort);
-                        if(m_pPoster && itServer != m_mServers.end())
-                        {   //tell the main thread and wait to see what happens
-                            //the main thread should check that it can definitely do what the patch says and simply signal true or false
-                            m_pPoster->PatchSender(m_vPath[C_ID], conRequest, nPort);
-                            //Pause the HTTP thread
-                            itServer->second->Wait();
-
-                            nCode = itServer->second->GetResponseCode();
-                            if(nCode == 200 || nCode == 202)
-                            {
-                                pSender->Stage(conRequest); //PATCH the sender
-                                sResponse = stw.write(pSender->GetConnectionStagedJson());
-                            }
-                            else
-                            {
-                                sResponse = stw.write(GetJsonError(nCode, "Sender unable to stage PATCH."));
-                            }
-                        }
-                        else
-                        {   //no way of telling main thread to do this so we'll simply assume it's been done
-                            if(conRequest.eActivate == connection::ACT_NOW)
-                            {
-                                nCode = 200;
-                            }
-                            else
-                            {
-                                nCode = 202;
-                            }
-                            pSender->Stage(conRequest); //PATCH the sender
-                            sResponse = stw.write(pSender->GetConnectionStagedJson());
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return nCode;
-}
-
-int NodeApi::PatchJsonReceiver(const std::string& sJson, std::string& sResponse, unsigned short nPort)
-{
-    int nCode(200);
-    Json::StyledWriter stw;
-    //does the sender exist?
-    map<string, Resource*>::const_iterator itReceiver = m_receivers.FindResource(m_vPath[C_ID]);
-    if(itReceiver == m_receivers.GetChangedResourceEnd())
-    {
-        nCode = 404;
-        sResponse = stw.write(GetJsonError(nCode, "Resource does not exist."));
-    }
-    else
-    {
-        //is the json valid?
-        Json::Value jsRequest;
-        Json::Reader jsReader;
-        if(jsReader.parse(sJson, jsRequest) == false)
-        {
-            nCode = 400;
-            sResponse = stw.write(GetJsonError(nCode, "Request is ill defined."));
-        }
-        else
-        {
-            Receiver* pReceiver(dynamic_cast<Receiver*>(itReceiver->second));
-            //can we create a connection from the json?
-            connectionReceiver conRequest(pReceiver->GetStaged());
-            if(conRequest.Patch(jsRequest) == false)
-            {
-                nCode = 400;
-                sResponse = stw.write(GetJsonError(nCode, "Request does not meet schema."));
-            }
-            else
-            {
-                if(pReceiver->IsLocked() == true)
-                {
-                    nCode = 423;
-                    sResponse = stw.write(GetJsonError(nCode, "Receiver had pending activation."));
-                }
-                else if(pReceiver->CheckConstraints(conRequest) == false)
-                {//does the connection meet the receiver constraints?
-                    nCode = 400;
-                    sResponse = stw.write(GetJsonError(nCode, "Request does not meet receiver's constraints."));
-                }
-                else
-                {
-                    //tell the main thread and wait to see what happens
-                    //tell the main thread and wait to see what happens
-                    map<unsigned short, MicroServer*>::iterator itServer = m_mServers.find(nPort);
-                    if(m_pPoster && itServer != m_mServers.end())
-                    {
-                        //Tell the main thread to connect
-                        m_pPoster->PatchReceiver(m_vPath[C_ID], conRequest, nPort);
-                        //Pause the HTTP thread
-                        itServer->second->Wait();
-
-                        //has the receiver taken the stream?
-
-                    }
-                    else
-                    {   //no way of telling main thread to do this so we'll simply assume it's been done
-                        nCode = 202;
-
-                    }
-                }
-            }
-        }
-    }
-    return nCode;
 }
 
 
@@ -961,7 +242,7 @@ bool NodeApi::Commit()
         else
         {
             //signal the register thread that we need to post resources
-            SignalCommit();
+            Signal(SIG_COMMIT);
         }
     }
 
@@ -984,17 +265,7 @@ void NodeApi::ModifyTxtRecords()
 
 
 
-void NodeApi::SplitString(vector<string>& vSplit, string str, char cSplit)
-{
-    vSplit.clear();
 
-    istringstream f(str);
-    string s;
-    while (getline(f, s, cSplit))
-    {
-        vSplit.push_back(s);
-    }
-}
 
 
 
@@ -1036,8 +307,8 @@ bool NodeApi::BrowseForRegistrationNode()
     m_pRegistrationBrowser = new ServiceBrowser(m_pPoster);
     set<string> setService;
     setService.insert("_nmos-registration._tcp");
-    setService.insert("_nmos-query._tcp");
-    Log::Get() << "Browse for register and query nodes" << endl;
+    //setService.insert("_nmos-query._tcp");
+    Log::Get() << "Browse for register nodes" << endl;
     if(m_pRegistrationBrowser->StartBrowser(setService))
     {
         std::unique_lock<std::mutex> lk(m_mutex);
@@ -1051,14 +322,22 @@ void NodeApi::SignalBrowse()
     m_cvBrowse.notify_one();
 }
 
-bool NodeApi::WaitForCommit(unsigned long nMilliseconds)
+bool NodeApi::Wait(unsigned long nMilliseconds)
 {
+    m_mutex.lock();
+    m_eSignal = SIG_NONE;
+    m_mutex.unlock();
+
     unique_lock<mutex> ul(m_mutex);
     return (m_cvCommit.wait_for(ul, chrono::milliseconds(nMilliseconds)) == cv_status::no_timeout);
 }
 
-void NodeApi::SignalCommit()
+void NodeApi::Signal(enumSignal eSignal)
 {
+    m_mutex.lock();
+    m_eSignal = eSignal;
+    m_mutex.unlock();
+
     m_cvCommit.notify_one();
 }
 
@@ -1441,3 +720,59 @@ bool NodeApi::AddSender(Sender* pResource)
 }
 
 
+unsigned short NodeApi::GetConnectionPort() const
+{
+    return m_nConnectionPort;
+}
+
+
+Receiver* NodeApi::GetReceiver(const std::string& sId)
+{
+    map<string, Resource*>::iterator itResource = m_receivers.GetResource(sId);
+    if(itResource != m_receivers.GetResourceEnd())
+    {
+        return dynamic_cast<Receiver*>(itResource->second);
+    }
+    return NULL;
+}
+
+Sender* NodeApi::GetSender(const std::string& sId)
+{
+    map<string, Resource*>::iterator itResource = m_senders.GetResource(sId);
+    if(itResource != m_senders.GetResourceEnd())
+    {
+        return dynamic_cast<Sender*>(itResource->second);
+    }
+    return NULL;
+}
+
+
+NodeApi::enumSignal NodeApi::GetSignal() const
+{
+    return m_eSignal;
+}
+
+
+bool NodeApi::ActivateSender(const std::string& sId)
+{
+    Sender* pSender(GetSender(sId));
+    if(pSender)
+    {
+        pSender->Activate();
+        Commit();
+        return true;
+    }
+    return false;
+}
+
+bool NodeApi::ActivateReceiver(const std::string& sId)
+{
+    Receiver* pReceiver(GetReceiver(sId));
+    if(pReceiver)
+    {
+        pReceiver->Activate();
+        Commit();
+        return true;
+    }
+    return false;
+}
