@@ -14,27 +14,12 @@
 
 using namespace std;
 
-int MicroServer::IteratePost (void * ptr, MHD_ValueKind kind, const char *key, const char *filename, const char *content_type, const char *transfer_encoding, const char *data, uint64_t off, size_t size)
-{
-    ConnectionInfo* pInfo = reinterpret_cast<ConnectionInfo*>(ptr);
-
-    if(size > 0)
-    {
-        pInfo->pServer->AddPutData(data);
-    }
-    return MHD_YES;
-}
-
 void MicroServer::RequestCompleted (void *cls, MHD_Connection* pConnection, void **ptr, enum MHD_RequestTerminationCode toe)
 {
     Log::Get() << "Request completed" << endl;
     ConnectionInfo *pInfo = reinterpret_cast<ConnectionInfo*>(*ptr);
     if (pInfo)
     {
-        if (ConnectionInfo::PUT == pInfo->nType)
-        {
-            MHD_destroy_post_processor (pInfo->pPost);
-        }
         delete pInfo;
         *ptr = NULL;
     }
@@ -74,6 +59,8 @@ int MicroServer::DoHttpPut(MHD_Connection* pConnection, string sUrl, ConnectionI
 
 int MicroServer::DoHttpPatch(MHD_Connection* pConnection, string sUrl, ConnectionInfo* pInfo)
 {
+    Log::Get(Log::DEBUG) << "DoHttpPatch" << std::endl;
+
     string sResponse;
     int nCode = pInfo->pServer->PatchJson(sUrl, pInfo->pServer->GetPutData(), sResponse);
     pInfo->pServer->ResetPutData();
@@ -100,12 +87,6 @@ int MicroServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, cons
         if("PUT" == sMethod || "POST" == sMethod || "PATCH" == sMethod)
         {
             Log::Get(Log::DEBUG) << "Initial connection: " << sMethod << endl;
-            pInfo->pPost = MHD_create_post_processor (pConnection, 65536, IteratePost, (void *)pInfo);
-            if(NULL == pInfo->pPost)
-            {
-                delete pInfo;
-                return MHD_NO;
-            }
             if("PUT" == sMethod)
             {
                 pInfo->nType = ConnectionInfo::PUT;
@@ -124,9 +105,12 @@ int MicroServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, cons
             Log::Get(Log::DEBUG) << "Initial connection: GET" << endl;
         }
         *ptr = (void *) pInfo;
+
+        Log::Get(Log::DEBUG) << "Initial connection: return MHD_YES" << endl;
         return MHD_YES;
     }
 
+    Log::Get(Log::DEBUG) << "MicroServer: " << url << endl;
     if("GET" == string(sMethod))
     {
         ConnectionInfo* pInfo = reinterpret_cast<ConnectionInfo*>(*ptr);
@@ -139,7 +123,7 @@ int MicroServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, cons
         ConnectionInfo* pInfo = reinterpret_cast<ConnectionInfo*>(*ptr);
         if (*upload_data_size != 0)
         {
-            MHD_post_process (pInfo->pPost, upload_data, *upload_data_size);
+            pInfo->pServer->AddPutData(upload_data);
             *upload_data_size = 0;
             return MHD_YES;
         }
@@ -154,7 +138,8 @@ int MicroServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, cons
         ConnectionInfo* pInfo = reinterpret_cast<ConnectionInfo*>(*ptr);
         if (*upload_data_size != 0)
         {
-            MHD_post_process (pInfo->pPost, upload_data, *upload_data_size);
+            Log::Get(Log::DEBUG) << "Actual connection: PATCH - more" << endl;
+            pInfo->pServer->AddPutData(upload_data);
             *upload_data_size = 0;
             return MHD_YES;
         }
@@ -224,12 +209,15 @@ void MicroServer::ResetPutData()
 
 void MicroServer::Wait()
 {
+    Log::Get(Log::DEBUG) << "Microserver: " << m_nPort << " Wait " << this_thread::get_id() << endl;
     std::unique_lock<std::mutex> lk(m_mutex);
     m_cvSync.wait(lk);
 }
 
 void MicroServer::Signal(unsigned char nCode)
 {
+    lock_guard<mutex> lock(m_mutex);
+    Log::Get(Log::DEBUG) << "Microserver: " << m_nPort << " Signal " << this_thread::get_id() << endl;
     m_nCode = nCode;
     m_cvSync.notify_one();
 }
@@ -401,7 +389,7 @@ Json::Value MicroServer::GetJsonDevices()
             return itDevice->second->GetJson();
         }
     }
-    return GetJsonError();
+    return GetJsonError(404, "Device "+m_vPath[RESOURCE]+"does not exist.");
 }
 
 Json::Value MicroServer::GetJsonFlows()
@@ -418,7 +406,7 @@ Json::Value MicroServer::GetJsonFlows()
             return itFlow->second->GetJson();
         }
     }
-    return GetJsonError();
+    return GetJsonError(404, "Flow "+m_vPath[RESOURCE]+"does not exist.");
 }
 
 Json::Value MicroServer::GetJsonReceivers()
@@ -435,7 +423,7 @@ Json::Value MicroServer::GetJsonReceivers()
             return itReceiver->second->GetJson();
         }
     }
-    return GetJsonError();
+    return GetJsonError(404, "Receiver "+m_vPath[RESOURCE]+"does not exist.");
 }
 
 Json::Value MicroServer::GetJsonSenders()
@@ -452,7 +440,7 @@ Json::Value MicroServer::GetJsonSenders()
             return itSender->second->GetJson();
         }
     }
-    return GetJsonError();
+    return GetJsonError(404, "Sender "+m_vPath[RESOURCE]+"does not exist.");
 }
 
 
@@ -703,10 +691,11 @@ int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
             if(!pReceiver)
             {
                 nCode = 404;
-                sResponse = stw.write(GetJsonError(nCode, "Resource does not exist."));
+                sResponse = stw.write(GetJsonError(nCode, "Resource "+m_vPath[RESOURCE]+"does not exist."));
             }
             else
             {
+                Log::Get(Log::DEBUG) << sJson << std::endl;
                 Json::Value jsRequest;
                 Json::Reader jsReader;
                 if(jsReader.parse(sJson, jsRequest) == false)
@@ -717,7 +706,7 @@ int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
                 else
                 {
                     //Have we been sent a sender??
-                    Sender* pSender = new Sender(jsRequest);
+                    std::shared_ptr<Sender> pSender = std::make_shared<Sender>(jsRequest);
                     if(pSender->IsOk() == false)
                     {
                         nCode = 400;
@@ -730,27 +719,25 @@ int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
                         m_pPoster->_Target(m_vPath[RESOURCE], pSender, m_nPort);
                         //Pause the HTTP thread
                         Wait();
+                        Log::Get(Log::DEBUG) << "MicroServer [" << m_nPort << "] continue..." << endl;
 
                         nCode = m_nCode;
                         if(nCode == 202)
                         {   //this means the main thread has connected the receiver to the sender
-
                             pReceiver->SetSender(pSender);
                             NodeApi::Get().Commit();   //updates the registration node or txt records
 
-                            sResponse = stw.write(pReceiver->GetSender()->GetJson());
+                            sResponse = stw.write(pSender->GetJson());
                         }
                         else
                         {
                             sResponse = stw.write(GetJsonError(nCode, "Request okay but receiver can't connect to sender."));
-                            delete pSender;
                         }
                     }
                     else
                     {   //no way of telling main thread to do this so we'll simply assume it's been done
                         nCode = 202;
                         sResponse = stw.write(pSender->GetJson());
-                        delete pSender;
                     }
                 }
             }
@@ -767,6 +754,8 @@ int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
 
 int MicroServer::PatchJson(string sPath, const string& sJson, string& sResponse)
 {
+    Log::Get(Log::DEBUG) << "PatchJson" << std::endl;
+
     //make sure path is correct
     transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
 
@@ -796,6 +785,7 @@ int MicroServer::PatchJson(string sPath, const string& sJson, string& sResponse)
 
 int MicroServer::PatchJsonSender(const std::string& sJson, std::string& sResponse)
 {
+    Log::Get(Log::DEBUG) << "PatchJsonSender" << std::endl;
     int nCode(200);
     Json::StyledWriter stw;
     //does the sender exist?
@@ -804,6 +794,7 @@ int MicroServer::PatchJsonSender(const std::string& sJson, std::string& sRespons
     {
         nCode = 404;
         sResponse = stw.write(GetJsonError(nCode, "Resource does not exist."));
+        Log::Get(Log::DEBUG) << "PatchJsonSender: Resource does not exist." << std::endl;
     }
     else
     {
@@ -814,6 +805,8 @@ int MicroServer::PatchJsonSender(const std::string& sJson, std::string& sRespons
         {
             nCode = 400;
             sResponse = stw.write(GetJsonError(nCode, "Request is ill defined."));
+
+            Log::Get(Log::DEBUG) << "PatchJsonSender: Request is ill defined." << std::endl;
         }
         else
         {
@@ -823,6 +816,7 @@ int MicroServer::PatchJsonSender(const std::string& sJson, std::string& sRespons
             {
                 nCode = 400;
                 sResponse = stw.write(GetJsonError(nCode, "Request does not meet schema."));
+                Log::Get(Log::DEBUG) << "PatchJsonSender: Request does not meet schema." << std::endl;
             }
             else
             {
@@ -830,6 +824,7 @@ int MicroServer::PatchJsonSender(const std::string& sJson, std::string& sRespons
                 {//does the patched connection meet the sender constraints?
                     nCode = 400;
                     sResponse = stw.write(GetJsonError(nCode, "Request does not meet sender's constraints."));
+                    Log::Get(Log::DEBUG) << "PatchJsonSender: Request does not meet sender's constraints." << std::endl;
                 }
                 else
                 {
@@ -845,12 +840,14 @@ int MicroServer::PatchJsonSender(const std::string& sJson, std::string& sRespons
                         {
                             nCode = 500;
                             sResponse = stw.write(GetJsonError(nCode, "Sender unable to stage PATCH as no EventPoster or activation time invalid."));
+                            Log::Get(Log::DEBUG) << "PatchJsonSender: Sender unable to stage PATCH as no EventPoster or activation time invalid." << std::endl;
                         }
                     }
                     else if(pSender->IsLocked() == true)
                     {   //locked by previous staged activation
                         nCode = 423;
                         sResponse = stw.write(GetJsonError(nCode, "Sender had pending activation."));
+                        Log::Get(Log::DEBUG) << "PatchJsonSender: Sender had pending activation." << std::endl;
                     }
                     else
                     {
@@ -868,16 +865,19 @@ int MicroServer::PatchJsonSender(const std::string& sJson, std::string& sRespons
                                 if(pSender->Stage(conRequest, m_pPoster)) //PATCH the sender
                                 {
                                     sResponse = stw.write(pSender->GetConnectionStagedJson());
+                                    Log::Get(Log::DEBUG) << sResponse << std::endl;
                                 }
                                 else
                                 {
                                     nCode = 500;
                                     sResponse = stw.write(GetJsonError(nCode, "Sender unable to stage PATCH as no EventPoster or activation time invalid."));
+                                    Log::Get(Log::DEBUG) << "PatchJsonSender: Sender unable to stage PATCH as no EventPoster or activation time invalid." << std::endl;
                                 }
                             }
                             else
                             {
                                 sResponse = stw.write(GetJsonError(nCode, "Sender unable to stage PATCH."));
+                                Log::Get(Log::DEBUG) << "PatchJsonSender: Sender unable to stage PATCH as no EventPoster or activation time invalid." << std::endl;
                             }
                         }
                         else
@@ -893,11 +893,13 @@ int MicroServer::PatchJsonSender(const std::string& sJson, std::string& sRespons
                             if(pSender->Stage(conRequest, m_pPoster)) //PATCH the sender
                             {
                                 sResponse = stw.write(pSender->GetConnectionStagedJson());
+                                Log::Get(Log::DEBUG) << sResponse << std::endl;
                             }
                             else
                             {
                                 nCode = 500;
                                 sResponse = stw.write(GetJsonError(nCode, "Sender unable to stage PATCH as no EventPoster or activation time invalid."));
+                                Log::Get(Log::DEBUG) << "PatchJsonSender: Sender unable to stage PATCH as no EventPoster or activation time invalid." << std::endl;
                             }
                         }
                     }
@@ -1007,12 +1009,17 @@ int MicroServer::PatchJsonReceiver(const std::string& sJson, std::string& sRespo
 
 void MicroServer::SplitString(vector<string>& vSplit, string str, char cSplit)
 {
+
     vSplit.clear();
 
     istringstream f(str);
     string s;
     while (getline(f, s, cSplit))
     {
-        vSplit.push_back(s);
+        if(s.empty() == false || vSplit.empty())    //we don't want any empty parts apart from the base one
+        {
+            vSplit.push_back(s);
+        }
     }
+
 }

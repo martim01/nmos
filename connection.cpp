@@ -1,4 +1,5 @@
 #include "connection.h"
+#include "log.h"
 
 const std::string connection::STR_ACTIVATE[4] = {"", "activate_immediate", "activate_scheduled_absolute", "activate_scheduled_relative"};
 
@@ -11,6 +12,8 @@ connection::connection() :
 
 bool connection::Patch(const Json::Value& jsData)
 {
+    Log::Get(Log::DEBUG) << "Patch: connection" << std::endl;
+
     bool bIsOk(true);
 
     if(jsData.isObject())
@@ -19,9 +22,10 @@ bool connection::Patch(const Json::Value& jsData)
         {
             bMasterEnable = jsData["master_enable"].asBool();
         }
-        else
+        else if(jsData["master_enable"].empty() == false)
         {
-            bIsOk = (jsData["master_enable"].empty());
+            Log::Get(Log::DEBUG) << "Patch: master_enable incorrect type." << std::endl;
+            bIsOk = false;
         }
 
         if(jsData["activation"].isObject())
@@ -38,20 +42,29 @@ bool connection::Patch(const Json::Value& jsData)
                         break;
                     }
                 }
+                if(!bFound)
+                {
+                    Log::Get(Log::DEBUG) << "Patch: activation mode not found." << std::endl;
+                }
                 bIsOk &= bFound;
             }
             else
             {
-                bIsOk &= (jsData["activation"]["mode"].isNull());
+                if(jsData["activation"]["mode"].isNull() == false)
+                {
+                    Log::Get(Log::DEBUG) << "Patch: activation mode incorrect type" << std::endl;
+                    bIsOk = false;
+                }
             }
             if(jsData["activation"]["requested_time"].isString())
             {
                 sRequestedTime = jsData["activation"]["requested_time"].asString();
                 // @todo check time is correct
             }
-            else
+            else if(jsData["activation"]["requested_time"].isNull() == false && jsData["activation"]["requested_time"].empty() == false)
             {
-                bIsOk &= (jsData["activation"]["mode"].isNull() || jsData["activation"]["mode"].empty());
+                bIsOk = false;
+                Log::Get(Log::DEBUG) << "Patch: activation requested_time incorrect type" << std::endl;
             }
         }
         else
@@ -61,8 +74,11 @@ bool connection::Patch(const Json::Value& jsData)
     }
     else
     {
+        Log::Get(Log::DEBUG) << "Patch: json not an object" << std::endl;
         bIsOk = false;
     }
+
+    Log::Get(Log::DEBUG) << "Patch: connection result " << bIsOk << std::endl;
     return bIsOk;
 }
 
@@ -115,6 +131,7 @@ connectionSender::connectionSender() : connection()
 
 bool connectionSender::Patch(const Json::Value& jsData)
 {
+    Log::Get(Log::DEBUG) << "Patch: connectionSender" << std::endl;
     bool bIsOk = connection::Patch(jsData);
     if(bIsOk)
     {
@@ -124,9 +141,10 @@ bool connectionSender::Patch(const Json::Value& jsData)
         {
             sReceiverId = jsData["receiver_id"].asString();
         }
-        else
+        else if((jsData["receiver_id"].isNull()  == false && jsData["receiver_id"].empty() == false))
         {
-            bIsOk &= (jsData["receiver_id"].isNull() || jsData["receiver_id"].empty());
+            bIsOk = false;
+            Log::Get(Log::DEBUG) << "Patch: receiver_id incorrect type" << std::endl;
         }
     }
     return bIsOk;
@@ -168,7 +186,11 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
         }
         else
         {
-            bIsOk &= (jsData["sender_id"].isNull() || jsData["sender_id"].empty());
+            if(jsData["sender_id"].isNull() == false && jsData["sender_id"].empty() == false)
+            {
+                bIsOk = false;
+                Log::Get(Log::DEBUG) << "Patch: sender_id incorrect type" << std::endl;
+            }
         }
 
         if(jsData["transport_file"].isObject())
@@ -177,18 +199,21 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
             {
                 sTransportFileType = jsData["transport_file"]["type"].asString();
             }
-            else
+            else if(jsData["transport_file"]["type"].isNull() == false)
             {
-                bIsOk &= (jsData["transport_file"]["type"].isNull());
+                bIsOk = false;
+                Log::Get(Log::DEBUG) << "Patch: transport_file type incorrect type" << std::endl;
             }
             if(jsData["transport_file"]["data"].isString())
             {
                 sTransportFileData = jsData["transport_file"]["data"].asString();
             }
-            else
+            else if(jsData["transport_file"]["data"].isNull() == false)
             {
-                bIsOk &= (jsData["transport_file"]["data"].isNull());
+                bIsOk = false;
+                Log::Get(Log::DEBUG) << "Patch: transport_file data incorrect type" << std::endl;
             }
+
             // @todo decode transport file and overwrite staged parameters with the relevant settings
         }
     }

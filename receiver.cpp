@@ -4,7 +4,7 @@
 #include "eventposter.h"
 #include "connection.h"
 #include "activationthread.h"
-
+#include "log.h"
 
 static void ActivationThreadReceiver(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sReceiverId, std::shared_ptr<EventPoster> pPoster)
 {
@@ -35,10 +35,7 @@ Receiver::Receiver(std::string sLabel, std::string sDescription, enumTransport e
 
 Receiver::~Receiver()
 {
-    if(m_pSender)
-    {
-        delete m_pSender;
-    }
+
 }
 
 void Receiver::AddInterfaceBinding(std::string sInterface)
@@ -135,18 +132,24 @@ Json::Value Receiver::GetConnectionActiveJson() const
 
 
 
-const Sender* Receiver::GetSender() const
+std::shared_ptr<Sender> Receiver::GetSender() const
 {
     return m_pSender;
 }
 
-void Receiver::SetSender(const Sender* pSender)
+void Receiver::SetSender(std::shared_ptr<Sender> pSender)
 {
-    if(m_pSender)
+
+    if(pSender->GetId().empty() == false)
     {
-        delete m_pSender;
+        Log::Get(Log::DEBUG) << "Receiver subscribe to sender " << pSender->GetId() << std::endl;
+        m_pSender = pSender;
     }
-    m_pSender = pSender;
+    else
+    {   //this means unsubscribe
+        Log::Get(Log::DEBUG) << "Receiver unssubscribe " << std::endl;
+        m_pSender = 0;
+    }
     UpdateVersionTime();
     // @todo need to update the IS-05 stage and active connection settings to match
 }

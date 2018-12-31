@@ -1,4 +1,5 @@
 #include "transportparams.h"
+#include "log.h"
 
 const std::string TransportParamsRTP::STR_FEC_MODE[2] = {"1D", "2D"};
 const std::string TransportParamsRTPSender::STR_FEC_TYPE[2] = {"XOR", "Reed-Solomon"};
@@ -32,9 +33,10 @@ bool TransportParamsRTP::Patch(const Json::Value& jsData)
         {
             sSourceIp.clear();
         }
-        else
+        else if(jsData["source_ip"].empty()== false)
         {
-            bIsOk = jsData["source_ip"].empty();
+            bIsOk = false;
+            Log::Get(Log::DEBUG) << "Patch: source_ip incorrect type" << std::endl;
         }
 
         bIsOk &= DecodePort(jsData, "destination_port", nDestinationPort);
@@ -43,17 +45,20 @@ bool TransportParamsRTP::Patch(const Json::Value& jsData)
         {
             bFecEnabled = jsData["fec_enabled"].asBool();
         }
-        else
-        {   //if not bool must not exist
-            bIsOk &= jsData["fec_enabled"].empty();
+        else if(jsData["fec_enabled"].empty() == false)
+        {
+            bIsOk = false;
+            Log::Get(Log::DEBUG) << "Patch: fec_enabled incorrect type" << std::endl;
         }
+
         if(jsData["fec_destination_ip"].isString())
         {
             sFecDestinationIp = jsData["fec_destination_ip"].asString();
         }
-        else
-        {   //if not string must not exist
-            bIsOk &= jsData["fec_destination_ip"].empty();
+        else if(jsData["fec_destination_ip"].empty() == false)
+        {
+            bIsOk = false;
+            Log::Get(Log::DEBUG) << "Patch: fec_destination_ip incorrect type" << std::endl;
         }
 
         if(jsData["fec_mode"].isString())
@@ -68,12 +73,14 @@ bool TransportParamsRTP::Patch(const Json::Value& jsData)
             }
             else
             {
+                Log::Get(Log::DEBUG) << "Patch: fec_mode not found" << std::endl;
                 bIsOk = false;
             }
         }
-        else
-        {   //if not string must not exist
-            bIsOk &= jsData["fec_mode"].empty();
+        else if(jsData["fec_mode"].empty() == false)
+        {
+            bIsOk = false;
+            Log::Get(Log::DEBUG) << "Patch: fec_mode incorrect type" << std::endl;
         }
 
         bIsOk &= DecodePort(jsData, "fec1D_destination_port", nFec1DDestinationPort);
@@ -83,34 +90,40 @@ bool TransportParamsRTP::Patch(const Json::Value& jsData)
         {
             bRtcpEnabled = jsData["rtcp_enabled"].asBool();
         }
-        else
-        {   //if not string must not exist
-            bIsOk &= jsData["rtcp_enabled"].empty();
+        else if(jsData["rtcp_enabled"].empty() == false)
+        {
+            bIsOk = false;
+            Log::Get(Log::DEBUG) << "Patch: rtcp_enabled incorrect type" << std::endl;
         }
 
         if(jsData["rtcp_destination_ip"].isString())
         {
             sRtcpDestinationIp = jsData["rtcp_destination_ip"].asString();
         }
-        else
-        {   //if not string must not exist
-            bIsOk &= jsData["rtcp_destination_ip"].empty();
+        else if(jsData["rtcp_destination_ip"].empty() == false)
+        {
+            bIsOk = false;
+            Log::Get(Log::DEBUG) << "Patch: rtcp_destination_ip incorrect type" << std::endl;
         }
 
         bIsOk &= DecodePort(jsData, "rtcp_destination_port", nRtcpDestinationPort);
+
         if(jsData["rtp_enabled"].isBool())
         {
             bRtpEnabled = jsData["rtp_enabled"].asBool();
         }
-        else
+        else if(jsData["rtp_enabled"].empty() == false)
         {
-            bIsOk &= jsData["rtp_enabled"].empty();
+            bIsOk = false;
+            Log::Get(Log::DEBUG) << "Patch: rtp_enabled incorrect type" << std::endl;
         }
     }
-    else
-    {
-        bIsOk = false;
-    }
+    Log::Get(Log::DEBUG) << "Patch: TransportParamsRTP: " << bIsOk << std::endl;
+    //else
+    //{
+    //    Log::Get(Log::DEBUG) << "Patch: transport_params is not an object" << endl;
+    //    bIsOk = false;
+   // }
     return bIsOk;
 }
 
@@ -167,6 +180,10 @@ bool TransportParamsRTP::DecodePort(const Json::Value& jsData, const std::string
         bOk = true;
         nPort = 0;
     }
+    else
+    {
+        Log::Get(Log::DEBUG) << "Patch: " << sPort << " not valid" << std::endl;
+    }
     return bOk;
 }
 
@@ -185,66 +202,77 @@ TransportParamsRTPSender::TransportParamsRTPSender() : TransportParamsRTP(),
 
 bool TransportParamsRTPSender::Patch(const Json::Value& jsData)
 {
-    bool bIsOk = TransportParamsRTP::Patch(jsData);
-    if(bIsOk)
+    if(jsData.isObject())
     {
-        if(jsData["destination_ip"].isString())
+        bool bIsOk = TransportParamsRTP::Patch(jsData);
+        if(bIsOk)
         {
-            sDestinationIp = jsData["destination_ip"].asString();
-        }
-        else
-        {
-            bIsOk &= (jsData["destination_ip"].empty());
-        }
-
-        bIsOk &= DecodePort(jsData, "source_port", nSourcePort);
-
-        if(jsData["fec_type"].isString())
-        {
-            if(jsData["fec_type"].asString() == STR_FEC_TYPE[XOR])
+            if(jsData["destination_ip"].isString())
             {
-                eFecType = XOR;
+                sDestinationIp = jsData["destination_ip"].asString();
             }
-            else if(jsData["fec_type"].asString() == STR_FEC_TYPE[REED])
-            {
-                eFecType = REED;
-            }
-            else
+            else if(jsData["destination_ip"].empty() == false)
             {
                 bIsOk = false;
+                Log::Get(Log::DEBUG) << "Patch: destination_ip incorrect type" << std::endl;
             }
-        }
-        else
-        {   //if not string must not exist
-            bIsOk &= jsData["fec_type"].empty();
+
+            bIsOk &= DecodePort(jsData, "source_port", nSourcePort);
+
+            if(jsData["fec_type"].isString())
+            {
+                if(jsData["fec_type"].asString() == STR_FEC_TYPE[XOR])
+                {
+                    eFecType = XOR;
+                }
+                else if(jsData["fec_type"].asString() == STR_FEC_TYPE[REED])
+                {
+                    eFecType = REED;
+                }
+                else
+                {
+                    bIsOk = false;
+                    Log::Get(Log::DEBUG) << "Patch: fec_type not found" << std::endl;
+                }
+            }
+            else if(jsData["fec_type"].empty() == false)
+            {
+                bIsOk = false;
+                Log::Get(Log::DEBUG) << "Patch: fec_type incorrect type" << std::endl;
+            }
+
+            if(jsData["fec_block_width"].isInt())
+            {
+                nFecBlockWidth = jsData["fec_block_width"].asInt();
+                bIsOk &= (nFecBlockWidth >= 4 && nFecBlockWidth <= 200);
+            }
+            else if(jsData["fec_block_width"].empty() == false)
+            {
+                bIsOk = false;
+                Log::Get(Log::DEBUG) << "Patch: fec_block_width incorrect type" << std::endl;
+            }
+
+            if(jsData["fec_block_height"].isInt())
+            {
+                nFecBlockHeight = jsData["fec_block_height"].asInt();
+                bIsOk &= (nFecBlockHeight >= 4 && nFecBlockHeight <= 200);
+            }
+            else if(jsData["fec_block_height"].empty() == false)
+            {
+                bIsOk = false;
+                Log::Get(Log::DEBUG) << "Patch: fec_block_height incorrect type" << std::endl;
+            }
+
+            bIsOk &= DecodePort(jsData, "fec1D_source_port", nFec1DSourcePort);
+            bIsOk &= DecodePort(jsData, "fec2D_source_port", nFec2DSourcePort);
+
+            bIsOk &= DecodePort(jsData, "rtcp_source_port", nRtcpSourcePort);
         }
 
-        if(jsData["fec_block_width"].isInt())
-        {
-            nFecBlockWidth = jsData["fec_block_width"].asInt();
-            bIsOk &= (nFecBlockWidth >= 4 && nFecBlockWidth <= 200);
-        }
-        else
-        {   //if not int must not exist
-            bIsOk &= jsData["fec_block_width"].empty();
-        }
-
-        if(jsData["fec_block_height"].isInt())
-        {
-            nFecBlockHeight = jsData["fec_block_height"].asInt();
-            bIsOk &= (nFecBlockHeight >= 4 && nFecBlockHeight <= 200);
-        }
-        else
-        {   //if not int must not exist
-            bIsOk &= jsData["fec_block_height"].empty();
-        }
-
-        bIsOk &= DecodePort(jsData, "fec1D_source_port", nFec1DSourcePort);
-        bIsOk &= DecodePort(jsData, "fec2D_source_port", nFec2DSourcePort);
-
-        bIsOk &= DecodePort(jsData, "rtcp_source_port", nRtcpSourcePort);
+        Log::Get(Log::DEBUG) << "Patch: TransportParamsRTPSender: " << bIsOk << std::endl;
+        return bIsOk;
     }
-    return bIsOk;
+    return true;
 }
 
 Json::Value TransportParamsRTPSender::GetJson() const
@@ -275,32 +303,38 @@ TransportParamsRTPReceiver::TransportParamsRTPReceiver() : TransportParamsRTP(),
 
 bool TransportParamsRTPReceiver::Patch(const Json::Value& jsData)
 {
-    bool bIsOk = TransportParamsRTP::Patch(jsData);
-    if(bIsOk)
+    if(jsData.isObject())
     {
-        if(jsData["multicast_ip"].isString())
+        bool bIsOk = TransportParamsRTP::Patch(jsData);
+        if(bIsOk)
         {
-            sMulticastIp = jsData["multicast_ip"].asString();
-        }
-        else if(jsData["multicast_ip"].isNull())
-        {
-            sMulticastIp.clear();
-        }
-        else
-        {
-            bIsOk &= (jsData["multicast_ip"].empty());
-        }
+            if(jsData["multicast_ip"].isString())
+            {
+                sMulticastIp = jsData["multicast_ip"].asString();
+            }
+            else if(jsData["multicast_ip"].isNull())
+            {
+                sMulticastIp.clear();
+            }
+            else if(jsData["multicast_ip"].empty() == false)
+            {
+                bIsOk = false;
+                Log::Get(Log::DEBUG) << "Patch: multicast_ip incorrect type" << std::endl;
+            }
 
-        if(jsData["interface_ip"].isString())
-        {
-            sInterfaceIp = jsData["interface_ip"].asString();
+            if(jsData["interface_ip"].isString())
+            {
+                sInterfaceIp = jsData["interface_ip"].asString();
+            }
+            else if(jsData["interface_ip"].empty() == false)
+            {
+                bIsOk = false;
+                Log::Get(Log::DEBUG) << "Patch: interface_ip incorrect type" << std::endl;
+            }
         }
-        else
-        {
-            bIsOk &= (jsData["multicast_ip"].empty());
-        }
+        return bIsOk;
     }
-    return bIsOk;
+    return true;
 }
 
 Json::Value TransportParamsRTPReceiver::GetJson() const

@@ -257,16 +257,11 @@ void NodeApi::ModifyTxtRecords()
     {
         SetmDNSTxt(itEndpoint->bSecure);
     }
-    if(m_pNodeApiPublisher)
-    {
-        m_pNodeApiPublisher->Modify();
-    }
+//    if(m_pNodeApiPublisher)
+//    {
+//        m_pNodeApiPublisher->Modify();
+//    }
 }
-
-
-
-
-
 
 
 void NodeApi::SetmDNSTxt(bool bSecure)
@@ -276,23 +271,24 @@ void NodeApi::SetmDNSTxt(bool bSecure)
     {
         if(bSecure)
         {
-            m_pNodeApiPublisher->AddTxt("api_proto", "https");
+            m_pNodeApiPublisher->AddTxt("api_proto", "https", false);
         }
         else
         {
-            m_pNodeApiPublisher->AddTxt("api_proto", "http");
+            m_pNodeApiPublisher->AddTxt("api_proto", "http", false);
         }
-        m_pNodeApiPublisher->AddTxt("api_ver", "v1.2");
+        m_pNodeApiPublisher->AddTxt("api_ver", "v1.2", false);
 
         if(m_sRegistrationNode.empty())
         {
-            m_pNodeApiPublisher->AddTxt("ver_slf", to_string(m_self.GetDnsVersion()));
-            m_pNodeApiPublisher->AddTxt("ver_src", to_string(m_sources.GetVersion()));
-            m_pNodeApiPublisher->AddTxt("ver_flw", to_string(m_flows.GetVersion()));
-            m_pNodeApiPublisher->AddTxt("ver_dvc", to_string(m_devices.GetVersion()));
-            m_pNodeApiPublisher->AddTxt("ver_snd", to_string(m_senders.GetVersion()));
-            m_pNodeApiPublisher->AddTxt("ver_rcv", to_string(m_receivers.GetVersion()));
+            m_pNodeApiPublisher->AddTxt("ver_slf", to_string(m_self.GetDnsVersion()),false);
+            m_pNodeApiPublisher->AddTxt("ver_src", to_string(m_sources.GetVersion()),false);
+            m_pNodeApiPublisher->AddTxt("ver_flw", to_string(m_flows.GetVersion()),false);
+            m_pNodeApiPublisher->AddTxt("ver_dvc", to_string(m_devices.GetVersion()),false);
+            m_pNodeApiPublisher->AddTxt("ver_snd", to_string(m_senders.GetVersion()),false);
+            m_pNodeApiPublisher->AddTxt("ver_rcv", to_string(m_receivers.GetVersion()),false);
         }
+        m_pNodeApiPublisher->Modify();
     }
 }
 
@@ -347,6 +343,10 @@ void NodeApi::SignalServer(unsigned short nPort, unsigned char nCode)
     if(itServer != m_mServers.end())
     {
         itServer->second->Signal(nCode);
+    }
+    else
+    {
+        Log::Get(Log::ERROR) << "No server with port " << nPort << endl;
     }
 }
 

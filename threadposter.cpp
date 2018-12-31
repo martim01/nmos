@@ -1,5 +1,12 @@
 #include "threadposter.h"
+#include <thread>
+#include <chrono>
 
+static void Notify(ThreadPoster* pPoster)
+{
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    pPoster->Signal();
+}
 
 bool ThreadPoster::Wait(std::chrono::milliseconds ms)
 {
@@ -23,45 +30,47 @@ void ThreadPoster::CurlDone(unsigned long nResult, const std::string& sResponse,
 {
     SetReason(CURL_DONE);
 
-    m_cv.notify_one();
+    LaunchThread();
 }
 
 void ThreadPoster::InstanceResolved(dnsInstance* pInstance)
 {
     SetReason(INSTANCE_RESOLVED);
-    m_cv.notify_one();
+    LaunchThread();
 }
 
 void ThreadPoster::AllForNow(const std::string& sService)
 {
     SetReason(ALLFORNOW);
-    m_cv.notify_one();
+    LaunchThread();
+
 }
 
 void ThreadPoster::Finished()
 {
     SetReason(FINISHED);
-    m_cv.notify_one();
+    LaunchThread();
 }
 
 void ThreadPoster::RegistrationNodeError()
 {
     SetReason(REGERROR);
-    m_cv.notify_one();
+    LaunchThread();
 }
 
 void ThreadPoster::InstanceRemoved(const std::string& sInstance)
 {
     SetReason(INSTANCE_REMOVED);
-    m_cv.notify_one();
+    LaunchThread();
 }
 
-void ThreadPoster::Target(const std::string& sReceiverId, const Sender* pSender, unsigned short nPort)
+void ThreadPoster::Target(const std::string& sReceiverId, std::shared_ptr<Sender> pSender, unsigned short nPort)
 {
     SetReason(TARGET);
     m_sString = sReceiverId;
     m_nShort = nPort;
-    m_cv.notify_one();
+    m_pSender = pSender;
+    LaunchThread();
 }
 
 void ThreadPoster::PatchSender(const std::string& sSenderId, const connectionSender& conPatch, unsigned short nPort)
@@ -69,7 +78,8 @@ void ThreadPoster::PatchSender(const std::string& sSenderId, const connectionSen
     SetReason(PATCH_SENDER);
     m_sString = sSenderId;
     m_nShort = nPort;
-    m_cv.notify_one();
+
+    LaunchThread();
 }
 
 void ThreadPoster::PatchReceiver(const std::string& sReceiverId, const connectionReceiver& conPatch, unsigned short nPort)
@@ -77,21 +87,21 @@ void ThreadPoster::PatchReceiver(const std::string& sReceiverId, const connectio
     SetReason(PATCH_RECEIVER);
     m_sString = sReceiverId;
     m_nShort = nPort;
-    m_cv.notify_one();
+    LaunchThread();
 }
 
 void ThreadPoster::ActivateSender(const std::string& sSenderId)
 {
     SetReason(ACTIVATE_SENDER);
     m_sString = sSenderId;
-    m_cv.notify_one();
+    LaunchThread();
 }
 
 void ThreadPoster::ActivateReceiver(const std::string& sReceiverId)
 {
     SetReason(ACTIVATE_RECEIVER);
     m_sString = sReceiverId;
-    m_cv.notify_one();
+    LaunchThread();
 }
 
 
@@ -105,4 +115,21 @@ unsigned short ThreadPoster::GetPort()
 {
     std::lock_guard<std::mutex> lg(m_mutexMain);
     return m_nShort;
+}
+
+void ThreadPoster::Signal()
+{
+    m_cv.notify_one();
+}
+
+
+void ThreadPoster::LaunchThread()
+{
+    std::thread thNotify(Notify, this);
+    thNotify.detach();
+}
+
+std::shared_ptr<Sender> ThreadPoster::GetSender()
+{
+    return m_pSender;
 }

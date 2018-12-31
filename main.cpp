@@ -104,9 +104,10 @@ int main()
                     break;
                 case ThreadPoster::TARGET:
                     cout << "----------------------------------------" << endl;
-                    cout << "NMOS Target: " << pPoster->GetString() << endl;
+                    cout << "NMOS Target: " << pPoster->GetString() << " [" << pPoster->GetSender()->GetId() << "]" << endl;
                     cout << "----------------------------------------" << endl;
-                    NodeApi::Get().SignalServer(pPoster->GetPort(), 200);
+                    //getchar();
+                    NodeApi::Get().SignalServer(pPoster->GetPort(), 202);
                     break;
                 case ThreadPoster::PATCH_SENDER:
                     cout << "----------------------------------------" << endl;
@@ -124,10 +125,12 @@ int main()
                     cout << "----------------------------------------" << endl;
                     cout << "NMOS Activate Sender: " << pPoster->GetString() << endl;
                     cout << "----------------------------------------" << endl;
+                    break;
                 case ThreadPoster::ACTIVATE_RECEIVER:
                     cout << "----------------------------------------" << endl;
                     cout << "NMOS Activate Receiver: " << pPoster->GetString() << endl;
                     cout << "----------------------------------------" << endl;
+                    break;
             }
 
         }

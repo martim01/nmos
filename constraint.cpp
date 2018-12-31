@@ -1,6 +1,7 @@
 #include "constraint.h"
 #include <sstream>
 
+
 using namespace std;
 
 constraint::constraint(const std::string& sParam, const std::string& sDescription) :

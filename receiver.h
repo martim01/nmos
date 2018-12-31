@@ -38,8 +38,8 @@ class NMOS_EXPOSE Receiver : public Resource
         Json::Value GetConnectionActiveJson() const;
         Json::Value GetConnectionConstraintsJson() const;
 
-        const Sender* GetSender() const;
-        void SetSender(const Sender* pSender);  //this is the IS-04 way of connecting
+        std::shared_ptr<Sender> GetSender() const;
+        void SetSender(std::shared_ptr<Sender>);  //this is the IS-04 way of connecting
 
         bool CheckConstraints(const connectionReceiver& conRequest);
         bool IsLocked() const;
@@ -64,7 +64,7 @@ class NMOS_EXPOSE Receiver : public Resource
         constraintsReceiver m_constraints;
 
 
-        const Sender* m_pSender;
+        std::shared_ptr<Sender> m_pSender;
 
         static const std::string TRANSPORT[4];
         static const std::string TYPE[4];

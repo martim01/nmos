@@ -13,7 +13,7 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-std=c++0x" />
+					<Add option="-std=c++11" />
 					<Add option="-g" />
 					<Add option="-D__WIN__" />
 					<Add directory="$(#microhttp.include)" />
@@ -53,6 +53,7 @@
 				<Compiler>
 					<Add option="-std=c++14" />
 					<Add option="-g" />
+					<Add option="-pthread" />
 					<Add option="-D__GNU__" />
 					<Add directory="$(#microhttp.include)" />
 				</Compiler>
@@ -62,6 +63,7 @@
 					<Add option="`pkg-config --libs uuid`" />
 					<Add option="`pkg-config --libs libcurl`" />
 					<Add library="lib/libnmosd.so" />
+					<Add library="pthread" />
 					<Add directory="$(#microhttp.lib)" />
 				</Linker>
 			</Target>

@@ -21,7 +21,7 @@ class NMOS_EXPOSE EventPoster
         void _Finished();
         void _RegistrationNodeError();
         void _InstanceRemoved(const std::string& sInstance);
-        void _Target(const std::string& sReceiverId, const Sender* pSender, unsigned short nPort);
+        void _Target(const std::string& sReceiverId, std::shared_ptr<Sender> pSender, unsigned short nPort);
         void _PatchSender(const std::string& sSenderId, const connectionSender& conPatch, unsigned short nPort);
         void _PatchReceiver(const std::string& sReceiverId, const connectionReceiver& conPatch, unsigned short nPort);
         void _ActivateSender(const std::string& sSenderId);
@@ -72,7 +72,7 @@ class NMOS_EXPOSE EventPoster
         *   @param nPort - the MicroServer port that the request came from
         *   @note this is a blocking event. The target of this function should call the NodeApi::SignalServer function once it is ready for the MicroServer to continue
         **/
-        virtual void Target(const std::string& sReceiverId, const Sender* pSender, unsigned short nPort)=0;
+        virtual void Target(const std::string& sReceiverId, std::shared_ptr<Sender> pSender, unsigned short nPort)=0;
 
         /** @brief Called by MicroServer when a IS-05 Sender/Staged PATCH is performed
         *   @param sSenderId the uuid of the Sender to apply the patch to
