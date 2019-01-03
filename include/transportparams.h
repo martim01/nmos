@@ -15,6 +15,8 @@ struct TransportParamsRTP
 
     void Actualize();
 
+    TransportParamsRTP& operator=(const TransportParamsRTP& other);
+
     std::string sSourceIp;
     unsigned short nDestinationPort;
     bool bFecEnabled;
@@ -40,6 +42,7 @@ struct TransportParamsRTPReceiver : public TransportParamsRTP
     virtual bool Patch(const Json::Value& jsData);
     virtual Json::Value GetJson() const;
     void Actualize(const std::string& sInterfaceIp);
+    TransportParamsRTPReceiver& operator=(const TransportParamsRTPReceiver& other);
 };
 
 
@@ -54,17 +57,15 @@ struct TransportParamsRTPSender : public TransportParamsRTP
 
     void Actualize(const std::string& sSource, const std::string& sDestination);
 
+    TransportParamsRTPSender& operator=(const TransportParamsRTPSender& other);
+
     std::string sDestinationIp;
     unsigned short nSourcePort;
-
-
     enumFecType eFecType;
     unsigned char nFecBlockWidth;
     unsigned char nFecBlockHeight;
     unsigned short nFec1DSourcePort;
     unsigned short nFec2DSourcePort;
-
-
     unsigned short nRtcpSourcePort;
 
 

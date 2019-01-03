@@ -7,10 +7,10 @@ struct connection
     enum enumActivate {ACT_NULL, ACT_NOW, ACT_ABSOLUTE, ACT_RELATIVE};
 
     connection();
-
+    connection& operator=(const connection& other);
     virtual bool Patch(const Json::Value& jsData);
-
     virtual Json::Value GetJson() const;
+
 
     bool bMasterEnable;
     enumActivate eActivate;
@@ -24,6 +24,7 @@ struct connectionSender : public connection
 {
 
     connectionSender();
+    connectionSender& operator=(const connectionSender& other);
     virtual bool Patch(const Json::Value& jsData);
 
     virtual Json::Value GetJson() const;
@@ -38,7 +39,7 @@ struct connectionSender : public connection
 struct connectionReceiver : public connection
 {
     connectionReceiver();
-
+    connectionReceiver& operator=(const connectionReceiver& other);
     virtual bool Patch(const Json::Value& jsData);
 
     virtual Json::Value GetJson() const;

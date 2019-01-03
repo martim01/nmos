@@ -19,6 +19,8 @@
 #include <wx/timer.h>
 //*)
 
+class wxNmosEvent;
+
 class wxnmosDialog: public wxDialog
 {
     public:
@@ -53,12 +55,19 @@ class wxnmosDialog: public wxDialog
         wxTimer m_timerHeartbeat;
         //*)
 
-        void OnBrowserResolved(wxCommandEvent& event);
-        void OnBrowserAllForNow(wxCommandEvent& event);
-        void OnBrowserFinished(wxCommandEvent& event);
-        void OnRegistrationError(wxCommandEvent& event);
         void OnLog(wxCommandEvent& event);
-        void OnCurlDone(wxCommandEvent& event);
+
+        void OnBrowserResolved(wxNmosEvent& event);
+        void OnBrowserAllForNow(wxNmosEvent& event);
+        void OnBrowserFinished(wxNmosEvent& event);
+        void OnRegistrationError(wxNmosEvent& event);
+
+        void OnCurlDone(wxNmosEvent& event);
+        void OnTarget(wxNmosEvent& event);
+        void OnPatchSender(wxNmosEvent& event);
+        void OnPatchReceiver(wxNmosEvent& event);
+        void OnActivateSender(wxNmosEvent& event);
+        void OnActivateReceiver(wxNmosEvent& event);
 
         void Log(const wxString& sLog);
 

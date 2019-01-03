@@ -260,3 +260,31 @@ Json::Value connectionReceiver::GetJson()  const
 
 
 
+connection& connection::operator=(const connection& other)
+{
+    bMasterEnable = other.bMasterEnable;
+    eActivate = other.eActivate;
+    sRequestedTime = other.sRequestedTime;
+    sActivationTime = other.sActivationTime;
+    return *this;
+}
+
+connectionSender& connectionSender::operator=(const connectionSender& other)
+{
+    connection::operator=(other);
+    tpSender = other.tpSender;
+    sReceiverId = other.sReceiverId;
+
+    return *this;
+}
+
+connectionReceiver& connectionReceiver::operator=(const connectionReceiver& other)
+{
+    connection::operator=(other);
+
+    tpReceiver = other.tpReceiver;
+    sSenderId = other.sSenderId;
+    sTransportFileType = other.sTransportFileType;
+    sTransportFileData = other.sTransportFileData;
+    return *this;
+}

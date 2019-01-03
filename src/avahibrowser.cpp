@@ -86,7 +86,7 @@ bool ServiceBrowser::StartBrowser(const set<string>& setServices)
     avahi_client_new(avahi_threaded_poll_get(m_pThreadedPoll), AVAHI_CLIENT_NO_FAIL, client_callback, reinterpret_cast<void*>(this), &error);
     avahi_threaded_poll_start(m_pThreadedPoll);
 
-    Log::Get(Log::DEBUG) << "ServiceBrowser: Started" << endl;
+
     return true;
 }
 
@@ -148,7 +148,7 @@ bool ServiceBrowser::Start(AvahiClient* pClient)
 
 void ServiceBrowser::ClientCallback(AvahiClient * pClient, AvahiClientState state)
 {
-    Log::Get(Log::DEBUG) << "ServiceBrowser: ClientCallback" << endl;
+
     switch (state)
     {
         case AVAHI_CLIENT_FAILURE:
@@ -180,7 +180,6 @@ void ServiceBrowser::ClientCallback(AvahiClient * pClient, AvahiClientState stat
         case AVAHI_CLIENT_S_REGISTERING:
         case AVAHI_CLIENT_S_RUNNING:
         case AVAHI_CLIENT_S_COLLISION:
-            Log::Get(Log::DEBUG) << "ServiceBrowser: S_" << endl;
             if (!m_bBrowsing)
             {
                 Start(pClient);
@@ -222,10 +221,6 @@ void ServiceBrowser::TypeCallback(AvahiIfIndex interface, AvahiProtocol protocol
                     }
                     m_mutex.unlock();
                 }
-                else
-                {
-                    Log::Get(Log::DEBUG) << "ServiceBrowser: Service '" << type << "' not for us" << endl;
-                }
             }
             break;
          case AVAHI_BROWSER_REMOVE:
@@ -237,10 +232,8 @@ void ServiceBrowser::TypeCallback(AvahiIfIndex interface, AvahiProtocol protocol
             Stop();
             break;
         case AVAHI_BROWSER_CACHE_EXHAUSTED:
-            Log::Get(Log::DEBUG) << "ServiceBrowser: (TypeBrowser) CACHE_EXHAUSTED" << endl;
             break;
         case AVAHI_BROWSER_ALL_FOR_NOW:
-            Log::Get(Log::DEBUG) << "ServiceBrowser: (TypeBrowser) ALL_FOR_NOW" << endl;
             CheckStop();
             break;
     }
@@ -300,7 +293,7 @@ void ServiceBrowser::BrowseCallback(AvahiServiceBrowser* pBrowser, AvahiIfIndex 
             break;
         case AVAHI_BROWSER_CACHE_EXHAUSTED:
             {
-                Log::Get(Log::DEBUG) << "ServiceBrowser: (Browser) CACHE_EXHAUSTED" << endl;
+
             }
             break;
     }

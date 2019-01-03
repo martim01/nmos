@@ -125,6 +125,7 @@ int main()
                     cout << "----------------------------------------" << endl;
                     cout << "NMOS Activate Sender: " << pPoster->GetString() << endl;
                     cout << "----------------------------------------" << endl;
+                    NodeApi::Get().ActivateSender(pPoster->GetString(),"","");
                     break;
                 case ThreadPoster::ACTIVATE_RECEIVER:
                     cout << "----------------------------------------" << endl;

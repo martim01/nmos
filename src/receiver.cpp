@@ -108,7 +108,7 @@ bool Receiver::Commit()
         else
         {
             m_json["subscription"]["sender_id"] = m_pSender->GetId();
-            m_json["subscription"]["active"] = true;    //@todo we need to get this information from somewhere sensible
+            m_json["subscription"]["active"] = true;    //@todo we need to get this subscription information from somewhere sensible
         }
 
 

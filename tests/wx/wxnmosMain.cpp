@@ -87,7 +87,7 @@ wxnmosDialog::wxnmosDialog(wxWindow* parent,wxWindowID id)
 
     Connect(ID_BUTTON1,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxnmosDialog::OnbtnQueryNodesClick);
     Connect(ID_CHECKBOX1,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&wxnmosDialog::OnchbxScrollClick);
-    Connect(ID_TIMER1,wxEVT_TIMER,(wxObjectEventFunction)&wxnmosDialog::OntimerHeartbeatTrigger);
+
     Connect(wxID_ANY,wxEVT_CLOSE_WINDOW,(wxObjectEventFunction)&wxnmosDialog::OnClose);
     //*)
     Connect(wxID_ANY, wxEVT_NMOS_MDNS_ALLFORNOW, (wxObjectEventFunction)&wxnmosDialog::OnBrowserAllForNow);
@@ -97,15 +97,22 @@ wxnmosDialog::wxnmosDialog(wxWindow* parent,wxWindowID id)
     Connect(wxID_ANY, wxEVT_NMOS_CURL_DONE, (wxObjectEventFunction)&wxnmosDialog::OnCurlDone);
     Connect(wxID_ANY, wxEVT_NMOS_REG_ERROR, (wxObjectEventFunction)&wxnmosDialog::OnRegistrationError);
 
+    Connect(wxID_ANY, wxEVT_NMOS_TARGET, (wxObjectEventFunction)&wxnmosDialog::OnTarget);
+    Connect(wxID_ANY, wxEVT_NMOS_PATCH_SENDER, (wxObjectEventFunction)&wxnmosDialog::OnPatchSender);
+    Connect(wxID_ANY, wxEVT_NMOS_PATCH_RECEIVER, (wxObjectEventFunction)&wxnmosDialog::OnPatchReceiver);
+    Connect(wxID_ANY, wxEVT_NMOS_ACTIVATE_RECEIVER, (wxObjectEventFunction)&wxnmosDialog::OnActivateSender);
+    Connect(wxID_ANY, wxEVT_NMOS_ACTIVATE_SENDER, (wxObjectEventFunction)&wxnmosDialog::OnActivateReceiver);
+
+
     Log::Get().SetOutput(new wxLogOutput(this));
 
     m_bScroll = true;
 
-    NodeApi::Get().Init(8080, 8081, "host1", "host1");
+    NodeApi::Get().Init(8080, 8081, "host Label", "host Description");
     NodeApi::Get().GetSelf().AddApiVersion("v1.2");
     NodeApi::Get().GetSelf().AddInternalClock("clk0");
     NodeApi::Get().GetSelf().AddPTPClock("clk1", true, "IEEE1588-2008", "08-00-11-ff-fe-21-e1-b0", true);
-    NodeApi::Get().GetSelf().AddInterface("eth0", "74-26-96-db-87-31", "74-26-96-db-87-32");
+    NodeApi::Get().GetSelf().AddInterface("eth0");
 
 
     Device* pDevice = new Device("TestDevice", "TestDescription", Device::GENERIC,NodeApi::Get().GetSelf().GetId());
@@ -125,14 +132,29 @@ wxnmosDialog::wxnmosDialog(wxWindow* parent,wxWindowID id)
     pReceiver->AddCap("audio/L16");
     pReceiver->AddInterfaceBinding("eth0");
 
-    NodeApi::Get().AddDevice(pDevice);
-    NodeApi::Get().AddSource(pSource);
-    NodeApi::Get().AddFlow(pFlow);
-    NodeApi::Get().AddReceiver(pReceiver);
-    NodeApi::Get().AddSender(pSender);
+    if(NodeApi::Get().AddDevice(pDevice) == false)
+    {
+        Log(wxT("FAILED TO ADD DEVICE"));
+    }
+    if(NodeApi::Get().AddSource(pSource) == false)
+    {
+        Log(wxT("FAILED TO ADD SOURCE"));
+    }
+    if(NodeApi::Get().AddFlow(pFlow) == false)
+    {
+        Log(wxT("FAILED TO ADD FLOW"));
+    }
+    if(NodeApi::Get().AddReceiver(pReceiver) == false)
+    {
+        Log(wxT("FAILED TO ADD RECEIVER"));
+    }
+    if(NodeApi::Get().AddSender(pSender) == false)
+    {
+        Log(wxT("FAILED TO ADD SENDER"));
+    }
     NodeApi::Get().Commit();
 
-    NodeApi::Get().StartServices(new wxEventPoster(this));
+    NodeApi::Get().StartServices(std::make_shared<wxEventPoster>(this));
 
 }
 
@@ -162,23 +184,23 @@ void wxnmosDialog::Log(const wxString& sLog)
     }
 }
 
-void wxnmosDialog::OnBrowserResolved(wxCommandEvent& event)
+void wxnmosDialog::OnBrowserResolved(wxNmosEvent& event)
 {
     Log(wxT("Registation node resolved"));
 }
 
-void wxnmosDialog::OnBrowserAllForNow(wxCommandEvent& event)
+void wxnmosDialog::OnBrowserAllForNow(wxNmosEvent& event)
 {
     Log(wxT("Browser - all for now "));
 
 }
 
-void wxnmosDialog::OnRegistrationError(wxCommandEvent& event)
+void wxnmosDialog::OnRegistrationError(wxNmosEvent& event)
 {
     Log(wxT("Registration error"));
 }
 
-void wxnmosDialog::OnCurlDone(wxCommandEvent& event)
+void wxnmosDialog::OnCurlDone(wxNmosEvent& event)
 {
     switch(event.GetExtraLong())
     {
@@ -194,7 +216,7 @@ void wxnmosDialog::OnCurlDone(wxCommandEvent& event)
 
 
 
-void wxnmosDialog::OnBrowserFinished(wxCommandEvent& event)
+void wxnmosDialog::OnBrowserFinished(wxNmosEvent& event)
 {
     Log(wxT("Browser - finished"));
 }
@@ -205,15 +227,10 @@ void wxnmosDialog::OnLog(wxCommandEvent& event)
     Log(event.GetString());
 }
 
-void wxnmosDialog::OntimerHeartbeatTrigger(wxTimerEvent& event)
-{
-}
-
 void wxnmosDialog::OnClose(wxCloseEvent& event)
 {
     NodeApi::Get().StopServices();
-    NodeApi::Get().UnregisterSimple();
-    event.Skip();
+       event.Skip();
 }
 
 void wxnmosDialog::OnbtnQueryNodesClick(wxCommandEvent& event)
@@ -224,4 +241,35 @@ void wxnmosDialog::OnbtnQueryNodesClick(wxCommandEvent& event)
 void wxnmosDialog::OnchbxScrollClick(wxCommandEvent& event)
 {
     m_bScroll = event.IsChecked();
+}
+
+
+void wxnmosDialog::OnTarget(wxNmosEvent& event)
+{
+    Log(wxString::Format(wxT("Target Recevier %s with Sender %s"), event.GetId().c_str(), event.GetSender()->GetId().c_str()));
+    NodeApi::Get().TargetTaken(event.GetPort(), true);
+}
+
+void wxnmosDialog::OnPatchSender(wxNmosEvent& event)
+{
+    Log(wxString::Format(wxT("Patch sender %s"), event.GetId().c_str()));
+    NodeApi::Get().SenderPatchAllowed(event.GetPort(), true);
+}
+
+void wxnmosDialog::OnPatchReceiver(wxNmosEvent& event)
+{
+    Log(wxString::Format(wxT("Patch receiver %s"), event.GetId().c_str()));
+    NodeApi::Get().ReceiverPatchAllowed(event.GetPort(), true);
+}
+
+void wxnmosDialog::OnActivateSender(wxNmosEvent& event)
+{
+    Log(wxString::Format(wxT("Activate sender %s"), event.GetId().c_str()));
+    NodeApi::Get().ActivateSender(std::string(event.GetId().mb_str()), "", "");
+}
+
+void wxnmosDialog::OnActivateReceiver(wxNmosEvent& event)
+{
+    Log(wxString::Format(wxT("Activate receiver %s"), event.GetId().c_str()));
+    NodeApi::Get().ActivateReceiver(std::string(event.GetId().mb_str()), "");
 }

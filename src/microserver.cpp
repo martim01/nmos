@@ -559,7 +559,7 @@ int MicroServer::GetJsonNmosConnectionSingleSenders(std::string& sReturn, std::s
                 }
                 else if(m_vPath[C_LAST] == "transportfile")
                 {
-                    // @todo transportfile get
+                    // transportfile get
                     sContentType = "application/sdp";
                     sReturn = pSender->GetTransportFile();
                     nCode = 200;
@@ -802,6 +802,9 @@ int MicroServer::PatchJsonSender(const std::string& sJson, std::string& sRespons
     }
     else
     {
+        Log::Get(Log::DEBUG) << "PatchJsonSender: --------------------------------" << std::endl;
+        Log::Get(Log::DEBUG) << sJson << std::endl;
+        Log::Get(Log::DEBUG) << "PatchJsonSender: --------------------------------" << std::endl;
         //is the json valid?
         Json::Value jsRequest;
         Json::Reader jsReader;
