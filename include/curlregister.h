@@ -53,12 +53,12 @@ class CurlRegister
 
     public:
         ///< @brief constructor
-        CurlRegister(EventPoster* pPoster);
+        CurlRegister(std::shared_ptr<EventPoster> pPoster);
 
         ///< @brief Destructor
         ~CurlRegister();
 
-        EventPoster* GetPoster();
+        std::shared_ptr<EventPoster> GetPoster();
         //threaded version
         void Post(const std::string& sBaseUrl, const std::string& sJson, long nUserType);
         //simple versions
@@ -74,7 +74,7 @@ class CurlRegister
 
         //void PostStatic(const std::string& sUrl, const std::string& sJson, EventPoster* pPoster);
         void ParseResults(NodeApi::enumResource eResource, const std::string& sResponse, ResourceHolder* pResults);
-        EventPoster* m_pPoster;
+        std::shared_ptr<EventPoster> m_pPoster;
 
         static const std::string STR_RESOURCE[7];
 

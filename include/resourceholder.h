@@ -36,6 +36,7 @@ class NMOS_EXPOSE ResourceHolder
         std::map<std::string, Resource*>::const_iterator GetResourceBegin() const;
         std::map<std::string, Resource*>::const_iterator GetResourceEnd() const;
         std::map<std::string, Resource*>::const_iterator FindResource(std::string sUuid) const;
+        std::map<std::string, Resource*>::iterator GetResource(std::string sUuid);
 
         std::map<std::string, Resource*>::const_iterator GetChangedResourceBegin() const;
         std::map<std::string, Resource*>::const_iterator GetChangedResourceEnd() const;
@@ -46,6 +47,8 @@ class NMOS_EXPOSE ResourceHolder
 
         size_t GetResourceCount() const;
     protected:
+
+
 
         void ResourceUpdated();
 

@@ -9,7 +9,7 @@
 #include <map>
 #include <list>
 #include <mutex>
-
+#include <memory>
 #include "dlldefine.h"
 
 
@@ -27,7 +27,7 @@ class ServiceBrowser
 {
 // Construction
     public:
-        ServiceBrowser(EventPoster* pPoster);
+        ServiceBrowser(std::shared_ptr<EventPoster> pPoster);
         virtual ~ServiceBrowser();
 
 
@@ -56,7 +56,7 @@ class ServiceBrowser
 
         std::mutex m_mutex;
 //        void OnStop(wxCommandEvent& event);
-        EventPoster* m_pPoster;
+        std::shared_ptr<EventPoster> m_pPoster;
 
         AvahiThreadedPoll* m_pThreadedPoll;
         AvahiClient * m_pClient;

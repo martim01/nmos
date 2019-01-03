@@ -5,6 +5,7 @@
 		<Option title="libnmos" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
+		<Option virtualFolders="nmos/;" />
 		<Build>
 			<Target title="Linux Debug">
 				<Option output="lib/nmosd" prefix_auto="1" extension_auto="1" />
@@ -56,11 +57,18 @@
 		<Unit filename="avahibrowser.h" />
 		<Unit filename="avahipublisher.cpp" />
 		<Unit filename="avahipublisher.h" />
+		<Unit filename="connection.cpp" />
+		<Unit filename="connection.h" />
+		<Unit filename="constraint.cpp" />
+		<Unit filename="constraint.h" />
 		<Unit filename="curlregister.cpp" />
 		<Unit filename="curlregister.h" />
 		<Unit filename="device.cpp" />
 		<Unit filename="device.h" />
-		<Unit filename="eventposter.h" />
+		<Unit filename="eventposter.cpp" />
+		<Unit filename="eventposter.h">
+			<Option virtualFolder="nmos/" />
+		</Unit>
 		<Unit filename="flow.cpp" />
 		<Unit filename="flow.h" />
 		<Unit filename="flowaudio.cpp" />

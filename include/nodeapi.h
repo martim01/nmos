@@ -20,6 +20,7 @@ class Flow;
 class Receiver;
 class Sender;
 class NmosThread;
+class MicroServer;
 
 
 class NMOS_EXPOSE NodeApi
@@ -46,7 +47,7 @@ class NMOS_EXPOSE NodeApi
         *   @note NodeApi takes owenership of the EventPoster and will delete it on destruction
         *   @return <i>bool</i> true on succesfully starting the thread
         **/
-        bool StartServices(EventPoster* pPoster);
+        bool StartServices(std::shared_ptr<EventPoster> pPoster);
 
         /** @brief Stop the thread that is running the nmos services
         **/
@@ -129,6 +130,42 @@ class NMOS_EXPOSE NodeApi
         **/
         const ResourceHolder& GetSenders();
 
+
+        /** @brief Returns a pointer to the receiver with the given id if one exists or null.
+        *   @param sId the uuid of the receiver
+        *   @return <i>Receiver*</i> pointer to the given receiver or null
+        **/
+        Receiver* GetReceiver(const std::string& sId);
+
+        /** @brief Returns a pointer to the Sender with the given id if one exists or null.
+        *   @param sId the uuid of the Sender
+        *   @return <i>Sender*</i> pointer to the given Sender or null
+        **/
+        Sender* GetSender(const std::string& sId);
+
+
+        /** @brief To be called by the main thread when an IS-04 connection is made. The server tread will have called Target
+        *   @param nPort the port of the MicroServer that is being used for IS-04
+        *   @param bOk true if the receiver has succesfully connected to the sender. False otherwise
+        **/
+        void TargetTaken(unsigned short nPort, bool bOk);
+
+        /** @brief To be called by the main thread when an IS-05 Sender Patch is being maded
+        *   @param nPort the port of the MicroServer that is being used for IS-04
+        *   @param bOk true if the Sender is allowed to take the patch.
+        *   @note EventPoster::PatchSender is called on the request of the Sender being patched whatever the activation mode is. This function should be called by the main thread to allow the server to respond.
+        **/
+        void SenderPatchAllowed(unsigned short nPort, bool bOk);
+
+        /** @brief To be called by the main thread when an IS-05 Receiver Patch is being maded
+        *   @param nPort the port of the MicroServer that is being used for IS-04
+        *   @param bOk true if the Receiver is allowed to take the patch
+        *   @note EventPoster::PatchSender is called on the request of the Receiver being patched whatever the activation mode is. This function should be called by the main thread to allow the server to respond.
+        **/
+        void ReceiverPatchAllowed(unsigned short nPort, bool bOk);
+
+
+
         /** @brief Returns a const reference to the ResourceHolder that contains all the resources returned from a query
         *   @return </i>const ResourceHolder&</i>
         **/
@@ -143,6 +180,29 @@ class NMOS_EXPOSE NodeApi
         bool Query(enumResource eResource, const std::string& sQuery);
 
 
+        /** @brief returns the port number used for the connection api
+        *   @return <i>unsigned short</i>
+        **/
+        unsigned short GetConnectionPort() const;
+
+
+
+        /** @brief Activates the stage parameters of the Sender with the given Id and updates any IS-O4 version information
+        *   @param sId the uuid of the Sender
+        *   @param sSourceIp IP address from which RTP packets will be sent (IP address of interface bound to this output)
+        *   @param sDestinationIp IP address to which RTP packets will be sent. Can be a multicast address
+        *   @param sSDP the transport file that the sender should serve. This should be created by the main program logic from the staged transport parameters and associated flow etc. If empty then the Sender will create it's own from the connection parameters
+        *   @return <i>bool</i> true if the Sender was found
+        *   @note sSourceIp and sDestinationIp should be set to be the same as the Sender's staged parameters unless they are set to auto. In which case the main program logic should choose them.
+        **/
+        bool ActivateSender(const std::string& sId, const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP="");
+
+        /** @brief Activates the stage parameters of the Receiver with the given Id and updates any IS-04 version information
+        *   @param sId the uuid of the Receiver
+        *   @param sInterfaceIp IP address of the network interface the receiver should use
+        *   @return <i>bool</i> true if the Receiver was found
+        **/
+        bool ActivateReceiver(const std::string& sId, const std::string& sInterfaceIp);
 
 
     protected:
@@ -155,9 +215,17 @@ class NMOS_EXPOSE NodeApi
         bool StartHttpServers();
         bool BrowseForRegistrationNode();
         void SignalBrowse();
-        void SignalCommit();
 
-        bool WaitForCommit(unsigned long nMilliseconds);
+
+        void SignalServer(unsigned short nPort, bool bOk);
+
+        enum enumSignal{SIG_NONE=0, SIG_COMMIT=1};
+
+        void Signal(enumSignal eSignal);
+        enumSignal GetSignal() const;
+
+
+        bool Wait(unsigned long nMilliseconds);
 
         bool FindRegistrationNode();
         bool IsRunning();
@@ -169,8 +237,7 @@ class NMOS_EXPOSE NodeApi
         long RegistrationHeartbeat();
         int UpdateRegisterSimple();
 
-        int GetJson(std::string sPath, std::string& sResponse, unsigned short nPort);
-        int PutJson(std::string sPath, std::string sJson, std::string& sRepsonse, unsigned short nPort);
+
 
     private:
         NodeApi();
@@ -186,24 +253,9 @@ class NMOS_EXPOSE NodeApi
 
         void StopRegistrationBrowser();
 
-        void SplitString(std::vector<std::string>& vSplit, std::string str, char cSplit);
 
-        int GetJsonNmos(std::string& sReturn, unsigned short nPort);
-        int GetJsonNmosNodeApi(std::string& sReturn);
-        int GetJsonNmosConnectionApi(std::string& sReturn);
-        int GetJsonNmosConnectionSingleApi(std::string& sReturn);
-        int GetJsonNmosConnectionBulkApi(std::string& sReturn);
 
-        int GetJsonNmosConnectionSingleSenders(std::string& sReturn);
-        int GetJsonNmosConnectionSingleReceivers(std::string& sReturn);
 
-        Json::Value GetJsonSources();
-        Json::Value GetJsonDevices();
-        Json::Value GetJsonFlows();
-        Json::Value GetJsonReceivers();
-        Json::Value GetJsonSenders();
-
-        Json::Value GetJsonError(unsigned long nCode = 404, std::string sError="Resource not found");
 
 
 
@@ -217,6 +269,7 @@ class NMOS_EXPOSE NodeApi
 
         bool FindQueryNode();
 
+        bool CheckNodeApiPath();
 
 
         Self m_self;
@@ -232,7 +285,7 @@ class NMOS_EXPOSE NodeApi
 
 
 
-        std::vector<std::string> m_vPath;
+
         std::string m_sRegistrationNode;
         std::string m_sQueryNode;
 
@@ -243,20 +296,18 @@ class NMOS_EXPOSE NodeApi
         unsigned int m_nRegistrationStatus;
 
         std::mutex m_mutex;
-        std::condition_variable m_cvBrowse;
-        std::condition_variable m_cvCommit;
+        std::condition_variable m_cvBrowse; //sync between nmos thread and ServiceBrowser thread
+        std::condition_variable m_cvCommit; //sync between nmos thread and main thread (used to sleep until a Commit is called)
+
 
         bool m_bRun;
-        EventPoster* m_pPoster;
+        std::shared_ptr<EventPoster> m_pPoster;
         unsigned short m_nConnectionPort;
+        unsigned short m_nDiscoveryPort;
 
-        std::map<unsigned short, MicroServer*> m_mConnectionServers;
+        std::map<unsigned short, MicroServer*> m_mServers;
 
-        enum {BASE=0, NMOS=1, API_TYPE=2,VERSION=3,ENDPOINT=4, RESOURCE=5};
-        enum {SZ_BASE=1, SZ_NMOS=2, SZ_API_TYPE=3,SZ_VERSION=4,SZ_ENDPOINT=5};
 
-        enum {SZC_TYPE=5, SZC_DIRECTION=6, SZC_ID=7, SZC_LAST=8};
-        enum {C_TYPE = 4, C_DIRECTION=5, C_ID=6, C_LAST=7};
-
+        enumSignal m_eSignal;
         static const std::string STR_RESOURCE[7];
 };

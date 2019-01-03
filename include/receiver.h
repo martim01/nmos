@@ -1,7 +1,13 @@
 #pragma once
 #include "resource.h"
 #include <set>
+#include <memory>
 #include "dlldefine.h"
+#include "constraint.h"
+#include "connection.h"
+
+class Sender;
+class EventPoster;
 
 class NMOS_EXPOSE Receiver : public Resource
 {
@@ -9,6 +15,7 @@ class NMOS_EXPOSE Receiver : public Resource
         enum enumTransport {RTP, RPT_UCAST, RTP_MCAST, DASH};
         enum enumType {AUDIO, VIDEO, DATA, MUX};
         Receiver(std::string sLabel, std::string sDescription, enumTransport eTransport, std::string sDeviceId, enumType eType);
+        ~Receiver();
 
         void SetTransport(enumTransport eTransport);
         void SetType(enumType eType);
@@ -19,20 +26,29 @@ class NMOS_EXPOSE Receiver : public Resource
         void AddCap(std::string sCap);
         void RemoveCap(std::string sCap);
 
-        void SetSubscription(std::string sSenderId, bool bActive);
+
         virtual bool Commit();
 
         const std::string& GetDeviceId() const
         {
             return m_sDeviceId;
         }
-        const std::string& GetFlowId() const
-        {
-            return m_sFlowId;
-        }
+
+        Json::Value GetConnectionStagedJson() const;
+        Json::Value GetConnectionActiveJson() const;
+        Json::Value GetConnectionConstraintsJson() const;
+
+        std::shared_ptr<Sender> GetSender() const;
+        void SetSender(std::shared_ptr<Sender>);  //this is the IS-04 way of connecting
+
+        bool CheckConstraints(const connectionReceiver& conRequest);
+        bool IsLocked() const;
+        bool Stage(const connectionReceiver& conRequest, std::shared_ptr<EventPoster> pPoster);
+        connectionReceiver GetStaged() const;
+
+        void Activate(const std::string& sInterfaceIp);
 
     private:
-        std::string m_sFlowId;
         enumTransport m_eTransport;
         std::string m_sDeviceId;
         std::string m_sManifest;
@@ -41,6 +57,14 @@ class NMOS_EXPOSE Receiver : public Resource
         enumType m_eType;
         std::set<std::string> m_setInterfaces;
         std::set<std::string> m_setCaps;
+
+
+        connectionReceiver m_Staged;
+        connectionReceiver m_Active;
+        constraintsReceiver m_constraints;
+
+
+        std::shared_ptr<Sender> m_pSender;
 
         static const std::string TRANSPORT[4];
         static const std::string TYPE[4];

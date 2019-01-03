@@ -117,6 +117,10 @@ std::map<std::string, Resource*>::const_iterator ResourceHolder::FindResource(st
     return m_mResource.find(sUuid);
 }
 
+std::map<std::string, Resource*>::iterator ResourceHolder::GetResource(std::string sUuid)
+{
+    return m_mResource.find(sUuid);
+}
 
 std::map<std::string, Resource*>::const_iterator ResourceHolder::GetStagedResourceBegin() const
 {

@@ -41,7 +41,7 @@ void resolve_callback(AvahiServiceResolver *r, AVAHI_GCC_UNUSED AvahiIfIndex int
 
 
 
-ServiceBrowser::ServiceBrowser(EventPoster* pPoster) :
+ServiceBrowser::ServiceBrowser(std::shared_ptr<EventPoster> pPoster) :
     m_pPoster(pPoster),
     m_pThreadedPoll(0),
     m_pClient(0),
@@ -118,7 +118,7 @@ void ServiceBrowser::Stop()
         m_pThreadedPoll = 0;
         if(m_pPoster)
         {
-            m_pPoster->Finished();
+            m_pPoster->_Finished();
         }
 //        if(m_pHandler)
 //        {   //only send if we are actually stopping not already stopped and now deleting
@@ -285,7 +285,7 @@ void ServiceBrowser::BrowseCallback(AvahiServiceBrowser* pBrowser, AvahiIfIndex 
                 Log::Get(Log::DEBUG) << "ServiceBrowser: (Browser) '" << type << "' in domain '" << domain << "' ALL_FOR_NOW" << endl;
                 if(m_pPoster)
                 {
-                    m_pPoster->AllForNow(type);
+                    m_pPoster->_AllForNow(type);
                 }
 
 
@@ -344,7 +344,7 @@ void ServiceBrowser::ResolveCallback(AvahiServiceResolver* pResolver, AvahiResol
                 itService->second->lstInstances.push_back(pInstance);
                 if(m_pPoster)
                 {
-                    m_pPoster->InstanceResolved(pInstance);
+                    m_pPoster->_InstanceResolved(pInstance);
                 }
                 m_mutex.unlock();
 
@@ -374,7 +374,7 @@ void ServiceBrowser::RemoveServiceInstance(const std::string& sService, const st
                 itService->second->lstInstances.erase(itDelete);
                 if(m_pPoster)
                 {
-                    m_pPoster->InstanceRemoved(sInstance);
+                    m_pPoster->_InstanceRemoved(sInstance);
                 }
             }
             else

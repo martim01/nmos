@@ -14,7 +14,7 @@ static void PostThreaded(const std::string& sUrl, const std::string& sJson, Curl
     long nResponseCode = pRegister->Post(sUrl, sJson, sResponse);
     if(pRegister->GetPoster())
     {
-        pRegister->GetPoster()->CurlDone(nResponseCode, sResponse, nUserType);
+        pRegister->GetPoster()->_CurlDone(nResponseCode, sResponse, nUserType);
     }
 }
 
@@ -24,7 +24,7 @@ static void DeleteThreaded(const std::string& sUrl, const std::string& sType, co
     long nResponseCode = pRegister->Delete(sUrl, sType, sId, sResponse);
     if(pRegister->GetPoster())
     {
-        pRegister->GetPoster()->CurlDone(nResponseCode, sResponse, nUserType);
+        pRegister->GetPoster()->_CurlDone(nResponseCode, sResponse, nUserType);
     }
 }
 
@@ -33,12 +33,12 @@ static void QueryThreaded(const std::string& sBaseUrl, NodeApi::enumResource eRe
     long nResponseCode = pRegister->Query(sBaseUrl, eResource, sQuery, pResults);
     if(pRegister->GetPoster())
     {
-        pRegister->GetPoster()->CurlDone(nResponseCode, "", nUserType);
+        pRegister->GetPoster()->_CurlDone(nResponseCode, "", nUserType);
     }
 }
 
 
-CurlRegister::CurlRegister(EventPoster* pPoster) :
+CurlRegister::CurlRegister(std::shared_ptr<EventPoster> pPoster) :
     m_pPoster(pPoster)
 {
 
@@ -51,7 +51,7 @@ CurlRegister::~CurlRegister()
     curl_global_cleanup();
 }
 
-EventPoster* CurlRegister::GetPoster()
+std::shared_ptr<EventPoster> CurlRegister::GetPoster()
 {
     return m_pPoster;
 }

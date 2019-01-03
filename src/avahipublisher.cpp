@@ -237,16 +237,22 @@ ServicePublisher::~ServicePublisher()
 
 
 
-void ServicePublisher::AddTxt(string sKey, string sValue)
+void ServicePublisher::AddTxt(string sKey, string sValue, bool bModify)
 {
     m_mTxt[sKey] = sValue;
-    Modify();
+    if(bModify)
+    {
+        Modify();
+    }
 }
 
-void ServicePublisher::RemoveTxt(string sKey, string sValue)
+void ServicePublisher::RemoveTxt(string sKey, string sValue, bool bModify)
 {
     m_mTxt.erase(sKey);
-    Modify();
+    if(bModify)
+    {
+        Modify();
+    }
 }
 
 
@@ -274,6 +280,7 @@ AvahiStringList* ServicePublisher::GetTxtList()
 
 void ServicePublisher::Modify()
 {
+    Log::Get(Log::DEBUG) << "Modify" << endl;
     if(m_pThreadedPoll)
     {
         AvahiStringList* pList = GetTxtList();

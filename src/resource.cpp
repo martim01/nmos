@@ -1,48 +1,50 @@
 #include "resource.h"
 #ifdef __WIN__
 #include <objbase.h>
-#include "timeofday.h"
 #endif
 #ifdef __GNU__
 #include <uuid/uuid.h>
 #include <sys/time.h>
 #endif // __GNU__
-
+#include <chrono>
 #include <sstream>
 
 Resource::Resource(std::string sLabel, std::string sDescription) :
+    m_bIsOk(true),
     m_sLabel(sLabel),
     m_sDescription(sDescription)
+
 {
     CreateGuid();
     UpdateVersionTime();
 }
 
-Resource::Resource()
+Resource::Resource() :
+    m_bIsOk(true)
 {
     CreateGuid();
     UpdateVersionTime();
 }
 
-Resource::Resource(const Json::Value& jsValue)
+Resource::Resource(const Json::Value& jsValue) :
+    m_bIsOk(false)
 {
     m_json = jsValue;
-    if(m_json["id"].isString())
+
+    m_bIsOk = (m_json["id"].isString() && m_json["label"].isString() && m_json["description"].isString() && m_json["version"].isString());
+    if(m_bIsOk)
     {
         m_sId = m_json["id"].asString();
-    }
-    if(m_json["label"].isString())
-    {
         m_sLabel = m_json["label"].asString();
-    }
-    if(m_json["description"].isString())
-    {
         m_sDescription = m_json["description"].asString();
-    }
-    if(m_json["version"].isString())
-    {
         m_sVersion = m_json["version"].asString();
     }
+}
+
+
+bool Resource::IsOk() const
+{
+    return m_bIsOk;
 }
 
 void Resource::AddTag(std::string sTag)
@@ -131,18 +133,18 @@ void Resource::UpdateDescription(std::string sDescription)
 
 void Resource::UpdateVersionTime()
 {
-    timeval tvNow;
-
-    gettimeofday(&tvNow, NULL);
-    std::stringstream strs;
-    unsigned long nNano(tvNow.tv_usec);
-    nNano*=1000;
-
-    strs << tvNow.tv_sec << ":" << nNano;
-
     m_sLastVersion = m_sVersion;
 
-    m_sVersion = strs.str();
+    m_sVersion = GetCurrentTime();
+}
+
+std::string Resource::GetCurrentTime()
+{
+    auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+    std::stringstream sstr;
+
+    sstr << (nanos/1000000000) << ":" << (nanos%1000000000);
+    return sstr.str();
 }
 
 const Json::Value& Resource::GetJson() const
@@ -169,4 +171,29 @@ const std::string& Resource::GetDescription() const
 const std::string& Resource::GetVersion() const
 {
     return m_sVersion;
+}
+
+
+bool Resource::ConvertTaiStringToTimePoint(const std::string& sTai, std::chrono::time_point<std::chrono::high_resolution_clock>& tp)
+{
+    std::istringstream f(sTai);
+    std::string sSeconds;
+    std::string sNano;
+
+    if(getline(f, sSeconds, ':') && getline(f, sNano, ':'))
+    {
+        try
+        {
+            std::chrono::seconds sec(std::stoul(sSeconds));
+            std::chrono::nanoseconds nano(std::stoul(sNano));
+            nano += std::chrono::duration_cast<std::chrono::nanoseconds>(sec);
+            tp = std::chrono::time_point<std::chrono::high_resolution_clock>(nano);
+
+        }
+        catch(std::invalid_argument& e)
+        {
+            return false;
+        }
+    }
+    return false;
 }

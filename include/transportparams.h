@@ -7,10 +7,13 @@ struct TransportParamsRTP
     enum enumFecMode {ONED, TWOD};
 
     TransportParamsRTP();
+    virtual bool Patch(const Json::Value& jsData);
+
     virtual Json::Value GetJson() const;
     void SetPort(Json::Value& js, const std::string& sPort, unsigned short nPort) const;
+    bool DecodePort(const Json::Value& jsData, const std::string& sPort, unsigned short& nPort);
 
-
+    void Actualize();
 
     std::string sSourceIp;
     unsigned short nDestinationPort;
@@ -34,7 +37,9 @@ struct TransportParamsRTPReceiver : public TransportParamsRTP
     std::string sInterfaceIp;
 
     TransportParamsRTPReceiver();
+    virtual bool Patch(const Json::Value& jsData);
     virtual Json::Value GetJson() const;
+    void Actualize(const std::string& sInterfaceIp);
 };
 
 
@@ -43,7 +48,11 @@ struct TransportParamsRTPSender : public TransportParamsRTP
     enum enumFecType {XOR, REED};
 
     TransportParamsRTPSender();
+    virtual bool Patch(const Json::Value& jsData);
+
     virtual Json::Value GetJson() const;
+
+    void Actualize(const std::string& sSource, const std::string& sDestination);
 
     std::string sDestinationIp;
     unsigned short nSourcePort;
