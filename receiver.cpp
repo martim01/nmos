@@ -151,6 +151,7 @@ void Receiver::SetSender(std::shared_ptr<Sender> pSender)
         m_pSender = 0;
     }
     UpdateVersionTime();
+
     // @todo need to update the IS-05 stage and active connection settings to match
 }
 
@@ -190,6 +191,9 @@ bool Receiver::Stage(const connectionReceiver& conRequest, std::shared_ptr<Event
     bool bOk(true);
     m_mutex.lock();
     m_Staged = conRequest;
+
+    //@todo need to decode the SDP and make the correct transport param changes here
+
     m_mutex.unlock();
 
     switch(m_Staged.eActivate)
@@ -265,14 +269,21 @@ connectionReceiver Receiver::GetStaged() const
 }
 
 
-void Receiver::Activate()
+void Receiver::Activate(const std::string& sInterfaceIp)
 {
+    //move the staged parameters to active parameters
+    m_Active = m_Staged;
+
+    //Change auto settings to what they actually are
+    m_Active.tpReceiver.Actualize(sInterfaceIp);
 
     //activeate - set subscription, receiverId and active on master_enable. Commit afterwards
     m_sSenderId = m_Staged.sSenderId;
     m_bSenderActive = m_Staged.bMasterEnable;
 
-    //move the staged parameters to active parameters
-    m_Active = m_Staged;
-    //@todo change auto settings to what they actually are
+    //reset the staged activation
+    m_Staged.eActivate = connection::ACT_NULL;
+    m_Staged.sActivationTime.clear();
+    m_Staged.sRequestedTime.clear();
+
 }

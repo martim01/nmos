@@ -200,6 +200,43 @@ TransportParamsRTPSender::TransportParamsRTPSender() : TransportParamsRTP(),
 
 }
 
+
+void TransportParamsRTP::Actualize()
+{
+    if(nDestinationPort == 0)
+    {
+        nDestinationPort = 5004;
+    }
+
+    if(bFecEnabled)
+    {
+        if(nFec1DDestinationPort == 0)
+        {
+            nFec1DDestinationPort = nDestinationPort+2;
+        }
+        if(nFec2DDestinationPort == 0)
+        {
+            nFec2DDestinationPort = nDestinationPort+4;
+        }
+
+    }
+    if(bRtcpEnabled)
+    {
+        if(nRtcpDestinationPort==0)
+        {
+            if(nDestinationPort%2 == 0)
+            {
+                nRtcpDestinationPort = nDestinationPort+1;
+            }
+            else
+            {
+                nRtcpDestinationPort = nDestinationPort+2;
+            }
+        }
+
+    }
+}
+
 bool TransportParamsRTPSender::Patch(const Json::Value& jsData)
 {
     if(jsData.isObject())
@@ -293,6 +330,56 @@ Json::Value TransportParamsRTPSender::GetJson() const
 }
 
 
+void TransportParamsRTPSender::Actualize(const std::string& sSource, const std::string& sDestination)
+{
+    TransportParamsRTP::Actualize();
+
+    sSourceIp =sSource;
+    sDestinationIp = sDestination;
+
+    if(nSourcePort == 0)
+    {
+        nSourcePort = 5004;
+    }
+
+    if(bFecEnabled)
+    {
+        if(sFecDestinationIp == "auto")
+        {
+            sFecDestinationIp = sDestinationIp;
+        }
+        if(nFec1DSourcePort == 0)
+        {
+            nFec1DSourcePort = nSourcePort+2;
+        }
+        if(nFec2DSourcePort == 0)
+        {
+            nFec2DSourcePort = nSourcePort+4;
+        }
+    }
+
+    if(bRtcpEnabled)
+    {
+        if(nRtcpSourcePort == 0)
+        {
+            if(nSourcePort%2 == 0)
+            {
+                nRtcpSourcePort = nSourcePort+1;
+            }
+            else
+            {
+                nRtcpSourcePort = nSourcePort+2;
+            }
+        }
+        if(sRtcpDestinationIp == "auto")
+        {
+            sRtcpDestinationIp = sDestinationIp;
+        }
+    }
+
+}
+
+
 TransportParamsRTPReceiver::TransportParamsRTPReceiver() : TransportParamsRTP(),
     sMulticastIp("auto"),
     sInterfaceIp("auto")
@@ -343,4 +430,41 @@ Json::Value TransportParamsRTPReceiver::GetJson() const
     jsTp["multicast_ip"] = sMulticastIp;
     jsTp["interface_ip"] = sInterfaceIp;
     return jsTp;
+}
+
+
+void TransportParamsRTPReceiver::Actualize(const std::string& sInterface)
+{
+    TransportParamsRTP::Actualize();
+    sInterfaceIp = sInterface;
+
+    if(bFecEnabled)
+    {
+        if(sFecDestinationIp == "auto")
+        {
+            if(sMulticastIp.empty())
+            {
+                sFecDestinationIp = sInterfaceIp;
+            }
+            else
+            {
+                sFecDestinationIp = sMulticastIp;
+            }
+        }
+    }
+
+    if(bRtcpEnabled)
+    {
+        if(sRtcpDestinationIp == "auto")
+        {
+            if(sMulticastIp.empty())
+            {
+                sRtcpDestinationIp = sInterfaceIp;
+            }
+            else
+            {
+                sRtcpDestinationIp = sMulticastIp;
+            }
+        }
+    }
 }

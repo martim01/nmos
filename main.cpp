@@ -107,19 +107,19 @@ int main()
                     cout << "NMOS Target: " << pPoster->GetString() << " [" << pPoster->GetSender()->GetId() << "]" << endl;
                     cout << "----------------------------------------" << endl;
                     //getchar();
-                    NodeApi::Get().SignalServer(pPoster->GetPort(), 202);
+                    NodeApi::Get().TargetTaken(pPoster->GetPort(), true);
                     break;
                 case ThreadPoster::PATCH_SENDER:
                     cout << "----------------------------------------" << endl;
                     cout << "NMOS Patch Sender: " << pPoster->GetString() << endl;
                     cout << "----------------------------------------" << endl;
-                    NodeApi::Get().SignalServer(pPoster->GetPort(), 200);
+                    NodeApi::Get().SenderPatched(pPoster->GetPort(), true);
                     break;
                 case ThreadPoster::PATCH_RECEIVER:
                     cout << "----------------------------------------" << endl;
                     cout << "NMOS Patch Receiver: " << pPoster->GetString() << endl;
                     cout << "----------------------------------------" << endl;
-                    NodeApi::Get().SignalServer(pPoster->GetPort(), 200);
+                    NodeApi::Get().ReceiverPatched(pPoster->GetPort(), true);
                     break;
                 case ThreadPoster::ACTIVATE_SENDER:
                     cout << "----------------------------------------" << endl;

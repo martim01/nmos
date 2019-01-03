@@ -48,10 +48,14 @@ class NMOS_EXPOSE Sender : public Resource
         connectionSender GetStaged();
 
         // called by the main thread as a reply to the eventposter
-        void Activate();
+        void Activate(const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP);
 
 
+        const std::string& GetTransportFile() const;
     private:
+
+        void CreateSDP();
+
         std::string m_sFlowId;
         enumTransport m_eTransport;
         std::string m_sDeviceId;
@@ -60,15 +64,11 @@ class NMOS_EXPOSE Sender : public Resource
         bool m_bReceiverActive;
         std::set<std::string> m_setInterfaces;
 
-
-
         connectionSender m_Staged;
         connectionSender m_Active;
         constraintsSender m_constraints;
 
-
-
-
+        std::string m_sTransportFile;
 
 
         static const std::string TRANSPORT[4];

@@ -283,16 +283,44 @@ connectionSender Sender::GetStaged()
 }
 
 
-void Sender::Activate()
+void Sender::Activate(const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP)
 {
-    // @todo create the SDP
+    //move the staged parameters to active parameters
+    m_Active = m_Staged;
 
-    //activeate - set subscription, receiverId and active on master_enable. Commit afterwards
+    //Change auto settings to what they actually are
+    m_Active.tpSender.Actualize(sSourceIp, sDestinationIp);
+
+
+    // create the SDP
+    if(sSDP.empty())
+    {
+        CreateSDP();
+    }
+    else
+    {
+        m_sTransportFile = sSDP;
+    }
+
+    //activate - set subscription, receiverId and active on master_enable.
     m_sReceiverId = m_Staged.sReceiverId;
     m_bReceiverActive = m_Staged.bMasterEnable;
 
-    //move the staged parameters to active parameters
-    m_Active = m_Staged;
-    //@todo change auto settings to what they actually are
+
+    //reset the staged activation
+    m_Staged.eActivate = connection::ACT_NULL;
+    m_Staged.sActivationTime.clear();
+    m_Staged.sRequestedTime.clear();
 }
 
+
+void Sender::CreateSDP()
+{
+    // @todo create the SDP ourselves...
+}
+
+
+const std::string& Sender::GetTransportFile() const
+{
+    return m_sTransportFile;
+}

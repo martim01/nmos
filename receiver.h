@@ -46,7 +46,7 @@ class NMOS_EXPOSE Receiver : public Resource
         bool Stage(const connectionReceiver& conRequest, std::shared_ptr<EventPoster> pPoster);
         connectionReceiver GetStaged() const;
 
-        void Activate();
+        void Activate(const std::string& sInterfaceIp);
 
     private:
         enumTransport m_eTransport;

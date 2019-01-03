@@ -337,12 +337,27 @@ void NodeApi::Signal(enumSignal eSignal)
     m_cvCommit.notify_one();
 }
 
-void NodeApi::SignalServer(unsigned short nPort, unsigned char nCode)
+void NodeApi::TargetTaken(unsigned short nPort, bool bOk)
+{
+    SignalServer(nPort, bOk);
+}
+
+void NodeApi::SenderPatchAllowed(unsigned short nPort, bool bOk)
+{
+    SignalServer(nPort, bOk);
+}
+
+void NodeApi::ReceiverPatchAllowed(unsigned short nPort, bool bOk)
+{
+    SignalServer(nPort, bOk);
+}
+
+void NodeApi::SignalServer(unsigned short nPort, bool bOk)
 {
     map<unsigned short, MicroServer*>::iterator itServer = m_mServers.find(nPort);
     if(itServer != m_mServers.end())
     {
-        itServer->second->Signal(nCode);
+        itServer->second->Signal(bOk);
     }
     else
     {
@@ -597,7 +612,7 @@ bool NodeApi::FindQueryNode()
                 map<string, string>::const_iterator itVersion = (*itInstance)->mTxt.find("api_ver");
                 if(itPriority != (*itInstance)->mTxt.end() && itVersion != (*itInstance)->mTxt.end())
                 {
-                    if(stoi(itPriority->second) < nPriority && itVersion->second.find("v1.2") != string::npos)
+                    if(stoul(itPriority->second) < nPriority && itVersion->second.find("v1.2") != string::npos)
                     {//for now only doing v1.2
 
                         pInstance = (*itInstance);
@@ -753,24 +768,24 @@ NodeApi::enumSignal NodeApi::GetSignal() const
 }
 
 
-bool NodeApi::ActivateSender(const std::string& sId)
+bool NodeApi::ActivateSender(const std::string& sId, const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP)
 {
     Sender* pSender(GetSender(sId));
     if(pSender)
     {
-        pSender->Activate();
+        pSender->Activate(sSourceIp, sDestinationIp, sSDP);
         Commit();
         return true;
     }
     return false;
 }
 
-bool NodeApi::ActivateReceiver(const std::string& sId)
+bool NodeApi::ActivateReceiver(const std::string& sId, const std::string& sInterfaceIp)
 {
     Receiver* pReceiver(GetReceiver(sId));
     if(pReceiver)
     {
-        pReceiver->Activate();
+        pReceiver->Activate(sInterfaceIp);
         Commit();
         return true;
     }

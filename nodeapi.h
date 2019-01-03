@@ -143,11 +143,27 @@ class NMOS_EXPOSE NodeApi
         **/
         Sender* GetSender(const std::string& sId);
 
-        /** @brief Signal a paused HttpServer that it may continue and reply to the question asked. Should be called by the main thread on handling a server blocking eventblocker event
-        *   @param nPort the port of the server
-        *   @param nCode the response code to return
+
+        /** @brief To be called by the main thread when an IS-04 connection is made. The server tread will have called Target
+        *   @param nPort the port of the MicroServer that is being used for IS-04
+        *   @param bOk true if the receiver has succesfully connected to the sender. False otherwise
         **/
-        void SignalServer(unsigned short nPort, unsigned char nCode);
+        void TargetTaken(unsigned short nPort, bool bOk);
+
+        /** @brief To be called by the main thread when an IS-05 Sender Patch is being maded
+        *   @param nPort the port of the MicroServer that is being used for IS-04
+        *   @param bOk true if the Sender is allowed to take the patch.
+        *   @note EventPoster::PatchSender is called on the request of the Sender being patched whatever the activation mode is. This function should be called by the main thread to allow the server to respond.
+        **/
+        void SenderPatchAllowed(unsigned short nPort, bool bOk);
+
+        /** @brief To be called by the main thread when an IS-05 Receiver Patch is being maded
+        *   @param nPort the port of the MicroServer that is being used for IS-04
+        *   @param bOk true if the Receiver is allowed to take the patch
+        *   @note EventPoster::PatchSender is called on the request of the Receiver being patched whatever the activation mode is. This function should be called by the main thread to allow the server to respond.
+        **/
+        void ReceiverPatchAllowed(unsigned short nPort, bool bOk);
+
 
 
         /** @brief Returns a const reference to the ResourceHolder that contains all the resources returned from a query
@@ -173,15 +189,20 @@ class NMOS_EXPOSE NodeApi
 
         /** @brief Activates the stage parameters of the Sender with the given Id and updates any IS-O4 version information
         *   @param sId the uuid of the Sender
+        *   @param sSourceIp IP address from which RTP packets will be sent (IP address of interface bound to this output)
+        *   @param sDestinationIp IP address to which RTP packets will be sent. Can be a multicast address
+        *   @param sSDP the transport file that the sender should serve. This should be created by the main program logic from the staged transport parameters and associated flow etc. If empty then the Sender will create it's own from the connection parameters
         *   @return <i>bool</i> true if the Sender was found
+        *   @note sSourceIp and sDestinationIp should be set to be the same as the Sender's staged parameters unless they are set to auto. In which case the main program logic should choose them.
         **/
-        bool ActivateSender(const std::string& sId);
+        bool ActivateSender(const std::string& sId, const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP="");
 
         /** @brief Activates the stage parameters of the Receiver with the given Id and updates any IS-04 version information
         *   @param sId the uuid of the Receiver
+        *   @param sInterfaceIp IP address of the network interface the receiver should use
         *   @return <i>bool</i> true if the Receiver was found
         **/
-        bool ActivateReceiver(const std::string& sId);
+        bool ActivateReceiver(const std::string& sId, const std::string& sInterfaceIp);
 
 
     protected:
@@ -195,6 +216,8 @@ class NMOS_EXPOSE NodeApi
         bool BrowseForRegistrationNode();
         void SignalBrowse();
 
+
+        void SignalServer(unsigned short nPort, bool bOk);
 
         enum enumSignal{SIG_NONE=0, SIG_COMMIT=1};
 

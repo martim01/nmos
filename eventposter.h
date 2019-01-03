@@ -70,7 +70,7 @@ class NMOS_EXPOSE EventPoster
         *   @param sReceiverId the uuid of the Receiver to apply the PU to
         *   @param pSender - pointer to the Sender that the node's receiver should connect to
         *   @param nPort - the MicroServer port that the request came from
-        *   @note this is a blocking event. The target of this function should call the NodeApi::SignalServer function once it is ready for the MicroServer to continue
+        *   @note this is a blocking event. The target of this function should call the NodeApi::TargetTaken function once it is ready for the MicroServer to continue
         **/
         virtual void Target(const std::string& sReceiverId, std::shared_ptr<Sender> pSender, unsigned short nPort)=0;
 
@@ -78,7 +78,7 @@ class NMOS_EXPOSE EventPoster
         *   @param sSenderId the uuid of the Sender to apply the patch to
         *   @param conPatch the connectionSender details that should be applied to the Sender
         *   @param nPort - the MicroServer port that the request came from
-        *   @note this is a blocking event. The target of this function should call the NodeApi::SignalServer function once it is ready for the MicroServer to continue
+        *   @note this is a blocking event. The target of this function should call the NodeApi::SenderPatchAllowed function once it is ready for the MicroServer to continue
         **/
         virtual void PatchSender(const std::string& sSenderId, const connectionSender& conPatch, unsigned short nPort)=0;
 
@@ -86,7 +86,7 @@ class NMOS_EXPOSE EventPoster
         *   @param sReceiverId the uuid of the Receiver to apply the patch to
         *   @param conPatch the connectionReceiver details that should be applied to the Receiver
         *   @param nPort - the MicroServer port that the request came from
-        *   @note this is a blocking event. The target of this function should call the NodeApi::SignalServer function once it is ready for the MicroServer to continue
+        *   @note this is a blocking event. The target of this function should call the NodeApi::ReceiverPatchAllowed function once it is ready for the MicroServer to continue
         **/
         virtual void PatchReceiver(const std::string& sReceiverId, const connectionReceiver& conPatch, unsigned short nPort)=0;
 
