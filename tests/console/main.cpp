@@ -18,11 +18,11 @@ int main()
 {
     //Log::Get().SetOutput(new wxLogOutput(this));
 
-    NodeApi::Get().Init(8080, 8081, "host1", "host1");
+    NodeApi::Get().Init(8080, 8081, "host Label", "host Description");
     NodeApi::Get().GetSelf().AddApiVersion("v1.2");
     NodeApi::Get().GetSelf().AddInternalClock("clk0");
     NodeApi::Get().GetSelf().AddPTPClock("clk1", true, "IEEE1588-2008", "08-00-11-ff-fe-21-e1-b0", true);
-    NodeApi::Get().GetSelf().AddInterface("eth0", "74-26-96-db-87-31", "74-26-96-db-87-32");
+    NodeApi::Get().GetSelf().AddInterface("eth0");
 
 
     Device* pDevice = new Device("TestDevice", "TestDescription", Device::GENERIC,NodeApi::Get().GetSelf().GetId());
@@ -113,13 +113,13 @@ int main()
                     cout << "----------------------------------------" << endl;
                     cout << "NMOS Patch Sender: " << pPoster->GetString() << endl;
                     cout << "----------------------------------------" << endl;
-                    NodeApi::Get().SenderPatched(pPoster->GetPort(), true);
+                    NodeApi::Get().SenderPatchAllowed(pPoster->GetPort(), true);
                     break;
                 case ThreadPoster::PATCH_RECEIVER:
                     cout << "----------------------------------------" << endl;
                     cout << "NMOS Patch Receiver: " << pPoster->GetString() << endl;
                     cout << "----------------------------------------" << endl;
-                    NodeApi::Get().ReceiverPatched(pPoster->GetPort(), true);
+                    NodeApi::Get().ReceiverPatchAllowed(pPoster->GetPort(), true);
                     break;
                 case ThreadPoster::ACTIVATE_SENDER:
                     cout << "----------------------------------------" << endl;

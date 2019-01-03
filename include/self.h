@@ -58,7 +58,7 @@ class NMOS_EXPOSE Self : public Resource
         void AddService(std::string sUrl, std::string sType);
         void RemoveService(std::string sUrl);
 
-        void AddInterface(std::string sInterface, std::string sChassisMac, std::string sPortMac);
+        void AddInterface(std::string sInterface, std::string sChassisMac="", std::string sPortMac="");
         void RemoveInterface(std::string sInterface);
 
 
@@ -91,7 +91,7 @@ class NMOS_EXPOSE Self : public Resource
         std::string m_sUrl;
         unsigned char m_nDnsVersion;
 
-
+        std::string GetMacAddress(const std::string& sInterface);
 
         struct interface
         {

@@ -2,10 +2,10 @@
 <CodeBlocks_workspace_file>
 	<Workspace title="Workspace">
 		<Project filename="libnmos.cbp" />
-		<Project filename="wxnmos.cbp">
+		<Project filename="tests/wx/wxnmos.cbp">
 			<Depends filename="libnmos.cbp" />
 		</Project>
-		<Project filename="nmos_node_test.cbp">
+		<Project filename="tests/console/nmos_node_test.cbp">
 			<Depends filename="libnmos.cbp" />
 		</Project>
 	</Workspace>

@@ -30,12 +30,15 @@ Sender::Sender(std::string sLabel, std::string sDescription, std::string sFlowId
 
 Sender::Sender(const Json::Value& jsData) : Resource(jsData)
 {
-    m_bIsOk = m_bIsOk && (m_json["flow_id"].isString() && m_json["device_id"].isString() && m_json["manifest_href"].isString() &&  m_json["transport"].isString()
+    m_bIsOk = m_bIsOk && ((m_json["flow_id"].isString() || m_json["flow_id"].isNull()) && m_json["device_id"].isString() && m_json["manifest_href"].isString() &&  m_json["transport"].isString()
                    && m_json["interface_bindings"].isArray() && m_json["subscription"].isObject() && m_json["subscription"]["receiver_id"].isString() && m_json["subscription"]["active"].isBool());
 
     if(m_bIsOk)
     {
-        m_sFlowId = m_json["flow_id"].asString();
+        if(m_json["flow_id"].isString())
+        {
+            m_sFlowId = m_json["flow_id"].asString();
+        }
         m_sDeviceId = m_json["device_id"].asString();
         m_sManifest = m_json["manifest_href"].asString();
 
@@ -100,7 +103,14 @@ bool Sender::Commit()
 {
     if(Resource::Commit())
     {
-        m_json["flow_id"] = m_sFlowId;
+        if(m_sFlowId.empty() == false)
+        {
+            m_json["flow_id"] = m_sFlowId;
+        }
+        else
+        {
+            m_json["flow_id"] = Json::nullValue;
+        }
         m_json["device_id"] = m_sDeviceId;
         m_json["manifest_href"] = m_sManifest;
         m_json["transport"] = TRANSPORT[m_eTransport];
@@ -302,10 +312,11 @@ void Sender::Activate(const std::string& sSourceIp, const std::string& sDestinat
         m_sTransportFile = sSDP;
     }
 
+    //@todo Set the flow to be whatever the flow is...
+
     //activate - set subscription, receiverId and active on master_enable.
     m_sReceiverId = m_Staged.sReceiverId;
     m_bReceiverActive = m_Staged.bMasterEnable;
-
 
     //reset the staged activation
     m_Staged.eActivate = connection::ACT_NULL;

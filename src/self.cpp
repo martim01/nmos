@@ -1,4 +1,16 @@
 #include "self.h"
+#ifdef __GNU__
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <string.h>
+#include <stdio.h>
+#include <unistd.h>
+#endif // __GNU__
+#include <iostream>
+#include <iomanip>
+#include <sstream>
 
 using namespace std;
 
@@ -67,6 +79,10 @@ void Self::RemoveService(string sUrl)
 
 void Self::AddInterface(string sInterface, string sChassisMac, string sPortMac)
 {
+    if(sPortMac.empty())
+    {
+        sPortMac = GetMacAddress(sInterface);
+    }
     m_mInterface.insert(make_pair(sInterface, interface(sChassisMac, sPortMac)));
     UpdateVersionTime();
 }
@@ -142,7 +158,14 @@ bool Self::Commit()
         {
             Json::Value jsInterface;
             jsInterface["name"] = itInterface->first;
-            jsInterface["chassis_id"] = itInterface->second.sChassisMac;
+            if(itInterface->second.sChassisMac.empty() == false)
+            {
+                jsInterface["chassis_id"] = itInterface->second.sChassisMac;
+            }
+            else
+            {
+                jsInterface["chassis_id"] = Json::nullValue;
+            }
             jsInterface["port_id"] = itInterface->second.sPortMac;
 
             m_json["interfaces"].append(jsInterface);
@@ -214,4 +237,35 @@ set<endpoint>::const_iterator Self::GetEndpointsBegin() const
 set<endpoint>::const_iterator Self::GetEndpointsEnd() const
 {
     return m_setEndpoint.end();
+}
+
+
+std::string Self::GetMacAddress(const std::string& sInterface)
+{
+    #ifdef __GNU__
+    int fd = socket(AF_INET, SOCK_DGRAM,0);
+    ifreq ifr;
+    ifr.ifr_addr.sa_family = AF_INET;
+    strncpy((char*)ifr.ifr_ifrn.ifrn_name, sInterface.c_str(), IFNAMSIZ-1);
+    ioctl(fd, SIOCGIFHWADDR, &ifr);
+    close(fd);
+
+
+    std::stringstream ss;
+    ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (int)ifr.ifr_hwaddr.sa_data[0];
+    ss << "-";
+    ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (int)ifr.ifr_hwaddr.sa_data[1];
+    ss << "-";
+    ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (int)ifr.ifr_hwaddr.sa_data[2];
+    ss << "-";
+    ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (int)ifr.ifr_hwaddr.sa_data[3];
+    ss << "-";
+    ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (((int)ifr.ifr_hwaddr.sa_data[4])&0xFF);
+    ss << "-";
+    ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (((int)ifr.ifr_hwaddr.sa_data[5])&0xFF);
+
+    return ss.str();
+    #else
+    return "";
+    #endif
 }

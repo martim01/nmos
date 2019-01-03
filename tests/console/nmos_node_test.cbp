@@ -62,7 +62,7 @@
 					<Add option="`pkg-config --libs avahi-client`" />
 					<Add option="`pkg-config --libs uuid`" />
 					<Add option="`pkg-config --libs libcurl`" />
-					<Add library="lib/libnmosd.so" />
+					<Add library="../../lib/libnmosd.so" />
 					<Add library="pthread" />
 					<Add directory="$(#microhttp.lib)" />
 				</Linker>
@@ -93,6 +93,7 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 			<Add directory="$(#json.include)" />
+			<Add directory="../../include" />
 		</Compiler>
 		<Unit filename="main.cpp" />
 		<Unit filename="threadposter.cpp" />
