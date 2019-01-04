@@ -418,13 +418,13 @@ int NodeApi::UpdateRegisterSimple()
 bool NodeApi::FindRegistrationNode()
 {
     Log::Get(Log::INFO) << "NodeApi: Find best registration node" << endl;
-    map<string, dnsService*>::const_iterator itService = m_pRegistrationBrowser->FindService("_nmos-registration._tcp");
+    map<string, std::shared_ptr<dnsService> >::const_iterator itService = m_pRegistrationBrowser->FindService("_nmos-registration._tcp");
     if(itService != m_pRegistrationBrowser->GetServiceEnd())
     {
         Log::Get(Log::INFO) << "NodeApi: Register. Found nmos registration service." << endl;
-        const dnsInstance* pInstance(0);
+        shared_ptr<dnsInstance>  pInstance(0);
         string sApiVersion;
-        for(list<dnsInstance*>::const_iterator itInstance = itService->second->lstInstances.begin(); itInstance != itService->second->lstInstances.end(); ++itInstance)
+        for(list<shared_ptr<dnsInstance> >::const_iterator itInstance = itService->second->lstInstances.begin(); itInstance != itService->second->lstInstances.end(); ++itInstance)
         {   //get the registration node with smallest priority number
 
             Log::Get(Log::INFO) << "NodeApi: Register. Found nmos registration node: " << (*itInstance)->sName << endl;
@@ -469,7 +469,7 @@ bool NodeApi::FindRegistrationNode()
 
 long NodeApi::RegisterResources(ResourceHolder& holder)
 {
-    for(map<string, Resource*>::const_iterator itResource = holder.GetResourceBegin(); itResource != holder.GetResourceEnd(); ++itResource)
+    for(map<string, shared_ptr<Resource> >::const_iterator itResource = holder.GetResourceBegin(); itResource != holder.GetResourceEnd(); ++itResource)
     {
         Log::Get(Log::INFO) << "NodeApi: Register. " << holder.GetType() << " : " << itResource->first << endl;
         long nResult = RegisterResource(holder.GetType(), itResource->second->GetJson());
@@ -483,7 +483,7 @@ long NodeApi::RegisterResources(ResourceHolder& holder)
 
 long NodeApi::ReregisterResources(ResourceHolder& holder)
 {
-    for(map<string, Resource*>::const_iterator itResource = holder.GetChangedResourceBegin(); itResource != holder.GetChangedResourceEnd(); ++itResource)
+    for(map<string, shared_ptr<Resource> >::const_iterator itResource = holder.GetChangedResourceBegin(); itResource != holder.GetChangedResourceEnd(); ++itResource)
     {
         Log::Get(Log::INFO) << "NodeApi: Register. " << holder.GetType() << " : " << itResource->first << endl;
         long nResult = RegisterResource(holder.GetType(), itResource->second->GetJson());
@@ -571,7 +571,7 @@ int NodeApi::UnregisterSimple()
 
 void NodeApi::UnregisterResources(ResourceHolder& holder)
 {
-    for(map<string, Resource*>::const_iterator itResource = holder.GetResourceBegin(); itResource != holder.GetResourceEnd(); ++itResource)
+    for(map<string, shared_ptr<Resource> >::const_iterator itResource = holder.GetResourceBegin(); itResource != holder.GetResourceEnd(); ++itResource)
     {
         Log::Get(Log::INFO) << "NodeApi: Unregister. " << holder.GetType() << " : " << itResource->first << endl;
         UnregisterResource(holder.GetType()+"s", itResource->first);
@@ -596,13 +596,13 @@ bool NodeApi::FindQueryNode()
 {
     if(m_sQueryNode.empty())
     {
-        map<string, dnsService*>::const_iterator itService = m_pRegistrationBrowser->FindService("_nmos-query._tcp");
+        map<string, std::shared_ptr<dnsService> >::const_iterator itService = m_pRegistrationBrowser->FindService("_nmos-query._tcp");
         if(itService != m_pRegistrationBrowser->GetServiceEnd())
         {
             Log::Get(Log::INFO) << "NodeApi: Query. Found nmos query service." << endl;
-            const dnsInstance* pInstance(0);
+            shared_ptr<dnsInstance>  pInstance(0);
             string sApiVersion;
-            for(list<dnsInstance*>::const_iterator itInstance = itService->second->lstInstances.begin(); itInstance != itService->second->lstInstances.end(); ++itInstance)
+            for(list<shared_ptr<dnsInstance> >::const_iterator itInstance = itService->second->lstInstances.begin(); itInstance != itService->second->lstInstances.end(); ++itInstance)
             {   //get the registration node with smallest priority number
 
                 Log::Get(Log::INFO) << "NodeApi: Query. Found nmos query node: " << (*itInstance)->sName << endl;
@@ -676,7 +676,7 @@ void NodeApi::StopRun()
 
 
 
-bool NodeApi::AddDevice(Device* pResource)
+bool NodeApi::AddDevice(shared_ptr<Device> pResource)
 {
     //make sure the node id agress
     if(pResource->GetNodeId() == m_self.GetId())
@@ -694,7 +694,7 @@ bool NodeApi::AddDevice(Device* pResource)
     return false;
 }
 
-bool NodeApi::AddSource(Source* pResource)
+bool NodeApi::AddSource(shared_ptr<Source> pResource)
 {
     if(m_devices.ResourceExists(pResource->GetDeviceId()))
     {
@@ -704,7 +704,7 @@ bool NodeApi::AddSource(Source* pResource)
     return false;
 }
 
-bool NodeApi::AddFlow(Flow* pResource)
+bool NodeApi::AddFlow(shared_ptr<Flow> pResource)
 {
     if(m_devices.ResourceExists(pResource->GetDeviceId()) && m_sources.ResourceExists(pResource->GetSourceId()))
     {
@@ -714,7 +714,7 @@ bool NodeApi::AddFlow(Flow* pResource)
     return false;
 }
 
-bool NodeApi::AddReceiver(Receiver* pResource)
+bool NodeApi::AddReceiver(shared_ptr<Receiver> pResource)
 {
     if(m_devices.ResourceExists(pResource->GetDeviceId()))
     {
@@ -724,7 +724,7 @@ bool NodeApi::AddReceiver(Receiver* pResource)
     return false;
 }
 
-bool NodeApi::AddSender(Sender* pResource)
+bool NodeApi::AddSender(shared_ptr<Sender> pResource)
 {
     if(m_devices.ResourceExists(pResource->GetDeviceId()))
     {
@@ -741,22 +741,22 @@ unsigned short NodeApi::GetConnectionPort() const
 }
 
 
-Receiver* NodeApi::GetReceiver(const std::string& sId)
+shared_ptr<Receiver> NodeApi::GetReceiver(const std::string& sId)
 {
-    map<string, Resource*>::iterator itResource = m_receivers.GetResource(sId);
+    map<string, shared_ptr<Resource> >::iterator itResource = m_receivers.GetResource(sId);
     if(itResource != m_receivers.GetResourceEnd())
     {
-        return dynamic_cast<Receiver*>(itResource->second);
+        return dynamic_pointer_cast<Receiver>(itResource->second);
     }
     return NULL;
 }
 
-Sender* NodeApi::GetSender(const std::string& sId)
+shared_ptr<Sender> NodeApi::GetSender(const std::string& sId)
 {
-    map<string, Resource*>::iterator itResource = m_senders.GetResource(sId);
+    map<string, shared_ptr<Resource> >::iterator itResource = m_senders.GetResource(sId);
     if(itResource != m_senders.GetResourceEnd())
     {
-        return dynamic_cast<Sender*>(itResource->second);
+        return dynamic_pointer_cast<Sender>(itResource->second);
     }
     return NULL;
 }
@@ -770,7 +770,7 @@ NodeApi::enumSignal NodeApi::GetSignal() const
 
 bool NodeApi::ActivateSender(const std::string& sId, const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP)
 {
-    Sender* pSender(GetSender(sId));
+    shared_ptr<Sender> pSender(GetSender(sId));
     if(pSender)
     {
         pSender->Activate(sSourceIp, sDestinationIp, sSDP);
@@ -782,7 +782,7 @@ bool NodeApi::ActivateSender(const std::string& sId, const std::string& sSourceI
 
 bool NodeApi::ActivateReceiver(const std::string& sId, const std::string& sInterfaceIp)
 {
-    Receiver* pReceiver(GetReceiver(sId));
+    shared_ptr<Receiver> pReceiver(GetReceiver(sId));
     if(pReceiver)
     {
         pReceiver->Activate(sInterfaceIp);

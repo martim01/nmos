@@ -1,6 +1,7 @@
 #pragma once
 #include "json/json.h"
 #include "dlldefine.h"
+#include <memory>
 
 class Resource;
 
@@ -20,8 +21,8 @@ class NMOS_EXPOSE ResourceHolder
 
         unsigned char GetVersion() const;
 
-        void AddResource(Resource* pResource);
-        void RemoveResource(Resource* pResource);
+        void AddResource(std::shared_ptr<Resource> pResource);
+        void RemoveResource(std::shared_ptr<Resource> pResource);
         void RemoveResource(std::string sUuid);
 
         void RemoveAllResources();
@@ -33,17 +34,17 @@ class NMOS_EXPOSE ResourceHolder
 
         bool ResourceExists(const std::string& sUuid) const;
 
-        std::map<std::string, Resource*>::const_iterator GetResourceBegin() const;
-        std::map<std::string, Resource*>::const_iterator GetResourceEnd() const;
-        std::map<std::string, Resource*>::const_iterator FindResource(std::string sUuid) const;
-        std::map<std::string, Resource*>::iterator GetResource(std::string sUuid);
+        std::map<std::string, std::shared_ptr<Resource> >::const_iterator GetResourceBegin() const;
+        std::map<std::string, std::shared_ptr<Resource> >::const_iterator GetResourceEnd() const;
+        std::map<std::string, std::shared_ptr<Resource> >::const_iterator FindResource(std::string sUuid) const;
+        std::map<std::string, std::shared_ptr<Resource> >::iterator GetResource(std::string sUuid);
 
-        std::map<std::string, Resource*>::const_iterator GetChangedResourceBegin() const;
-        std::map<std::string, Resource*>::const_iterator GetChangedResourceEnd() const;
+        std::map<std::string, std::shared_ptr<Resource> >::const_iterator GetChangedResourceBegin() const;
+        std::map<std::string, std::shared_ptr<Resource> >::const_iterator GetChangedResourceEnd() const;
 
-        std::map<std::string, Resource*>::const_iterator GetStagedResourceBegin() const;
-        std::map<std::string, Resource*>::const_iterator GetStagedResourceEnd() const;
-        std::map<std::string, Resource*>::const_iterator FindStagedResource(std::string sUuid) const;
+        std::map<std::string, std::shared_ptr<Resource> >::const_iterator GetStagedResourceBegin() const;
+        std::map<std::string, std::shared_ptr<Resource> >::const_iterator GetStagedResourceEnd() const;
+        std::map<std::string, std::shared_ptr<Resource> >::const_iterator FindStagedResource(std::string sUuid) const;
 
         size_t GetResourceCount() const;
     protected:
@@ -55,9 +56,9 @@ class NMOS_EXPOSE ResourceHolder
         std::string m_sType;
         unsigned char m_nVersion;
         Json::Value m_json;
-        std::map<std::string, Resource*> m_mResource;
-        std::map<std::string, Resource*> m_mResourceStaging;
-        std::map<std::string, Resource*> m_mResourceChanged;
+        std::map<std::string, std::shared_ptr<Resource> > m_mResource;
+        std::map<std::string, std::shared_ptr<Resource> > m_mResourceStaging;
+        std::map<std::string, std::shared_ptr<Resource> > m_mResourceChanged;
 
 
 };

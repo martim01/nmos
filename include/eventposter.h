@@ -16,7 +16,7 @@ class NMOS_EXPOSE EventPoster
         virtual ~EventPoster(){}
 
         void _CurlDone(unsigned long nResult, const std::string& sResponse, long nType);
-        void _InstanceResolved(dnsInstance* pInstance);
+        void _InstanceResolved(std::shared_ptr<dnsInstance> pInstance);
         void _AllForNow(const std::string& sService);
         void _Finished();
         void _RegistrationNodeError();
@@ -42,7 +42,7 @@ class NMOS_EXPOSE EventPoster
         *   @note The pointer must not be deleted as it belongs to AvahiBrowser
         *   @note this is a non-blocking event
         **/
-        virtual void InstanceResolved(dnsInstance* pInstance)=0;
+        virtual void InstanceResolved(std::shared_ptr<dnsInstance> pInstance)=0;
 
         /** @brief Called by AvahiBrowser when no more instances of the given service are likely to be found
         *   @param sService the name of the service

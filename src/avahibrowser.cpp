@@ -62,10 +62,6 @@ ServiceBrowser::~ServiceBrowser()
 void ServiceBrowser::DeleteAllServices()
 {
     lock_guard<mutex> lock(m_mutex);
-    for(map<string, dnsService*>::iterator itService = m_mServices.begin(); itService != m_mServices.end(); ++itService)
-    {
-        delete itService->second;
-    }
     m_mServices.clear();
 }
 
@@ -204,7 +200,7 @@ void ServiceBrowser::TypeCallback(AvahiIfIndex interface, AvahiProtocol protocol
                 {
                     Log::Get(Log::DEBUG) << "ServiceBrowser: Service '" << type << "' found in domain '" << domain << "'" << endl;
                     m_mutex.lock();
-                    if(m_mServices.insert(make_pair(sService, new dnsService(sService))).second)
+                    if(m_mServices.insert(make_pair(sService, make_shared<dnsService>(dnsService(sService)))).second)
                     {
                         AvahiServiceBrowser* psb = NULL;
                         /* Create the service browser */
@@ -318,8 +314,8 @@ void ServiceBrowser::ResolveCallback(AvahiServiceResolver* pResolver, AvahiResol
                 char a[AVAHI_ADDRESS_STR_MAX];
                 avahi_address_snprint(a, sizeof(a), address);
                 m_mutex.lock();
-                map<string, dnsService*>::iterator itService = m_mServices.find(sService);
-                dnsInstance* pInstance = new dnsInstance(sName);
+                map<string, shared_ptr<dnsService> >::iterator itService = m_mServices.find(sService);
+                shared_ptr<dnsInstance> pInstance = make_shared<dnsInstance>(dnsInstance(sName));
                 pInstance->sHostName = host_name;
                 pInstance->nPort = port;
                 pInstance->sHostIP = a;
@@ -354,15 +350,14 @@ void ServiceBrowser::RemoveServiceInstance(const std::string& sService, const st
 {
     lock_guard<mutex> lock(m_mutex);
 
-    map<string, dnsService*>::iterator itService = m_mServices.find(sService);
+    map<string, shared_ptr<dnsService> >::iterator itService = m_mServices.find(sService);
     if(itService != m_mServices.end())
     {
-        for(list<dnsInstance*>::iterator itInstance = itService->second->lstInstances.begin(); itInstance != itService->second->lstInstances.end(); )
+        for(list<shared_ptr<dnsInstance> >::iterator itInstance = itService->second->lstInstances.begin(); itInstance != itService->second->lstInstances.end(); )
         {
             if((*itInstance)->sName == sInstance)
             {
-                delete (*itInstance);
-                list<dnsInstance*>::iterator itDelete(itInstance);
+                list<shared_ptr<dnsInstance> >::iterator itDelete(itInstance);
                 ++itInstance;
                 itService->second->lstInstances.erase(itDelete);
                 if(m_pPoster)
@@ -388,19 +383,19 @@ void ServiceBrowser::CheckStop()
     }
 }
 
-map<string, dnsService*>::const_iterator ServiceBrowser::GetServiceBegin()
+map<string, shared_ptr<dnsService> >::const_iterator ServiceBrowser::GetServiceBegin()
 {
     lock_guard<mutex> lock(m_mutex);
     return m_mServices.begin();
 }
 
-map<string, dnsService*>::const_iterator ServiceBrowser::GetServiceEnd()
+map<string, shared_ptr<dnsService> >::const_iterator ServiceBrowser::GetServiceEnd()
 {
     lock_guard<mutex> lock(m_mutex);
     return m_mServices.end();
 }
 
-map<string, dnsService*>::const_iterator ServiceBrowser::FindService(const string& sService)
+map<string, shared_ptr<dnsService> >::const_iterator ServiceBrowser::FindService(const string& sService)
 {
     lock_guard<mutex> lock(m_mutex);
     return m_mServices.find(sService);

@@ -27,14 +27,11 @@ struct NMOS_EXPOSE dnsService
 
     ~dnsService()
     {
-        for(std::list<dnsInstance*>::iterator itInstance = lstInstances.begin(); itInstance != lstInstances.end(); ++itInstance)
-        {
-            delete (*itInstance);
-        }
+        lstInstances.clear();
     }
 
     std::string sService;
-    std::list<dnsInstance*> lstInstances;
+    std::list<std::shared_ptr<dnsInstance> > lstInstances;
 
 };
 

@@ -42,9 +42,9 @@ class ServiceBrowser
 
         void RemoveServiceInstance(const std::string& sService, const std::string& sInstance);
 
-        std::map<std::string, dnsService*>::const_iterator GetServiceBegin();
-        std::map<std::string, dnsService*>::const_iterator GetServiceEnd();
-        std::map<std::string, dnsService*>::const_iterator FindService(const std::string& sService);
+        std::map<std::string, std::shared_ptr<dnsService> >::const_iterator GetServiceBegin();
+        std::map<std::string, std::shared_ptr<dnsService> >::const_iterator GetServiceEnd();
+        std::map<std::string, std::shared_ptr<dnsService> >::const_iterator FindService(const std::string& sService);
 
 
     protected:
@@ -66,7 +66,7 @@ class ServiceBrowser
         bool m_bBrowsing;
         unsigned long m_nWaitingOn;
         std::set<AvahiServiceBrowser*> m_setBrowser;
-        std::map<std::string, dnsService*> m_mServices;
+        std::map<std::string, std::shared_ptr<dnsService> > m_mServices;
 };
 
 

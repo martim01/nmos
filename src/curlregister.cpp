@@ -256,7 +256,7 @@ void CurlRegister::ParseResults(NodeApi::enumResource eResource, const std::stri
         for(Json::ArrayIndex n = 0; n < jsResult.size(); n++)
         {
 
-            Resource* pResource = new Resource(jsResult[n]);
+            std::shared_ptr<Resource> pResource = std::make_shared<Resource>(jsResult[n]);
             pResults->AddResource(pResource);
         }
         pResults->Commit();

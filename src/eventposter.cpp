@@ -7,7 +7,7 @@ void EventPoster::_CurlDone(unsigned long nResult, const std::string& sResponse,
 }
 
 
-void EventPoster::_InstanceResolved(dnsInstance* pInstance)
+void EventPoster::_InstanceResolved(std::shared_ptr<dnsInstance> pInstance)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
     InstanceResolved(pInstance);

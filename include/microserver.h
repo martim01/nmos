@@ -81,7 +81,6 @@ class MicroServer
         int PatchJson(std::string sPath, const std::string& sJson, std::string& sRepsonse);
 
 
-        void Wait();
         void Signal(bool bOk);
 
 

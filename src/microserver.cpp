@@ -207,12 +207,6 @@ void MicroServer::ResetPutData()
     m_sPut.clear();
 }
 
-void MicroServer::Wait()
-{
-    Log::Get(Log::DEBUG) << "Microserver: " << m_nPort << " Wait " << this_thread::get_id() << endl;
-    std::unique_lock<std::mutex> lk(m_mutex);
-    m_cvSync.wait(lk);
-}
 
 void MicroServer::Signal(bool bOk)
 {
@@ -367,7 +361,7 @@ Json::Value MicroServer::GetJsonSources()
     }
     else
     {
-        map<string, Resource*>::const_iterator itSource = NodeApi::Get().GetSources().FindResource(m_vPath[RESOURCE]);
+        map<string, std::shared_ptr<Resource> >::const_iterator itSource = NodeApi::Get().GetSources().FindResource(m_vPath[RESOURCE]);
         if(itSource != NodeApi::Get().GetSources().GetResourceEnd())
         {
             return itSource->second->GetJson();
@@ -384,7 +378,7 @@ Json::Value MicroServer::GetJsonDevices()
     }
     else
     {
-        map<string, Resource*>::const_iterator itDevice = NodeApi::Get().GetDevices().FindResource(m_vPath[RESOURCE]);
+        map<string, shared_ptr<Resource> >::const_iterator itDevice = NodeApi::Get().GetDevices().FindResource(m_vPath[RESOURCE]);
         if(itDevice != NodeApi::Get().GetDevices().GetResourceEnd())
         {
             return itDevice->second->GetJson();
@@ -401,7 +395,7 @@ Json::Value MicroServer::GetJsonFlows()
     }
     else
     {
-        map<string, Resource*>::const_iterator itFlow = NodeApi::Get().GetFlows().FindResource(m_vPath[RESOURCE]);
+        map<string, shared_ptr<Resource> >::const_iterator itFlow = NodeApi::Get().GetFlows().FindResource(m_vPath[RESOURCE]);
         if(itFlow != NodeApi::Get().GetFlows().GetResourceEnd())
         {
             return itFlow->second->GetJson();
@@ -418,7 +412,7 @@ Json::Value MicroServer::GetJsonReceivers()
     }
     else
     {
-        map<string, Resource*>::const_iterator itReceiver = NodeApi::Get().GetReceivers().FindResource(m_vPath[RESOURCE]);
+        map<string, shared_ptr<Resource> >::const_iterator itReceiver = NodeApi::Get().GetReceivers().FindResource(m_vPath[RESOURCE]);
         if(itReceiver != NodeApi::Get().GetReceivers().GetResourceEnd())
         {
             return itReceiver->second->GetJson();
@@ -435,7 +429,7 @@ Json::Value MicroServer::GetJsonSenders()
     }
     else
     {
-        map<string, Resource*>::const_iterator itSender = NodeApi::Get().GetSenders().FindResource(m_vPath[RESOURCE]);
+        map<string, shared_ptr<Resource> >::const_iterator itSender = NodeApi::Get().GetSenders().FindResource(m_vPath[RESOURCE]);
         if(itSender != NodeApi::Get().GetSenders().GetResourceEnd())
         {
             return itSender->second->GetJson();
@@ -530,7 +524,7 @@ int MicroServer::GetJsonNmosConnectionSingleSenders(std::string& sReturn, std::s
     }
     else
     {
-        map<string, Resource*>::const_iterator itResource = NodeApi::Get().GetSenders().FindResource(m_vPath[SZC_DIRECTION]);
+        map<string, shared_ptr<Resource> >::const_iterator itResource = NodeApi::Get().GetSenders().FindResource(m_vPath[SZC_DIRECTION]);
         if(itResource != NodeApi::Get().GetSenders().GetResourceEnd())
         {
             if(m_vPath.size() == SZC_ID)
@@ -544,7 +538,7 @@ int MicroServer::GetJsonNmosConnectionSingleSenders(std::string& sReturn, std::s
             }
             else
             {
-                Sender* pSender = dynamic_cast<Sender*>(itResource->second);
+                shared_ptr<Sender> pSender = dynamic_pointer_cast<Sender>(itResource->second);
                 if(m_vPath[C_LAST] == "constraints")
                 {
                     sReturn = stw.write(pSender->GetConnectionConstraintsJson());
@@ -590,7 +584,7 @@ int MicroServer::GetJsonNmosConnectionSingleReceivers(std::string& sReturn)
     }
     else
     {
-        map<string, Resource*>::const_iterator itResource = NodeApi::Get().GetReceivers().FindResource(m_vPath[SZC_DIRECTION]);
+        map<string, shared_ptr<Resource> >::const_iterator itResource = NodeApi::Get().GetReceivers().FindResource(m_vPath[SZC_DIRECTION]);
         if(itResource != NodeApi::Get().GetReceivers().GetResourceEnd())
         {
             if(m_vPath.size() == SZC_ID)
@@ -603,17 +597,18 @@ int MicroServer::GetJsonNmosConnectionSingleReceivers(std::string& sReturn)
             }
             else
             {
+                shared_ptr<Receiver> pReceiver(dynamic_pointer_cast<Receiver>(itResource->second));
                 if(m_vPath[C_LAST] == "constraints")
                 {
-                    sReturn = stw.write(dynamic_cast<Receiver*>(itResource->second)->GetConnectionConstraintsJson());
+                    sReturn = stw.write(pReceiver->GetConnectionConstraintsJson());
                 }
                 else if(m_vPath[C_LAST] == "staged")
                 {
-                    sReturn = stw.write(dynamic_cast<Receiver*>(itResource->second)->GetConnectionStagedJson());
+                    sReturn = stw.write(pReceiver->GetConnectionStagedJson());
                 }
                 else if(m_vPath[C_LAST] == "active")
                 {
-                    sReturn = stw.write(dynamic_cast<Receiver*>(itResource->second)->GetConnectionActiveJson());
+                    sReturn = stw.write(pReceiver->GetConnectionActiveJson());
                 }
                 else
                 {
@@ -691,7 +686,7 @@ int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
         if(m_vPath[NMOS] == "x-nmos" && m_vPath[API_TYPE] == "node" &&  NodeApi::Get().GetSelf().IsVersionSupported(m_vPath[VERSION]) && m_vPath[ENDPOINT] == "receivers" && m_vPath[TARGET] == "target")
         {
             //does the receiver exist?
-            Receiver* pReceiver  = NodeApi::Get().GetReceiver(m_vPath[RESOURCE]);
+            shared_ptr<Receiver> pReceiver  = NodeApi::Get().GetReceiver(m_vPath[RESOURCE]);
             if(!pReceiver)
             {
                 nCode = 404;
@@ -719,10 +714,11 @@ int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
 
                     if(m_pPoster)
                     {
+                        std::unique_lock<std::mutex> lk(m_mutex);
                         //Tell the main thread to connect
                         m_pPoster->_Target(m_vPath[RESOURCE], pSender, m_nPort);
                         //Pause the HTTP thread
-                        Wait();
+                        m_cvSync.wait(lk);
 
                         if(IsOk())
                         {   //this means the main thread has connected the receiver to the sender
@@ -793,7 +789,7 @@ int MicroServer::PatchJsonSender(const std::string& sJson, std::string& sRespons
     int nCode(200);
     Json::StyledWriter stw;
     //does the sender exist?
-    Sender* pSender = NodeApi::Get().GetSender(m_vPath[C_ID]);
+    shared_ptr<Sender> pSender = NodeApi::Get().GetSender(m_vPath[C_ID]);
     if(!pSender)
     {
         nCode = 404;
@@ -840,9 +836,11 @@ int MicroServer::PatchJsonSender(const std::string& sJson, std::string& sRespons
             else if(m_pPoster)
             {   //tell the main thread and wait to see what happens
                 //the main thread should check that it can definitely do what the patch says and simply signal true or false
+                std::unique_lock<std::mutex> lk(m_mutex);
                 m_pPoster->_PatchSender(m_vPath[C_ID], conRequest, m_nPort);
                 //Pause the HTTP thread
-                Wait();
+                m_cvSync.wait(lk);
+
 
                 if(IsOk() && pSender->Stage(conRequest, m_pPoster)) //PATCH the sender
                 {
@@ -885,7 +883,7 @@ int MicroServer::PatchJsonReceiver(const std::string& sJson, std::string& sRespo
     int nCode(200);
     Json::StyledWriter stw;
     //does the sender exist?
-    Receiver* pReceiver = NodeApi::Get().GetReceiver(m_vPath[C_ID]);
+    shared_ptr<Receiver> pReceiver = NodeApi::Get().GetReceiver(m_vPath[C_ID]);
     if(!pReceiver)
     {
         nCode = 404;
@@ -927,10 +925,11 @@ int MicroServer::PatchJsonReceiver(const std::string& sJson, std::string& sRespo
             }
             else if(m_pPoster)
             {   //tell the main thread and wait to see what happens
+                std::unique_lock<std::mutex> lk(m_mutex);
                 //the main thread should check that it can definitely do what the patch says and simply signal true or false
                 m_pPoster->_PatchReceiver(m_vPath[C_ID], conRequest, m_nPort);
                 //Pause the HTTP thread
-                Wait();
+                m_cvSync.wait(lk);
 
                 if(IsOk() && pReceiver->Stage(conRequest, m_pPoster)) //PATCH the Receiver
                 {

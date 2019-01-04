@@ -65,7 +65,7 @@ class NMOS_EXPOSE NodeApi
         *   @note NodeApi takes ownership of the resource and will delete it on exit.
         *   @note You need to call Commit in order to publish the resource to the outside world
         **/
-        bool AddDevice(Device* pResource);
+        bool AddDevice(std::shared_ptr<Device> pResource);
 
 
         /** @brief Adds a source to the model.
@@ -74,7 +74,7 @@ class NMOS_EXPOSE NodeApi
         *   @note NodeApi takes ownership of the resource and will delete it on exit.
         *   @note You need to call Commit in order to publish the resource to the outside world
         **/
-        bool AddSource(Source* pResource);
+        bool AddSource(std::shared_ptr<Source> pResource);
 
         /** @brief Adds a flow to the model.
         *   @param pResource a pointer to the flow
@@ -82,7 +82,7 @@ class NMOS_EXPOSE NodeApi
         *   @note NodeApi takes ownership of the resource and will delete it on exit.
         *   @note You need to call Commit in order to publish the resource to the outside world
         **/
-        bool AddFlow(Flow* pResource);
+        bool AddFlow(std::shared_ptr<Flow> pResource);
 
         /** @brief Adds a source to the model.
         *   @param pResource a pointer to the receiver
@@ -90,7 +90,7 @@ class NMOS_EXPOSE NodeApi
         *   @note NodeApi takes ownership of the resource and will delete it on exit.
         *   @note You need to call Commit in order to publish the resource to the outside world
         **/
-        bool AddReceiver(Receiver* pResource);
+        bool AddReceiver(std::shared_ptr<Receiver> pResource);
 
         /** @brief Adds a sender to the model.
         *   @param pResource a pointer to the sender
@@ -98,7 +98,7 @@ class NMOS_EXPOSE NodeApi
         *   @note NodeApi takes ownership of the resource and will delete it on exit.
         *   @note You need to call Commit in order to publish the resource to the outside world
         **/
-        bool AddSender(Sender* pResource);
+        bool AddSender(std::shared_ptr<Sender> pResource);
 
         /** @brief Returns a reference to the Node /self
         *   @return <i>Self&</i>
@@ -135,13 +135,13 @@ class NMOS_EXPOSE NodeApi
         *   @param sId the uuid of the receiver
         *   @return <i>Receiver*</i> pointer to the given receiver or null
         **/
-        Receiver* GetReceiver(const std::string& sId);
+        std::shared_ptr<Receiver> GetReceiver(const std::string& sId);
 
         /** @brief Returns a pointer to the Sender with the given id if one exists or null.
         *   @param sId the uuid of the Sender
         *   @return <i>Sender*</i> pointer to the given Sender or null
         **/
-        Sender* GetSender(const std::string& sId);
+        std::shared_ptr<Sender> GetSender(const std::string& sId);
 
 
         /** @brief To be called by the main thread when an IS-04 connection is made. The server tread will have called Target
