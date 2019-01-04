@@ -192,7 +192,11 @@ bool Receiver::Stage(const connectionReceiver& conRequest, std::shared_ptr<Event
     m_mutex.lock();
     m_Staged = conRequest;
 
-    //@todo need to decode the SDP and make the correct transport param changes here
+    //need to decode the SDP and make the correct transport param changes here
+    if(m_Staged.sTransportFileType == "application/sdp" && m_Staged.sTransportFileData.empty() == false)
+    {
+        SdpManager::SdpToTransportParams(m_Staged.sTransportFileData, m_Staged.tpReceiver);
+    }
 
     m_mutex.unlock();
 

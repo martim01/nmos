@@ -22,12 +22,12 @@ m_pHandler(pHandler)
 
 }
 
-void wxEventPoster::InstanceResolved(dnsInstance* pInstance)
+void wxEventPoster::InstanceResolved(std::shared_ptr<dnsInstance> pInstance)
 {
     if(m_pHandler)
     {
         wxNmosEvent* pEvent = new wxNmosEvent(wxEVT_NMOS_MDNS_RESOLVED);
-        pEvent->SetClientData(reinterpret_cast<void*>(pInstance));
+        pEvent->SetDnsInstance(pInstance);
         wxQueueEvent(m_pHandler, pEvent);
     }
 }
@@ -213,4 +213,15 @@ int wxNmosEvent::GetCurlResult() const
 int wxNmosEvent::GetCurlType() const
 {
     return GetExtraLong();
+}
+
+
+void wxNmosEvent::SetDnsInstance(std::shared_ptr<dnsInstance> pInstance)
+{
+    m_pDnsInstance = pInstance;
+}
+
+const std::shared_ptr<dnsInstance> wxNmosEvent::GetDnsInstance() const
+{
+    return m_pDnsInstance;
 }

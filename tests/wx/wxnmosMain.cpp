@@ -49,6 +49,7 @@ wxString wxbuildinfo(wxbuildinfoformat format)
 
     return wxbuild;
 }
+using namespace std;
 
 //(*IdInit(wxnmosDialog)
 const long wxnmosDialog::ID_BUTTON1 = wxNewId();
@@ -115,18 +116,18 @@ wxnmosDialog::wxnmosDialog(wxWindow* parent,wxWindowID id)
     NodeApi::Get().GetSelf().AddInterface("eth0");
 
 
-    Device* pDevice = new Device("TestDevice", "TestDescription", Device::GENERIC,NodeApi::Get().GetSelf().GetId());
+    shared_ptr<Device> pDevice = make_shared<Device>("TestDevice", "TestDescription", Device::GENERIC,NodeApi::Get().GetSelf().GetId());
 
-    SourceAudio* pSource = new SourceAudio("TestAudio", "TestDescription", pDevice->GetId());
+    shared_ptr<SourceAudio> pSource = make_shared<SourceAudio>("TestAudio", "TestDescription", pDevice->GetId());
     pSource->AddChannel("Left", "L");
     pSource->AddChannel("Right", "R");
 
-    FlowAudioRaw* pFlow = new FlowAudioRaw("TestFlow", "TestDescription", pSource->GetId(), pDevice->GetId(),48000, FlowAudioRaw::L24);
-    Sender* pSender(new Sender("TestSender", "Description", pFlow->GetId(), Sender::RTP_MCAST, pDevice->GetId(), "http://192.168.1.35/by-name/pam.sdp"));
+    shared_ptr<FlowAudioRaw> pFlow = make_shared<FlowAudioRaw>("TestFlow", "TestDescription", pSource->GetId(), pDevice->GetId(),48000, FlowAudioRaw::L24);
+    shared_ptr<Sender> pSender(new Sender("TestSender", "Description", pFlow->GetId(), Sender::RTP_MCAST, pDevice->GetId(), "http://192.168.1.35/by-name/pam.sdp"));
     pSender->AddInterfaceBinding("eth0");
 
 
-    Receiver* pReceiver = new Receiver("Test Receiver", "TestDescription", Receiver::RTP_MCAST, pDevice->GetId(), Receiver::AUDIO);
+    shared_ptr<Receiver> pReceiver = make_shared<Receiver>("Test Receiver", "TestDescription", Receiver::RTP_MCAST, pDevice->GetId(), Receiver::AUDIO);
     pReceiver->AddCap("audio/L24");
     pReceiver->AddCap("audio/L20");
     pReceiver->AddCap("audio/L16");
@@ -205,7 +206,7 @@ void wxnmosDialog::OnCurlDone(wxNmosEvent& event)
     switch(event.GetExtraLong())
     {
         case NodeApi::CURL_QUERY:
-            for(std::map<std::string, Resource*>::const_iterator itResource = NodeApi::Get().GetQueryResults().GetResourceBegin(); itResource != NodeApi::Get().GetQueryResults().GetResourceEnd(); ++itResource)
+            for(std::map<std::string, shared_ptr<Resource> >::const_iterator itResource = NodeApi::Get().GetQueryResults().GetResourceBegin(); itResource != NodeApi::Get().GetQueryResults().GetResourceEnd(); ++itResource)
             {
                 Log(wxString::Format(wxT("QUERY: %s found %s"), wxString::FromAscii(NodeApi::Get().GetQueryResults().GetType().c_str()).c_str(), wxString::FromAscii(itResource->first.c_str()).c_str()));
             }

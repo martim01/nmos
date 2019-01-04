@@ -11,6 +11,7 @@
 #include "sender.h"
 #include "log.h"
 #include "eventposter.h"
+#include "utils.h"
 
 using namespace std;
 
@@ -207,19 +208,40 @@ void MicroServer::ResetPutData()
     m_sPut.clear();
 }
 
+void MicroServer::PrimeWait()
+{
+    lock_guard<mutex> lock(m_mutex);
+    m_eOk = WAIT;
+}
+
+void MicroServer::Wait()
+{
+    std::unique_lock<std::mutex> lk(m_mutex);
+    while(m_eOk == WAIT)
+    {
+        m_cvSync.wait(lk);
+    }
+}
 
 void MicroServer::Signal(bool bOk)
 {
     lock_guard<mutex> lock(m_mutex);
     Log::Get(Log::DEBUG) << "Microserver: " << m_nPort << " Signal " << this_thread::get_id() << endl;
-    m_bOk = bOk;
+    if(bOk)
+    {
+        m_eOk = SUCCESS;
+    }
+    else
+    {
+        m_eOk = FAIL;
+    }
     m_cvSync.notify_one();
 }
 
 bool MicroServer::IsOk()
 {
     lock_guard<mutex> lock(m_mutex);
-    return m_bOk;
+    return (m_eOk == SUCCESS);
 }
 
 
@@ -304,7 +326,6 @@ int MicroServer::GetJsonNmosNodeApi(string& sReturn)
             if(m_vPath.size() == SZ_VERSION)
             {
                 //check the version::
-
                 Json::Value jsNode;
                 jsNode.append("self/");
                 jsNode.append("sources/");
@@ -714,11 +735,12 @@ int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
 
                     if(m_pPoster)
                     {
-                        std::unique_lock<std::mutex> lk(m_mutex);
+                        PrimeWait();
                         //Tell the main thread to connect
                         m_pPoster->_Target(m_vPath[RESOURCE], pSender, m_nPort);
                         //Pause the HTTP thread
-                        m_cvSync.wait(lk);
+                        Log::Get(Log::DEBUG) << "Microserver: Wait" << std::endl;
+                        Wait();
 
                         if(IsOk())
                         {   //this means the main thread has connected the receiver to the sender
@@ -836,10 +858,10 @@ int MicroServer::PatchJsonSender(const std::string& sJson, std::string& sRespons
             else if(m_pPoster)
             {   //tell the main thread and wait to see what happens
                 //the main thread should check that it can definitely do what the patch says and simply signal true or false
-                std::unique_lock<std::mutex> lk(m_mutex);
+                PrimeWait();
                 m_pPoster->_PatchSender(m_vPath[C_ID], conRequest, m_nPort);
                 //Pause the HTTP thread
-                m_cvSync.wait(lk);
+                Wait();
 
 
                 if(IsOk() && pSender->Stage(conRequest, m_pPoster)) //PATCH the sender
@@ -925,11 +947,11 @@ int MicroServer::PatchJsonReceiver(const std::string& sJson, std::string& sRespo
             }
             else if(m_pPoster)
             {   //tell the main thread and wait to see what happens
-                std::unique_lock<std::mutex> lk(m_mutex);
+                PrimeWait();
                 //the main thread should check that it can definitely do what the patch says and simply signal true or false
                 m_pPoster->_PatchReceiver(m_vPath[C_ID], conRequest, m_nPort);
                 //Pause the HTTP thread
-                m_cvSync.wait(lk);
+                Wait();
 
                 if(IsOk() && pReceiver->Stage(conRequest, m_pPoster)) //PATCH the Receiver
                 {
@@ -965,21 +987,4 @@ int MicroServer::PatchJsonReceiver(const std::string& sJson, std::string& sRespo
         }
     }
     return nCode;
-}
-
-void MicroServer::SplitString(vector<string>& vSplit, string str, char cSplit)
-{
-
-    vSplit.clear();
-
-    istringstream f(str);
-    string s;
-    while (getline(f, s, cSplit))
-    {
-        if(s.empty() == false || vSplit.empty())    //we don't want any empty parts apart from the base one
-        {
-            vSplit.push_back(s);
-        }
-    }
-
 }

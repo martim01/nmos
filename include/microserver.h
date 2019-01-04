@@ -80,13 +80,14 @@ class MicroServer
         int PutJson(std::string sPath, const std::string& sJson, std::string& sRepsonse);
         int PatchJson(std::string sPath, const std::string& sJson, std::string& sRepsonse);
 
-
+        void Wait();
+        void PrimeWait();
         void Signal(bool bOk);
 
 
     private:
 
-        void SplitString(std::vector<std::string>& vSplit, std::string str, char cSplit);
+
         bool IsOk();
         int GetJsonNmos(std::string& sReturn, std::string& sContentType);
         int GetJsonNmosNodeApi(std::string& sReturn);
@@ -119,7 +120,10 @@ class MicroServer
 
         std::mutex m_mutex;
         std::condition_variable m_cvSync;
-        bool m_bOk;
+        enum enumSignal{WAIT, FAIL, SUCCESS};
+
+        enumSignal m_eOk;
+
 
         enum {BASE=0, NMOS=1, API_TYPE=2,VERSION=3,ENDPOINT=4, RESOURCE=5, TARGET=6};
         enum {SZ_BASE=1, SZ_NMOS=2, SZ_API_TYPE=3,SZ_VERSION=4,SZ_ENDPOINT=5, SZ_RESOURCE=6, SZ_TARGET=7};

@@ -614,14 +614,12 @@ bool NodeApi::FindQueryNode()
                 {
                     if(stoul(itPriority->second) < nPriority && itVersion->second.find("v1.2") != string::npos)
                     {//for now only doing v1.2
-
+                        // @todo maybe support other versions?
                         pInstance = (*itInstance);
                         nPriority = stoi(itPriority->second);
 
                         Log::Get(Log::INFO) << "NodeApi: Query. Found nmos query node with v1.2 and low priority: " << (*itInstance)->sName << " " << nPriority << endl;
 
-                        //vector<string> vApi;
-                        //SplitString(vApi, itVersion->second, ',');
                     }
                 }
             }

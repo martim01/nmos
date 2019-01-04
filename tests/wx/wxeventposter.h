@@ -11,7 +11,7 @@ class wxEventPoster : public EventPoster
 
     protected:
         void CurlDone(unsigned long nResult, const std::string& sResponse, long nType);
-        void InstanceResolved(dnsInstance* pInstance);
+        void InstanceResolved(std::shared_ptr<dnsInstance> pInstance);
         void AllForNow(const std::string& sService);
         void Finished();
         void RegistrationNodeError();
@@ -54,6 +54,9 @@ public:
     **/
     virtual wxEvent *Clone() const { return new wxNmosEvent(*this); }
 
+    void SetDnsInstance(std::shared_ptr<dnsInstance> pInstance);
+    const std::shared_ptr<dnsInstance> GetDnsInstance() const;
+
     void SetSender(std::shared_ptr<Sender> pSender);
     const std::shared_ptr<Sender> GetSender() const;
 
@@ -70,12 +73,15 @@ public:
     int GetCurlResult() const;
     int GetCurlType() const;
 
+
+
     DECLARE_DYNAMIC_CLASS(wxNmosEvent)
 
 
 
 private:
 
+    std::shared_ptr<dnsInstance> m_pDnsInstance;
     std::shared_ptr<Sender> m_pSender;
     connectionSender m_conSender;
     connectionReceiver m_conReceiver;

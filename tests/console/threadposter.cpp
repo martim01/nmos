@@ -33,7 +33,7 @@ void ThreadPoster::CurlDone(unsigned long nResult, const std::string& sResponse,
     LaunchThread();
 }
 
-void ThreadPoster::InstanceResolved(dnsInstance* pInstance)
+void ThreadPoster::InstanceResolved(std::shared_ptr<dnsInstance> pInstance)
 {
     SetReason(INSTANCE_RESOLVED);
     LaunchThread();
