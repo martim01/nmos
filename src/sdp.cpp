@@ -156,7 +156,7 @@ SdpManager::enumAddress SdpManager::ValidateIp4Address(string sAddress)
 
 SdpManager::enumAddress SdpManager::ValidateIp6Address(std::string sAddress)
 {
-    //@todo
+    //@todo ValidateIp6Address and workout unicast or multicast
     return ADDR_INVALID;
 }
 
@@ -174,6 +174,9 @@ bool SdpManager::ParseAttributeLine(string sLine, TransportParamsRTPReceiver& tp
         return ParseRTCP(sLine.substr(nStart+STR_RTCP.length()), tpReceiver);
     }
 
+    // @todo what other settings are possible here? Possibly FEC
+
+    return true;
 }
 
 bool SdpManager::ParseSourceFilter(std::string sLine, TransportParamsRTPReceiver& tpReceiver)
