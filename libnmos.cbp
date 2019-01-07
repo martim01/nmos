@@ -87,7 +87,6 @@
 		<Unit filename="include/source.h" />
 		<Unit filename="include/sourceaudio.h" />
 		<Unit filename="include/sourcegeneric.h" />
-		<Unit filename="include/timeofday.h" />
 		<Unit filename="include/transportparams.h" />
 		<Unit filename="include/utils.h" />
 		<Unit filename="src/avahibrowser.cpp" />

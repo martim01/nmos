@@ -10,7 +10,9 @@ class NMOS_EXPOSE FlowAudio : public Flow
 
         void SetSampleRate(unsigned int nSampleRate);
 
-    private:
+        virtual std::string CreateSDPLines(unsigned short nRtpPort) const=0;
+
+    protected:
         unsigned int m_nSampleRate;
 };
 

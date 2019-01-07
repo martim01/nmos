@@ -63,19 +63,17 @@ bool SdpManager::ParseConnectionIp4(string sAddress, TransportParamsRTPReceiver&
     size_t nTTL = sAddress.find('/');
     switch(ValidateIp4Address(sAddress.substr(0, nTTL)))
     {
-        case ADDR_INVALID:
-            return false;
-        case ADDR_MULTICAST:
+        case IP4_MULTI:
             tpReceiver.sMulticastIp = sAddress.substr(0, nTTL);
             //@todo do we care about TTL and possible address grouping??
-            break;
-        case ADDR_UNICAST:
+            return true;
+        case IP4_UNI:
             tpReceiver.sMulticastIp.clear();
             tpReceiver.sSourceIp = sAddress.substr(0, nTTL);
             //@todo do we care about TTL and possible address grouping??
-            break;
-
-        return true;
+            return true;
+        default:
+            return false;
     }
     return false;
 }
@@ -85,29 +83,28 @@ bool SdpManager::ParseConnectionIp6(string sAddress, TransportParamsRTPReceiver&
     size_t nGrouping = sAddress.find('/');
     switch(ValidateIp6Address(sAddress.substr(0, nGrouping)))
     {
-        case ADDR_INVALID:
-            return false;
-        case ADDR_MULTICAST:
+        case IP6_MULTI:
             tpReceiver.sMulticastIp = sAddress.substr(0, nGrouping);
             //@todo do we care about TTL and possible address grouping??
-            break;
-        case ADDR_UNICAST:
+            return true;
+        case IP6_UNI:
             tpReceiver.sMulticastIp.clear();
             tpReceiver.sSourceIp = sAddress.substr(0, nGrouping);
             //@todo do we care about TTL and possible address grouping??
-            break;
-        return true;
+            return true;
+        default:
+            return false;
     }
     return false;
 }
 
-SdpManager::enumAddress SdpManager::ValidateIp4Address(string sAddress)
+SdpManager::enumIPType SdpManager::ValidateIp4Address(string sAddress)
 {
     vector<string> vSplit;
     SplitString(vSplit, sAddress, '.');
     if(vSplit.size() != 4)
     {
-        return ADDR_INVALID;
+        return IP_INVALID;
     }
     vector<long> vValue;
     vValue.resize(4);
@@ -118,7 +115,7 @@ SdpManager::enumAddress SdpManager::ValidateIp4Address(string sAddress)
         {
             if(vSplit[i].empty())
             {
-                return ADDR_INVALID;
+                return IP_INVALID;
             }
             if(vSplit[i].length() > 1 && vSplit[i][0] == '0')
             {
@@ -137,27 +134,27 @@ SdpManager::enumAddress SdpManager::ValidateIp4Address(string sAddress)
             }
             if(vValue[i] < 0 || vValue[i] > 255)
             {
-                return ADDR_INVALID;
+                return IP_INVALID;
             }
         }
         catch(invalid_argument& ia)
         {
-            return ADDR_INVALID;
+            return IP_INVALID;
         }
     }
     //check if multicast address or unicast
     if(vValue[0] >= 224 && vValue[0] <= 239)
     {
-        return ADDR_MULTICAST;
+        return IP4_MULTI;
     }
 
-    return ADDR_UNICAST;
+    return IP4_UNI;
 }
 
-SdpManager::enumAddress SdpManager::ValidateIp6Address(std::string sAddress)
+SdpManager::enumIPType SdpManager::ValidateIp6Address(std::string sAddress)
 {
     //@todo ValidateIp6Address and workout unicast or multicast
-    return ADDR_INVALID;
+    return IP_INVALID;
 }
 
 bool SdpManager::ParseAttributeLine(string sLine, TransportParamsRTPReceiver& tpReceiver)
@@ -187,18 +184,19 @@ bool SdpManager::ParseSourceFilter(std::string sLine, TransportParamsRTPReceiver
     {
         if(vSplit[0] == "IN" && vSplit[1] == "incl")
         {
-            if(vSplit[2] == "IP4" && ValidateIp4Address(vSplit[3]) == ADDR_MULTICAST && ValidateIp4Address(vSplit[4]) == ADDR_UNICAST)
+            if(vSplit[2] == "IP4" && ValidateIp4Address(vSplit[3]) == IP4_MULTI && ValidateIp4Address(vSplit[4]) == IP4_UNI)
             {
                 tpReceiver.sSourceIp = vSplit[4];
                 return true;
             }
-            else if(vSplit[2] == "IP6" && ValidateIp6Address(vSplit[3]) == ADDR_MULTICAST && ValidateIp6Address(vSplit[4]) == ADDR_UNICAST)
+            else if(vSplit[2] == "IP6" && ValidateIp6Address(vSplit[3]) == IP6_MULTI && ValidateIp6Address(vSplit[4]) == IP6_UNI)
             {
                 tpReceiver.sSourceIp = vSplit[4];
                 return true;
             }
         }
     }
+    return false;
 }
 
 bool SdpManager::ParseRTCP(std::string sLine, TransportParamsRTPReceiver& tpReceiver)
@@ -231,12 +229,12 @@ bool SdpManager::ParseRTCP(std::string sLine, TransportParamsRTPReceiver& tpRece
         //also have destination address which should contain 3 more parts
         if(vSplit.size() >= 4 && vSplit[1] != "IN")
         {
-            if(vSplit[2] == "IP4" && ValidateIp4Address(vSplit[3]) != ADDR_INVALID)
+            if(vSplit[2] == "IP4" && ValidateIp4Address(vSplit[3]) != IP_INVALID)
             {
                 tpReceiver.sRtcpDestinationIp = vSplit[3];
                 return true;
             }
-            else if(vSplit[2] == "IP6" && ValidateIp6Address(vSplit[3]) != ADDR_INVALID)
+            else if(vSplit[2] == "IP6" && ValidateIp6Address(vSplit[3]) != IP_INVALID)
             {
                 tpReceiver.sRtcpDestinationIp = vSplit[3];
                 return true;
@@ -275,5 +273,19 @@ bool SdpManager::ParseMediaLine(string sLine, TransportParamsRTPReceiver& tpRece
 bool SdpManager::TransportParamsToSdp(const TransportParamsRTPSender& tpSender, std::string& sSdp)
 {
     // @todo convert tp to SDP
+
     return true;
+}
+
+
+SdpManager::enumIPType SdpManager::CheckIpAddress(std::string sAddress)
+{
+    enumIPType eType = ValidateIp4Address(sAddress);
+    if(eType != IP_INVALID)
+    {
+        return eType;
+    }
+
+    return ValidateIp6Address(sAddress);
+
 }

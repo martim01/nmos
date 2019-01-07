@@ -1,5 +1,7 @@
 #include "connection.h"
 #include "log.h"
+#include "sdp.h"
+
 
 const std::string connection::STR_ACTIVATE[4] = {"", "activate_immediate", "activate_scheduled_absolute", "activate_scheduled_relative"};
 
@@ -175,7 +177,36 @@ connectionReceiver::connectionReceiver() : connection()
 
 bool connectionReceiver::Patch(const Json::Value& jsData)
 {
-    bool bIsOk = connection::Patch(jsData);
+    bool bIsOk(true);
+    //need to decode the SDP and make the correct transport param changes here so that any connection json will overwrite them
+    if(jsData["transport_file"].isObject())
+    {
+        if(jsData["transport_file"]["type"].isString())
+        {
+            sTransportFileType = jsData["transport_file"]["type"].asString();
+        }
+        else if(jsData["transport_file"]["type"].isNull() == false)
+        {
+            bIsOk = false;
+            Log::Get(Log::DEBUG) << "Patch: transport_file type incorrect type" << std::endl;
+        }
+        if(jsData["transport_file"]["data"].isString())
+        {
+            sTransportFileData = jsData["transport_file"]["data"].asString();
+        }
+        else if(jsData["transport_file"]["data"].isNull() == false)
+        {
+            bIsOk = false;
+            Log::Get(Log::DEBUG) << "Patch: transport_file data incorrect type" << std::endl;
+        }
+
+        if(sTransportFileType == "application/sdp" && sTransportFileData.empty() == false)
+        {
+            SdpManager::SdpToTransportParams(sTransportFileData, tpReceiver);
+        }
+    }
+
+    bIsOk &= connection::Patch(jsData);
     if(bIsOk)
     {
         bIsOk &= tpReceiver.Patch(jsData["transport_params"]);
@@ -193,29 +224,7 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
             }
         }
 
-        if(jsData["transport_file"].isObject())
-        {
-            if(jsData["transport_file"]["type"].isString())
-            {
-                sTransportFileType = jsData["transport_file"]["type"].asString();
-            }
-            else if(jsData["transport_file"]["type"].isNull() == false)
-            {
-                bIsOk = false;
-                Log::Get(Log::DEBUG) << "Patch: transport_file type incorrect type" << std::endl;
-            }
-            if(jsData["transport_file"]["data"].isString())
-            {
-                sTransportFileData = jsData["transport_file"]["data"].asString();
-            }
-            else if(jsData["transport_file"]["data"].isNull() == false)
-            {
-                bIsOk = false;
-                Log::Get(Log::DEBUG) << "Patch: transport_file data incorrect type" << std::endl;
-            }
 
-            // @todo decode transport file and overwrite staged parameters with the relevant settings
-        }
     }
     return bIsOk;
 }
@@ -225,16 +234,6 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
 Json::Value connectionReceiver::GetJson()  const
 {
     Json::Value jsConnect(connection::GetJson());
-
-    if(sSenderId.empty())
-    {
-        jsConnect["sender_id"] = Json::nullValue;
-    }
-    else
-    {
-        jsConnect["sender_id"] = sSenderId;
-    }
-
     jsConnect["transport_file"] = Json::objectValue;
     if(sTransportFileType.empty() || sTransportFileData.empty())
     {
@@ -246,6 +245,20 @@ Json::Value connectionReceiver::GetJson()  const
         jsConnect["transport_file"]["type"] = sTransportFileType;
         jsConnect["transport_file"]["data"] = sTransportFileData;
     }
+
+
+
+
+    if(sSenderId.empty())
+    {
+        jsConnect["sender_id"] = Json::nullValue;
+    }
+    else
+    {
+        jsConnect["sender_id"] = sSenderId;
+    }
+
+
 
     jsConnect["transport_params"] = Json::arrayValue;
     jsConnect["transport_params"].append(tpReceiver.GetJson());

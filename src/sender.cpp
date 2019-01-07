@@ -1,6 +1,9 @@
 #include "sender.h"
 #include "eventposter.h"
 #include <thread>
+#include "sdp.h"
+#include "nodeapi.h"
+#include "flow.h"
 
 static void ActivationThreadSender(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sSenderId, std::shared_ptr<EventPoster> pPoster)
 {
@@ -24,7 +27,8 @@ Sender::Sender(std::string sLabel, std::string sDescription, std::string sFlowId
     m_sReceiverId(""),
     m_bReceiverActive(false)
 {
-
+    //activate the
+    Activate("","","");
 }
 
 
@@ -327,7 +331,103 @@ void Sender::Activate(const std::string& sSourceIp, const std::string& sDestinat
 
 void Sender::CreateSDP()
 {
-    // @todo create the SDP ourselves...
+    std::stringstream ssSDP;
+    ssSDP << "v=0\r\n";
+    ssSDP << "o=- " << GetCurrentTime(false) << " " << GetCurrentTime(false) << "IN IP";
+    switch(SdpManager::CheckIpAddress(m_Active.tpSender.sSourceIp))
+    {
+        case SdpManager::IP4_UNI:
+        case SdpManager::IP4_MULTI:
+            ssSDP << "4 ";
+            break;
+        case SdpManager::IP6_UNI:
+        case SdpManager::IP6_MULTI:
+            ssSDP << "6 ";
+            break;
+        case SdpManager::IP_INVALID:
+            ssSDP << " ";
+            break;
+    }
+    ssSDP << m_Active.tpSender.sSourceIp << "\r\n";    // @todo should check here if
+    ssSDP << "t=0 0 \r\n";
+
+    std::map<std::string, std::shared_ptr<Resource> >::const_iterator itDevice = NodeApi::Get().GetDevices().FindResource(m_sDeviceId);
+    if(itDevice != NodeApi::Get().GetDevices().GetResourceEnd())
+    {
+        ssSDP << "s=" << itDevice->second->GetLabel() << ":";
+    }
+    else
+    {
+        ssSDP << "s=-:";
+    }
+    ssSDP << GetLabel() << "\r\n";
+
+
+    //put in the destination unicast/multicast block
+    switch(SdpManager::CheckIpAddress(m_Active.tpSender.sDestinationIp))
+    {
+        case SdpManager::IP4_UNI:
+            ssSDP << "c=IN IP4 " << m_Active.tpSender.sDestinationIp << "\r\n";
+            ssSDP << "a=type:unicast\r\n";
+            break;
+        case SdpManager::IP4_MULTI:
+            ssSDP << "c=IN IP4 " << m_Active.tpSender.sDestinationIp << "/32\r\n";
+            ssSDP << "a=source-filter: incl IN IP4 " << m_Active.tpSender.sDestinationIp << " " << m_Active.tpSender.sSourceIp << "\r\n";
+            ssSDP << "a=type:multicast\r\n";
+            break;
+        case SdpManager::IP6_UNI:
+            ssSDP << "c=IN IP6 " << m_Active.tpSender.sDestinationIp << "\r\n";
+            ssSDP << "a=type:unicast\r\n";
+            break;
+        case SdpManager::IP6_MULTI:
+            ssSDP << "c=IN IP6 " << m_Active.tpSender.sDestinationIp << "\r\n";
+            ssSDP << "a=source-filter: incl IN IP6 " << m_Active.tpSender.sDestinationIp << " " << m_Active.tpSender.sSourceIp << "\r\n";
+            ssSDP << "a=type:multicast\r\n";
+            break;
+        case SdpManager::SdpManager::IP_INVALID:
+            break;
+    }
+
+
+    //now put in the flow media information
+    std::map<std::string, std::shared_ptr<Resource> >::const_iterator itFlow = NodeApi::Get().GetFlows().FindResource(m_sFlowId);
+    if(itFlow != NodeApi::Get().GetFlows().GetResourceEnd())
+    {
+        std::shared_ptr<Flow> pFlow = std::dynamic_pointer_cast<Flow>(itFlow->second);
+        if(pFlow)
+        {
+            ssSDP << pFlow->CreateSDPLines(m_Active.tpSender.nDestinationPort);
+        }
+    }
+
+    //clock information is probably at the media level
+    if(m_setInterfaces.empty())
+    {
+        ssSDP << NodeApi::Get().GetSelf().CreateClockSdp("");
+    }
+    else
+    {
+        ssSDP << NodeApi::Get().GetSelf().CreateClockSdp(*m_setInterfaces.begin()); // @todo should we check all the intefaces for the clock mac address??
+    }
+
+    //now put in the RTCP info if we've got any
+    if(m_Active.tpSender.bRtcpEnabled)
+    {
+        switch(SdpManager::CheckIpAddress(m_Active.tpSender.sRtcpDestinationIp))
+        {
+            case SdpManager::IP4_UNI:
+            case SdpManager::IP4_MULTI:
+                ssSDP << "a=rtcp:" << m_Active.tpSender.nRtcpDestinationPort << " IN IP4 " << m_Active.tpSender.sRtcpDestinationIp << "\r\n";
+                break;
+            case SdpManager::IP6_UNI:
+            case SdpManager::IP6_MULTI:
+                ssSDP << "a=rtcp:" << m_Active.tpSender.nRtcpDestinationPort << " IN IP6 " << m_Active.tpSender.sRtcpDestinationIp << "\r\n";
+                break;
+            default:
+                break;
+        }
+    }
+    m_sTransportFile = ssSDP.str();
 }
 
 

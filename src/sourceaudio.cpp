@@ -2,7 +2,8 @@
 
 
 SourceAudio::SourceAudio(std::string sLabel, std::string sDescription, std::string sDeviceId) :
-    Source(sLabel, sDescription, sDeviceId, Source::AUDIO)
+    Source(sLabel, sDescription, sDeviceId, Source::AUDIO),
+    m_nCommitedChannelCount(0)
 {
 
 }
@@ -34,7 +35,13 @@ bool SourceAudio::Commit()
 
             m_json["channels"].append(jsChannel);
         }
+        m_nCommitedChannelCount = m_mChannel.size();
         return true;
     }
     return false;
+}
+
+size_t SourceAudio::GetNumberOfChannels() const
+{
+    return m_nCommitedChannelCount;
 }

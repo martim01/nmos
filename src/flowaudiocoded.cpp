@@ -4,7 +4,17 @@ FlowAudioCoded::FlowAudioCoded(std::string sLabel, std::string sDescription, std
     FlowAudio(sLabel, sDescription, sSourceId, sDeviceId, nSampleRate),
     m_sMediaType(sMediaType)
 {
-
+    m_mRtpTypes.insert(make_pair("audio/PCMU"), 0);
+    m_mRtpTypes.insert(make_pair("audio/GSM"), 3);
+    m_mRtpTypes.insert(make_pair("audio/G723"), 4);
+    m_mRtpTypes.insert(make_pair("audio/DVI4"), 5);
+    m_mRtpTypes.insert(make_pair("audio/LPC"), 7);
+    m_mRtpTypes.insert(make_pair("audio/PCMA"), 8);
+    m_mRtpTypes.insert(make_pair("audio/G722"), 9);
+    m_mRtpTypes.insert(make_pair("audio/CN"), 13);
+    m_mRtpTypes.insert(make_pair("audio/MPA"), 14);
+    m_mRtpTypes.insert(make_pair("audio/G728"), 15);
+    m_mRtpTypes.insert(make_pair("audio/G729"), 18);
 }
 
 bool FlowAudioCoded::Commit()
@@ -20,5 +30,28 @@ bool FlowAudioCoded::Commit()
 void FlowAudioCoded::SetMediaType(std::string sMediaType)
 {
     m_sMediaType = sMediaType;
-    UpdateVersionTime();
+}
+
+
+std::string FlowAudioCoded::CreateSDPLines(unsigned short nRtpPort) const
+{
+    // @todo FlowAudioCoded::CreateSDPLines
+    std::stringstream sstr;
+
+    if(m_json["media_type"].isString())
+    {
+        std::string sMedia = m_json["media_type"].asString();
+        std::map<std::string, unsigned short>::const_iterator itType = m_mRtpTypes.find(sMedia);
+        if(itType != m_mRtpTypes.end())
+        {
+            sstr << "m=audio " << nRtpPort << " RTP/AVP " << itType->second << "\r\n"; //this is not 96 its the actual number
+        }
+        else
+        {
+            sstr << "m=audio " << nRtpPort << " RTP/AVP 103\r\n";
+            sstr << "a=rtpmap:103 " << sMedia << "\r\n";    // @todo check what more is needed here ofr different audio codings
+        }
+
+    }
+    return sstr.str();
 }

@@ -76,6 +76,7 @@ class NMOS_EXPOSE Self : public Resource
 
         unsigned char GetDnsVersion() const;
 
+        std::string CreateClockSdp(std::string sInterface) const;
 
         std::set<endpoint>::const_iterator GetEndpointsBegin() const;
         std::set<endpoint>::const_iterator GetEndpointsEnd() const;
@@ -136,6 +137,7 @@ class NMOS_EXPOSE Self : public Resource
         std::map<std::string, std::string> m_mService;
         std::map<std::string, interface> m_mInterface;
         std::map<std::string, clock> m_mClock;
+        std::map<std::string, clock> m_mClockCommited;
 
 
 

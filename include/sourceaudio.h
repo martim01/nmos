@@ -15,10 +15,12 @@ class NMOS_EXPOSE SourceAudio : public Source
 
         bool Commit();
 
+        size_t GetNumberOfChannels() const;
+
 
 
 
     private:
         std::map<std::string, std::string> m_mChannel;
-
+        size_t m_nCommitedChannelCount;
 };

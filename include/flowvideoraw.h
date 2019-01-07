@@ -14,6 +14,8 @@ class NMOS_EXPOSE FlowVideoRaw : public FlowVideo
 
         virtual bool Commit();
 
+        std::string CreateSDPLines(unsigned short nRtpPort) const;
+
     private:
         struct component
         {

@@ -11,3 +11,10 @@ bool FlowDataSdiAnc::Commit()
     return FlowData::Commit();
 
 }
+
+
+std::string FlowDataSdiAnc::CreateSDPLines(unsigned short nRtpPort) const
+{
+    // @todo create FlowDataSdiAnc SDP information
+    return "";
+}

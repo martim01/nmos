@@ -138,12 +138,16 @@ void Resource::UpdateVersionTime()
     m_sVersion = GetCurrentTime();
 }
 
-std::string Resource::GetCurrentTime()
+std::string Resource::GetCurrentTime(bool bIncludeNano)
 {
     auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
     std::stringstream sstr;
 
-    sstr << (nanos/1000000000) << ":" << (nanos%1000000000);
+    sstr << (nanos/1000000000);
+    if(bIncludeNano)
+    {
+        sstr << ":" << (nanos%1000000000);
+    }
     return sstr.str();
 }
 

@@ -45,3 +45,10 @@ bool FlowVideoRaw::Commit()
     }
     return false;
 }
+
+
+std::string FlowVideoRaw::CreateSDPLines(unsigned short nRtpPort) const
+{
+    // @todo create VideoRaw SDP information
+    return "";
+}

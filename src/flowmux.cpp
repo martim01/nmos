@@ -24,3 +24,10 @@ void FlowMux::SetMediaType(std::string sMediaType)
     m_sMediaType = sMediaType;
     UpdateVersionTime();
 }
+
+
+std::string FlowMux::CreateSDPLines(unsigned short nRtpPort) const
+{
+    // @todo create FlowMux SDP information
+    return "";
+}

@@ -13,6 +13,9 @@ class SdpManager
         static bool SdpToTransportParams(std::string sSdp, TransportParamsRTPReceiver& tpReceiver);
         static bool TransportParamsToSdp(const TransportParamsRTPSender& tpSender, std::string& sSdp);
 
+        enum enumIPType{IP_INVALID, IP4_UNI, IP4_MULTI, IP6_UNI, IP6_MULTI};
+        static enumIPType CheckIpAddress(std::string sAddress);
+
     protected:
         static bool ParseConnectionLine(std::string sLine, TransportParamsRTPReceiver& tpReceiver);
         static bool ParseAttributeLine(std::string sLine, TransportParamsRTPReceiver& tpReceiver);
@@ -25,9 +28,10 @@ class SdpManager
         static bool ParseRTCP(std::string sLine, TransportParamsRTPReceiver& tpReceiver);
 
 
-        enum enumAddress{ADDR_INVALID, ADDR_UNICAST, ADDR_MULTICAST};
-        static enumAddress ValidateIp4Address(std::string sAddress);
-        static enumAddress ValidateIp6Address(std::string sAddress);
+        static enumIPType ValidateIp4Address(std::string sAddress);
+        static enumIPType ValidateIp6Address(std::string sAddress);
+
+
 
         static const std::string STR_FILTER;
         static const std::string STR_RTCP;

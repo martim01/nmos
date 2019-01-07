@@ -4,7 +4,8 @@ Flow::Flow(std::string sLabel, std::string sDescription, std::string sFormat, st
     Resource(sLabel, sDescription),
     m_sFormat(sFormat),
     m_sSourceId(sSourceId),
-    m_sDeviceId(sDeviceId)
+    m_sDeviceId(sDeviceId),
+    m_nMediaClkOffset(0)
 {
 
 }
@@ -37,4 +38,10 @@ void Flow::RemoveParentId(std::string sId)
 {
     m_setParent.erase(sId);
     UpdateVersionTime();
+}
+
+
+void Flow::SetMediaClkOffset(unsigned long nOffset)
+{
+    m_nMediaClkOffset = nOffset;
 }

@@ -21,10 +21,20 @@ class NMOS_EXPOSE Flow : public Resource
         {
             return m_sSourceId;
         }
+
+        void SetMediaClkOffset(unsigned long nOffset);
+
+        virtual std::string CreateSDPLines(unsigned short nRtpPort) const=0;
+
+    protected:
+        unsigned long m_nMediaClkOffset;
+
     private:
         std::string m_sFormat;
         std::string m_sSourceId;
         std::string m_sDeviceId;
         std::set<std::string> m_setParent;
+
+
 };
 

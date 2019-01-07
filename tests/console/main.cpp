@@ -32,6 +32,9 @@ int main()
     pSource->AddChannel("Right", "R");
 
     shared_ptr<FlowAudioRaw> pFlow = make_shared<FlowAudioRaw>("TestFlow", "TestDescription", pSource->GetId(), pDevice->GetId(),48000, FlowAudioRaw::L24);
+    pFlow->SetPacketTime(FlowAudioRaw::US_125);
+    pFlow->SetMediaClkOffset(129122110);
+
     shared_ptr<Sender> pSender(make_shared<Sender>("TestSender", "Description", pFlow->GetId(), Sender::RTP_MCAST, pDevice->GetId(), "http://192.168.1.35/by-name/pam.sdp"));
     pSender->AddInterfaceBinding("eth0");
 

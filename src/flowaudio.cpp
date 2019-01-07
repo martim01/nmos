@@ -20,5 +20,5 @@ bool FlowAudio::Commit()
 void FlowAudio::SetSampleRate(unsigned int nSampleRate)
 {
     m_nSampleRate = nSampleRate;
-    UpdateVersionTime();
 }
+

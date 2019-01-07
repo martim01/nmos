@@ -24,3 +24,8 @@ void FlowVideoCoded::SetMediaType(std::string sMediaType)
     UpdateVersionTime();
 }
 
+std::string FlowVideoCoded::CreateSDPLines(unsigned short nRtpPort) const
+{
+    // @todo create VideoCoded SDP information
+    return "";
+}

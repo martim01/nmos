@@ -1,9 +1,13 @@
 #include "flowaudioraw.h"
 #include "flowaudio.h"
+#include <sstream>
+#include "nodeapi.h"
+#include "sourceaudio.h"
 
 FlowAudioRaw::FlowAudioRaw(std::string sLabel, std::string sDescription, std::string sSourceId, std::string sDeviceId, unsigned int nSampleRate, enumFormat eFormat) :
     FlowAudio(sLabel, sDescription, sSourceId, sDeviceId, nSampleRate),
-    m_eFormat(eFormat)
+    m_eFormat(eFormat),
+    m_ePacketTime(US_1000)
 {
 
 }
@@ -39,5 +43,83 @@ bool FlowAudioRaw::Commit()
 void FlowAudioRaw::SetFormat(enumFormat eFormat)
 {
     m_eFormat = eFormat;
-    UpdateVersionTime();
+}
+
+void FlowAudioRaw::SetPacketTime(enumPacket ePacketTime)
+{
+    m_ePacketTime = ePacketTime;
+}
+
+std::string FlowAudioRaw::CreateSDPLines(unsigned short nRtpPort) const
+{
+    //we return
+    std::stringstream sstr;
+    sstr << "m=audio " << nRtpPort << " RTP/AVP 96\r\n";
+
+    sstr << "a=rtpmap:96 L";
+    switch(m_eFormat)
+    {
+    case L24:
+        sstr << "24/";
+        break;
+    case L20:
+        sstr << "20/";
+        break;
+    case L16:
+        sstr << "16/";
+        break;
+    case L8:
+        sstr << "8/";
+        break;
+    }
+
+    sstr << m_nSampleRate << "/";
+
+    //Get the number of channels from the associated source
+    std::map<std::string, std::shared_ptr<Resource> >::const_iterator itResource = NodeApi::Get().GetSources().FindResource(GetSourceId());
+    if(itResource != NodeApi::Get().GetSources().GetResourceEnd())
+    {
+        std::shared_ptr<SourceAudio> pSource = std::dynamic_pointer_cast<SourceAudio>(itResource->second);
+        if(pSource)
+        {
+            sstr << pSource->GetNumberOfChannels();
+        }
+        else
+        {
+            sstr << "0";
+        }
+    }
+    else
+    {
+        sstr << "0";
+    }
+    sstr << "\r\n";
+
+    // @todo channel order - needed in SMPTE2110. Not needed in AES67 but it shouldnt matter to include it
+
+
+    //packet time
+    switch(m_ePacketTime)
+    {
+        case US_125:
+            sstr << "a=ptime:0.125\r\n";
+            break;
+        case US_250:
+            sstr << "a=ptime:0.250\r\n";
+            break;
+        case US_333:
+            sstr << "a=ptime:0.333\r\n";
+            break;
+        case US_1000:
+            sstr << "a=ptime:1\r\n";
+            break;
+        case US_4000:
+            sstr << "a=ptime:4\r\n";
+            break;
+    }
+
+    //mediaclk:direct=
+    sstr << "a=mediaclk:direct=" << m_nMediaClkOffset << "\r\n";
+
+    return sstr.str();
 }

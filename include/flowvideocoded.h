@@ -10,6 +10,8 @@ class NMOS_EXPOSE FlowVideoCoded : public FlowVideo
         virtual bool Commit();
         void SetMediaType(std::string sMediaType);
 
+        std::string CreateSDPLines(unsigned short nRtpPort) const;
+
     private:
         std::string m_sMediaType;
 };
