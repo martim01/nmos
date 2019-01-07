@@ -13,7 +13,7 @@ class NMOS_EXPOSE Sender : public Resource
 {
     public:
         enum enumTransport {RTP, RTP_UCAST, RTP_MCAST, DASH};
-        Sender(std::string sLabel, std::string sDescription, std::string sFlowId, enumTransport eTransport, std::string sDeviceId);
+        Sender(std::string sLabel, std::string sDescription, std::string sFlowId, enumTransport eTransport, std::string sDeviceId, std::string sInterface);
 
         Sender(const Json::Value& jsData);
 
@@ -48,7 +48,7 @@ class NMOS_EXPOSE Sender : public Resource
         connectionSender GetStaged();
 
         // called by the main thread as a reply to the eventposter
-        void Activate(const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP);
+        void Activate(std::string sSourceIp="", std::string sDestinationIp="", std::string sSDP="");
 
 
         const std::string& GetTransportFile() const;

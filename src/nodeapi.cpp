@@ -87,7 +87,7 @@ void NodeApi::Init(unsigned short nDiscoveryPort, unsigned short nConnectionPort
         {
             if(temp_addr->ifa_addr->sa_family == AF_INET)
             {
-                // Check if interface is en0 which is the wifi connection on the iPhone
+                Log::Get(Log::DEBUG) << "Interface: " << temp_addr->ifa_name << endl;
                 string sAddress(inet_ntoa(((sockaddr_in*)temp_addr->ifa_addr)->sin_addr));
                 if(sAddress != "127.0.0.1")
                 {

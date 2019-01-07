@@ -77,11 +77,11 @@ void Self::RemoveService(string sUrl)
 
 void Self::AddInterface(string sInterface, string sChassisMac, string sPortMac)
 {
-    if(sPortMac.empty())
-    {
-        sPortMac = GetMacAddress(sInterface);
-    }
-    m_mInterface.insert(make_pair(sInterface, interface(sChassisMac, sPortMac)));
+    interface anInterface(sChassisMac, sPortMac);
+
+    GetAddresses(sInterface, anInterface);
+
+    m_mInterface.insert(make_pair(sInterface, anInterface));
 
 }
 
@@ -239,7 +239,7 @@ set<endpoint>::const_iterator Self::GetEndpointsEnd() const
 }
 
 
-std::string Self::GetMacAddress(const std::string& sInterface)
+void Self::GetAddresses(const std::string& sInterface, interface& anInterface)
 {
     #ifdef __GNU__
     int fd = socket(AF_INET, SOCK_DGRAM,0);
@@ -247,6 +247,7 @@ std::string Self::GetMacAddress(const std::string& sInterface)
     ifr.ifr_addr.sa_family = AF_INET;
     strncpy((char*)ifr.ifr_ifrn.ifrn_name, sInterface.c_str(), IFNAMSIZ-1);
     ioctl(fd, SIOCGIFHWADDR, &ifr);
+    ioctl(fd, SIOCGIFADDR, &ifr);
     close(fd);
 
 
@@ -263,7 +264,11 @@ std::string Self::GetMacAddress(const std::string& sInterface)
     ss << "-";
     ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (((int)ifr.ifr_hwaddr.sa_data[5])&0xFF);
 
-    return ss.str();
+    if(anInterface.sPortMac.empty())
+    {
+        anInterface.sPortMac = ss.str();
+    }
+    anInterface.sMainIpAddress = inet_ntoa((((sockaddr_in*)&ifr.ifr_addr)->sin_addr));
     #else
     return "";
     #endif
@@ -308,4 +313,18 @@ std::string Self::CreateClockSdp(std::string sInterface) const
         }
     }
     return ss.str();
+}
+
+
+std::map<std::string, interface>::const_iterator Self::GetInterfaceBegin() const
+{
+    return m_mInterface.begin();
+}
+std::map<std::string, interface>::const_iterator Self::GetInterfaceEnd() const
+{
+    return m_mInterface.end();
+}
+std::map<std::string, interface>::const_iterator Self::FindInterface(const std::string& sInterface) const
+{
+    return m_mInterface.find(sInterface);
 }

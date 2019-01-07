@@ -18,7 +18,7 @@ static void ActivationThreadSender(const std::chrono::time_point<std::chrono::hi
 const std::string Sender::TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash"};
 
 
-Sender::Sender(std::string sLabel, std::string sDescription, std::string sFlowId, enumTransport eTransport, std::string sDeviceId) :
+Sender::Sender(std::string sLabel, std::string sDescription, std::string sFlowId, enumTransport eTransport, std::string sDeviceId, std::string sInterface) :
     Resource(sLabel, sDescription),
     m_sFlowId(sFlowId),
     m_eTransport(eTransport),
@@ -26,6 +26,7 @@ Sender::Sender(std::string sLabel, std::string sDescription, std::string sFlowId
     m_sReceiverId(""),
     m_bReceiverActive(false)
 {
+    AddInterfaceBinding(sInterface);
     //activate the
     Activate("","","");
 }
@@ -289,10 +290,24 @@ connectionSender Sender::GetStaged()
 }
 
 
-void Sender::Activate(const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP)
+void Sender::Activate(std::string sSourceIp, std::string sDestinationIp, std::string sSDP)
 {
     //move the staged parameters to active parameters
     m_Active = m_Staged;
+
+    if(sSourceIp.empty())
+    {
+        //get the bound to interface source address
+        for(std::set<std::string>::iterator itInteface = m_setInterfaces.begin(); itInteface != m_setInterfaces.end(); ++itInteface)
+        {
+            std::map<std::string, interface>::const_iterator itDetails = NodeApi::Get().GetSelf().FindInterface((*itInteface));
+            if(itDetails != NodeApi::Get().GetSelf().GetInterfaceEnd())
+            {
+                sSourceIp = itDetails->second.sMainIpAddress;
+                break;
+            }
+        }
+    }
 
     //Change auto settings to what they actually are
     m_Active.tpSender.Actualize(sSourceIp, sDestinationIp);
@@ -331,7 +346,7 @@ void Sender::CreateSDP()
 {
     std::stringstream ssSDP;
     ssSDP << "v=0\r\n";
-    ssSDP << "o=- " << GetCurrentTime(false) << " " << GetCurrentTime(false) << "IN IP";
+    ssSDP << "o=- " << GetCurrentTime(false) << " " << GetCurrentTime(false) << "IN IP ";
     switch(SdpManager::CheckIpAddress(m_Active.tpSender.sSourceIp))
     {
         case SdpManager::IP4_UNI:

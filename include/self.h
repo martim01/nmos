@@ -41,6 +41,15 @@ struct endpoint
     bool bSecure;
 };
 
+struct interface
+{
+    interface(std::string sC, std::string sI) : sChassisMac(sC), sPortMac(sI){}
+    std::string sChassisMac;
+    std::string sPortMac;
+    std::string sMainIpAddress;
+};
+
+
 class NMOS_EXPOSE Self : public Resource
 {
     public:
@@ -81,6 +90,10 @@ class NMOS_EXPOSE Self : public Resource
         std::set<endpoint>::const_iterator GetEndpointsBegin() const;
         std::set<endpoint>::const_iterator GetEndpointsEnd() const;
 
+        std::map<std::string, interface>::const_iterator GetInterfaceBegin() const;
+        std::map<std::string, interface>::const_iterator GetInterfaceEnd() const;
+        std::map<std::string, interface>::const_iterator FindInterface(const std::string& sInterface) const;
+
     protected:
         friend class NodeApi;
 
@@ -92,14 +105,10 @@ class NMOS_EXPOSE Self : public Resource
         std::string m_sUrl;
         unsigned char m_nDnsVersion;
 
-        std::string GetMacAddress(const std::string& sInterface);
 
-        struct interface
-        {
-            interface(std::string sC, std::string sI) : sChassisMac(sC), sPortMac(sI){}
-            std::string sChassisMac;
-            std::string sPortMac;
-        };
+
+
+        void GetAddresses(const std::string& sInterface, interface& anInterface);
 
         struct clock
         {

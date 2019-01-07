@@ -35,8 +35,7 @@ int main()
     pFlow->SetPacketTime(FlowAudioRaw::US_125);
     pFlow->SetMediaClkOffset(129122110);
 
-    shared_ptr<Sender> pSender(make_shared<Sender>("TestSender", "Description", pFlow->GetId(), Sender::RTP_MCAST, pDevice->GetId()));
-    pSender->AddInterfaceBinding("eth0");
+    shared_ptr<Sender> pSender(make_shared<Sender>("TestSender", "Description", pFlow->GetId(), Sender::RTP_MCAST, pDevice->GetId()), "eth0");
 
 
     shared_ptr<Receiver> pReceiver = make_shared<Receiver>("Test Receiver", "TestDescription", Receiver::RTP_MCAST, pDevice->GetId(), Receiver::AUDIO);
@@ -67,6 +66,7 @@ int main()
     }
     NodeApi::Get().Commit();
 
+    getchar();
     std::shared_ptr<ThreadPoster> pPoster = std::make_shared<ThreadPoster>();
     NodeApi::Get().StartServices(pPoster);
     while(true)
@@ -128,7 +128,7 @@ int main()
                     cout << "----------------------------------------" << endl;
                     cout << "NMOS Activate Sender: " << pPoster->GetString() << endl;
                     cout << "----------------------------------------" << endl;
-                    NodeApi::Get().ActivateSender(pPoster->GetString(),"","");
+                    NodeApi::Get().ActivateSender(pPoster->GetString(),"","239.192.55.101");
                     break;
                 case ThreadPoster::ACTIVATE_RECEIVER:
                     cout << "----------------------------------------" << endl;
