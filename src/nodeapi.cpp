@@ -724,9 +724,20 @@ bool NodeApi::AddReceiver(shared_ptr<Receiver> pResource)
 
 bool NodeApi::AddSender(shared_ptr<Sender> pResource)
 {
+
     if(m_devices.ResourceExists(pResource->GetDeviceId()))
     {
         m_senders.AddResource(pResource);
+
+        //Make the IS-04 manifest href the same as the IS-05 control transportfile endpoint
+        if(m_self.GetEndpointsBegin() != m_self.GetEndpointsEnd())
+        {
+            stringstream sstr;
+            sstr << "http://" << m_self.GetEndpointsBegin()->sHost << ":" << m_nConnectionPort << "/x-nmos/connection/v1.0/single/senders/";
+            sstr << pResource->GetId() << "/transportfile";
+            pResource->SetManifestHref(sstr.str());
+        }
+
         return true;
     }
     return false;

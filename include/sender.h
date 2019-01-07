@@ -13,7 +13,7 @@ class NMOS_EXPOSE Sender : public Resource
 {
     public:
         enum enumTransport {RTP, RTP_UCAST, RTP_MCAST, DASH};
-        Sender(std::string sLabel, std::string sDescription, std::string sFlowId, enumTransport eTransport, std::string sDeviceId, std::string sManifestHref);
+        Sender(std::string sLabel, std::string sDescription, std::string sFlowId, enumTransport eTransport, std::string sDeviceId);
 
         Sender(const Json::Value& jsData);
 

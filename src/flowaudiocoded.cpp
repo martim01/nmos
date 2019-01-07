@@ -1,20 +1,22 @@
 #include "flowaudiocoded.h"
 
+std::map<std::string, unsigned short>  FlowAudioCoded::m_mRtpTypes = std::map<std::string, unsigned short>();
+
 FlowAudioCoded::FlowAudioCoded(std::string sLabel, std::string sDescription, std::string sSourceId, std::string sDeviceId, unsigned int nSampleRate, std::string sMediaType) :
     FlowAudio(sLabel, sDescription, sSourceId, sDeviceId, nSampleRate),
     m_sMediaType(sMediaType)
 {
-    m_mRtpTypes.insert(make_pair("audio/PCMU"), 0);
-    m_mRtpTypes.insert(make_pair("audio/GSM"), 3);
-    m_mRtpTypes.insert(make_pair("audio/G723"), 4);
-    m_mRtpTypes.insert(make_pair("audio/DVI4"), 5);
-    m_mRtpTypes.insert(make_pair("audio/LPC"), 7);
-    m_mRtpTypes.insert(make_pair("audio/PCMA"), 8);
-    m_mRtpTypes.insert(make_pair("audio/G722"), 9);
-    m_mRtpTypes.insert(make_pair("audio/CN"), 13);
-    m_mRtpTypes.insert(make_pair("audio/MPA"), 14);
-    m_mRtpTypes.insert(make_pair("audio/G728"), 15);
-    m_mRtpTypes.insert(make_pair("audio/G729"), 18);
+    m_mRtpTypes.insert(std::make_pair("audio/PCMU", 0));
+    m_mRtpTypes.insert(std::make_pair("audio/GSM", 3));
+    m_mRtpTypes.insert(std::make_pair("audio/G723", 4));
+    m_mRtpTypes.insert(std::make_pair("audio/DVI4", 5));
+    m_mRtpTypes.insert(std::make_pair("audio/LPC", 7));
+    m_mRtpTypes.insert(std::make_pair("audio/PCMA", 8));
+    m_mRtpTypes.insert(std::make_pair("audio/G722", 9));
+    m_mRtpTypes.insert(std::make_pair("audio/CN", 13));
+    m_mRtpTypes.insert(std::make_pair("audio/MPA", 14));
+    m_mRtpTypes.insert(std::make_pair("audio/G728", 15));
+    m_mRtpTypes.insert(std::make_pair("audio/G729", 18));
 }
 
 bool FlowAudioCoded::Commit()

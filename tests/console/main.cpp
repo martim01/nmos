@@ -35,7 +35,7 @@ int main()
     pFlow->SetPacketTime(FlowAudioRaw::US_125);
     pFlow->SetMediaClkOffset(129122110);
 
-    shared_ptr<Sender> pSender(make_shared<Sender>("TestSender", "Description", pFlow->GetId(), Sender::RTP_MCAST, pDevice->GetId(), "http://192.168.1.35/by-name/pam.sdp"));
+    shared_ptr<Sender> pSender(make_shared<Sender>("TestSender", "Description", pFlow->GetId(), Sender::RTP_MCAST, pDevice->GetId()));
     pSender->AddInterfaceBinding("eth0");
 
 

@@ -75,6 +75,7 @@ int MicroServer::DoHttpPatch(MHD_Connection* pConnection, string sUrl, Connectio
 
 int MicroServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, const char * url, const char * method, const char * sVersion, const char * upload_data, size_t * upload_data_size, void **ptr)
 {
+    Log::Get(Log::DEBUG) << "AnswerToConnection" << endl;
     string sMethod(method);
     if (NULL == *ptr)
     {

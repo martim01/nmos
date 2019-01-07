@@ -18,12 +18,11 @@ static void ActivationThreadSender(const std::chrono::time_point<std::chrono::hi
 const std::string Sender::TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash"};
 
 
-Sender::Sender(std::string sLabel, std::string sDescription, std::string sFlowId, enumTransport eTransport, std::string sDeviceId, std::string sManifestHref) :
+Sender::Sender(std::string sLabel, std::string sDescription, std::string sFlowId, enumTransport eTransport, std::string sDeviceId) :
     Resource(sLabel, sDescription),
     m_sFlowId(sFlowId),
     m_eTransport(eTransport),
     m_sDeviceId(sDeviceId),
-    m_sManifest(sManifestHref),
     m_sReceiverId(""),
     m_bReceiverActive(false)
 {
@@ -87,20 +86,18 @@ Sender::Sender(const Json::Value& jsData) : Resource(jsData)
 void Sender::AddInterfaceBinding(std::string sInterface)
 {
     m_setInterfaces.insert(sInterface);
-    UpdateVersionTime();
 }
 
 void Sender::RemoveInterfaceBinding(std::string sInterface)
 {
     m_setInterfaces.erase(sInterface);
-    UpdateVersionTime();
 }
 
 void Sender::SetReceiverId(std::string sReceiverId, bool bActive)
 {
     m_sReceiverId = sReceiverId;
     m_bReceiverActive = bActive;
-    UpdateVersionTime();
+
 }
 
 bool Sender::Commit()
@@ -152,14 +149,9 @@ bool Sender::Commit()
 void Sender::SetTransport(enumTransport eTransport)
 {
     m_eTransport = eTransport;
-    UpdateVersionTime();
+
 }
 
-void Sender::SetManifestHref(std::string sHref)
-{
-    m_sManifest = sHref;
-    UpdateVersionTime();
-}
 
 
 Json::Value Sender::GetConnectionStagedJson() const
@@ -307,15 +299,21 @@ void Sender::Activate(const std::string& sSourceIp, const std::string& sDestinat
 
 
     // create the SDP
-    if(sSDP.empty())
+    if(m_Active.bMasterEnable)
     {
-        CreateSDP();
+        if(sSDP.empty())
+        {
+            CreateSDP();
+        }
+        else
+        {
+            m_sTransportFile = sSDP;
+        }
     }
     else
     {
-        m_sTransportFile = sSDP;
+        m_sTransportFile.clear();
     }
-
     //@todo Set the flow to be whatever the flow is...
 
     //activate - set subscription, receiverId and active on master_enable.
@@ -434,4 +432,10 @@ void Sender::CreateSDP()
 const std::string& Sender::GetTransportFile() const
 {
     return m_sTransportFile;
+}
+
+
+void Sender::SetManifestHref(std::string sHref)
+{
+    m_sManifest = sHref;
 }
