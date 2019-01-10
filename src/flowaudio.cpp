@@ -13,17 +13,17 @@ FlowAudio::FlowAudio() : Flow("urn:x-nmos:format:audio")
 
 }
 
-bool UpdateFromJson(const Json::Value& jsData)
+bool FlowAudio::UpdateFromJson(const Json::Value& jsData)
 {
     Flow::UpdateFromJson(jsData);
     m_bIsOk &= (jsData["sample_rate"]["numerator"].isInt() && (jsData["sample_rate"]["denominator"].isInt() || jsData["sample_rate"]["denominator"].isNull()));
     if(m_bIsOk)
     {
-        m_nSampleRateNumerator = sData["sample_rate"]["numerator"].asInt();
+        m_nSampleRateNumerator = jsData["sample_rate"]["numerator"].asInt();
 
         if(jsData["sample_rate"]["denominator"].isInt())
         {
-            m_nSampleRateDenominator = sData["sample_rate"]["denominator"].asInt();
+            m_nSampleRateDenominator = jsData["sample_rate"]["denominator"].asInt();
         }
         else
         {
@@ -49,6 +49,8 @@ bool FlowAudio::Commit()
 
 void FlowAudio::SetSampleRate(unsigned int nSampleRate)
 {
-    m_nSampleRate = nSampleRate;
+    m_nSampleRateNumerator = nSampleRate;
+    m_nSampleRateDenominator = 1;
+    UpdateVersionTime();
 }
 

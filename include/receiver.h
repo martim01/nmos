@@ -25,7 +25,7 @@ class NMOS_EXPOSE Receiver : public Resource
         void AddInterfaceBinding(std::string sInterface);
         void RemoveInterfaceBinding(std::string sInterface);
 
-        void AddCap(std::string sCap);
+        bool AddCap(std::string sCap);
         void RemoveCap(std::string sCap);
 
 
@@ -68,8 +68,8 @@ class NMOS_EXPOSE Receiver : public Resource
 
         std::shared_ptr<Sender> m_pSender;
 
-        static const std::string TRANSPORT[4];
-        static const std::string TYPE[4];
+        static const std::string STR_TRANSPORT[4];
+        static const std::string STR_TYPE[4];
 };
 
 

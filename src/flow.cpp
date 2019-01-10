@@ -2,10 +2,11 @@
 
 Flow::Flow(std::string sLabel, std::string sDescription, std::string sFormat, std::string sSourceId, std::string sDeviceId) :
     Resource("flow", sLabel, sDescription),
+    m_nMediaClkOffset(0),
     m_sFormat(sFormat),
     m_sSourceId(sSourceId),
-    m_sDeviceId(sDeviceId),
-    m_nMediaClkOffset(0)
+    m_sDeviceId(sDeviceId)
+
 {
 
 }
@@ -19,7 +20,7 @@ Flow::Flow(std::string sFormat) : Resource("flow"),
 bool Flow::UpdateFromJson(const Json::Value& jsData)
 {
     Resource::UpdateFromJson(jsData);
-    m_bIsOk &= (jsData["device_id"].isString && jsData["source_id"].isString() && jsData["parents"].isArray());
+    m_bIsOk &= (jsData["device_id"].isString() && jsData["source_id"].isString() && jsData["parents"].isArray());
     if(m_bIsOk)
     {
         m_sDeviceId = jsData["device_id"].asString();

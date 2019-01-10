@@ -78,6 +78,7 @@ bool FlowAudioRaw::Commit()
 void FlowAudioRaw::SetFormat(enumFormat eFormat)
 {
     m_eFormat = eFormat;
+    UpdateVersionTime();
 }
 
 void FlowAudioRaw::SetPacketTime(enumPacket ePacketTime)
@@ -108,7 +109,7 @@ std::string FlowAudioRaw::CreateSDPLines(unsigned short nRtpPort) const
         break;
     }
 
-    sstr << m_nSampleRate << "/";
+    sstr << m_nSampleRateNumerator << "/";
 
     //Get the number of channels from the associated source
     std::map<std::string, std::shared_ptr<Resource> >::const_iterator itResource = NodeApi::Get().GetSources().FindResource(GetSourceId());

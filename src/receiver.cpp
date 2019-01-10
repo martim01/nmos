@@ -16,8 +16,8 @@ static void ActivationThreadReceiver(const std::chrono::time_point<std::chrono::
 }
 
 
-const std::string Receiver::TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash"};
-const std::string Receiver::TYPE[4] = {"urn:x-nmos:format:audio", "urn:x-nmos:format:video", "urn:x-nmos:format:data", "urn:x-nmos:format:mux"};
+const std::string Receiver::STR_TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash"};
+const std::string Receiver::STR_TYPE[4] = {"urn:x-nmos:format:audio", "urn:x-nmos:format:video", "urn:x-nmos:format:data", "urn:x-nmos:format:mux"};
 
 
 
@@ -38,22 +38,54 @@ Receiver::~Receiver()
 
 }
 
+Receiver::Receiver() : Resource("receiver")
+{
+
+}
+
 void Receiver::AddInterfaceBinding(std::string sInterface)
 {
     m_setInterfaces.insert(sInterface);
-    UpdateVersionTime();
 }
 
 void Receiver::RemoveInterfaceBinding(std::string sInterface)
 {
     m_setInterfaces.erase(sInterface);
-    UpdateVersionTime();
 }
 
-void Receiver::AddCap(std::string sCap)
+bool Receiver::AddCap(std::string sCap)
 {
+    //check that the caps are valid
+    switch(m_eType)
+    {
+        case AUDIO:
+            if(sCap.find("audio/") == std::string::npos)
+            {
+                return false;
+            }
+            break;
+        case VIDEO:
+            if(sCap.find("video/") == std::string::npos)
+            {
+               return false;
+            }
+            break;
+        case DATA:
+            if(sCap != "video/smpte291")
+            {
+                return false;
+            }
+            break;
+        case MUX:
+            if(sCap != "video/SMPTE2022-6")
+            {
+                return false;
+            }
+            break;
+    }
     m_setCaps.insert(sCap);
     UpdateVersionTime();
+    return true;
 }
 
 void Receiver::RemoveCap(std::string sCap)
@@ -76,13 +108,136 @@ void Receiver::SetType(enumType eType)
     UpdateVersionTime();
 }
 
+bool Receiver::UpdateFromJson(const Json::Value& jsData)
+{
+    Resource::UpdateFromJson(jsData);
+    m_bIsOk &= (jsData["device_id"].isString() && jsData["transport"].isString() && jsData["interface_bindings"].isArray() && jsData["interface_bindings"].size() > 0 && jsData["subscription"].isObject() && jsData["caps"].isObject() && jsData["caps"]["media_types"].isArray() && jsData["caps"]["media_types"].size() > 0 && jsData["format"].isString());
+
+    if(m_bIsOk)
+    {
+        m_sDeviceId = jsData["device_id"].asString();
+        bool bFound(false);
+        for(int i = 0; i < 4; i++)
+        {
+            if(STR_TRANSPORT[i] == jsData["transport"].asString())
+            {
+                m_eTransport = enumTransport(i);
+                bFound = true;
+                break;
+            }
+        }
+        m_bIsOk &= bFound;
+        for(int i = 0; i < 4; i++)
+        {
+            if(STR_TYPE[i] == jsData["format"].asString())
+            {
+                m_eType = enumType(i);
+                bFound = true;
+                break;
+            }
+        }
+        m_bIsOk &= bFound;
+        for(Json::ArrayIndex ai = 0; ai < jsData["interface_bindings"].size(); ++ai)
+        {
+            if(jsData["interface_bindings"][ai].isString() == false)
+            {
+                m_bIsOk = false;
+                break;
+            }
+            else
+            {
+                m_setInterfaces.insert(jsData["interface_bindings"][ai].asString());
+            }
+        }
+        for(Json::ArrayIndex ai = 0; ai < jsData["caps"]["media_types"].size(); ++ai)
+        {
+            if(jsData["caps"]["media_types"][ai].isString() == false)
+            {
+                m_bIsOk = false;
+            }
+            else
+            {
+                //check that the caps are valid
+                switch(m_eType)
+                {
+                case AUDIO:
+                    if(jsData["caps"]["media_types"][ai].asString().find("audio/") == std::string::npos)
+                    {
+                        m_bIsOk = false;
+                    }
+                    else
+                    {
+                        m_setCaps.insert(jsData["caps"]["media_types"][ai].asString());
+                    }
+                    break;
+                case VIDEO:
+                    if(jsData["caps"]["media_types"][ai].asString().find("video/") == std::string::npos)
+                    {
+                        m_bIsOk = false;
+                    }
+                    else
+                    {
+                        m_setCaps.insert(jsData["caps"]["media_types"][ai].asString());
+                    }
+                    break;
+                case DATA:
+                    if(jsData["caps"]["media_types"][ai].asString() != "video/smpte291")
+                    {
+                        m_bIsOk = false;
+                    }
+                    else
+                    {
+                        m_setCaps.insert(jsData["caps"]["media_types"][ai].asString());
+                    }
+                    break;
+                case MUX:
+                    if(jsData["caps"]["media_types"][ai].asString() != "video/SMPTE2022-6")
+                    {
+                        m_bIsOk = false;
+                    }
+                    else
+                    {
+                        m_setCaps.insert(jsData["caps"]["media_types"][ai].asString());
+                    }
+                }
+            }
+
+            if(m_bIsOk == false)
+            {
+                break;
+            }
+        }
+
+        if(jsData["subscription"]["sender_id"].isString())
+        {
+            m_sSenderId = jsData["subscription"]["sender_id"].asString();
+        }
+        else if(jsData["subscription"]["sender_id"].isNull())
+        {
+            m_sSenderId.clear();
+        }
+        else
+        {
+            m_bIsOk = false;
+        }
+        if(jsData["subscription"]["active"].isBool())
+        {
+            m_bSenderActive = jsData["subscription"]["active"].asBool();
+        }
+        else
+        {
+            m_bIsOk = false;
+        }
+    }
+    return m_bIsOk;
+}
 bool Receiver::Commit()
 {
     if(Resource::Commit())
     {
         m_json["device_id"] = m_sDeviceId;
-        m_json["transport"] = TRANSPORT[m_eTransport];
-        m_json["format"] = TYPE[m_eType];
+        m_json["transport"] = STR_TRANSPORT[m_eTransport];
+        m_json["format"] = STR_TYPE[m_eType];
 
         m_json["interface_bindings"] = Json::Value(Json::arrayValue);
         for(std::set<std::string>::iterator itInterface = m_setInterfaces.begin(); itInterface != m_setInterfaces.end(); ++itInterface)

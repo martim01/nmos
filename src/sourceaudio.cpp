@@ -8,6 +8,11 @@ SourceAudio::SourceAudio(std::string sLabel, std::string sDescription, std::stri
 
 }
 
+SourceAudio::SourceAudio() : Source(Source::AUDIO)
+{
+
+}
+
 void SourceAudio::AddChannel(std::string sLabel, std::string sSymbol)
 {
     m_mChannel.insert(make_pair(sSymbol, sLabel));
@@ -20,6 +25,29 @@ void SourceAudio::RemoveChannel(std::string sSymbol)
     UpdateVersionTime();
 }
 
+
+bool SourceAudio::UpdateFromJson(const Json::Value& jsData)
+{
+    Source::UpdateFromJson(jsData);
+    m_bIsOk &= (jsData["channels"].isArray() && jsData["channels"].size() >0);
+    if(m_bIsOk)
+    {
+        for(Json::ArrayIndex ai = 0; ai < jsData["channels"].size(); ++ai)
+        {
+            if(jsData["channels"][ai].isObject() == false || jsData["channels"][ai]["label"].isString() == false || jsData["channels"][ai]["symbol"].isString() == false)
+            {
+                m_bIsOk = false;
+                break;
+            }
+            else
+            {
+                // @todo should we check the channel symbol is valid??
+                m_mChannel.insert(make_pair(jsData["channels"][ai]["symbol"].asString(), jsData["channels"][ai]["label"].asString()));
+            }
+        }
+    }
+    return m_bIsOk;
+}
 
 bool SourceAudio::Commit()
 {

@@ -7,6 +7,14 @@
 
  }
 
+ Source::Source(enumFormat eFormat) : Resource("source"),
+  m_eFormat(eFormat)
+{
+
+}
+
+
+
 void Source::AddParentId(std::string sId)
 {
     m_setParent.insert(sId);
@@ -23,6 +31,31 @@ void Source::SetClock(std::string sClock)
 {
     m_sClock = sClock;
     UpdateVersionTime();
+}
+
+bool Source::UpdateFromJson(const Json::Value& jsData)
+{
+    Resource::UpdateFromJson(jsData);
+    m_bIsOk &= (jsData["device_id"].isString() && jsData["caps"].isObject() && jsData["parents"].isArray() && (jsData["clock_name"].isString() || jsData["clock_name"].isNull()));
+
+    m_sDeviceId = jsData["device_id"].asString();
+    if(jsData["clock_name"].isString())
+    {
+        m_sClock = jsData["clock_name"].asString();
+    }
+    for(Json::ArrayIndex ai = 0; ai < jsData["parents"].size(); ai++)
+    {
+        if(jsData["parents"][ai].isString() == false)
+        {
+            m_bIsOk = false;
+            break;
+        }
+        else
+        {
+            m_setParent.insert(jsData["parents"][ai].asString());
+        }
+    }
+    return m_bIsOk;
 }
 
 bool Source::Commit()

@@ -28,8 +28,8 @@ bool FlowVideo::UpdateFromJson(const Json::Value& jsData)
 {
     Flow::UpdateFromJson(jsData);
     m_bIsOk &= (jsData["frame_width"].isInt() && jsData["frame_height"].isInt() &&  jsData["colorspace"].isString() &&
-               (jsData["interlace_mode"].isString() || jsData["interlace_mode"].isEmpty()) &&
-               (jsData["transfer_characteristic"].isString() || jsData["transfer_characteristic"].isEmpty()));
+               (jsData["interlace_mode"].isString() || jsData["interlace_mode"].empty()) &&
+               (jsData["transfer_characteristic"].isString() || jsData["transfer_characteristic"].empty()));
 
     if(m_bIsOk)
     {
@@ -39,9 +39,9 @@ bool FlowVideo::UpdateFromJson(const Json::Value& jsData)
         bool bFound(false);
         for(int i = 0; i < 4; i++)
         {
-            if(STR_COLOUR[i] == jsData["colorspace"])
+            if(STR_COLOUR[i] == jsData["colorspace"].asString())
             {
-                m_eColour = i;
+                m_eColour = enumColour(i);
                 bFound = true;
                 break;
             }
@@ -53,9 +53,9 @@ bool FlowVideo::UpdateFromJson(const Json::Value& jsData)
             bFound = false;
             for(int i = 0; i < 4; i++)
             {
-                if(STR_INTERLACE[i] == jsData["interlace_mode"])
+                if(STR_INTERLACE[i] == jsData["interlace_mode"].asString())
                 {
-                    m_eInterlace = i;
+                    m_eInterlace = enumInterlace(i);
                     bFound = true;
                     break;
                 }
@@ -68,9 +68,9 @@ bool FlowVideo::UpdateFromJson(const Json::Value& jsData)
             bFound = false;
             for(int i = 0; i < 3; i++)
             {
-                if(STR_TRANSFER[i] == jsData["transfer_characteristic"])
+                if(STR_TRANSFER[i] == jsData["transfer_characteristic"].asString())
                 {
-                    m_eTransfer = i;
+                    m_eTransfer = enumTransfer(i);
                     bFound = true;
                     break;
                 }

@@ -26,7 +26,7 @@ bool FlowVideoRaw::UpdateFromJson(const Json::Value& jsData)
     {
         for(Json::ArrayIndex ai = 0; ai < jsData["components"].size(); ++ai)
         {
-            if(jsData["components"][ai].isOject() == false || jsData["components"][ai]["name"].isString() == false ||jsData["components"][ai]["width"].isInt() == false || jsData["components"][ai]["height"].isInt() == false || jsData["components"][ai]["bit_depth"].isInt() == false)
+            if(jsData["components"][ai].isObject() == false || jsData["components"][ai]["name"].isString() == false ||jsData["components"][ai]["width"].isInt() == false || jsData["components"][ai]["height"].isInt() == false || jsData["components"][ai]["bit_depth"].isInt() == false)
             {
                 m_bIsOk = false;
                 break;
@@ -40,7 +40,7 @@ bool FlowVideoRaw::UpdateFromJson(const Json::Value& jsData)
                     if(jsData["components"][ai]["name"] == STR_COMPONENT[i])
                     {
                         bFound = true;
-                        m_mComponent.insert(make_pair(i, component aComp(jsData["components"][ai]["width"].asInt(), jsData["components"][ai]["height"].asInt(), jsData["components"][ai]["bit_depth"].asInt())));
+                        m_mComponent.insert(make_pair(enumComponent(i), component(jsData["components"][ai]["width"].asInt(), jsData["components"][ai]["height"].asInt(), jsData["components"][ai]["bit_depth"].asInt())));
                         break;
                     }
                 }

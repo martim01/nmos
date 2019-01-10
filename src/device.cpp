@@ -30,7 +30,7 @@ bool Device::UpdateFromJson(const Json::Value& jsData)
         {
             m_eType = PIPELINE;
         }
-        m_sNodeId = jsData["node_id"];
+        m_sNodeId = jsData["node_id"].asString();
 
         for(Json::ArrayIndex ai = 0; ai < jsData["senders"].size(); ++ai)
         {
@@ -65,7 +65,7 @@ bool Device::UpdateFromJson(const Json::Value& jsData)
             }
             else
             {
-                m_setControls.insert(std::make_pair(jsData["controls"][ai]["type"].asString(), jsData["controls"][ai]["href"].asString()))
+                m_setControls.insert(std::make_pair(jsData["controls"][ai]["type"].asString(), jsData["controls"][ai]["href"].asString()));
             }
         }
     }

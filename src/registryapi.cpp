@@ -130,7 +130,7 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
     }
     else if(sType == "receiver")
     {
-        hared_ptr<Receiver> pResource = make_shared<Receiver>();
+        shared_ptr<Receiver> pResource = make_shared<Receiver>();
         if(pResource->UpdateFromJson(jsData))
         {
             m_resources.AddResource(pResource);
@@ -205,7 +205,7 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
                     }
                     else
                     {
-                        shared_ptr<FlowVideoCoded> pResource = make_shared<FlowVideoCoded>(sData["media_type"].asString());
+                        shared_ptr<FlowVideoCoded> pResource = make_shared<FlowVideoCoded>(jsData["media_type"].asString());
                         if(pResource->UpdateFromJson(jsData))
                         {
                             m_resources.AddResource(pResource);
@@ -244,8 +244,10 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
 
 bool RegistryApi::UpdateResource(const Json::Value& jsData, std::shared_ptr<Resource> pResource)
 {
-
+    // @todo update resource  we should make a copy of the resource in case updating it corrupts it
+    return pResource->UpdateFromJson(jsData);
 }
+
 void RegistryApi::DeleteResource(const string& sId)
 {
     m_resources.RemoveResource(sId);

@@ -38,31 +38,31 @@ Sender::Sender() : Resource("sender")
 
 bool Sender::UpdateFromJson(const Json::Value& jsData)
 {
-    m_bIsOk = Resource::UpdateFromJson(jsData) && ((m_json["flow_id"].isString() || m_json["flow_id"].isNull()) && m_json["device_id"].isString() && m_json["manifest_href"].isString() &&  m_json["transport"].isString()
-                   && m_json["interface_bindings"].isArray() && m_json["subscription"].isObject() && m_json["subscription"]["receiver_id"].isString() && m_json["subscription"]["active"].isBool());
+    m_bIsOk = Resource::UpdateFromJson(jsData) && ((jsData["flow_id"].isString() || jsData["flow_id"].isNull()) && jsData["device_id"].isString() && jsData["manifest_href"].isString() &&  jsData["transport"].isString()
+                   && jsData["interface_bindings"].isArray() && jsData["subscription"].isObject() && (jsData["subscription"]["receiver_id"].isString() || jsData["subscription"]["receiver_id"].isNull()) && jsData["subscription"]["active"].isBool());
 
     if(m_bIsOk)
     {
-        if(m_json["flow_id"].isString())
+        if(jsData["flow_id"].isString())
         {
-            m_sFlowId = m_json["flow_id"].asString();
+            m_sFlowId = jsData["flow_id"].asString();
         }
-        m_sDeviceId = m_json["device_id"].asString();
-        m_sManifest = m_json["manifest_href"].asString();
+        m_sDeviceId = jsData["device_id"].asString();
+        m_sManifest = jsData["manifest_href"].asString();
 
-        if(m_json["transport"].asString() == TRANSPORT[RTP])
+        if(jsData["transport"].asString() == TRANSPORT[RTP])
         {
             m_eTransport = RTP;
         }
-        else if(m_json["transport"].asString() == TRANSPORT[RTP_UCAST])
+        else if(jsData["transport"].asString() == TRANSPORT[RTP_UCAST])
         {
             m_eTransport = RTP_UCAST;
         }
-        else if(m_json["transport"].asString() == TRANSPORT[RTP_MCAST])
+        else if(jsData["transport"].asString() == TRANSPORT[RTP_MCAST])
         {
             m_eTransport = RTP_MCAST;
         }
-        else if(m_json["transport"].asString() == TRANSPORT[DASH])
+        else if(jsData["transport"].asString() == TRANSPORT[DASH])
         {
             m_eTransport = DASH;
         }
@@ -70,11 +70,11 @@ bool Sender::UpdateFromJson(const Json::Value& jsData)
         {
             m_bIsOk = false;
         }
-        for(Json::ArrayIndex n = 0; n < m_json["interface_bindings"].size(); n++)
+        for(Json::ArrayIndex n = 0; n < jsData["interface_bindings"].size(); n++)
         {
-            if(m_json["interface_bindings"][n].isString())
+            if(jsData["interface_bindings"][n].isString())
             {
-                m_setInterfaces.insert(m_json["interface_bindings"][n].asString());
+                m_setInterfaces.insert(jsData["interface_bindings"][n].asString());
             }
             else
             {
@@ -83,8 +83,11 @@ bool Sender::UpdateFromJson(const Json::Value& jsData)
             }
         }
 
-        m_sReceiverId = m_json["subscription"]["receiver_id"].asString();
-        m_bReceiverActive = m_json["subscription"]["active"].asBool();
+        if(jsData["subscription"]["receiver_id"].isString())
+        {
+            m_sReceiverId = jsData["subscription"]["receiver_id"].asString();
+        }
+        m_bReceiverActive = jsData["subscription"]["active"].asBool();
     }
     return m_bIsOk;
 }

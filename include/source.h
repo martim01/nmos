@@ -14,7 +14,7 @@ class NMOS_EXPOSE Source : public Resource
         virtual bool UpdateFromJson(const Json::Value& jsData);
         virtual ~Source(){}
 
-        void SetFormat(enumFormat eFormat);
+
         void AddParentId(std::string sId);
         void RemoveParentId(std::string sId);
 
@@ -26,6 +26,8 @@ class NMOS_EXPOSE Source : public Resource
             return m_sDeviceId;
         }
 
+    protected:
+        void SetFormat(enumFormat eFormat);
     private:
         std::string m_sDeviceId;
         std::set<std::string> m_setParent;

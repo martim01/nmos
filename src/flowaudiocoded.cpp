@@ -51,6 +51,7 @@ bool FlowAudioCoded::Commit()
 void FlowAudioCoded::SetMediaType(std::string sMediaType)
 {
     m_sMediaType = sMediaType;
+    UpdateVersionTime();
 }
 
 
