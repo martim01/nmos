@@ -15,7 +15,7 @@
 using namespace std;
 
 
-Self::Self(string sHostname, string sUrl,string sLabel, string sDescription) : Resource(sLabel, sDescription),
+Self::Self(string sHostname, string sUrl,string sLabel, string sDescription) : Resource("self", sLabel, sDescription),
     m_sHostname(sHostname),
     m_sUrl(sUrl),
     m_nDnsVersion(0)

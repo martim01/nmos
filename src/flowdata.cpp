@@ -7,6 +7,23 @@ FlowData::FlowData(std::string sLabel, std::string sDescription, std::string sSo
 
 }
 
+FlowData::FlowData(const std::string sMediaType) : Flow("urn:x-nmos:format:data"),
+    m_sMediaType(sMediaType)
+{
+
+}
+
+bool FlowData::UpdateFromJson(const Json::Value& jsData)
+{
+    Flow::UpdateFromJson(jsData);
+    m_bIsOk &= jsData["media_type"].isString();
+    if(m_bIsOk)
+    {
+        m_sMediaType = jsData["media_type"].asString();
+    }
+    return m_bIsOk;
+}
+
 bool FlowData::Commit()
 {
     if(Flow::Commit())

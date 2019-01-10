@@ -727,8 +727,8 @@ int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
                 else
                 {
                     //Have we been sent a sender??
-                    std::shared_ptr<Sender> pSender = std::make_shared<Sender>(jsRequest);
-                    if(pSender->IsOk() == false)
+                    std::shared_ptr<Sender> pSender = std::make_shared<Sender>();
+                    if(pSender->UpdateFromJson(jsRequest) == false)
                     {
                         nCode = 400;
                         sResponse = stw.write(GetJsonError(nCode, "Request is ill defined or missing mandatory attributes."));

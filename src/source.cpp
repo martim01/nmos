@@ -1,6 +1,6 @@
 #include "source.h"
 
- Source::Source(std::string sLabel, std::string sDescription, std::string sDeviceId, enumFormat eFormat) : Resource(sLabel, sDescription)
+ Source::Source(std::string sLabel, std::string sDescription, std::string sDeviceId, enumFormat eFormat) : Resource("source", sLabel, sDescription)
  , m_sDeviceId(sDeviceId)
  , m_eFormat(eFormat)
  {

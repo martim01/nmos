@@ -9,8 +9,9 @@ class NMOS_EXPOSE FlowVideo : public Flow
         enum enumColour{BT601, BT709, BT2020, BT2100};
         enum enumTransfer{SDR, HLG,PQ};
 
-        FlowVideo(std::string sLabel, std::string sDescription, std::string sSourceId, std::string sDeviceId, unsigned int nFrameWidth, unsigned int nFrameHeight, enumColour eColour, enumInterlace eInterlace=PROGRESSIVE, enumTransfer eTransfer=SDR);
-
+        FlowVideo(std::string sLabel, std::string sDescription, std::string sSourceId, std::string sDeviceId, const std::string& sMediaType, unsigned int nFrameWidth, unsigned int nFrameHeight, enumColour eColour, enumInterlace eInterlace=PROGRESSIVE, enumTransfer eTransfer=SDR);
+        FlowVideo(const std::string& sMediaType);
+        virtual bool UpdateFromJson(const Json::Value& jsData);
         virtual bool Commit();
 
         void SetFrameWidth(unsigned int nWidth);
@@ -22,6 +23,7 @@ class NMOS_EXPOSE FlowVideo : public Flow
         virtual std::string CreateSDPLines(unsigned short nRtpPort) const=0;
 
     private:
+        std::string m_sMediaType;
         unsigned int m_nFrameWidth;
         unsigned int m_nFrameHeight;
 

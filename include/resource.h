@@ -9,9 +9,9 @@
 class NMOS_EXPOSE Resource
 {
     public:
-        Resource(std::string sLabel, std::string sDescription);
-        Resource();
-        Resource(const Json::Value& jsValue);
+        Resource(const std::string& sType, const std::string& sLabel, const std::string& sDescription);
+        Resource(const std::string& sType);
+
 
         virtual ~Resource(){}
         void AddTag(std::string sTag);
@@ -23,12 +23,18 @@ class NMOS_EXPOSE Resource
 
         bool IsOk() const;
 
+        virtual bool UpdateFromJson(const Json::Value& jsValue);
 
         const Json::Value& GetJson() const;
         virtual bool Commit();
 
         void UpdateLabel(std::string sLabel);
         void UpdateDescription(std::string sDescription);
+
+        const std::string& GetType() const;
+
+        size_t GetLastHeartbeat() const;
+        void SetHeartbeat();
 
     protected:
         void UpdateVersionTime();
@@ -42,6 +48,7 @@ class NMOS_EXPOSE Resource
         mutable std::mutex m_mutex;
     private:
         void CreateGuid();
+        std::string m_sType;
         std::string m_sId;
         std::string m_sLabel;
         std::string m_sDescription;
@@ -50,4 +57,5 @@ class NMOS_EXPOSE Resource
         std::list<std::string> m_lstTag;
 
 
+        size_t m_nHeartbeat;
 };

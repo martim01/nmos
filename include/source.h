@@ -10,6 +10,8 @@ class NMOS_EXPOSE Source : public Resource
 
 
         Source(std::string sLabel, std::string sDescription, std::string sDeviceId, enumFormat eFormat);
+        Source(enumFormat eFormat);
+        virtual bool UpdateFromJson(const Json::Value& jsData);
         virtual ~Source(){}
 
         void SetFormat(enumFormat eFormat);

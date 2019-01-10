@@ -15,8 +15,9 @@ class NMOS_EXPOSE Sender : public Resource
         enum enumTransport {RTP, RTP_UCAST, RTP_MCAST, DASH};
         Sender(std::string sLabel, std::string sDescription, std::string sFlowId, enumTransport eTransport, std::string sDeviceId, std::string sInterface);
 
-        Sender(const Json::Value& jsData);
+        Sender();
 
+        virtual bool UpdateFromJson(const Json::Value& jsData);
 
         void AddInterfaceBinding(std::string sInterface);
         void RemoveInterfaceBinding(std::string sInterface);

@@ -11,6 +11,8 @@ class NMOS_EXPOSE FlowAudioRaw : public FlowAudio
         FlowAudioRaw(std::string sLabel, std::string sDescription, std::string sSourceId, std::string sDeviceId, unsigned int nSampleRate, enumFormat eFormat);
         virtual bool Commit();
 
+        FlowAudioRaw();
+        virtual bool UpdateFromJson(const Json::Value& jsData);
         void SetFormat(enumFormat eFormat);
         void SetPacketTime(enumPacket ePacketTime);
 

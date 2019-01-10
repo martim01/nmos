@@ -19,6 +19,25 @@ FlowAudioCoded::FlowAudioCoded(std::string sLabel, std::string sDescription, std
     m_mRtpTypes.insert(std::make_pair("audio/G729", 18));
 }
 
+FlowAudioCoded::FlowAudioCoded() : FlowAudio()
+{
+
+}
+
+bool FlowAudioCoded::UpdateFromJson(const Json::Value& jsData)
+{
+    FlowAudio::UpdateFromJson(jsData);
+    if(jsData["media_type"].isString() == false)
+    {
+        m_bIsOk = false;
+    }
+    else
+    {
+        m_sMediaType = jsData["media_type"].asString();
+    }
+    return m_bIsOk;
+}
+
 bool FlowAudioCoded::Commit()
 {
     if(FlowAudio::Commit())

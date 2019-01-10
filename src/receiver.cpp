@@ -22,7 +22,7 @@ const std::string Receiver::TYPE[4] = {"urn:x-nmos:format:audio", "urn:x-nmos:fo
 
 
 Receiver::Receiver(std::string sLabel, std::string sDescription, enumTransport eTransport, std::string sDeviceId, enumType eFormat) :
-    Resource(sLabel, sDescription),
+    Resource("receiver", sLabel, sDescription),
     m_eTransport(eTransport),
     m_sDeviceId(sDeviceId),
     m_sSenderId(""),

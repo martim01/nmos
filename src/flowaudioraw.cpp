@@ -12,6 +12,41 @@ FlowAudioRaw::FlowAudioRaw(std::string sLabel, std::string sDescription, std::st
 
 }
 
+FlowAudioRaw::FlowAudioRaw() : FlowAudio()
+{
+
+}
+
+bool FlowAudioRaw::UpdateFromJson(const Json::Value& jsData)
+{
+    FlowAudio::UpdateFromJson(jsData);
+    m_bIsOk &= (jsData["media_type"].isString() && jsData["bit_depth"].isInt());
+    if(m_bIsOk)
+    {
+        if(jsData["media_type"].asString() == "audio/L24" && jsData["bit_depth"].asInt() == 24)
+        {
+            m_eFormat = L24;
+        }
+        else if(jsData["media_type"].asString() == "audio/L20" && jsData["bit_depth"].asInt() == 20)
+        {
+            m_eFormat = L20;
+        }
+        else if(jsData["media_type"].asString() == "audio/L16" && jsData["bit_depth"].asInt() == 16)
+        {
+            m_eFormat = L16;
+        }
+        else if(jsData["media_type"].asString() == "audio/L8" && jsData["bit_depth"].asInt() == 8)
+        {
+            m_eFormat = L8;
+        }
+        else
+        {
+            m_bIsOk = false;
+        }
+    }
+    return m_bIsOk;
+}
+
 bool FlowAudioRaw::Commit()
 {
     if(FlowAudio::Commit())

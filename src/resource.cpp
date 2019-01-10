@@ -9,25 +9,27 @@
 #include <chrono>
 #include <sstream>
 
-Resource::Resource(std::string sLabel, std::string sDescription) :
+Resource::Resource(const std::string& sType, const std::string& sLabel, const std::string& sDescription) :
     m_bIsOk(true),
+    m_sType(sType),
     m_sLabel(sLabel),
-    m_sDescription(sDescription)
+    m_sDescription(sDescription),
+    m_nHeartbeat(0)
 
 {
     CreateGuid();
     UpdateVersionTime();
 }
 
-Resource::Resource() :
-    m_bIsOk(true)
+Resource::Resource(const std::string& sType) :
+    m_bIsOk(true),
+    m_sType(sType)
 {
     CreateGuid();
     UpdateVersionTime();
 }
 
-Resource::Resource(const Json::Value& jsValue) :
-    m_bIsOk(false)
+bool Resource::UpdateFromJson(const Json::Value& jsValue)
 {
     m_json = jsValue;
 
@@ -39,6 +41,7 @@ Resource::Resource(const Json::Value& jsValue) :
         m_sDescription = m_json["description"].asString();
         m_sVersion = m_json["version"].asString();
     }
+    return m_bIsOk;
 }
 
 
@@ -200,4 +203,21 @@ bool Resource::ConvertTaiStringToTimePoint(const std::string& sTai, std::chrono:
         }
     }
     return false;
+}
+
+const std::string& Resource::GetType() const
+{
+    return m_sType;
+}
+
+
+size_t Resource::GetLastHeartbeat() const
+{
+    return m_nHeartbeat;
+}
+
+void Resource::SetHeartbeat()
+{
+    auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+    m_nHeartbeat =(nanos/1000000000);
 }

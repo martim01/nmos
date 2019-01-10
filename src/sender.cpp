@@ -19,7 +19,7 @@ const std::string Sender::TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmo
 
 
 Sender::Sender(std::string sLabel, std::string sDescription, std::string sFlowId, enumTransport eTransport, std::string sDeviceId, std::string sInterface) :
-    Resource(sLabel, sDescription),
+    Resource("sender", sLabel, sDescription),
     m_sFlowId(sFlowId),
     m_eTransport(eTransport),
     m_sDeviceId(sDeviceId),
@@ -31,10 +31,14 @@ Sender::Sender(std::string sLabel, std::string sDescription, std::string sFlowId
     Activate("","","");
 }
 
-
-Sender::Sender(const Json::Value& jsData) : Resource(jsData)
+Sender::Sender() : Resource("sender")
 {
-    m_bIsOk = m_bIsOk && ((m_json["flow_id"].isString() || m_json["flow_id"].isNull()) && m_json["device_id"].isString() && m_json["manifest_href"].isString() &&  m_json["transport"].isString()
+
+}
+
+bool Sender::UpdateFromJson(const Json::Value& jsData)
+{
+    m_bIsOk = Resource::UpdateFromJson(jsData) && ((m_json["flow_id"].isString() || m_json["flow_id"].isNull()) && m_json["device_id"].isString() && m_json["manifest_href"].isString() &&  m_json["transport"].isString()
                    && m_json["interface_bindings"].isArray() && m_json["subscription"].isObject() && m_json["subscription"]["receiver_id"].isString() && m_json["subscription"]["active"].isBool());
 
     if(m_bIsOk)
@@ -82,6 +86,7 @@ Sender::Sender(const Json::Value& jsData) : Resource(jsData)
         m_sReceiverId = m_json["subscription"]["receiver_id"].asString();
         m_bReceiverActive = m_json["subscription"]["active"].asBool();
     }
+    return m_bIsOk;
 }
 
 void Sender::AddInterfaceBinding(std::string sInterface)

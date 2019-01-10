@@ -9,6 +9,9 @@ class NMOS_EXPOSE Device : public Resource
         enum enumType {GENERIC, PIPELINE};
 
         Device(std::string sLabel, std::string sDescription, enumType eType, std::string sNodeId);
+        Device();
+        virtual bool UpdateFromJson(const Json::Value& jsData);
+
         virtual ~Device(){}
         void AddControl(std::string sType, std::string sUri);
         void RemoveControl(std::string sType, std::string sUri);
@@ -27,8 +30,9 @@ class NMOS_EXPOSE Device : public Resource
         enumType m_eType;
         std::string m_sNodeId;
         std::set<std::pair<std::string, std::string> > m_setControls;
-
-        static const std::string TYPE[2];
+        std::set<std::string> m_setSenders;
+        std::set<std::string> m_setReceivers;
+        static const std::string STR_TYPE[2];
 };
 
 

@@ -7,6 +7,22 @@ FlowMux::FlowMux(std::string sLabel, std::string sDescription, std::string sSour
 
 }
 
+FlowMux::FlowMux() : Flow("urn:x-nmos:format:mux")
+{
+
+}
+
+bool FlowMux::UpdateFromJson(const Json::Value& jsData)
+{
+    Flow::UpdateFromJson(jsData);
+    m_bIsOk &= (jsData["media_type"].isString());
+    if(m_bIsOk)
+    {
+        m_sMediaType = jsData["media_type"].asString();
+    }
+    return m_bIsOk;
+}
+
 bool FlowMux::Commit()
 {
     if(Flow::Commit())

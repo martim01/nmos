@@ -9,6 +9,8 @@ class NMOS_EXPOSE FlowAudioCoded : public FlowAudio
         FlowAudioCoded(std::string sLabel, std::string sDescription, std::string sSourceId, std::string sDeviceId, unsigned int nSampleRate, std::string sMediaType);
         virtual bool Commit();
 
+        FlowAudioCoded();
+        virtual bool UpdateFromJson(const Json::Value& jsData);
         void SetMediaType(std::string sMediaType);
 
         std::string CreateSDPLines(unsigned short nRtpPort) const;

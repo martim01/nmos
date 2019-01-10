@@ -16,6 +16,8 @@ class NMOS_EXPOSE Receiver : public Resource
         enum enumType {AUDIO, VIDEO, DATA, MUX};
         Receiver(std::string sLabel, std::string sDescription, enumTransport eTransport, std::string sDeviceId, enumType eType);
         ~Receiver();
+        Receiver();
+        virtual bool UpdateFromJson(const Json::Value& jsData);
 
         void SetTransport(enumTransport eTransport);
         void SetType(enumType eType);
