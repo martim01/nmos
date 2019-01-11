@@ -110,6 +110,17 @@ void Self::RemoveClock(string sName)
 
 }
 
+bool Self:UpdateFromJson(const Json::Value& jsData)
+{
+    Resource::UpdateFromJson(jsData);
+    m_bIsOk &= (jsData["href"].isString() && jsData["caps"].isObject() && jsData["api"].isObject() && jsData["services"].isArray() && jsData["clocks"].isArray() && jsData["interfaces"].isArray())
+
+
+    jsData["hostname"].isString()
+
+    return m_bIsOk;
+}
+
 bool Self::Commit()
 {
     if(Resource::Commit())

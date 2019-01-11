@@ -13,15 +13,20 @@
 #include "flowmux.h"
 #include "sender.h"
 #include "receiver.h"
+#include "log.h"
 
 using namespace std;
 
+const string RegistryApi::STR_RESOURCE[6] = {"node", "device", "source", "flow", "sender", "receiver"};
+
 RegistryApi::RegistryApi() :
     m_pRegistryApiPublisher(0),
-    m_pRegistryServer(0),
-    m_resources("")
+    m_pRegistryServer(0)
 {
-
+    for(int i = 0; i < 7; i++)
+    {
+        m_mRegistryHolder.insert(make_pair(STR_RESOURCE[i], RegistryHolder()));
+    }
 }
 
 RegistryApi::~RegistryApi()
@@ -29,8 +34,15 @@ RegistryApi::~RegistryApi()
     Stop();
 }
 
+RegistryApi& RegistryApi::Get()
+{
+    static RegistryApi ra;
+    return ra;
+}
+
 bool RegistryApi::Start(unsigned short nPriority, unsigned short nPort, bool bSecure)
 {
+    Log::Get() << "RegistryApi: Start" << endl;
     return (StartPublisher(nPriority, nPort, bSecure) && StartServer(nPort));
 }
 
@@ -87,36 +99,75 @@ void RegistryApi::StopServer()
         m_pRegistryServer = 0;
     }
 }
-const ResourceHolder& RegistryApi::GetResources()
-{
-    return m_resources;
-}
 
-shared_ptr<Resource> RegistryApi::GetResource(const std::string& sId)
+
+const shared_ptr<Resource> RegistryApi::FindResource(const std::string& sType, const std::string& sId)
 {
-    map<string, shared_ptr<Resource> >::iterator itResource = m_resources.GetResource(sId);
-    if(itResource != m_resources.GetResourceEnd())
+    map<string, RegistryHolder>::iterator itHolder = m_mRegistryHolder.find(sType);
+    if(itHolder != m_mRegistryHolder.end())
     {
-        return itResource->second;
+        map<string, shared_ptr<Resource> >::iterator itResource = itHolder->second.GetResource(sId);
+        if(itResource != itHolder->second.GetResourceEnd())
+        {
+            return itResource->second;
+        }
     }
     return shared_ptr<Resource>(0);
 }
 
+bool RegistryApi::AddResource(const std::string& sType, shared_ptr<Resource> pResource)
+{
+    map<string, RegistryHolder>::iterator itHolder = m_mRegistryHolder.find(sType);
+    if(itHolder != m_mRegistryHolder.end())
+    {
+        if(itHolder->second.AddResource(pResource))
+        {
+            Log::Get() << "Resource of type '" << sType << "' " << pResource->GetId() << " added to registry." << endl;
+            return true;
+        }
+    }
+    Log::Get(Log::ERROR) << "Failed to add resource of type '" << sType << "' " << pResource->GetId() << " added to registry." << endl;
+    return false;
+}
+
+unsigned short RegistryApi::AddUpdateResource(const string& sType, const Json::Value& jsData)
+{
+    map<string, RegistryHolder>::iterator itHolder = m_mRegistryHolder.find(sType);
+    if(itHolder != m_mRegistryHolder.end())
+    {
+        map<string, shared_ptr<Resource> >::const_iterator itResource = itHolder->second.FindResource(jsData["id"].asString());
+        if(itResource == itHolder->second.GetResourceEnd())
+        {
+            if(AddResource(sType, jsData))
+            {
+                return 201;
+            }
+        }
+        else if(UpdateResource(jsData, itResource->second))
+        {
+            return 200;
+        }
+    }
+    return 404;
+}
 
 bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
 {
     bool bOk(false);
     if(sType == "node")
     {
-
+        shared_ptr<Self> pResource = make_shared<Self>();
+        if(pResource->UpdateFromJson(jsData))
+        {
+            bOk = AddResource(sType, pResource);
+        }
     }
     else if(sType == "device")
     {
         shared_ptr<Device> pResource = make_shared<Device>();
         if(pResource->UpdateFromJson(jsData))
         {
-            m_resources.AddResource(pResource);
-            bOk = true;
+            bOk = AddResource(sType, pResource);
         }
     }
     else if(sType == "sender")
@@ -124,8 +175,7 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
         shared_ptr<Sender> pResource = make_shared<Sender>();
         if(pResource->UpdateFromJson(jsData))
         {
-            m_resources.AddResource(pResource);
-            bOk = true;
+            bOk = AddResource(sType, pResource);
         }
     }
     else if(sType == "receiver")
@@ -133,8 +183,7 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
         shared_ptr<Receiver> pResource = make_shared<Receiver>();
         if(pResource->UpdateFromJson(jsData))
         {
-            m_resources.AddResource(pResource);
-            bOk = true;
+            bOk = AddResource(sType, pResource);
         }
     }
     else if(sType == "source")
@@ -147,8 +196,7 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
                 shared_ptr<SourceAudio> pResource = make_shared<SourceAudio>();
                 if(pResource->UpdateFromJson(jsData))
                 {
-                    m_resources.AddResource(pResource);
-                    bOk = true;
+                    bOk = AddResource(sType, pResource);
                 }
             }
             else
@@ -156,8 +204,7 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
                 shared_ptr<SourceGeneric> pResource = make_shared<SourceGeneric>();
                 if(pResource->UpdateFromJson(jsData))
                 {
-                    m_resources.AddResource(pResource);
-                    bOk = true;
+                    bOk = AddResource(sType, pResource);
                 }
             }
         }
@@ -175,8 +222,7 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
                         shared_ptr<FlowAudioRaw> pResource = make_shared<FlowAudioRaw>();
                         if(pResource->UpdateFromJson(jsData))
                         {
-                            m_resources.AddResource(pResource);
-                            bOk = true;
+                            bOk = AddResource(sType, pResource);
                         }
                     }
                     else
@@ -184,8 +230,7 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
                         shared_ptr<FlowAudioCoded> pResource = make_shared<FlowAudioCoded>();
                         if(pResource->UpdateFromJson(jsData))
                         {
-                            m_resources.AddResource(pResource);
-                            bOk = true;
+                            bOk = AddResource(sType, pResource);
                         }
                     }
                 }
@@ -199,8 +244,7 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
                         shared_ptr<FlowVideoRaw> pResource = make_shared<FlowVideoRaw>();
                         if(pResource->UpdateFromJson(jsData))
                         {
-                            m_resources.AddResource(pResource);
-                            bOk = true;
+                            bOk = AddResource(sType, pResource);
                         }
                     }
                     else
@@ -208,8 +252,7 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
                         shared_ptr<FlowVideoCoded> pResource = make_shared<FlowVideoCoded>(jsData["media_type"].asString());
                         if(pResource->UpdateFromJson(jsData))
                         {
-                            m_resources.AddResource(pResource);
-                            bOk = true;
+                            bOk = AddResource(sType, pResource);
                         }
                     }
                 }
@@ -221,8 +264,7 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
                     shared_ptr<FlowDataSdiAnc> pResource = make_shared<FlowDataSdiAnc>();
                     if(pResource->UpdateFromJson(jsData))
                     {
-                        m_resources.AddResource(pResource);
-                        bOk = true;
+                        bOk = AddResource(sType, pResource);
                     }
                 }
                 //SDIAncData only at the moment
@@ -233,8 +275,7 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
                 shared_ptr<FlowMux> pResource = make_shared<FlowMux>();
                 if(pResource->UpdateFromJson(jsData))
                 {
-                    m_resources.AddResource(pResource);
-                    bOk = true;
+                    bOk = AddResource(sType, pResource);
                 }
             }
         }
@@ -248,8 +289,28 @@ bool RegistryApi::UpdateResource(const Json::Value& jsData, std::shared_ptr<Reso
     return pResource->UpdateFromJson(jsData);
 }
 
-void RegistryApi::DeleteResource(const string& sId)
+bool RegistryApi::DeleteResource(const string& sType, const std::string& sId)
 {
-    m_resources.RemoveResource(sId);
-    m_resources.Commit();
+    map<string, RegistryHolder>::iterator itHolder = m_mRegistryHolder.find(sType);
+    if(itHolder != m_mRegistryHolder.end())
+    {
+        return itHolder->second.RemoveResource(sId);
+    }
+    return false;
+}
+
+
+size_t RegistryApi::Heartbeat(const std::string& sId)
+{
+    map<string, RegistryHolder>::iterator itHolder = m_mRegistryHolder.find("node");
+    if(itHolder != m_mRegistryHolder.end())
+    {
+        map<string, shared_ptr<Resource> >::iterator itResource = itHolder->second.GetResource(sId);
+        if(itResource != itHolder->second.GetResourceEnd())
+        {
+            itResource->second->SetHeartbeat();
+            return itResource->second->GetLastHeartbeat();
+        }
+    }
+    return 0;
 }

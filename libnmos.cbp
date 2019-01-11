@@ -80,6 +80,7 @@
 		<Unit filename="include/nodeapi.h" />
 		<Unit filename="include/receiver.h" />
 		<Unit filename="include/registryapi.h" />
+		<Unit filename="include/registryholder.h" />
 		<Unit filename="include/registryserver.h" />
 		<Unit filename="include/resource.h" />
 		<Unit filename="include/resourceholder.h" />
@@ -114,6 +115,7 @@
 		<Unit filename="src/nodeapi.cpp" />
 		<Unit filename="src/receiver.cpp" />
 		<Unit filename="src/registryapi.cpp" />
+		<Unit filename="src/registryholder.cpp" />
 		<Unit filename="src/registryserver.cpp" />
 		<Unit filename="src/resource.cpp" />
 		<Unit filename="src/resourceholder.cpp" />

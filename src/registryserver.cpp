@@ -296,19 +296,11 @@ int RegistryServer::GetJsonNmosResource(string& sReturn)
     }
     else
     {
-        map<string, shared_ptr<Resource> >::const_iterator itResource = RegistryApi::Get().GetResources().FindResource(m_vPath[RESOURCE_ID]);
-        if(itResource != RegistryApi::Get().GetResources().GetResourceEnd())
+        const shared_ptr<Resource> pResource = RegistryApi::Get().FindResource(m_vPath[RESOURCE_TYPE], m_vPath[RESOURCE_ID]);
+        if(pResource)
         {
-            if(itResource->second->GetType() == m_vPath[RESOURCE_TYPE])
-            {
-                nCode = 200;
-                sReturn = stw.write(itResource->second->GetJson());
-            }
-            else
-            {
-                nCode = 404;
-                sReturn = stw.write(GetJsonError(404, "Resource found but no of that type"));
-            }
+            nCode = 200;
+            sReturn = stw.write(pResource->GetJson());
         }
         else
         {
@@ -333,12 +325,12 @@ int RegistryServer::GetJsonNmosHealth(string& sReturn)
     {
         if(m_vPath[HEALTH_NODES] == "nodes")
         {
-            map<string, shared_ptr<Resource> >::const_iterator itResource = RegistryApi::Get().GetResources().FindResource(m_vPath[HEALTH_ID]);
-            if(itResource != RegistryApi::Get().GetResources().GetResourceEnd())
+            const shared_ptr<Resource> pResource = RegistryApi::Get().FindResource("node", m_vPath[HEALTH_ID]);
+            if(pResource)
             {
                 nCode = 200;
                 Json::Value jsNode;
-                jsNode["health"] = to_string(itResource->second->GetLastHeartbeat());
+                jsNode["health"] = to_string(pResource->GetLastHeartbeat());
                 sReturn = stw.write(jsNode);
             }
             else
@@ -415,24 +407,9 @@ int RegistryServer::PostJsonNmosResource(const std::string& sJson, std::string& 
     }
 
     //does a resource already exist with the given id??
-    bool bUpdated;
-    shared_ptr<Resource> pResource = RegistryApi::Get().GetResource(jsRequest["data"]["id"].asString());
-    if(pResource)
-    {
-        if(jsRequest["type"].asString() != pResource->GetType())
-        {
-            nCode = 400;
-            sReturn = stw.write(GetJsonError(nCode, "Resource with this id but of a different type already exists."));
-            return nCode;
-        }
-        bUpdated = RegistryApi::Get().UpdateResource(jsRequest["data"], pResource);
-    }
-    else
-    {
-        bUpdated = RegistryApi::Get().AddResource(jsRequest["type"].asString(), jsRequest["data"]);
-    }
+    nCode = RegistryApi::Get().AddUpdateResource(jsRequest["type"].asString(), jsRequest["data"]);
 
-    if(bUpdated)
+    if(nCode == 200 || nCode == 201)
     {
         sReturn = stw.write(jsRequest["data"]);
         stringstream sLoc;
@@ -453,13 +430,11 @@ int RegistryServer::PostJsonNmosHealth(std::string& sReturn)
     unsigned short nCode;
     Json::StyledWriter stw;
 
-    shared_ptr<Resource> pResource = RegistryApi::Get().GetResource(m_vPath[HEALTH_ID]);
-    if(pResource)
+    size_t nHeatbeat = RegistryApi::Get().Heartbeat(m_vPath[HEALTH_ID]);
+    if(nHeatbeat != 0)
     {
-        pResource->SetHeartbeat();
-
         Json::Value jsNode;
-        jsNode["health"] = to_string(pResource->GetLastHeartbeat());
+        jsNode["health"] = to_string(nHeatbeat);
         sReturn = stw.write(jsNode);
         nCode = 200;
     }
@@ -488,21 +463,11 @@ int RegistryServer::DeleteJson(string sPath, string& sResponse)
     }
     else
     {
-        map<string, shared_ptr<Resource> >::const_iterator itResource = RegistryApi::Get().GetResources().FindResource(m_vPath[RESOURCE_ID]);
-        if(itResource != RegistryApi::Get().GetResources().GetResourceEnd())
+        if(RegistryApi::Get().DeleteResource(m_vPath[RESOURCE_TYPE], m_vPath[RESOURCE_ID]))
         {
-            if(m_vPath[RESOURCE_TYPE] != itResource->second->GetType())
-            {
-                nCode = 404;
-                sResponse = stw.write(GetJsonError(nCode, "Resource with this id exists but of a different type."));
+            nCode = 204;
+            sResponse.clear();
 
-            }
-            else
-            {
-                nCode = 204;
-                sResponse.clear();
-                RegistryApi::Get().DeleteResource(m_vPath[RESOURCE_ID]);
-            }
         }
         else
         {

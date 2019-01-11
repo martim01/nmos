@@ -35,12 +35,13 @@ unsigned char ResourceHolder::GetVersion() const
 }
 
 
-void ResourceHolder::AddResource(std::shared_ptr<Resource> pResource)
+bool ResourceHolder::AddResource(std::shared_ptr<Resource> pResource)
 {
     if(pResource)
     {
-        m_mResourceStaging.insert(make_pair(pResource->GetId(), pResource));
+        return m_mResourceStaging.insert(make_pair(pResource->GetId(), pResource)).second;
     }
+    return false;
 }
 
 void ResourceHolder::RemoveResource(std::shared_ptr<Resource> pResource)

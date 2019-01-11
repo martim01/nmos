@@ -21,7 +21,7 @@ class NMOS_EXPOSE ResourceHolder
 
         unsigned char GetVersion() const;
 
-        void AddResource(std::shared_ptr<Resource> pResource);
+        bool AddResource(std::shared_ptr<Resource> pResource);
         void RemoveResource(std::shared_ptr<Resource> pResource);
         void RemoveResource(std::string sUuid);
 

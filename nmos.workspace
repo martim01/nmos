@@ -8,5 +8,8 @@
 		<Project filename="tests/console/nmos_node_test.cbp">
 			<Depends filename="libnmos.cbp" />
 		</Project>
+		<Project filename="tests/nmos_registry_test/nmos_registry_test.cbp">
+			<Depends filename="libnmos.cbp" />
+		</Project>
 	</Workspace>
 </CodeBlocks_workspace_file>
