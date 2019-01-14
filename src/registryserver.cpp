@@ -362,6 +362,7 @@ Json::Value RegistryServer::GetJsonError(unsigned long nCode, string sError)
 
 int RegistryServer::PostJson(string sPath, const string& sJson, string& sResponse, std::string& sLocation)
 {
+    Log::Get() << "RegistyServer: " << sPath << " " << sJson << endl;
     //make sure path is correct
     transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
 
@@ -388,6 +389,7 @@ int RegistryServer::PostJson(string sPath, const string& sJson, string& sRespons
         nCode = 405;
         sResponse = stw.write(GetJsonError(nCode, "Method not allowed here."));
     }
+    Log::Get() << "Response: " << sResponse << " Code:" << nCode << endl;
     return nCode;
 }
 
@@ -408,6 +410,8 @@ int RegistryServer::PostJsonNmosResource(const std::string& sJson, std::string& 
 
     //does a resource already exist with the given id??
     nCode = RegistryApi::Get().AddUpdateResource(jsRequest["type"].asString(), jsRequest["data"]);
+
+    Log::Get() << "RESOURCE TYPE: " << jsRequest["type"].asString() << endl;
 
     if(nCode == 200 || nCode == 201)
     {

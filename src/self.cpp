@@ -110,13 +110,45 @@ void Self::RemoveClock(string sName)
 
 }
 
-bool Self:UpdateFromJson(const Json::Value& jsData)
+bool Self::UpdateFromJson(const Json::Value& jsData)
 {
     Resource::UpdateFromJson(jsData);
-    m_bIsOk &= (jsData["href"].isString() && jsData["caps"].isObject() && jsData["api"].isObject() && jsData["services"].isArray() && jsData["clocks"].isArray() && jsData["interfaces"].isArray())
+    m_bIsOk &= (jsData["href"].isString() && jsData["caps"].isObject() && jsData["api"].isObject() && jsData["services"].isArray() && jsData["clocks"].isArray() && jsData["interfaces"].isArray() && (jsData["hostname"].isString() || jsData["hostname"].empty()) && jsData["api"]["versions"].isArray() && jsData["api"]["endpoints"].isArray());
 
+    if(m_bIsOk)
+    {
+        if(jsData["hostname"].isString())
+        {
+            m_sHostname = jsData["hostname"].asString();
+        }
+        m_sUrl = m_json["href"].asString();
 
-    jsData["hostname"].isString()
+        for(Json::ArrayIndex ai = 0; ai < jsData["api"]["versions"].size(); ++ai)
+        {
+            if(jsData["api"]["versions"][ai].isString() == false)
+            {
+                m_bIsOk = false;
+                break;
+            }
+            else
+            {
+                m_setVersion.insert(jsData["api"]["versions"][ai].asString());
+            }
+        }
+
+        for(Json::ArrayIndex ai = 0; ai < jsData["api"]["endpoints"].size(); ++ai)
+        {
+            if(jsData["api"]["endpoints"][ai].isObject() && jsData["api"]["endpoints"][ai]["host"].isString() && jsData["api"]["endpoints"][ai]["port"].isInt() && jsData["api"]["endpoints"][ai]["protocol"].isString())
+            {
+                m_setEndpoint.insert(endpoint(jsData["api"]["endpoints"][ai]["host"].asString(), jsData["api"]["endpoints"][ai]["port"].asInt(), (jsData["api"]["endpoints"][ai]["protocol"].asString() == "https")));
+            }
+            else
+            {
+                m_bIsOk = false;
+                break;
+            }
+        }
+    }
 
     return m_bIsOk;
 }
@@ -128,8 +160,6 @@ bool Self::Commit()
         m_json["hostname"] = m_sHostname;
         m_json["href"] = m_sUrl;
 
-
-        m_json["tags"] = Json::Value(Json::objectValue);
         m_json["caps"] = Json::Value(Json::objectValue);
 
         m_json["api"]["versions"] = Json::Value(Json::arrayValue);

@@ -14,6 +14,8 @@
 #include "sender.h"
 #include "receiver.h"
 #include "log.h"
+#include "utils.h"
+#include "registry.h"
 
 using namespace std;
 
@@ -21,12 +23,10 @@ const string RegistryApi::STR_RESOURCE[6] = {"node", "device", "source", "flow",
 
 RegistryApi::RegistryApi() :
     m_pRegistryApiPublisher(0),
-    m_pRegistryServer(0)
+    m_pRegistryServer(0),
+    m_pRegistry(0)
 {
-    for(int i = 0; i < 7; i++)
-    {
-        m_mRegistryHolder.insert(make_pair(STR_RESOURCE[i], RegistryHolder()));
-    }
+
 }
 
 RegistryApi::~RegistryApi()
@@ -40,10 +40,11 @@ RegistryApi& RegistryApi::Get()
     return ra;
 }
 
-bool RegistryApi::Start(unsigned short nPriority, unsigned short nPort, bool bSecure)
+bool RegistryApi::Start(shared_ptr<Registry> pRegistry, unsigned short nPriority, const std::string& sInterface, unsigned short nPort, bool bSecure)
 {
+    m_pRegistry = pRegistry;
     Log::Get() << "RegistryApi: Start" << endl;
-    return (StartPublisher(nPriority, nPort, bSecure) && StartServer(nPort));
+    return (StartPublisher(nPriority, sInterface, nPort, bSecure) && StartServer(nPort));
 }
 
 void RegistryApi::Stop()
@@ -52,10 +53,10 @@ void RegistryApi::Stop()
     StopServer();
 }
 
-bool RegistryApi::StartPublisher(unsigned short nPriority, unsigned short nPort, bool bSecure)
+bool RegistryApi::StartPublisher(unsigned short nPriority, const std::string& sInterface, unsigned short nPort, bool bSecure)
 {
     StopPublisher();
-    m_pRegistryApiPublisher = new ServicePublisher("registryapi", "_nmos-registry._tcp", nPort);
+    m_pRegistryApiPublisher = new ServicePublisher("registryapi", "_nmos-registration._tcp", nPort, GetIpAddress(sInterface));
 
     if(bSecure)
     {
@@ -103,49 +104,38 @@ void RegistryApi::StopServer()
 
 const shared_ptr<Resource> RegistryApi::FindResource(const std::string& sType, const std::string& sId)
 {
-    map<string, RegistryHolder>::iterator itHolder = m_mRegistryHolder.find(sType);
-    if(itHolder != m_mRegistryHolder.end())
+    if(m_pRegistry)
     {
-        map<string, shared_ptr<Resource> >::iterator itResource = itHolder->second.GetResource(sId);
-        if(itResource != itHolder->second.GetResourceEnd())
-        {
-            return itResource->second;
-        }
+        return m_pRegistry->FindResource(sType, sId);
     }
     return shared_ptr<Resource>(0);
 }
 
 bool RegistryApi::AddResource(const std::string& sType, shared_ptr<Resource> pResource)
 {
-    map<string, RegistryHolder>::iterator itHolder = m_mRegistryHolder.find(sType);
-    if(itHolder != m_mRegistryHolder.end())
+    if(m_pRegistry)
     {
-        if(itHolder->second.AddResource(pResource))
-        {
-            Log::Get() << "Resource of type '" << sType << "' " << pResource->GetId() << " added to registry." << endl;
-            return true;
-        }
+        return m_pRegistry->AddResource(sType, pResource);
     }
-    Log::Get(Log::ERROR) << "Failed to add resource of type '" << sType << "' " << pResource->GetId() << " added to registry." << endl;
     return false;
 }
 
 unsigned short RegistryApi::AddUpdateResource(const string& sType, const Json::Value& jsData)
 {
-    map<string, RegistryHolder>::iterator itHolder = m_mRegistryHolder.find(sType);
-    if(itHolder != m_mRegistryHolder.end())
+    if(m_pRegistry)
     {
-        map<string, shared_ptr<Resource> >::const_iterator itResource = itHolder->second.FindResource(jsData["id"].asString());
-        if(itResource == itHolder->second.GetResourceEnd())
+        shared_ptr<Resource> pResource = m_pRegistry->FindResource(sType, jsData["id"].asString());
+        if(pResource)
         {
-            if(AddResource(sType, jsData))
+            if(UpdateResource(jsData, pResource))
             {
-                return 201;
+                return 200;
             }
+            return 404;
         }
-        else if(UpdateResource(jsData, itResource->second))
+        else if(AddResource(sType, jsData))
         {
-            return 200;
+            return 201;
         }
     }
     return 404;
@@ -154,7 +144,7 @@ unsigned short RegistryApi::AddUpdateResource(const string& sType, const Json::V
 bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
 {
     bool bOk(false);
-    if(sType == "node")
+    if(sType == STR_RESOURCE[NODE])
     {
         shared_ptr<Self> pResource = make_shared<Self>();
         if(pResource->UpdateFromJson(jsData))
@@ -162,7 +152,7 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
             bOk = AddResource(sType, pResource);
         }
     }
-    else if(sType == "device")
+    else if(sType == STR_RESOURCE[DEVICE])
     {
         shared_ptr<Device> pResource = make_shared<Device>();
         if(pResource->UpdateFromJson(jsData))
@@ -170,7 +160,7 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
             bOk = AddResource(sType, pResource);
         }
     }
-    else if(sType == "sender")
+    else if(sType == STR_RESOURCE[SENDER])
     {
         shared_ptr<Sender> pResource = make_shared<Sender>();
         if(pResource->UpdateFromJson(jsData))
@@ -178,7 +168,7 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
             bOk = AddResource(sType, pResource);
         }
     }
-    else if(sType == "receiver")
+    else if(sType == STR_RESOURCE[RECEIVER])
     {
         shared_ptr<Receiver> pResource = make_shared<Receiver>();
         if(pResource->UpdateFromJson(jsData))
@@ -186,7 +176,7 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
             bOk = AddResource(sType, pResource);
         }
     }
-    else if(sType == "source")
+    else if(sType == STR_RESOURCE[SOURCE])
     {
         //audio or generic?
         if(jsData["format"].isString())
@@ -209,7 +199,7 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
             }
         }
     }
-    else if(sType == "flow")
+    else if(sType == STR_RESOURCE[FLOW])
     {
         if(jsData["format"].isString())
         {
@@ -286,15 +276,21 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
 bool RegistryApi::UpdateResource(const Json::Value& jsData, std::shared_ptr<Resource> pResource)
 {
     // @todo update resource  we should make a copy of the resource in case updating it corrupts it
-    return pResource->UpdateFromJson(jsData);
+    if(m_pRegistry)
+    {
+        if(pResource->UpdateFromJson(jsData))
+        {
+            return m_pRegistry->ResourceUpdated(pResource);
+        }
+    }
+    return false;
 }
 
 bool RegistryApi::DeleteResource(const string& sType, const std::string& sId)
 {
-    map<string, RegistryHolder>::iterator itHolder = m_mRegistryHolder.find(sType);
-    if(itHolder != m_mRegistryHolder.end())
+    if(m_pRegistry)
     {
-        return itHolder->second.RemoveResource(sId);
+        return m_pRegistry->DeleteResource(sType, sId);
     }
     return false;
 }
@@ -302,15 +298,9 @@ bool RegistryApi::DeleteResource(const string& sType, const std::string& sId)
 
 size_t RegistryApi::Heartbeat(const std::string& sId)
 {
-    map<string, RegistryHolder>::iterator itHolder = m_mRegistryHolder.find("node");
-    if(itHolder != m_mRegistryHolder.end())
+    if(m_pRegistry)
     {
-        map<string, shared_ptr<Resource> >::iterator itResource = itHolder->second.GetResource(sId);
-        if(itResource != itHolder->second.GetResourceEnd())
-        {
-            itResource->second->SetHeartbeat();
-            return itResource->second->GetLastHeartbeat();
-        }
+        return m_pRegistry->Heartbeat(sId);
     }
     return 0;
 }

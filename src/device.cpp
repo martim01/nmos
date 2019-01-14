@@ -41,7 +41,7 @@ bool Device::UpdateFromJson(const Json::Value& jsData)
             }
             else
             {
-                m_setSenders.insert(jsData["senders"].asString());
+                m_setSenders.insert(jsData["senders"][ai].asString());
             }
         }
         for(Json::ArrayIndex ai = 0; ai < jsData["receivers"].size(); ++ai)
@@ -53,7 +53,7 @@ bool Device::UpdateFromJson(const Json::Value& jsData)
             }
             else
             {
-                m_setReceivers.insert(jsData["receivers"].asString());
+                m_setReceivers.insert(jsData["receivers"][ai].asString());
             }
         }
         for(Json::ArrayIndex ai = 0; ai < jsData["controls"].size(); ai++)

@@ -131,7 +131,7 @@ bool ServiceBrowser::Start(AvahiClient* pClient)
     if(!m_bBrowsing)
     {
         m_pClient = pClient;
-        if(!(m_pTypeBrowser = avahi_service_type_browser_new(pClient, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, NULL, (AvahiLookupFlags)0, type_callback, reinterpret_cast<void*>(this))))
+        if(!(m_pTypeBrowser = avahi_service_type_browser_new(pClient, AVAHI_IF_UNSPEC, AVAHI_PROTO_INET, NULL, (AvahiLookupFlags)0, type_callback, reinterpret_cast<void*>(this))))
         {
             Log::Get(Log::ERROR) << "Failed to create service type browser" << endl;
             return false;
@@ -255,7 +255,7 @@ void ServiceBrowser::BrowseCallback(AvahiServiceBrowser* pBrowser, AvahiIfIndex 
                    function we free it. If the server is terminated before
                    the callback function is called the server will free
                    the resolver for us. */
-                if (!(avahi_service_resolver_new(m_pClient, interface, protocol, name, type, domain, AVAHI_PROTO_UNSPEC, (AvahiLookupFlags)0, resolve_callback, reinterpret_cast<void*>(this))))
+                if (!(avahi_service_resolver_new(m_pClient, interface, protocol, name, type, domain, AVAHI_PROTO_INET, (AvahiLookupFlags)0, resolve_callback, reinterpret_cast<void*>(this))))
                 {
                     Log::Get(Log::ERROR) << "ServiceBrowser: Failed to resolve service " << name << ": " << avahi_strerror(avahi_client_errno(m_pClient)) << endl;
                 }

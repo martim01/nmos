@@ -74,7 +74,7 @@ void ServicePublisher::CreateServices()
             }
             else
             {
-                if ((ret = avahi_entry_group_add_service_strlst(m_pGroup, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, (AvahiPublishFlags)0, m_psName, m_sService.c_str(), NULL, NULL, m_nPort, pList)) < 0)
+                if ((ret = avahi_entry_group_add_service_strlst(m_pGroup, AVAHI_IF_UNSPEC, AVAHI_PROTO_INET, (AvahiPublishFlags)0, m_psName, m_sService.c_str(), NULL, NULL, m_nPort, pList)) < 0)
                 {
                     if (ret == AVAHI_ERR_COLLISION)
                     {
@@ -218,16 +218,17 @@ bool ServicePublisher::Start()
     return true;
 }
 
-ServicePublisher::ServicePublisher(string sName, string sService, unsigned short nPort) :
+ServicePublisher::ServicePublisher(string sName, string sService, unsigned short nPort, std::string sHostname) :
     m_pClient(0),
     m_pGroup(0),
     m_pThreadedPoll(0),
     m_sName(sName),
     m_sService(sService),
     m_nPort(nPort),
+    m_sHostname(sHostname),
     m_psName(0)
 {
-
+    Log::Get(Log::DEBUG) << m_sHostname;
 }
 
 ServicePublisher::~ServicePublisher()
@@ -291,7 +292,7 @@ void ServicePublisher::Modify()
         else
         {
             int ret;
-            if ((ret = avahi_entry_group_update_service_txt_strlst(m_pGroup, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, (AvahiPublishFlags)0, m_psName, m_sService.c_str(), NULL, pList)) < 0)
+            if ((ret = avahi_entry_group_update_service_txt_strlst(m_pGroup, AVAHI_IF_UNSPEC, AVAHI_PROTO_INET, (AvahiPublishFlags)0, m_psName, m_sService.c_str(), NULL, pList)) < 0)
             {
                 if (ret == AVAHI_ERR_COLLISION)
                 {

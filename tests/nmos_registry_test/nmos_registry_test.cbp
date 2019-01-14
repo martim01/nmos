@@ -6,8 +6,9 @@
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
-			<Target title="Debug">
-				<Option output="bin/Debug/nmos_registry_test" prefix_auto="1" extension_auto="1" />
+			<Target title="Linux Debug">
+				<Option platforms="Unix;" />
+				<Option output="bin/Linux Debug/nmos_registry_test" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -15,11 +16,12 @@
 					<Add option="-g" />
 				</Compiler>
 				<Linker>
-					<Add library="../../lib/libnmosd.so" />
+					<Add library="nmosd" />
 				</Linker>
 			</Target>
-			<Target title="Release">
-				<Option output="bin/Release/nmos_registry_test" prefix_auto="1" extension_auto="1" />
+			<Target title="Linux Release">
+				<Option platforms="Unix;" />
+				<Option output="bin/Linux Release/nmos_registry_test" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gcc" />

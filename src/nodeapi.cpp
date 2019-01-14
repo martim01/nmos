@@ -17,6 +17,7 @@
 #include "sender.h"
 #include "microserver.h"
 #include "nmosthread.h"
+#include "sdp.h"
 #ifdef __GNU__
 #include <unistd.h>
 #include <sys/types.h>
@@ -152,7 +153,7 @@ bool NodeApi::StartmDNSServer()
     set<endpoint>::const_iterator itEndpoint = m_self.GetEndpointsBegin();
     if(itEndpoint != m_self.GetEndpointsEnd())
     {
-        m_pNodeApiPublisher = new ServicePublisher("nodeapi", "_nmos-node._tcp", itEndpoint->nPort);
+        m_pNodeApiPublisher = new ServicePublisher("nodeapi", "_nmos-node._tcp", itEndpoint->nPort, itEndpoint->sHost);
         SetmDNSTxt(itEndpoint->bSecure);
     }
 
@@ -432,7 +433,7 @@ bool NodeApi::FindRegistrationNode()
             unsigned long nPriority(200);
             map<string, string>::const_iterator itPriority = (*itInstance)->mTxt.find("pri");
             map<string, string>::const_iterator itVersion = (*itInstance)->mTxt.find("api_ver");
-            if(itPriority != (*itInstance)->mTxt.end() && itVersion != (*itInstance)->mTxt.end())
+            if(itPriority != (*itInstance)->mTxt.end() && itVersion != (*itInstance)->mTxt.end() && SdpManager::CheckIpAddress((*itInstance)->sHostIP) == SdpManager::IP4_UNI)
             {
                 if(stoul(itPriority->second) < nPriority && itVersion->second.find("v1.2") != string::npos)
                 {//for now only doing v1.2
@@ -455,7 +456,7 @@ bool NodeApi::FindRegistrationNode()
             stringstream ssUrl;
             ssUrl <<  pInstance->sHostIP << ":" << pInstance->nPort << "/x-nmos/registration/v1.2";
             m_sRegistrationNode = ssUrl.str();
-
+            Log::Get(Log::INFO) << "NodeApi: Registration Url = " << m_sRegistrationNode << endl;
             return true;
         }
     }
@@ -527,28 +528,6 @@ long NodeApi::RegistrationHeartbeat()
     }
     return 500;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 int NodeApi::UnregisterSimple()
 {

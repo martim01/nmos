@@ -56,7 +56,7 @@ class NMOS_EXPOSE Self : public Resource
         Self(std::string sHostname, std::string sUrl,std::string sLabel, std::string sDescription);
         Self() : Resource("node"){}
         bool UpdateFromJson(const Json::Value& jsData);
-        virtual ~Self();
+        ~Self();
 
         void Init(std::string sHostname, std::string sUrl,std::string sLabel, std::string sDescription);
 

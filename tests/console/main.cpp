@@ -35,10 +35,9 @@ int main()
     pFlow->SetPacketTime(FlowAudioRaw::US_125);
     pFlow->SetMediaClkOffset(129122110);
 
-    shared_ptr<Sender> pSender(make_shared<Sender>("TestSender", "Description", pFlow->GetId(), Sender::RTP_MCAST, pDevice->GetId()), "eth0");
-
-
+    shared_ptr<Sender> pSender = make_shared<Sender>("TestSender", "Description", pFlow->GetId(), Sender::RTP_MCAST, pDevice->GetId(), "eth0");
     shared_ptr<Receiver> pReceiver = make_shared<Receiver>("Test Receiver", "TestDescription", Receiver::RTP_MCAST, pDevice->GetId(), Receiver::AUDIO);
+
     pReceiver->AddCap("audio/L24");
     pReceiver->AddCap("audio/L20");
     pReceiver->AddCap("audio/L16");

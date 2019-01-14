@@ -111,7 +111,50 @@ void Receiver::SetType(enumType eType)
 bool Receiver::UpdateFromJson(const Json::Value& jsData)
 {
     Resource::UpdateFromJson(jsData);
-    m_bIsOk &= (jsData["device_id"].isString() && jsData["transport"].isString() && jsData["interface_bindings"].isArray() && jsData["interface_bindings"].size() > 0 && jsData["subscription"].isObject() && jsData["caps"].isObject() && jsData["caps"]["media_types"].isArray() && jsData["caps"]["media_types"].size() > 0 && jsData["format"].isString());
+    if(m_bIsOk == false)
+    {
+        Log::Get() << "Resource json error" << std::endl;
+    }
+    if(jsData["device_id"].isString() == false)
+    {
+        m_bIsOk = false;
+        Log::Get() << "device_id not string" << std::endl;
+    }
+    if(jsData["transport"].isString() == false)
+    {
+        m_bIsOk = false;
+        Log::Get() << "transport not string" << std::endl;
+    }
+    if(jsData["interface_bindings"].isArray() == false)
+    {
+        m_bIsOk = false;
+        Log::Get() << "interface_bindings not array" << std::endl;
+    }
+    if(jsData["subscription"].isObject() == false)
+    {
+        m_bIsOk = false;
+        Log::Get() << "subscription not object" << std::endl;
+    }
+    if(jsData["caps"].isObject() == false)
+    {
+        m_bIsOk = false;
+        Log::Get() << "caps not object" << std::endl;
+    }
+    if(jsData["caps"]["media_types"].isArray() == false)
+    {
+        m_bIsOk = false;
+        Log::Get() << "caps-media_types not array" << std::endl;
+    }
+    if(jsData["caps"]["media_types"].size() == 0)
+    {
+        m_bIsOk = false;
+        Log::Get() << "caps-media_types empty" << std::endl;
+    }
+    if(jsData["format"].isString() == false)
+    {
+        m_bIsOk = false;
+        Log::Get() << "format not string" << std::endl;
+    }
 
     if(m_bIsOk)
     {
@@ -126,6 +169,11 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
                 break;
             }
         }
+        if(!bFound)
+        {
+            Log::Get() << "Transport " <<jsData["transport"].asString() <<" incorrect" << std::endl;
+        }
+
         m_bIsOk &= bFound;
         for(int i = 0; i < 4; i++)
         {
@@ -136,6 +184,11 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
                 break;
             }
         }
+        if(!bFound)
+        {
+            Log::Get() << "Format " <<jsData["format"].asString() <<" incorrect" << std::endl;
+        }
+
         m_bIsOk &= bFound;
         for(Json::ArrayIndex ai = 0; ai < jsData["interface_bindings"].size(); ++ai)
         {
@@ -149,11 +202,17 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
                 m_setInterfaces.insert(jsData["interface_bindings"][ai].asString());
             }
         }
+        if(!bFound)
+        {
+            Log::Get() << "interface_bindings " <<jsData["interface_bindings"].asString() <<" incorrect" << std::endl;
+        }
+
         for(Json::ArrayIndex ai = 0; ai < jsData["caps"]["media_types"].size(); ++ai)
         {
             if(jsData["caps"]["media_types"][ai].isString() == false)
             {
                 m_bIsOk = false;
+                Log::Get() << "Media_type wrong" << std::endl;
             }
             else
             {
@@ -164,6 +223,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
                     if(jsData["caps"]["media_types"][ai].asString().find("audio/") == std::string::npos)
                     {
                         m_bIsOk = false;
+                        Log::Get() << "Media_type wrong not audio" << std::endl;
                     }
                     else
                     {
@@ -174,6 +234,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
                     if(jsData["caps"]["media_types"][ai].asString().find("video/") == std::string::npos)
                     {
                         m_bIsOk = false;
+                        Log::Get() << "Media_type not video" << std::endl;
                     }
                     else
                     {
@@ -184,6 +245,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
                     if(jsData["caps"]["media_types"][ai].asString() != "video/smpte291")
                     {
                         m_bIsOk = false;
+                        Log::Get() << "Media_type not smpte291" << std::endl;
                     }
                     else
                     {
@@ -194,6 +256,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
                     if(jsData["caps"]["media_types"][ai].asString() != "video/SMPTE2022-6")
                     {
                         m_bIsOk = false;
+                        Log::Get() << "Media_type not 2022" << std::endl;
                     }
                     else
                     {
@@ -228,6 +291,10 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
         {
             m_bIsOk = false;
         }
+    }
+    else
+    {
+         Log::Get() << "initial json error"  << std::endl;
     }
     return m_bIsOk;
 }

@@ -33,13 +33,16 @@ bool Resource::UpdateFromJson(const Json::Value& jsValue)
 {
     m_json = jsValue;
 
-    m_bIsOk = (m_json["id"].isString() && m_json["label"].isString() && m_json["description"].isString() && m_json["version"].isString());
+    m_bIsOk = (m_json["id"].isString() && m_json["label"].isString() && m_json["description"].isString() && m_json["version"].isString() && m_json["tags"].isObject());
     if(m_bIsOk)
     {
         m_sId = m_json["id"].asString();
         m_sLabel = m_json["label"].asString();
         m_sDescription = m_json["description"].asString();
         m_sVersion = m_json["version"].asString();
+
+        //@todo decode tags
+        //for(Json::ArrayIndex ai = m_json["tags"][])
     }
     return m_bIsOk;
 }
@@ -71,7 +74,7 @@ bool Resource::Commit()
     m_json["id"] = m_sId;
 
     m_json["tags"] = Json::Value(Json::objectValue);
-
+    //@todo tags
 
     m_json["version"] = m_sVersion;
 

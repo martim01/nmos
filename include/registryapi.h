@@ -4,7 +4,7 @@
 #include "dlldefine.h"
 #include "registryholder.h"
 
-
+class Registry;
 class ServicePublisher;
 class RegistryServer;
 
@@ -15,12 +15,13 @@ class NMOS_EXPOSE RegistryApi
         static RegistryApi& Get();
 
         /** @brief Starts the mDNS-SD and HTTP servers
+        *   @param pRegistry a shared_ptr to the derivce registry object that actually stores the resource details
         *   @param nPriority the priority to assign to this Registry Node.
         *   @param nPort the http port to use to connect to the Registry Node.
         *   @param bSecure whether to use https or http for connections
         *   @return <i>bool</i> true if both servers start okay.
         **/
-        bool Start(unsigned short nPriority, unsigned short nPort, bool bSecure);
+        bool Start(std::shared_ptr<Registry> pRegistry, unsigned short nPriority, const std::string& sInterface, unsigned short nPort, bool bSecure);
 
         ///< @brief Stops the mDNS-SD and HTTP servers
         void Stop();
@@ -58,7 +59,7 @@ class NMOS_EXPOSE RegistryApi
         RegistryApi();
         ~RegistryApi();
 
-        bool StartPublisher(unsigned short nPriority, unsigned short nPort, bool bSecure);
+        bool StartPublisher(unsigned short nPriority, const std::string& sInterface, unsigned short nPort, bool bSecure);
         void StopPublisher();
 
         bool StartServer(unsigned short nPort);
@@ -72,6 +73,6 @@ class NMOS_EXPOSE RegistryApi
         ServicePublisher* m_pRegistryApiPublisher;
         RegistryServer* m_pRegistryServer;
 
-        std::map<std::string, RegistryHolder> m_mRegistryHolder;
+        std::shared_ptr<Registry> m_pRegistry;
 
 };
