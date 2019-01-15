@@ -32,8 +32,33 @@ Resource::Resource(const std::string& sType) :
 bool Resource::UpdateFromJson(const Json::Value& jsValue)
 {
     m_json = jsValue;
+    m_ssJsonError.str(std::string());
 
-    m_bIsOk = (m_json["id"].isString() && m_json["label"].isString() && m_json["description"].isString() && m_json["version"].isString() && m_json["tags"].isObject());
+    if(m_json["id"].isString() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'id' not a string" << std::endl;
+    }
+    if(m_json["label"].isString()==false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'label' not a string" << std::endl;
+    }
+    if(m_json["description"].isString()==false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'description' not a string" << std::endl;
+    }
+    if(m_json["version"].isString() ==false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'version' not a string" << std::endl;
+    }
+    if(m_json["tags"].isObject() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'tags' not an object" << std::endl;
+    }
     if(m_bIsOk)
     {
         m_sId = m_json["id"].asString();
@@ -41,8 +66,20 @@ bool Resource::UpdateFromJson(const Json::Value& jsValue)
         m_sDescription = m_json["description"].asString();
         m_sVersion = m_json["version"].asString();
 
-        //@todo decode tags
-        //for(Json::ArrayIndex ai = m_json["tags"][])
+        Json::Value::Members vMembers = m_json["tags"].getMemberNames();
+        for(size_t i = 0; i < vMembers.size(); i++)
+        {
+            if(m_json["tags"][vMembers[i]].isArray())
+            {
+                for(Json::ArrayIndex ai = 0; ai < m_json["tags"][vMembers[i]].size(); ++ai)
+                {
+                    if(m_json["tags"][vMembers[i]][ai].isString())
+                    {
+                        m_mmTag.insert(make_pair(vMembers[i], m_json["tags"][vMembers[i]][ai].asString()));
+                    }
+                }
+            }
+        }
     }
     return m_bIsOk;
 }
@@ -53,9 +90,9 @@ bool Resource::IsOk() const
     return m_bIsOk;
 }
 
-void Resource::AddTag(std::string sTag)
+void Resource::AddTag(const std::string& sKey, const std::string& sValue)
 {
-    m_lstTag.push_back(sTag);
+    m_mmTag.insert(std::make_pair(sKey, sValue));
     UpdateVersionTime();
 }
 
@@ -74,7 +111,14 @@ bool Resource::Commit()
     m_json["id"] = m_sId;
 
     m_json["tags"] = Json::Value(Json::objectValue);
-    //@todo tags
+    for(std::multimap<std::string, std::string>::iterator itTag = m_mmTag.begin(); itTag != m_mmTag.end(); ++itTag)
+    {
+        if(m_json["tags"][itTag->first].empty())
+        {
+            m_json["tags"][itTag->first] = Json::Value(Json::arrayValue);
+        }
+        m_json["tags"][itTag->first].append(itTag->second);
+    }
 
     m_json["version"] = m_sVersion;
 
@@ -223,4 +267,10 @@ void Resource::SetHeartbeat()
 {
     auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
     m_nHeartbeat =(nanos/1000000000);
+}
+
+
+std::string Resource::GetJsonParseError()
+{
+    return m_ssJsonError.str();
 }

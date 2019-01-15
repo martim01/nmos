@@ -153,7 +153,11 @@ int RegistryServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, c
 bool RegistryServer::Init(unsigned int nPort)
 {
     m_nPort = nPort;
-    m_pmhd = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY, nPort, NULL, NULL, &RegistryServer::AnswerToConnection, this, MHD_OPTION_NOTIFY_COMPLETED, RequestCompleted, NULL, MHD_OPTION_END);
+    m_pmhd = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY
+#if EPOLL_SUPPORT
+| MHD_USE_EPOLL_INTERNALLY_LINUX_ONLY
+#endif // EPOLL_SUPPORT,
+, nPort, NULL, NULL, &RegistryServer::AnswerToConnection, this, MHD_OPTION_NOTIFY_COMPLETED, RequestCompleted, NULL, MHD_OPTION_THREAD_POOL_SIZE,4, MHD_OPTION_END);
     if(m_pmhd)
     {
         Log::Get() << "RegistryServer: " << nPort << " Init: OK" << std::endl;
@@ -409,7 +413,8 @@ int RegistryServer::PostJsonNmosResource(const std::string& sJson, std::string& 
     }
 
     //does a resource already exist with the given id??
-    nCode = RegistryApi::Get().AddUpdateResource(jsRequest["type"].asString(), jsRequest["data"]);
+    string sError;
+    nCode = RegistryApi::Get().AddUpdateResource(jsRequest["type"].asString(), jsRequest["data"], sError);
 
     Log::Get() << "RESOURCE TYPE: " << jsRequest["type"].asString() << endl;
 
@@ -422,7 +427,7 @@ int RegistryServer::PostJsonNmosResource(const std::string& sJson, std::string& 
     }
     else
     {
-        sReturn = stw.write(GetJsonError(nCode, "Request is ill defined for given resource type"));
+        sReturn = stw.write(GetJsonError(nCode, sError));
     }
 
     return nCode;

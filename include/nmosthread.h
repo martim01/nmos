@@ -1,10 +1,10 @@
 #pragma once
 
 
-class NmosThread
+class NodeThread
 {
     public:
-        NmosThread(){}
+        NodeThread(){}
         static void Main();
         static bool RegisteredOperation();
 

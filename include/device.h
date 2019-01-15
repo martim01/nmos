@@ -21,10 +21,11 @@ class NMOS_EXPOSE Device : public Resource
         std::set<std::pair<std::string, std::string> >::const_iterator GetControlsEnd() const;
 
 
-        const std::string& GetNodeId() const
+        std::string GetParentResourceId() const
         {
             return m_sNodeId;
         }
+
         virtual bool Commit();
     private:
         enumType m_eType;

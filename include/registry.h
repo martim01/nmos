@@ -19,5 +19,7 @@ class NMOS_EXPOSE Registry
         virtual bool AddResource(const std::string& sType, std::shared_ptr<Resource> pResource)=0;
         virtual bool ResourceUpdated(std::shared_ptr<Resource> pResource)=0;
 
+        virtual bool GarbageCollection()=0;
+
 };
 

@@ -16,7 +16,17 @@ FlowAudio::FlowAudio() : Flow("urn:x-nmos:format:audio")
 bool FlowAudio::UpdateFromJson(const Json::Value& jsData)
 {
     Flow::UpdateFromJson(jsData);
-    m_bIsOk &= (jsData["sample_rate"]["numerator"].isInt() && (jsData["sample_rate"]["denominator"].isInt() || jsData["sample_rate"]["denominator"].isNull()));
+    if(jsData["sample_rate"]["numerator"].isInt() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'samplerate' 'numerator' is not an int" << std::endl;
+    }
+    if(jsData["sample_rate"]["denominator"].isInt() == false && jsData["sample_rate"]["denominator"].isNull()) == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'samplerate' 'denominator' is not null and not an int" << std::endl;
+    }
+
     if(m_bIsOk)
     {
         m_nSampleRateNumerator = jsData["sample_rate"]["numerator"].asInt();

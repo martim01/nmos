@@ -178,7 +178,7 @@ bool NodeApi::StartServices(shared_ptr<EventPoster> pPoster)
     m_pPoster = pPoster;
     m_pRegisterCurl = new CurlRegister(m_pPoster);
 
-    thread thMain(NmosThread::Main);
+    thread thMain(NodeThread::Main);
     thMain.detach();
 
     return true;
@@ -656,7 +656,7 @@ void NodeApi::StopRun()
 bool NodeApi::AddDevice(shared_ptr<Device> pResource)
 {
     //make sure the node id agress
-    if(pResource->GetNodeId() == m_self.GetId())
+    if(pResource->GetParentResourceId() == m_self.GetId())
     {
         m_devices.AddResource(pResource);
         //add the control endpoints for is/05
@@ -673,7 +673,7 @@ bool NodeApi::AddDevice(shared_ptr<Device> pResource)
 
 bool NodeApi::AddSource(shared_ptr<Source> pResource)
 {
-    if(m_devices.ResourceExists(pResource->GetDeviceId()))
+    if(m_devices.ResourceExists(pResource->GetParentResourceId()))
     {
         m_sources.AddResource(pResource);
         return true;
@@ -683,7 +683,7 @@ bool NodeApi::AddSource(shared_ptr<Source> pResource)
 
 bool NodeApi::AddFlow(shared_ptr<Flow> pResource)
 {
-    if(m_devices.ResourceExists(pResource->GetDeviceId()) && m_sources.ResourceExists(pResource->GetSourceId()))
+    if(m_devices.ResourceExists(pResource->GetParentResourceId()) && m_sources.ResourceExists(pResource->GetSourceId()))
     {
         m_flows.AddResource(pResource);
         return true;
@@ -693,7 +693,7 @@ bool NodeApi::AddFlow(shared_ptr<Flow> pResource)
 
 bool NodeApi::AddReceiver(shared_ptr<Receiver> pResource)
 {
-    if(m_devices.ResourceExists(pResource->GetDeviceId()))
+    if(m_devices.ResourceExists(pResource->GetParentResourceId()))
     {
         m_receivers.AddResource(pResource);
         return true;
@@ -704,7 +704,7 @@ bool NodeApi::AddReceiver(shared_ptr<Receiver> pResource)
 bool NodeApi::AddSender(shared_ptr<Sender> pResource)
 {
 
-    if(m_devices.ResourceExists(pResource->GetDeviceId()))
+    if(m_devices.ResourceExists(pResource->GetParentResourceId()))
     {
         m_senders.AddResource(pResource);
 

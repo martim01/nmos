@@ -16,10 +16,21 @@
 #include "log.h"
 #include "utils.h"
 #include "registry.h"
+#include <chrono>
 
 using namespace std;
 
 const string RegistryApi::STR_RESOURCE[6] = {"node", "device", "source", "flow", "sender", "receiver"};
+
+void GarbageThread()
+{
+    while(RegistryApi::Get().Running())
+    {
+        std::this_thread::sleep_for(std::chrono::seconds(10));
+        RegistryApi::Get().GarbageCollection();
+    }
+}
+
 
 RegistryApi::RegistryApi() :
     m_pRegistryApiPublisher(0),
@@ -44,13 +55,23 @@ bool RegistryApi::Start(shared_ptr<Registry> pRegistry, unsigned short nPriority
 {
     m_pRegistry = pRegistry;
     Log::Get() << "RegistryApi: Start" << endl;
-    return (StartPublisher(nPriority, sInterface, nPort, bSecure) && StartServer(nPort));
+    if(StartPublisher(nPriority, sInterface, nPort, bSecure) && StartServer(nPort))
+    {
+        m_bRunning = true;
+        //Start the garbage collector thread
+        thread th(GarbageThread);
+        th.detach();
+        return true;
+    }
+    return false;
 }
 
 void RegistryApi::Stop()
 {
+    lock_guard<mutex> lg(m_mutex);
     StopPublisher();
     StopServer();
+    m_bRunning = false;
 }
 
 bool RegistryApi::StartPublisher(unsigned short nPriority, const std::string& sInterface, unsigned short nPort, bool bSecure)
@@ -93,6 +114,7 @@ bool RegistryApi::StartServer(unsigned short nPort)
 
 void RegistryApi::StopServer()
 {
+
     if(m_pRegistryServer)
     {
         m_pRegistryServer->Stop();
@@ -104,6 +126,7 @@ void RegistryApi::StopServer()
 
 const shared_ptr<Resource> RegistryApi::FindResource(const std::string& sType, const std::string& sId)
 {
+    lock_guard<mutex> lg(m_mutex);
     if(m_pRegistry)
     {
         return m_pRegistry->FindResource(sType, sId);
@@ -113,6 +136,7 @@ const shared_ptr<Resource> RegistryApi::FindResource(const std::string& sType, c
 
 bool RegistryApi::AddResource(const std::string& sType, shared_ptr<Resource> pResource)
 {
+    lock_guard<mutex> lg(m_mutex);
     if(m_pRegistry)
     {
         return m_pRegistry->AddResource(sType, pResource);
@@ -120,20 +144,21 @@ bool RegistryApi::AddResource(const std::string& sType, shared_ptr<Resource> pRe
     return false;
 }
 
-unsigned short RegistryApi::AddUpdateResource(const string& sType, const Json::Value& jsData)
+unsigned short RegistryApi::AddUpdateResource(const string& sType, const Json::Value& jsData, std::string& sError)
 {
+    //lock_guard<mutex> lg(m_mutex);
     if(m_pRegistry)
     {
         shared_ptr<Resource> pResource = m_pRegistry->FindResource(sType, jsData["id"].asString());
         if(pResource)
         {
-            if(UpdateResource(jsData, pResource))
+            if(UpdateResource(jsData, pResource,sError))
             {
                 return 200;
             }
             return 404;
         }
-        else if(AddResource(sType, jsData))
+        else if(AddResource(sType, jsData,sError))
         {
             return 201;
         }
@@ -141,7 +166,7 @@ unsigned short RegistryApi::AddUpdateResource(const string& sType, const Json::V
     return 404;
 }
 
-bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
+bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData, std::string& sError)
 {
     bool bOk(false);
     if(sType == STR_RESOURCE[NODE])
@@ -151,6 +176,10 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
         {
             bOk = AddResource(sType, pResource);
         }
+        else
+        {
+            sError = pResource->GetJsonParseError();
+        }
     }
     else if(sType == STR_RESOURCE[DEVICE])
     {
@@ -158,6 +187,10 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
         if(pResource->UpdateFromJson(jsData))
         {
             bOk = AddResource(sType, pResource);
+        }
+        else
+        {
+            sError = pResource->GetJsonParseError();
         }
     }
     else if(sType == STR_RESOURCE[SENDER])
@@ -167,6 +200,10 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
         {
             bOk = AddResource(sType, pResource);
         }
+        else
+        {
+            sError = pResource->GetJsonParseError();
+        }
     }
     else if(sType == STR_RESOURCE[RECEIVER])
     {
@@ -175,18 +212,26 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
         {
             bOk = AddResource(sType, pResource);
         }
+        else
+        {
+            sError = pResource->GetJsonParseError();
+        }
     }
     else if(sType == STR_RESOURCE[SOURCE])
     {
         //audio or generic?
         if(jsData["format"].isString())
         {
-            if(jsData["format"].asString() == "urn:x-nmos:format:audio")
+            if(jsData["format"].asString().find("urn:x-nmos:format:audio") != string::npos)
             {   //Audio
                 shared_ptr<SourceAudio> pResource = make_shared<SourceAudio>();
                 if(pResource->UpdateFromJson(jsData))
                 {
                     bOk = AddResource(sType, pResource);
+                }
+                else
+                {
+                    sError = pResource->GetJsonParseError();
                 }
             }
             else
@@ -196,6 +241,10 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
                 {
                     bOk = AddResource(sType, pResource);
                 }
+                else
+                {
+                    sError = pResource->GetJsonParseError();
+                }
             }
         }
     }
@@ -203,7 +252,7 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
     {
         if(jsData["format"].isString())
         {
-            if(jsData["format"].asString() == "urn:x-nmos:format:audio")
+            if(jsData["format"].asString().find("urn:x-nmos:format:audio") != string::npos)
             {
                 if(jsData["media_type"].isString())
                 {
@@ -214,6 +263,10 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
                         {
                             bOk = AddResource(sType, pResource);
                         }
+                        else
+                        {
+                            sError = pResource->GetJsonParseError();
+                        }
                     }
                     else
                     {   //Code audio
@@ -222,10 +275,14 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
                         {
                             bOk = AddResource(sType, pResource);
                         }
+                        else
+                        {
+                            sError = pResource->GetJsonParseError();
+                        }
                     }
                 }
             }
-            else if(jsData["format"].asString() == "urn:x-nmos:format:video")
+            else if(jsData["format"].asString().find("urn:x-nmos:format:video") != string::npos)
             {
                 if(jsData["media_type"].isString())
                 {//Coded vidoe
@@ -236,6 +293,10 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
                         {
                             bOk = AddResource(sType, pResource);
                         }
+                        else
+                        {
+                            sError = pResource->GetJsonParseError();
+                        }
                     }
                     else
                     {
@@ -244,10 +305,14 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
                         {
                             bOk = AddResource(sType, pResource);
                         }
+                        else
+                        {
+                            sError = pResource->GetJsonParseError();
+                        }
                     }
                 }
             }
-            else if(jsData["format"].asString() == "urn:x-nmos:format:data")
+            else if(jsData["format"].asString().find("urn:x-nmos:format:data") != string::npos)
             {
                 if(jsData["media_type"] == "video/smpte291")
                 {
@@ -256,10 +321,14 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
                     {
                         bOk = AddResource(sType, pResource);
                     }
+                    else
+                    {
+                        sError = pResource->GetJsonParseError();
+                    }
                 }
                 //SDIAncData only at the moment
             }
-            else if(jsData["format"].asString() == "urn:x-nmos:format:mux")
+            else if(jsData["format"].asString().find("urn:x-nmos:format:mux") != string::npos)
             {
                 //Mux only at the momemnt
                 shared_ptr<FlowMux> pResource = make_shared<FlowMux>();
@@ -267,13 +336,21 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData)
                 {
                     bOk = AddResource(sType, pResource);
                 }
+                else
+                {
+                    sError = pResource->GetJsonParseError();
+                }
             }
         }
+    }
+    else
+    {
+        sError = "Resource type not valid";
     }
     return bOk;
 }
 
-bool RegistryApi::UpdateResource(const Json::Value& jsData, std::shared_ptr<Resource> pResource)
+bool RegistryApi::UpdateResource(const Json::Value& jsData, std::shared_ptr<Resource> pResource, std::string& sError)
 {
     // @todo update resource  we should make a copy of the resource in case updating it corrupts it
     if(m_pRegistry)
@@ -282,12 +359,17 @@ bool RegistryApi::UpdateResource(const Json::Value& jsData, std::shared_ptr<Reso
         {
             return m_pRegistry->ResourceUpdated(pResource);
         }
+        else
+        {
+            sError = pResource->GetJsonParseError();
+        }
     }
     return false;
 }
 
 bool RegistryApi::DeleteResource(const string& sType, const std::string& sId)
 {
+    lock_guard<mutex> lg(m_mutex);
     if(m_pRegistry)
     {
         return m_pRegistry->DeleteResource(sType, sId);
@@ -298,9 +380,25 @@ bool RegistryApi::DeleteResource(const string& sType, const std::string& sId)
 
 size_t RegistryApi::Heartbeat(const std::string& sId)
 {
+    lock_guard<mutex> lg(m_mutex);
     if(m_pRegistry)
     {
         return m_pRegistry->Heartbeat(sId);
     }
     return 0;
+}
+
+bool RegistryApi::Running()
+{
+    lock_guard<mutex> lg(m_mutex);
+    return m_bRunning;
+}
+
+void RegistryApi::GarbageCollection()
+{
+    lock_guard<mutex> lg(m_mutex);
+    if(m_pRegistry)
+    {
+        m_pRegistry->GarbageCollection();
+    }
 }

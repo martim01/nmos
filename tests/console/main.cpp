@@ -23,7 +23,9 @@ int main()
     NodeApi::Get().GetSelf().AddInternalClock("clk0");
     NodeApi::Get().GetSelf().AddPTPClock("clk1", true, "IEEE1588-2008", "08-00-11-ff-fe-21-e1-b0", true);
     NodeApi::Get().GetSelf().AddInterface("eth0");
-
+    NodeApi::Get().GetSelf().AddTag("location", "W1");
+    NodeApi::Get().GetSelf().AddTag("location", "MCR1");
+    NodeApi::Get().GetSelf().AddTag("Author", "Matt");
 
     shared_ptr<Device> pDevice = make_shared<Device>("TestDevice", "TestDescription", Device::GENERIC,NodeApi::Get().GetSelf().GetId());
 

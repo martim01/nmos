@@ -14,7 +14,16 @@ FlowDataSdiAnc::FlowDataSdiAnc() : FlowData("video/smpte291")
 bool FlowDataSdiAnc::UpdateFromJson(const Json::Value& jsData)
 {
     FlowData::UpdateFromJson(jsData);
-    m_bIsOk &= (jsData["DID_SDID"].isArray() || jsData["DID_SDID"].empty());
+    if(jsData["DID_SDID"].isArray() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'DID_SDID' is not an array" << std::endl;
+    }
+    else if(jsData["DID_SDID"].empty())
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'DID_SDID' cannot be an empty array" << std::endl;
+    }
 
     if(jsData["DID_SDID"].isArray())
     {
@@ -27,6 +36,7 @@ bool FlowDataSdiAnc::UpdateFromJson(const Json::Value& jsData)
             else
             {
                 m_bIsOk = false;
+                m_ssJsonError << "'DID_SDID' #" << ai << "'DID' or 'SDID' is not a string" << std::endl;
                 break;
             }
         }

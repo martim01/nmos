@@ -20,7 +20,21 @@ Flow::Flow(std::string sFormat) : Resource("flow"),
 bool Flow::UpdateFromJson(const Json::Value& jsData)
 {
     Resource::UpdateFromJson(jsData);
-    m_bIsOk &= (jsData["device_id"].isString() && jsData["source_id"].isString() && jsData["parents"].isArray());
+    if(jsData["device_id"].isString() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'device_id' is not a string" << std::endl;
+    }
+    if(jsData["source_id"].isString() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'device_id' is not a string" << std::endl;
+    }
+    if(jsData["parents"].isArray() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'parents' is not an array" << std::endl;
+    }
     if(m_bIsOk)
     {
         m_sDeviceId = jsData["device_id"].asString();
@@ -31,7 +45,7 @@ bool Flow::UpdateFromJson(const Json::Value& jsData)
             if(jsData["parents"][ai].isString() == false)
             {
                 m_bIsOk = false;
-                break;
+                m_ssJsonError << "'parents' #" << ai << " is not a string" << std::endl;
             }
             else
             {

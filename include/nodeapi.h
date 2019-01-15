@@ -19,7 +19,7 @@ class Source;
 class Flow;
 class Receiver;
 class Sender;
-class NmosThread;
+class NodeThread;
 class MicroServer;
 
 
@@ -206,7 +206,7 @@ class NMOS_EXPOSE NodeApi
 
 
     protected:
-        friend class NmosThread;
+        friend class NodeThread;
         friend class ServiceBrowser;
         friend class MicroServer;
 

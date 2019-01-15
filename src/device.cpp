@@ -19,7 +19,31 @@ Device::Device() : Resource("device")
 bool Device::UpdateFromJson(const Json::Value& jsData)
 {
     Resource::UpdateFromJson(jsData);
-    m_bIsOk &= (jsData["type"].isString() && jsData["node_id"].isString() && jsData["senders"].isArray() && jsData["receivers"].isArray() && jsData["controls"].isArray());
+    if(jsData["type"].isString() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'type' is not a string" << std::endl;
+    }
+    if(jsData["node_id"].isString() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'node_id' is not a string" << std::endl;
+    }
+    if(jsData["senders"].isArray() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'sender' is not an array" << std::endl;
+    }
+    if(jsData["receivers"].isArray() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'receivers' is not an array" << std::endl;
+    }
+    if(jsData["controls"].isArray() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'controls' is not an array" << std::endl;
+    }
     if(m_bIsOk)
     {
         if(jsData["type"].asString() == STR_TYPE[GENERIC])
@@ -37,6 +61,7 @@ bool Device::UpdateFromJson(const Json::Value& jsData)
             if(jsData["senders"][ai].isString() == false)
             {
                 m_bIsOk = false;
+                m_ssJsonError << "'senders' entry #" << ai << " not a string" << std::endl;
                 break;
             }
             else
@@ -49,6 +74,7 @@ bool Device::UpdateFromJson(const Json::Value& jsData)
             if(jsData["receivers"][ai].isString() == false)
             {
                 m_bIsOk = false;
+                m_ssJsonError << "'receivers' entry #" << ai << " not a string" << std::endl;
                 break;
             }
             else
@@ -58,9 +84,22 @@ bool Device::UpdateFromJson(const Json::Value& jsData)
         }
         for(Json::ArrayIndex ai = 0; ai < jsData["controls"].size(); ai++)
         {
-            if(jsData["controls"][ai].isObject() == false || jsData["controls"][ai]["href"].isString() == false || jsData["controls"][ai]["type"].isString() == false)
+            if(jsData["controls"][ai].isObject() == false)
+            {
+                m_ssJsonError << "'controls' entry #" << ai << " not an object" << std::endl;
+                m_bIsOk = false;
+                break;
+            }
+            if(jsData["controls"][ai]["href"].isString() == false)
+            {
+                m_ssJsonError << "'controls' entry #" << ai << " 'href' not a string" << std::endl;
+                m_bIsOk = false;
+                break;
+            }
+            if(jsData["controls"][ai]["type"].isString() == false)
             {
                 m_bIsOk = false;
+                m_ssJsonError << "'controls' entry #" << ai << " type not a string" << std::endl;
                 break;
             }
             else

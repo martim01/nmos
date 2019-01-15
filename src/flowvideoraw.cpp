@@ -21,13 +21,42 @@ FlowVideoRaw::FlowVideoRaw() : FlowVideo("vidoe/raw")
 bool FlowVideoRaw::UpdateFromJson(const Json::Value& jsData)
 {
     FlowVideo::UpdateFromJson(jsData);
-    m_bIsOk &= (jsData["components"].isArray() && jsData["components"].size() >=1);
+    if(jsData["components"].isArray() == false || jsData["components"].size() == 0)
+    {
+        m_ssJsonError << "'components' is not an array or is an empty array" << std::endl;
+        m_bIsOk = false;
+    }
     if(m_bIsOk)
     {
         for(Json::ArrayIndex ai = 0; ai < jsData["components"].size(); ++ai)
         {
-            if(jsData["components"][ai].isObject() == false || jsData["components"][ai]["name"].isString() == false ||jsData["components"][ai]["width"].isInt() == false || jsData["components"][ai]["height"].isInt() == false || jsData["components"][ai]["bit_depth"].isInt() == false)
+            if(jsData["components"][ai].isObject() == false)
             {
+                m_ssJsonError << "'components' #" << ai << " is not an object" << std::endl;
+                m_bIsOk = false;
+                break;
+            }
+            if(jsData["components"][ai]["name"].isString() == false)
+            {
+                m_ssJsonError << "'components' #" << ai << " 'name' is not a string" << std::endl;
+                m_bIsOk = false;
+                break;
+            }
+            if(jsData["components"][ai]["width"].isInt() == false)
+            {
+                m_ssJsonError << "'components' #" << ai << " 'width' is not an int" << std::endl;
+                m_bIsOk = false;
+                break;
+            }
+            if(jsData["components"][ai]["height"].isInt() == false)
+            {
+                m_ssJsonError << "'components' #" << ai << " 'height' is not an int" << std::endl;
+                m_bIsOk = false;
+                break;
+            }
+            if(jsData["components"][ai]["bit_depth"].isInt() == false)
+            {
+                m_ssJsonError << "'components' #" << ai << " 'bit_depth' is not an int" << std::endl;
                 m_bIsOk = false;
                 break;
             }
@@ -44,7 +73,11 @@ bool FlowVideoRaw::UpdateFromJson(const Json::Value& jsData)
                         break;
                     }
                 }
-                m_bIsOk &= bFound;
+                if(!bFound)
+                {
+                    m_ssJsonError << "'components' #" << ai << " 'name' is not valid" << std::endl;
+                    m_bIsOk = false;
+                }
 
             }
         }

@@ -2,9 +2,11 @@
 #include <string>
 #include "json/json.h"
 #include <list>
+#include <map>
 #include "dlldefine.h"
 #include <chrono>
 #include <mutex>
+#include <sstream>
 
 class NMOS_EXPOSE Resource
 {
@@ -14,7 +16,7 @@ class NMOS_EXPOSE Resource
 
 
         virtual ~Resource(){}
-        void AddTag(std::string sTag);
+        void AddTag(const std::string& sKey, const std::string& sValue);
 
         const std::string& GetId() const;
         const std::string& GetLabel() const;
@@ -33,8 +35,14 @@ class NMOS_EXPOSE Resource
 
         const std::string& GetType() const;
 
+        virtual std::string GetParentResourceId() const
+        {
+            return "";
+        }
         size_t GetLastHeartbeat() const;
         void SetHeartbeat();
+
+        std::string GetJsonParseError();
 
     protected:
         void UpdateVersionTime();
@@ -45,6 +53,8 @@ class NMOS_EXPOSE Resource
         Json::Value m_json;
         bool m_bIsOk;
 
+        std::stringstream m_ssJsonError;
+
         mutable std::mutex m_mutex;
     private:
         void CreateGuid();
@@ -54,7 +64,8 @@ class NMOS_EXPOSE Resource
         std::string m_sDescription;
         std::string m_sVersion;
         std::string m_sLastVersion;
-        std::list<std::string> m_lstTag;
+        std::multimap<std::string, std::string> m_mmTag;
+
 
 
         size_t m_nHeartbeat;

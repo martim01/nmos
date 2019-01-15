@@ -28,7 +28,7 @@ class NMOS_EXPOSE Sender : public Resource
         void SetReceiverId(std::string sReceiverId, bool bActive);
         virtual bool Commit();
 
-        const std::string& GetDeviceId() const
+        std::string GetParentResourceId() const
         {
             return m_sDeviceId;
         }

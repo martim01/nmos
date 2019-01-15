@@ -7,7 +7,7 @@
 
 using namespace std;
 
-void NmosThread::Main()
+void NodeThread::Main()
 {
 
     //start the discovery and connection servers
@@ -46,7 +46,7 @@ void NmosThread::Main()
 
 }
 
-bool NmosThread::RegisteredOperation()
+bool NodeThread::RegisteredOperation()
 {
     if(NodeApi::Get().RegisterSimple() == NodeApi::REG_DONE)
     {
@@ -82,3 +82,4 @@ bool NmosThread::RegisteredOperation()
     }
     return false;
 }
+

@@ -3,7 +3,7 @@
 #include "json/json.h"
 #include "dlldefine.h"
 #include "registryholder.h"
-
+#include <mutex>
 class Registry;
 class ServicePublisher;
 class RegistryServer;
@@ -38,7 +38,7 @@ class NMOS_EXPOSE RegistryApi
         *   @param jsData Json data that describes the resource. The function will parse this data and check for validity before adding the resource
         *   @return <i>unsigned short</i> 201 if the resource was added. 200 if the resource was updated. 404 for failure
         **/
-        unsigned short AddUpdateResource(const std::string& sType, const Json::Value& jsData);
+        unsigned short AddUpdateResource(const std::string& sType, const Json::Value& jsData, std::string& sError);
 
         /** @brief Attempts to addelete resource of the given type and id
         *   @param sType the type of resource. This should be one of STR_RESOURCE
@@ -53,8 +53,16 @@ class NMOS_EXPOSE RegistryApi
         **/
         size_t Heartbeat(const std::string& sId);
 
+        /** @brief Checks whether all the registy services are running
+        *   @return <i>bool</i>
+        **/
+        bool Running();
+
+        ///< @brief Checks all nodes to see if they are still heartbeating and removes those that aren't
+        void GarbageCollection();
+
         static const std::string STR_RESOURCE[6];
-        enum{NODE, DEVICE, SOURCE, FLOW, SENDER, RECEIVER};
+        enum enumResource{NODE, DEVICE, SOURCE, FLOW, SENDER, RECEIVER};
     private:
         RegistryApi();
         ~RegistryApi();
@@ -65,14 +73,17 @@ class NMOS_EXPOSE RegistryApi
         bool StartServer(unsigned short nPort);
         void StopServer();
 
-        bool AddResource(const std::string& sType, const Json::Value& jsData);
+        bool AddResource(const std::string& sType, const Json::Value& jsData, std::string& sError);
 
         bool AddResource(const std::string& sType, std::shared_ptr<Resource> pResource);
-        bool UpdateResource(const Json::Value& jsData, std::shared_ptr<Resource> pResource);
+        bool UpdateResource(const Json::Value& jsData, std::shared_ptr<Resource> pResource, std::string& sError);
 
         ServicePublisher* m_pRegistryApiPublisher;
         RegistryServer* m_pRegistryServer;
 
         std::shared_ptr<Registry> m_pRegistry;
+
+        std::mutex m_mutex;
+        bool m_bRunning;
 
 };

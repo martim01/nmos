@@ -21,6 +21,10 @@ bool FlowData::UpdateFromJson(const Json::Value& jsData)
     {
         m_sMediaType = jsData["media_type"].asString();
     }
+    else
+    {
+        m_ssJsonError << "'media_type' is not a string" << std::endl;
+    }
     return m_bIsOk;
 }
 

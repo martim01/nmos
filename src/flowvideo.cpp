@@ -27,9 +27,31 @@ FlowVideo::FlowVideo(const std::string& sMediaType) : Flow("urn:x-nmos:format:vi
 bool FlowVideo::UpdateFromJson(const Json::Value& jsData)
 {
     Flow::UpdateFromJson(jsData);
-    m_bIsOk &= (jsData["frame_width"].isInt() && jsData["frame_height"].isInt() &&  jsData["colorspace"].isString() &&
-               (jsData["interlace_mode"].isString() || jsData["interlace_mode"].empty()) &&
-               (jsData["transfer_characteristic"].isString() || jsData["transfer_characteristic"].empty()));
+    if(jsData["frame_width"].isInt() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'frame_width' is not an int" << std::endl;
+    }
+    if(jsData["frame_height"].isInt() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'frame_height' is not an int" << std::endl;
+    }
+    if(jsData["colorspace"].isString() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'colorspace' is not a string" << std::endl;
+    }
+    if(jsData["interlace_mode"].isString() == false && jsData["interlace_mode"].empty() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'interlace_mode' is not a string and not empty" << std::endl;
+    }
+    if(jsData["transfer_characteristic"].isString() == false && jsData["transfer_characteristic"].empty()== false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'transfer_characteristic' is not a string and not empty" << std::endl;
+    }
 
     if(m_bIsOk)
     {
@@ -46,7 +68,11 @@ bool FlowVideo::UpdateFromJson(const Json::Value& jsData)
                 break;
             }
         }
-        m_bIsOk &= bFound;
+        if(!bFound)
+        {
+            m_ssJsonError << "'colorspace' is not valid" << std::endl;
+            m_bIsOk = false;
+        }
 
         if(jsData["interlace_mode"].isString())
         {
@@ -60,7 +86,12 @@ bool FlowVideo::UpdateFromJson(const Json::Value& jsData)
                     break;
                 }
             }
-            m_bIsOk &= bFound;
+            if(!bFound)
+            {
+                m_ssJsonError << "'interlace_mode' is not valid" << std::endl;
+                m_bIsOk = false;
+            }
+
         }
 
         if(jsData["transfer_characteristic"].isString())
@@ -75,7 +106,12 @@ bool FlowVideo::UpdateFromJson(const Json::Value& jsData)
                     break;
                 }
             }
-            m_bIsOk &= bFound;
+            if(!bFound)
+            {
+                m_ssJsonError << "'transfer_characteristic' is not valid" << std::endl;
+                m_bIsOk = false;
+            }
+
         }
     }
     return m_bIsOk;

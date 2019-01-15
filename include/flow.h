@@ -15,7 +15,7 @@ class NMOS_EXPOSE Flow : public Resource
 
         virtual bool Commit();
 
-        const std::string& GetDeviceId() const
+        std::string GetParentResourceId() const
         {
             return m_sDeviceId;
         }
