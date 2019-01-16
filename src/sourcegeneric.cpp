@@ -14,25 +14,30 @@ SourceGeneric::SourceGeneric() : Source(Source::VIDEO)
 bool SourceGeneric::UpdateFromJson(const Json::Value& jsData)
 {
     Source::UpdateFromJson(jsData);
-    m_bIsOk &= jsData["format"].isString();
+    if(jsData["format"].isString() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'format' is not a string" << std::endl;
+    }
 
     if(m_bIsOk)
     {
-        if(jsData["format"] == "urn:x-nmos:format:video")
+        if(jsData["format"].asString().find("urn:x-nmos:format:video") != std::string::npos)
         {
             SetFormat(VIDEO);
         }
-        else if(jsData["format"] == "urn:x-nmos:format:data")
+        else if(jsData["format"].asString().find("urn:x-nmos:format:data") != std::string::npos)
         {
             SetFormat(DATA);
         }
-        else if(jsData["format"] == "urn:x-nmos:format:mux")
+        else if(jsData["format"].asString().find("urn:x-nmos:format:mux") != std::string::npos)
         {
             SetFormat(MUX);
         }
         else
         {
             m_bIsOk = false;
+            m_ssJsonError << "'format' " <<jsData["format"].asString() <<" incorrect" << std::endl;
         }
     }
     return m_bIsOk;

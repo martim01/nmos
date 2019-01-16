@@ -36,23 +36,45 @@ void Source::SetClock(std::string sClock)
 bool Source::UpdateFromJson(const Json::Value& jsData)
 {
     Resource::UpdateFromJson(jsData);
-    m_bIsOk &= (jsData["device_id"].isString() && jsData["caps"].isObject() && jsData["parents"].isArray() && (jsData["clock_name"].isString() || jsData["clock_name"].isNull()));
-
-    m_sDeviceId = jsData["device_id"].asString();
-    if(jsData["clock_name"].isString())
+    if(jsData["device_id"].isString() == false)
     {
-        m_sClock = jsData["clock_name"].asString();
+        m_bIsOk = false;
+        m_ssJsonError << "'device_id' is not a string" << std::endl;
     }
-    for(Json::ArrayIndex ai = 0; ai < jsData["parents"].size(); ai++)
+    if(jsData["caps"].isObject() == false)
     {
-        if(jsData["parents"][ai].isString() == false)
+        m_bIsOk = false;
+        m_ssJsonError << "'caps' is not an object" << std::endl;
+    }
+    if(jsData["parents"].isArray() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'parents' is not an array" << std::endl;
+    }
+    if(jsData["clock_name"].isString() == false && jsData["clock_name"].isNull() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'clock_name' is neither a string or null" << std::endl;
+    }
+    if(m_bIsOk)
+    {
+        m_sDeviceId = jsData["device_id"].asString();
+        if(jsData["clock_name"].isString())
         {
-            m_bIsOk = false;
-            break;
+            m_sClock = jsData["clock_name"].asString();
         }
-        else
+        for(Json::ArrayIndex ai = 0; ai < jsData["parents"].size(); ai++)
         {
-            m_setParent.insert(jsData["parents"][ai].asString());
+            if(jsData["parents"][ai].isString() == false)
+            {
+                m_bIsOk = false;
+                m_ssJsonError << "'parents' #" << ai << " is not a string" << std::endl;
+                break;
+            }
+            else
+            {
+                m_setParent.insert(jsData["parents"][ai].asString());
+            }
         }
     }
     return m_bIsOk;

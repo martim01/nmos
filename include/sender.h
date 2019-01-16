@@ -72,7 +72,7 @@ class NMOS_EXPOSE Sender : public Resource
         std::string m_sTransportFile;
 
 
-        static const std::string TRANSPORT[4];
+        static const std::string STR_TRANSPORT[4];
 };
 
 

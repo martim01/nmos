@@ -15,7 +15,7 @@ static void ActivationThreadSender(const std::chrono::time_point<std::chrono::hi
     }
 }
 
-const std::string Sender::TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash"};
+const std::string Sender::STR_TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash"};
 
 
 Sender::Sender(std::string sLabel, std::string sDescription, std::string sFlowId, enumTransport eTransport, std::string sDeviceId, std::string sInterface) :
@@ -38,8 +38,47 @@ Sender::Sender() : Resource("sender")
 
 bool Sender::UpdateFromJson(const Json::Value& jsData)
 {
-    m_bIsOk = Resource::UpdateFromJson(jsData) && ((jsData["flow_id"].isString() || jsData["flow_id"].isNull()) && jsData["device_id"].isString() && jsData["manifest_href"].isString() &&  jsData["transport"].isString()
-                   && jsData["interface_bindings"].isArray() && jsData["subscription"].isObject() && (jsData["subscription"]["receiver_id"].isString() || jsData["subscription"]["receiver_id"].isNull()) && jsData["subscription"]["active"].isBool());
+    Resource::UpdateFromJson(jsData);
+    if(jsData["flow_id"].isString() == false && jsData["flow_id"].isNull() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'flow_id' neither a string or null" << std::endl;
+    }
+    if(jsData["device_id"].isString() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'device_id' is not a string" << std::endl;
+    }
+    if(jsData["manifest_href"].isString() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'manifest_href' is not a string" << std::endl;
+    }
+    if(jsData["transport"].isString() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'transport' is not a string" << std::endl;
+    }
+    if(jsData["interface_bindings"].isArray() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'interface_bindings' is not an array" << std::endl;
+    }
+    if(jsData["subscription"].isObject() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'subscription' is not an object" << std::endl;
+    }
+    if(jsData["subscription"]["receiver_id"].isString() ==false && jsData["subscription"]["receiver_id"].isNull() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'subscription' 'receiver_id' is not a string and not null" << std::endl;
+    }
+    if(jsData["subscription"]["active"].isBool() == false)
+    {
+        m_bIsOk = false;
+        m_ssJsonError << "'subscription' 'active' is not a bool" << std::endl;
+    }
 
     if(m_bIsOk)
     {
@@ -50,25 +89,28 @@ bool Sender::UpdateFromJson(const Json::Value& jsData)
         m_sDeviceId = jsData["device_id"].asString();
         m_sManifest = jsData["manifest_href"].asString();
 
-        if(jsData["transport"].asString() == TRANSPORT[RTP])
-        {
-            m_eTransport = RTP;
-        }
-        else if(jsData["transport"].asString() == TRANSPORT[RTP_UCAST])
-        {
-            m_eTransport = RTP_UCAST;
-        }
-        else if(jsData["transport"].asString() == TRANSPORT[RTP_MCAST])
+
+        if(jsData["transport"].asString().find(STR_TRANSPORT[RTP_MCAST]) != std::string::npos)
         {
             m_eTransport = RTP_MCAST;
         }
-        else if(jsData["transport"].asString() == TRANSPORT[DASH])
+        else if(jsData["transport"].asString().find(STR_TRANSPORT[RTP_UCAST]) != std::string::npos)
+        {
+            m_eTransport = RTP_UCAST;
+        }
+
+        else if(jsData["transport"].asString().find(STR_TRANSPORT[RTP]) != std::string::npos)
+        {
+            m_eTransport = RTP;
+        }
+        else if(jsData["transport"].asString().find(STR_TRANSPORT[DASH]) != std::string::npos)
         {
             m_eTransport = DASH;
         }
         else
         {
             m_bIsOk = false;
+            m_ssJsonError << "'transport' " <<jsData["transport"].asString() <<" incorrect" << std::endl;
         }
         for(Json::ArrayIndex n = 0; n < jsData["interface_bindings"].size(); n++)
         {
@@ -79,6 +121,7 @@ bool Sender::UpdateFromJson(const Json::Value& jsData)
             else
             {
                 m_bIsOk = false;
+                m_ssJsonError << "'interface_bindings' #" << n <<" not a string" << std::endl;
                 break;
             }
         }
@@ -123,7 +166,7 @@ bool Sender::Commit()
         }
         m_json["device_id"] = m_sDeviceId;
         m_json["manifest_href"] = m_sManifest;
-        m_json["transport"] = TRANSPORT[m_eTransport];
+        m_json["transport"] = STR_TRANSPORT[m_eTransport];
 
         m_json["interface_bindings"] = Json::Value(Json::arrayValue);
         for(std::set<std::string>::iterator itInterface = m_setInterfaces.begin(); itInterface != m_setInterfaces.end(); ++itInterface)
