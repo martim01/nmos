@@ -66,7 +66,7 @@ int main()
         cout << "FAILED TO ADD SENDER" << endl;
     }
     NodeApi::Get().Commit();
-
+    getchar();
     std::shared_ptr<ThreadPoster> pPoster = std::make_shared<ThreadPoster>();
     NodeApi::Get().StartServices(pPoster);
     while(true)

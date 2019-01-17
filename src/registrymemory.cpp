@@ -41,7 +41,7 @@ size_t RegistryMemory::Heartbeat(const std::string& sId)
     return 0;
 }
 
-std::shared_ptr<Resource> RegistryMemory::FindResource(const std::string& sType, const std::string& sId)
+std::shared_ptr<Resource> RegistryMemory::FindNmosResource(const std::string& sType, const std::string& sId)
 {
     map<string, RegistryHolder>::iterator itHolder = m_mRegistryHolder.find(sType);
     if(itHolder != m_mRegistryHolder.end())

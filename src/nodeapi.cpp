@@ -5,9 +5,21 @@
 #ifdef __GNU__
 #include "avahipublisher.h"
 #include "avahibrowser.h"
+#include <unistd.h>
+#include <sys/types.h>
+#include <ifaddrs.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <arpa/inet.h>
 #else
+#define WINVER 0x0600
 #include "bonjourbrowser.h"
 #include "bonjourpublisher.h"
+#include <winsock2.h>
+#include <windows.h>
+#include <iphlpapi.h>
+#include <iptypes.h>
 #endif
 
 #include "log.h"
@@ -24,15 +36,6 @@
 #include "microserver.h"
 #include "nmosthread.h"
 #include "sdp.h"
-#ifdef __GNU__
-#include <unistd.h>
-#include <sys/types.h>
-#include <ifaddrs.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <arpa/inet.h>
-#endif // __GNU__
 using namespace std;
 
 const std::string NodeApi::STR_RESOURCE[7] = {"node", "device", "source", "flow", "sender", "receiver", "subscription"};
@@ -109,7 +112,66 @@ void NodeApi::Init(unsigned short nDiscoveryPort, unsigned short nConnectionPort
     // Free memory
     freeifaddrs(interfaces);
     #else
-    m_self.AddEndpoint("127.0.0.1", nDiscoveryPort, false);
+    DWORD dwRetVal = 0;
+    // Set the flags to pass to GetAdaptersAddresses
+    ULONG flags = 0;//GAA_FLAG_INCLUDE_PREFIX;
+    // default to unspecified address family (both)
+    ULONG family = AF_INET;
+    PIP_ADAPTER_ADDRESSES pAddresses = NULL;
+    ULONG outBufLen = 15000;
+    ULONG Iterations = 0;
+    PIP_ADAPTER_ADDRESSES pCurrAddresses = NULL;
+    PIP_ADAPTER_UNICAST_ADDRESS pUnicast = NULL;
+    // Allocate a 15 KB buffer to start with.
+    do
+    {
+        pAddresses = (IP_ADAPTER_ADDRESSES *) malloc(outBufLen);
+        if (pAddresses == NULL)
+        {
+            Log::Get() << "Memory allocation failed for IP_ADAPTER_ADDRESSES struct" << endl;
+            return;
+        }
+        dwRetVal = GetAdaptersAddresses(family, flags, NULL, pAddresses, &outBufLen);
+        if (dwRetVal == ERROR_BUFFER_OVERFLOW)
+        {
+            free(pAddresses);
+            pAddresses = NULL;
+        }
+        else
+        {
+            break;
+        }
+        Iterations++;
+    } while ((dwRetVal == ERROR_BUFFER_OVERFLOW) && (Iterations < 3));
+
+    if (dwRetVal == NO_ERROR)
+    {
+        // If successful, output some information from the data we received
+        pCurrAddresses = pAddresses;
+        while (pCurrAddresses)
+        {
+            pUnicast = pCurrAddresses->FirstUnicastAddress;
+            if (pUnicast != NULL)
+            {
+                string sAddress = inet_ntoa(((sockaddr_in*)pUnicast->Address.lpSockaddr)->sin_addr);
+                if(sAddress.substr(0,3) != "169")
+                {
+                    m_self.AddEndpoint(sAddress, nDiscoveryPort, false);
+                }
+                for (int i = 0; pUnicast != NULL; i++)
+                    pUnicast = pUnicast->Next;
+            }
+            pCurrAddresses = pCurrAddresses->Next;
+        }
+    }
+    else
+    {
+        Log::Get() << "Call to GetAdaptersAddresses failed with error: " << dwRetVal << endl;
+    }
+    if (pAddresses)
+    {
+        free(pAddresses);
+    }
     #endif // __GNU__
 
     if(setEndpoints.empty() == false)

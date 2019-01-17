@@ -1,13 +1,15 @@
 #include "resource.h"
-#ifdef __WIN__
-#include <objbase.h>
-#endif
+#include <chrono>
+#include <sstream>
+#include <string>
+
+
+
 #ifdef __GNU__
 #include <uuid/uuid.h>
 #include <sys/time.h>
 #endif // __GNU__
-#include <chrono>
-#include <sstream>
+
 
 Resource::Resource(const std::string& sType, const std::string& sLabel, const std::string& sDescription) :
     m_bIsOk(true),
@@ -101,7 +103,7 @@ bool Resource::Commit()
 {
     if(m_sVersion == m_sLastVersion)
     {   //no changes to resource
-        return false;
+ //       return false;
     }
 
     m_json.clear();
@@ -129,12 +131,12 @@ bool Resource::Commit()
 void Resource::CreateGuid()
 {
 
-#ifdef __WIN__
+#ifdef __GNUWIN32__
     UUID guid;
 	CoCreateGuid(&guid);
 
     std::stringstream os;
-	os << std::lowercase;
+//	os << std::lowercase;
     os.width(8);
     os << std::hex << guid.Data1 << '-';
 
@@ -155,7 +157,7 @@ void Resource::CreateGuid()
         << static_cast<short>(guid.Data4[5])
         << static_cast<short>(guid.Data4[6])
         << static_cast<short>(guid.Data4[7]);
-    os << std::nolowercase;
+  //  os << std::nolowercase;
     m_sId = os.str();
 #endif // __WIN__
 

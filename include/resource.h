@@ -1,4 +1,8 @@
 #pragma once
+#ifdef __GNUWIN32__
+#include <windows.h>
+#include <rpc.h>
+#endif
 #include <string>
 #include "json/json.h"
 #include <list>
