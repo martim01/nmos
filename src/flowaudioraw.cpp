@@ -122,7 +122,7 @@ std::string FlowAudioRaw::CreateSDPLines(unsigned short nRtpPort) const
     sstr << m_nSampleRateNumerator << "/";
 
     //Get the number of channels from the associated source
-    std::map<std::string, std::shared_ptr<Resource> >::const_iterator itResource = NodeApi::Get().GetSources().FindResource(GetSourceId());
+    std::map<std::string, std::shared_ptr<Resource> >::const_iterator itResource = NodeApi::Get().GetSources().FindNmosResource(GetSourceId());
     if(itResource != NodeApi::Get().GetSources().GetResourceEnd())
     {
         std::shared_ptr<SourceAudio> pSource = std::dynamic_pointer_cast<SourceAudio>(itResource->second);

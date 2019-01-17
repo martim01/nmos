@@ -64,8 +64,8 @@ void CurlRegister::Post(const std::string& sBaseUrl, const std::string& sJson, l
 
 long CurlRegister::Post(const std::string& sUrl, const std::string& sJson, std::string& sResponse)
 {
-    Log::Get(Log::DEBUG) << "CurlRegister: Post '" << sUrl << "'" << std::endl;
-    Log::Get(Log::DEBUG) << "CurlRegster: Json '" << sJson << "'" << std::endl;
+    Log::Get(Log::LOG_DEBUG) << "CurlRegister: Post '" << sUrl << "'" << std::endl;
+    Log::Get(Log::LOG_DEBUG) << "CurlRegster: Json '" << sJson << "'" << std::endl;
 
     char sError[CURL_ERROR_SIZE];
     CURLcode res;
@@ -128,7 +128,7 @@ long CurlRegister::Delete(const std::string& sUrl, const std::string& sType, con
 {
     std::stringstream ssUrl;
     ssUrl << sUrl << "/" << sType << "/" << sId;
-    Log::Get(Log::DEBUG) << "CurlRegister: Delete " << ssUrl.str() << std::endl;
+    Log::Get(Log::LOG_DEBUG) << "CurlRegister: Delete " << ssUrl.str() << std::endl;
 
 
     char sError[CURL_ERROR_SIZE];
@@ -197,7 +197,7 @@ long CurlRegister::Query(const std::string& sBaseUrl, NodeApi::enumResource eRes
     std::stringstream ssUrl;
     ssUrl << sBaseUrl << "/" << STR_RESOURCE[eResource] << "/" << sQuery;
 
-    Log::Get(Log::DEBUG) << "CurlRegister: Query: " << ssUrl.str() << std::endl;
+    Log::Get(Log::LOG_DEBUG) << "CurlRegister: Query: " << ssUrl.str() << std::endl;
 
     std::string sResponse;
 
@@ -234,7 +234,7 @@ long CurlRegister::Query(const std::string& sBaseUrl, NodeApi::enumResource eRes
         else
         {
             sResponse.assign(chunk.pMemory, chunk.nSize);
-            Log::Get(Log::DEBUG) << sResponse << std::endl;
+            Log::Get(Log::LOG_DEBUG) << sResponse << std::endl;
             ParseResults(eResource, sResponse, pResults);
             curl_easy_getinfo(pCurl, CURLINFO_RESPONSE_CODE, &nResponseCode);
         }
@@ -262,7 +262,7 @@ void CurlRegister::ParseResults(NodeApi::enumResource eResource, const std::stri
     }
     else
     {
-        Log::Get(Log::ERROR) << "Query: Could not parse response" << std::endl;
+        Log::Get(Log::LOG_ERROR) << "Query: Could not parse response" << std::endl;
     }
 }
 

@@ -1,5 +1,5 @@
 #include <iostream>
-#include "json/json.h"
+//#include "json/json.h"
 #include <iostream>
 #include <fstream>
 #include "threadposter.h"
@@ -67,7 +67,6 @@ int main()
     }
     NodeApi::Get().Commit();
 
-    getchar();
     std::shared_ptr<ThreadPoster> pPoster = std::make_shared<ThreadPoster>();
     NodeApi::Get().StartServices(pPoster);
     while(true)

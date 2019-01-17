@@ -31,7 +31,7 @@ class NMOS_EXPOSE RegistryApi
         *   @param sId the id of the resource
         *   @return <i>const shared_ptr<Resource></i> Pointer to the resource if found. Else 0
         **/
-        const std::shared_ptr<Resource> FindResource(const std::string& sType, const std::string& sId);
+        const std::shared_ptr<Resource> FindNmosResource(const std::string& sType, const std::string& sId);
 
         /** @brief Attempts to add or update a resource of the given type with the Json data
         *   @param sType the type of resource. This should be one of STR_RESOURCE
@@ -76,7 +76,7 @@ class NMOS_EXPOSE RegistryApi
         bool AddResource(const std::string& sType, const Json::Value& jsData, std::string& sError);
 
         bool AddResource(const std::string& sType, std::shared_ptr<Resource> pResource);
-        bool UpdateResource(const Json::Value& jsData, std::shared_ptr<Resource> pResource, std::string& sError);
+        bool UpdateNmosResource(const Json::Value& jsData, std::shared_ptr<Resource> pResource, std::string& sError);
 
         ServicePublisher* m_pRegistryApiPublisher;
         RegistryServer* m_pRegistryServer;

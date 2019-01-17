@@ -66,7 +66,7 @@ bool RegistryMemory::AddResource(const std::string& sType, shared_ptr<Resource> 
             return true;
         }
     }
-    Log::Get(Log::ERROR) << "Failed to add resource of type '" << sType << "' " << pResource->GetId() << " added to registry." << endl;
+    Log::Get(Log::LOG_ERROR) << "Failed to add resource of type '" << sType << "' " << pResource->GetId() << " added to registry." << endl;
     return false;
 }
 

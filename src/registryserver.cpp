@@ -26,7 +26,7 @@ void RegistryServer::RequestCompleted (void *cls, MHD_Connection* pConnection, v
     }
     else
     {
-        Log::Get(Log::ERROR) << "Request completed: Failed" << endl;
+        Log::Get(Log::LOG_ERROR) << "Request completed: Failed" << endl;
     }
 }
 
@@ -78,11 +78,11 @@ int RegistryServer::DoHttpDelete(MHD_Connection* pConnection, string sUrl, Regis
 
 int RegistryServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, const char * url, const char * method, const char * sVersion, const char * upload_data, size_t * upload_data_size, void **ptr)
 {
-    Log::Get(Log::DEBUG) << "AnswerToConnection" << endl;
+    Log::Get(Log::LOG_DEBUG) << "AnswerToConnection" << endl;
     string sMethod(method);
     if (NULL == *ptr)
     {
-        Log::Get(Log::DEBUG) << "Initial connection" << endl;
+        Log::Get(Log::LOG_DEBUG) << "Initial connection" << endl;
         RegistryInfo* pInfo = new RegistryInfo();
         if(pInfo == 0)
         {
@@ -91,7 +91,7 @@ int RegistryServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, c
         pInfo->pServer = reinterpret_cast<RegistryServer*>(cls);
         if("POST" == sMethod)
         {
-            Log::Get(Log::DEBUG) << "Initial connection: " << sMethod << endl;
+            Log::Get(Log::LOG_DEBUG) << "Initial connection: " << sMethod << endl;
             if("POST" == sMethod)
             {
                 pInfo->nType = RegistryInfo::POST;
@@ -99,35 +99,35 @@ int RegistryServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, c
         }
         else if("DELETE" == sMethod)
         {
-            pInfo->nType = RegistryInfo::DELETE;
-            Log::Get(Log::DEBUG) << "Initial connection: " << sMethod << endl;
+            pInfo->nType = RegistryInfo::DEL;
+            Log::Get(Log::LOG_DEBUG) << "Initial connection: " << sMethod << endl;
         }
         else
         {
-            Log::Get(Log::DEBUG) << "Initial connection: GET" << endl;
+            Log::Get(Log::LOG_DEBUG) << "Initial connection: GET" << endl;
         }
         *ptr = (void *) pInfo;
 
-        Log::Get(Log::DEBUG) << "Initial connection: return MHD_YES" << endl;
+        Log::Get(Log::LOG_DEBUG) << "Initial connection: return MHD_YES" << endl;
         return MHD_YES;
     }
 
-    Log::Get(Log::DEBUG) << "RegistryServer: " << url << endl;
+    Log::Get(Log::LOG_DEBUG) << "RegistryServer: " << url << endl;
     if("GET" == string(sMethod))
     {
         RegistryInfo* pInfo = reinterpret_cast<RegistryInfo*>(*ptr);
-        Log::Get(Log::DEBUG) << "Actual connection: GET" << endl;
+        Log::Get(Log::LOG_DEBUG) << "Actual connection: GET" << endl;
         return DoHttpGet(pConnection, url, pInfo);
     }
     else if("DELETE" == string(sMethod))
     {
         RegistryInfo* pInfo = reinterpret_cast<RegistryInfo*>(*ptr);
-        Log::Get(Log::DEBUG) << "Actual connection: DELETE" << endl;
+        Log::Get(Log::LOG_DEBUG) << "Actual connection: DELETE" << endl;
         return DoHttpDelete(pConnection, url, pInfo);
     }
     else if("POST" == string(sMethod))
     {
-        Log::Get(Log::DEBUG) << "Actual connection: POST" << endl;
+        Log::Get(Log::LOG_DEBUG) << "Actual connection: POST" << endl;
         RegistryInfo* pInfo = reinterpret_cast<RegistryInfo*>(*ptr);
         if (*upload_data_size != 0)
         {
@@ -300,7 +300,7 @@ int RegistryServer::GetJsonNmosResource(string& sReturn)
     }
     else
     {
-        const shared_ptr<Resource> pResource = RegistryApi::Get().FindResource(m_vPath[RESOURCE_TYPE], m_vPath[RESOURCE_ID]);
+        const shared_ptr<Resource> pResource = RegistryApi::Get().FindNmosResource(m_vPath[RESOURCE_TYPE], m_vPath[RESOURCE_ID]);
         if(pResource)
         {
             nCode = 200;
@@ -329,7 +329,7 @@ int RegistryServer::GetJsonNmosHealth(string& sReturn)
     {
         if(m_vPath[HEALTH_NODES] == "nodes")
         {
-            const shared_ptr<Resource> pResource = RegistryApi::Get().FindResource("node", m_vPath[HEALTH_ID]);
+            const shared_ptr<Resource> pResource = RegistryApi::Get().FindNmosResource("node", m_vPath[HEALTH_ID]);
             if(pResource)
             {
                 nCode = 200;

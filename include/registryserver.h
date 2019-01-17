@@ -11,7 +11,7 @@ class RegistryServer;
 
 struct RegistryInfo
 {
-    enum {GET=0, POST = 1, PUT=2, PATCH = 3, DELETE=4};
+    enum {GET=0, POST = 1, PUT=2, PATCH = 3, DEL=4};
     RegistryInfo() : nType(GET), pPost(0){}
     int nType;
     RegistryServer* pServer;

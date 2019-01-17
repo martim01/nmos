@@ -22,15 +22,9 @@ public:
 
     static const std::string STR_LEVEL[4];
 
-    enum LogLevel
-    {
-        DEBUG=0,
-        INFO=1,
-        WARN=2,
-        ERROR=3
-    };
+    enum enumLevel{ LOG_DEBUG=0, LOG_INFO=1, LOG_WARN=2, LOG_ERROR=3 };
 
-    static Log& Get(LogLevel eLevel=INFO);
+    static Log& Get(enumLevel eLevel=LOG_INFO);
 
     void SetOutput(LogOutput* pLogout)
     {
@@ -65,13 +59,13 @@ public:
         return *this;
     }
 
-    Log& operator()(LogLevel e)
+    Log& operator()(enumLevel e)
     {
         m_logLevel = e;
         return *this;
     }
 
-    void SetLevel(LogLevel e)
+    void SetLevel(enumLevel e)
     {
         m_logLevel = e;
     }
@@ -89,7 +83,7 @@ public:
     }
 
 private:
-    Log() : m_logLevel(INFO) , m_pOutput(new LogOutput()){}
+    Log() : m_logLevel(LOG_INFO) , m_pOutput(new LogOutput()){}
     ~Log()
     {
         if(m_pOutput)

@@ -2,13 +2,13 @@
 <CodeBlocks_workspace_file>
 	<Workspace title="Workspace">
 		<Project filename="libnmos.cbp" />
-		<Project filename="tests/wx/wxnmos.cbp">
-			<Depends filename="libnmos.cbp" />
-		</Project>
-		<Project filename="tests/console/nmos_node_test.cbp">
-			<Depends filename="libnmos.cbp" />
-		</Project>
 		<Project filename="tests/nmos_registry_test/nmos_registry_test.cbp">
+			<Depends filename="libnmos.cbp" />
+		</Project>
+		<Project filename="tests/nmos_node_test/nmos_node_test.cbp">
+			<Depends filename="tests/wx/wxnmos.cbp" />
+		</Project>
+		<Project filename="tests/wx/wxnmos.cbp">
 			<Depends filename="libnmos.cbp" />
 		</Project>
 	</Workspace>

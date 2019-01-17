@@ -1,5 +1,5 @@
 #pragma once
-#ifdef __GNU__
+
 #include <avahi-client/client.h>
 #include <avahi-client/lookup.h>
 #include <avahi-common/thread-watch.h>
@@ -70,4 +70,3 @@ class ServiceBrowser
 };
 
 
-#endif // __WXGNU__

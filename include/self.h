@@ -41,9 +41,9 @@ struct endpoint
     bool bSecure;
 };
 
-struct interface
+struct nodeinterface
 {
-    interface(std::string sC, std::string sI) : sChassisMac(sC), sPortMac(sI){}
+    nodeinterface(std::string sC, std::string sI) : sChassisMac(sC), sPortMac(sI){}
     std::string sChassisMac;
     std::string sPortMac;
     std::string sMainIpAddress;
@@ -91,9 +91,9 @@ class NMOS_EXPOSE Self : public Resource
         std::set<endpoint>::const_iterator GetEndpointsBegin() const;
         std::set<endpoint>::const_iterator GetEndpointsEnd() const;
 
-        std::map<std::string, interface>::const_iterator GetInterfaceBegin() const;
-        std::map<std::string, interface>::const_iterator GetInterfaceEnd() const;
-        std::map<std::string, interface>::const_iterator FindInterface(const std::string& sInterface) const;
+        std::map<std::string, nodeinterface>::const_iterator GetInterfaceBegin() const;
+        std::map<std::string, nodeinterface>::const_iterator GetInterfaceEnd() const;
+        std::map<std::string, nodeinterface>::const_iterator FindInterface(const std::string& sInterface) const;
 
     protected:
         friend class NodeApi;
@@ -109,7 +109,7 @@ class NMOS_EXPOSE Self : public Resource
 
 
 
-        void GetAddresses(const std::string& sInterface, interface& anInterface);
+        void GetAddresses(const std::string& sInterface, nodeinterface& anInterface);
 
         struct clock
         {
@@ -145,7 +145,7 @@ class NMOS_EXPOSE Self : public Resource
         std::set<std::string> m_setVersion;
         std::set<endpoint> m_setEndpoint;
         std::map<std::string, std::string> m_mService;
-        std::map<std::string, interface> m_mInterface;
+        std::map<std::string, nodeinterface> m_mInterface;
         std::map<std::string, clock> m_mClock;
         std::map<std::string, clock> m_mClockCommited;
 

@@ -9,13 +9,10 @@ using namespace std;
 
 void NodeThread::Main()
 {
-
     //start the discovery and connection servers
     NodeApi::Get().StartHttpServers();
-
     //start the DNS-SD publisher server
     NodeApi::Get().StartmDNSServer();
-
 
     do
     {

@@ -11,6 +11,7 @@ static void Notify(ThreadPoster* pPoster)
 bool ThreadPoster::Wait(std::chrono::milliseconds ms)
 {
     std::unique_lock<std::mutex> ul(m_mutexMain);
+
     return (m_cv.wait_for(ul, ms) == std::cv_status::no_timeout);
 }
 

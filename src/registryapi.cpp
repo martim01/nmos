@@ -1,5 +1,9 @@
 #include "registryapi.h"
+#ifdef __GNU__
 #include "avahipublisher.h"
+#else
+#include "bonjourpublisher.h"
+#endif // __GNU__
 #include "registryserver.h"
 #include "self.h"
 #include "device.h"
@@ -124,7 +128,7 @@ void RegistryApi::StopServer()
 }
 
 
-const shared_ptr<Resource> RegistryApi::FindResource(const std::string& sType, const std::string& sId)
+const shared_ptr<Resource> RegistryApi::FindNmosResource(const std::string& sType, const std::string& sId)
 {
     lock_guard<mutex> lg(m_mutex);
     if(m_pRegistry)
@@ -152,7 +156,7 @@ unsigned short RegistryApi::AddUpdateResource(const string& sType, const Json::V
         shared_ptr<Resource> pResource = m_pRegistry->FindResource(sType, jsData["id"].asString());
         if(pResource)
         {
-            if(UpdateResource(jsData, pResource,sError))
+            if(UpdateNmosResource(jsData, pResource,sError))
             {
                 return 200;
             }
@@ -350,7 +354,7 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData, st
     return bOk;
 }
 
-bool RegistryApi::UpdateResource(const Json::Value& jsData, std::shared_ptr<Resource> pResource, std::string& sError)
+bool RegistryApi::UpdateNmosResource(const Json::Value& jsData, std::shared_ptr<Resource> pResource, std::string& sError)
 {
     // @todo update resource  we should make a copy of the resource in case updating it corrupts it
     if(m_pRegistry)

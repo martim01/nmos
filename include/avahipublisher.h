@@ -1,4 +1,5 @@
 #pragma once
+
 #include <string>
 #include <map>
 #include <set>
@@ -51,3 +52,4 @@ class ServicePublisher
         std::map<std::string, std::string> m_mTxt;
         //"_nmos-node._tcp"
 };
+

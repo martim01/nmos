@@ -12,8 +12,8 @@ class connectionReceiver;
 class NMOS_EXPOSE EventPoster
 {
     public:
-        EventPoster(){}
-        virtual ~EventPoster(){}
+        //EventPoster()=0;
+        //virtual ~EventPoster()=0;
 
         void _CurlDone(unsigned long nResult, const std::string& sResponse, long nType);
         void _InstanceResolved(std::shared_ptr<dnsInstance> pInstance);

@@ -5,9 +5,10 @@
 		<Option title="libnmos" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
-		<Option virtualFolders="nmos/;" />
+		<Option virtualFolders="nmos\;" />
 		<Build>
 			<Target title="Linux Debug">
+				<Option platforms="Unix;" />
 				<Option output="lib/nmosd" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="3" />
@@ -27,6 +28,7 @@
 				</Linker>
 			</Target>
 			<Target title="Linux Release">
+				<Option platforms="Unix;" />
 				<Option output="lib/nmos" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="3" />
@@ -46,20 +48,101 @@
 					<Add option="`pkg-config --libs libcurl`" />
 				</Linker>
 			</Target>
+			<Target title="Windows Debug">
+				<Option platforms="Windows;" />
+				<Option output="lib/nmosd" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="3" />
+				<Option compiler="new_gnu_gcc_compiler" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-std=c11" />
+					<Add option="-g" />
+					<Add option="-pipe" />
+					<Add option="-mthreads" />
+					<Add option='[[if (PLATFORM == PLATFORM_MSW &amp;&amp; (GetCompilerFactory().GetCompilerVersionString(_T(&quot;gcc&quot;)) &gt;= _T(&quot;4.0.0&quot;))) print(_T(&quot;-Wno-attributes&quot;));]]' />
+					<Add option="-std=c++11" />
+					<Add option="-D__GNUWIN32__" />
+					<Add option="-D_MSL_STDINT_H" />
+					<Add directory="external/mdnssd" />
+					<Add directory="$(#curl.INCLUDE)" />
+					<Add directory="$(#microhttp.INCLUDE)" />
+				</Compiler>
+				<Linker>
+					<Add library="dnssd" />
+					<Add library="libcurl" />
+					<Add library="Ws2_32" />
+					<Add library="Iphlpapi" />
+					<Add library="libmicrohttpd-12" />
+					<Add directory="$(#curl.LIB)" />
+					<Add directory="$(#microhttp.LIB)" />
+					<Add directory="external/mdnssd/windows" />
+				</Linker>
+			</Target>
+			<Target title="Windows Release">
+				<Option platforms="Windows;" />
+				<Option output="lib/nmos" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="3" />
+				<Option compiler="new_gnu_gcc_compiler" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-std=c11" />
+					<Add option="-pipe" />
+					<Add option="-mthreads" />
+					<Add option='[[if (PLATFORM == PLATFORM_MSW &amp;&amp; (GetCompilerFactory().GetCompilerVersionString(_T(&quot;gcc&quot;)) &gt;= _T(&quot;4.0.0&quot;))) print(_T(&quot;-Wno-attributes&quot;));]]' />
+					<Add option="-std=c++11" />
+					<Add option="-D__GNUWIN32__" />
+					<Add option="-D_MSL_STDINT_H" />
+					<Add directory="external/mdnssd" />
+					<Add directory="$(#curl.INCLUDE)" />
+					<Add directory="$(#microhttp.INCLUDE)" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="dnssd" />
+					<Add library="curl" />
+					<Add library="Ws2_32" />
+					<Add library="Iphlpapi" />
+					<Add library="libmicrohttpd-12" />
+					<Add directory="$(#curl.LIB)" />
+					<Add directory="$(#microhttp.LIB)" />
+					<Add directory="external/mdnssd/windows" />
+				</Linker>
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
+			<Add option="-DNMOS_EXPORT" />
 			<Add directory="$(#json.include)" />
 			<Add directory="include" />
 		</Compiler>
 		<Unit filename="../jsoncpp-master/dist/jsoncpp.cpp" />
-		<Unit filename="include/avahibrowser.h" />
-		<Unit filename="include/avahipublisher.h" />
+		<Unit filename="include/avahibrowser.h">
+			<Option target="Linux Debug" />
+			<Option target="Linux Release" />
+		</Unit>
+		<Unit filename="include/avahipublisher.h">
+			<Option target="Linux Debug" />
+			<Option target="Linux Release" />
+		</Unit>
+		<Unit filename="include/bonjourbrowser.h">
+			<Option target="Windows Debug" />
+			<Option target="Windows Release" />
+		</Unit>
+		<Unit filename="include/bonjourpublisher.h">
+			<Option target="Windows Debug" />
+			<Option target="Windows Release" />
+		</Unit>
 		<Unit filename="include/connection.h" />
 		<Unit filename="include/constraint.h" />
 		<Unit filename="include/curlregister.h" />
 		<Unit filename="include/device.h" />
+		<Unit filename="include/dlldefine.h" />
 		<Unit filename="include/eventposter.h">
 			<Option virtualFolder="nmos/" />
 		</Unit>
@@ -94,8 +177,19 @@
 		<Unit filename="include/sourcegeneric.h" />
 		<Unit filename="include/transportparams.h" />
 		<Unit filename="include/utils.h" />
-		<Unit filename="src/avahibrowser.cpp" />
-		<Unit filename="src/avahipublisher.cpp" />
+		<Unit filename="src/avahibrowser.cpp">
+			<Option target="Linux Debug" />
+			<Option target="Linux Release" />
+		</Unit>
+		<Unit filename="src/avahipublisher.cpp">
+			<Option target="Linux Debug" />
+			<Option target="Linux Release" />
+		</Unit>
+		<Unit filename="src/bonjourbrowser.cpp">
+			<Option target="Windows Debug" />
+			<Option target="Windows Release" />
+		</Unit>
+		<Unit filename="src/bonjourpublisher.cpp" />
 		<Unit filename="src/connection.cpp" />
 		<Unit filename="src/constraint.cpp" />
 		<Unit filename="src/curlregister.cpp" />

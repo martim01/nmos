@@ -77,7 +77,7 @@ void Self::RemoveService(string sUrl)
 
 void Self::AddInterface(string sInterface, string sChassisMac, string sPortMac)
 {
-    interface anInterface(sChassisMac, sPortMac);
+    nodeinterface anInterface(sChassisMac, sPortMac);
 
     GetAddresses(sInterface, anInterface);
 
@@ -194,7 +194,7 @@ bool Self::Commit()
         m_mClockCommited = m_mClock;
 
         m_json["interfaces"] = Json::Value(Json::arrayValue);
-        for(map<string, interface>::iterator itInterface = m_mInterface.begin(); itInterface != m_mInterface.end(); ++itInterface)
+        for(map<string, nodeinterface>::iterator itInterface = m_mInterface.begin(); itInterface != m_mInterface.end(); ++itInterface)
         {
             Json::Value jsInterface;
             jsInterface["name"] = itInterface->first;
@@ -280,7 +280,7 @@ set<endpoint>::const_iterator Self::GetEndpointsEnd() const
 }
 
 
-void Self::GetAddresses(const std::string& sInterface, interface& anInterface)
+void Self::GetAddresses(const std::string& sInterface, nodeinterface& anInterface)
 {
     #ifdef __GNU__
     int fd = socket(AF_INET, SOCK_DGRAM,0);
@@ -311,7 +311,7 @@ void Self::GetAddresses(const std::string& sInterface, interface& anInterface)
     }
     anInterface.sMainIpAddress = inet_ntoa((((sockaddr_in*)&ifr.ifr_addr)->sin_addr));
     #else
-    return "";
+
     #endif
 }
 
@@ -341,7 +341,7 @@ std::string Self::CreateClockSdp(std::string sInterface) const
     {
         if(itClock->second.nType == clock::INTERNAL)
         {
-            map<std::string, interface>::const_iterator itInterface = m_mInterface.find(sInterface);
+            map<std::string, nodeinterface>::const_iterator itInterface = m_mInterface.find(sInterface);
             if(itInterface != m_mInterface.end())
             {
                 ss << "ts-refclk:localmac=" << itInterface->second.sPortMac << "\r\n";
@@ -357,15 +357,15 @@ std::string Self::CreateClockSdp(std::string sInterface) const
 }
 
 
-std::map<std::string, interface>::const_iterator Self::GetInterfaceBegin() const
+std::map<std::string, nodeinterface>::const_iterator Self::GetInterfaceBegin() const
 {
     return m_mInterface.begin();
 }
-std::map<std::string, interface>::const_iterator Self::GetInterfaceEnd() const
+std::map<std::string, nodeinterface>::const_iterator Self::GetInterfaceEnd() const
 {
     return m_mInterface.end();
 }
-std::map<std::string, interface>::const_iterator Self::FindInterface(const std::string& sInterface) const
+std::map<std::string, nodeinterface>::const_iterator Self::FindInterface(const std::string& sInterface) const
 {
     return m_mInterface.find(sInterface);
 }

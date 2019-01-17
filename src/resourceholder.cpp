@@ -112,7 +112,7 @@ std::map<std::string, std::shared_ptr<Resource> >::const_iterator ResourceHolder
     return m_mResource.end();
 }
 
-std::map<std::string, std::shared_ptr<Resource> >::const_iterator ResourceHolder::FindResource(std::string sUuid) const
+std::map<std::string, std::shared_ptr<Resource> >::const_iterator ResourceHolder::FindNmosResource(std::string sUuid) const
 {
     return m_mResource.find(sUuid);
 }

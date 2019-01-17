@@ -358,12 +358,12 @@ void Receiver::SetSender(std::shared_ptr<Sender> pSender)
 
     if(pSender->GetId().empty() == false)
     {
-        Log::Get(Log::DEBUG) << "Receiver subscribe to sender " << pSender->GetId() << std::endl;
+        Log::Get(Log::LOG_DEBUG) << "Receiver subscribe to sender " << pSender->GetId() << std::endl;
         m_pSender = pSender;
     }
     else
     {   //this means unsubscribe
-        Log::Get(Log::DEBUG) << "Receiver unssubscribe " << std::endl;
+        Log::Get(Log::LOG_DEBUG) << "Receiver unssubscribe " << std::endl;
         m_pSender = 0;
     }
     UpdateVersionTime();

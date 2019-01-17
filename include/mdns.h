@@ -2,6 +2,7 @@
 #include <string>
 #include <map>
 #include <list>
+#include <memory>
 #include "dlldefine.h"
 
 struct NMOS_EXPOSE dnsInstance

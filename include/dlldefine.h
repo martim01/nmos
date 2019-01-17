@@ -1,7 +1,6 @@
 #pragma once
 
-#ifdef __WIN__
-
+#ifdef __GNUWIN32__
     #ifdef NMOS_EXPORT
         #define NMOS_EXPOSE __declspec(dllexport)
     #else

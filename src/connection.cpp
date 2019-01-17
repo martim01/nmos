@@ -14,7 +14,7 @@ connection::connection() :
 
 bool connection::Patch(const Json::Value& jsData)
 {
-    Log::Get(Log::DEBUG) << "Patch: connection" << std::endl;
+    Log::Get(Log::LOG_DEBUG) << "Patch: connection" << std::endl;
 
     bool bIsOk(true);
 
@@ -26,7 +26,7 @@ bool connection::Patch(const Json::Value& jsData)
         }
         else if(jsData["master_enable"].empty() == false)
         {
-            Log::Get(Log::DEBUG) << "Patch: master_enable incorrect type." << std::endl;
+            Log::Get(Log::LOG_DEBUG) << "Patch: master_enable incorrect type." << std::endl;
             bIsOk = false;
         }
 
@@ -46,7 +46,7 @@ bool connection::Patch(const Json::Value& jsData)
                 }
                 if(!bFound)
                 {
-                    Log::Get(Log::DEBUG) << "Patch: activation mode not found." << std::endl;
+                    Log::Get(Log::LOG_DEBUG) << "Patch: activation mode not found." << std::endl;
                 }
                 bIsOk &= bFound;
             }
@@ -54,7 +54,7 @@ bool connection::Patch(const Json::Value& jsData)
             {
                 if(jsData["activation"]["mode"].isNull() == false)
                 {
-                    Log::Get(Log::DEBUG) << "Patch: activation mode incorrect type" << std::endl;
+                    Log::Get(Log::LOG_DEBUG) << "Patch: activation mode incorrect type" << std::endl;
                     bIsOk = false;
                 }
             }
@@ -66,7 +66,7 @@ bool connection::Patch(const Json::Value& jsData)
             else if(jsData["activation"]["requested_time"].isNull() == false && jsData["activation"]["requested_time"].empty() == false)
             {
                 bIsOk = false;
-                Log::Get(Log::DEBUG) << "Patch: activation requested_time incorrect type" << std::endl;
+                Log::Get(Log::LOG_DEBUG) << "Patch: activation requested_time incorrect type" << std::endl;
             }
         }
         else
@@ -76,11 +76,11 @@ bool connection::Patch(const Json::Value& jsData)
     }
     else
     {
-        Log::Get(Log::DEBUG) << "Patch: json not an object" << std::endl;
+        Log::Get(Log::LOG_DEBUG) << "Patch: json not an object" << std::endl;
         bIsOk = false;
     }
 
-    Log::Get(Log::DEBUG) << "Patch: connection result " << bIsOk << std::endl;
+    Log::Get(Log::LOG_DEBUG) << "Patch: connection result " << bIsOk << std::endl;
     return bIsOk;
 }
 
@@ -133,7 +133,7 @@ connectionSender::connectionSender() : connection()
 
 bool connectionSender::Patch(const Json::Value& jsData)
 {
-    Log::Get(Log::DEBUG) << "Patch: connectionSender" << std::endl;
+    Log::Get(Log::LOG_DEBUG) << "Patch: connectionSender" << std::endl;
     bool bIsOk = connection::Patch(jsData);
     if(bIsOk)
     {
@@ -146,7 +146,7 @@ bool connectionSender::Patch(const Json::Value& jsData)
         else if((jsData["receiver_id"].isNull()  == false && jsData["receiver_id"].empty() == false))
         {
             bIsOk = false;
-            Log::Get(Log::DEBUG) << "Patch: receiver_id incorrect type" << std::endl;
+            Log::Get(Log::LOG_DEBUG) << "Patch: receiver_id incorrect type" << std::endl;
         }
     }
     return bIsOk;
@@ -188,7 +188,7 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
         else if(jsData["transport_file"]["type"].isNull() == false)
         {
             bIsOk = false;
-            Log::Get(Log::DEBUG) << "Patch: transport_file type incorrect type" << std::endl;
+            Log::Get(Log::LOG_DEBUG) << "Patch: transport_file type incorrect type" << std::endl;
         }
         if(jsData["transport_file"]["data"].isString())
         {
@@ -197,7 +197,7 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
         else if(jsData["transport_file"]["data"].isNull() == false)
         {
             bIsOk = false;
-            Log::Get(Log::DEBUG) << "Patch: transport_file data incorrect type" << std::endl;
+            Log::Get(Log::LOG_DEBUG) << "Patch: transport_file data incorrect type" << std::endl;
         }
 
         if(sTransportFileType == "application/sdp" && sTransportFileData.empty() == false)
@@ -220,7 +220,7 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
             if(jsData["sender_id"].isNull() == false && jsData["sender_id"].empty() == false)
             {
                 bIsOk = false;
-                Log::Get(Log::DEBUG) << "Patch: sender_id incorrect type" << std::endl;
+                Log::Get(Log::LOG_DEBUG) << "Patch: sender_id incorrect type" << std::endl;
             }
         }
 

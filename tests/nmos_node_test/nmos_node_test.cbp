@@ -11,17 +11,24 @@
 				<Option output="bin/Debug/nmos_node_test" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
+				<Option compiler="new_gnu_gcc_compiler" />
 				<Compiler>
-					<Add option="-std=c++11" />
+					<Add option="-std=c11" />
 					<Add option="-g" />
-					<Add option="-D__WIN__" />
+					<Add option="-pipe" />
+					<Add option="-mthreads" />
+					<Add option='[[if (PLATFORM == PLATFORM_MSW &amp;&amp; (GetCompilerFactory().GetCompilerVersionString(_T(&quot;gcc&quot;)) &gt;= _T(&quot;4.0.0&quot;))) print(_T(&quot;-Wno-attributes&quot;));]]' />
+					<Add option="-std=c++11" />
+					<Add option="-D__GNUWIN32__" />
 					<Add directory="$(#microhttp.include)" />
+					<Add directory="$(#nmos.INCLUDE)" />
 				</Compiler>
 				<Linker>
 					<Add library="ole32" />
-					<Add library="libmicrohttpd-12" />
+					<Add library="nmosd" />
 					<Add directory="$(#microhttp.lib)" />
+					<Add directory="$(#nmos.LIB)" />
+					<Add directory="$(#curl.LIB)" />
 				</Linker>
 			</Target>
 			<Target title="Windows Release">
@@ -29,19 +36,25 @@
 				<Option output="bin/Release/nmos_node_test" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
+				<Option compiler="new_gnu_gcc_compiler" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add option="-std=c11" />
+					<Add option="-pipe" />
+					<Add option="-mthreads" />
+					<Add option='[[if (PLATFORM == PLATFORM_MSW &amp;&amp; (GetCompilerFactory().GetCompilerVersionString(_T(&quot;gcc&quot;)) &gt;= _T(&quot;4.0.0&quot;))) print(_T(&quot;-Wno-attributes&quot;));]]' />
 					<Add option="-std=c++11" />
-					<Add option="-D__GNU__" />
+					<Add option="-D__GNUWIN32__" />
 					<Add directory="$(#microhttp.include)" />
+					<Add directory="$(#nmos.INCLUDE)" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
-					<Add option="`pkg-config --libs libmicrohttpd`" />
-					<Add option="`pkg-config --libs avahi-client`" />
-					<Add option="`pkg-config --libs uuid`" />
+					<Add library="ole32" />
+					<Add library="nmos" />
 					<Add directory="$(#microhttp.lib)" />
+					<Add directory="$(#nmos.LIB)" />
+					<Add directory="$(#curl.LIB)" />
 				</Linker>
 			</Target>
 			<Target title="Linux Debug">

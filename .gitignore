@@ -3,3 +3,4 @@ bin/
 *.layout
 *.depend
 lib/
+*.bak

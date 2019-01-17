@@ -351,7 +351,7 @@ void Sender::Activate(std::string sSourceIp, std::string sDestinationIp, std::st
         //get the bound to interface source address
         for(std::set<std::string>::iterator itInteface = m_setInterfaces.begin(); itInteface != m_setInterfaces.end(); ++itInteface)
         {
-            std::map<std::string, interface>::const_iterator itDetails = NodeApi::Get().GetSelf().FindInterface((*itInteface));
+            std::map<std::string, nodeinterface>::const_iterator itDetails = NodeApi::Get().GetSelf().FindInterface((*itInteface));
             if(itDetails != NodeApi::Get().GetSelf().GetInterfaceEnd())
             {
                 sSourceIp = itDetails->second.sMainIpAddress;
@@ -415,7 +415,7 @@ void Sender::CreateSDP()
     ssSDP << m_Active.tpSender.sSourceIp << "\r\n";    // @todo should check here if
     ssSDP << "t=0 0 \r\n";
 
-    std::map<std::string, std::shared_ptr<Resource> >::const_iterator itDevice = NodeApi::Get().GetDevices().FindResource(m_sDeviceId);
+    std::map<std::string, std::shared_ptr<Resource> >::const_iterator itDevice = NodeApi::Get().GetDevices().FindNmosResource(m_sDeviceId);
     if(itDevice != NodeApi::Get().GetDevices().GetResourceEnd())
     {
         ssSDP << "s=" << itDevice->second->GetLabel() << ":";
@@ -454,7 +454,7 @@ void Sender::CreateSDP()
 
 
     //now put in the flow media information
-    std::map<std::string, std::shared_ptr<Resource> >::const_iterator itFlow = NodeApi::Get().GetFlows().FindResource(m_sFlowId);
+    std::map<std::string, std::shared_ptr<Resource> >::const_iterator itFlow = NodeApi::Get().GetFlows().FindNmosResource(m_sFlowId);
     if(itFlow != NodeApi::Get().GetFlows().GetResourceEnd())
     {
         std::shared_ptr<Flow> pFlow = std::dynamic_pointer_cast<Flow>(itFlow->second);
