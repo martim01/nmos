@@ -158,6 +158,7 @@
 		<Unit filename="include/flowvideo.h" />
 		<Unit filename="include/flowvideocoded.h" />
 		<Unit filename="include/flowvideoraw.h" />
+		<Unit filename="include/libnmos.h" />
 		<Unit filename="include/log.h" />
 		<Unit filename="include/mdns.h" />
 		<Unit filename="include/microserver.h" />

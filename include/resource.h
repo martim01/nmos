@@ -12,7 +12,7 @@
 #include <mutex>
 #include <sstream>
 
-class NMOS_EXPOSE Resource
+class Resource
 {
     public:
         Resource(const std::string& sType, const std::string& sLabel, const std::string& sDescription);
