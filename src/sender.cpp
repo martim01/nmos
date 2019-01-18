@@ -206,24 +206,24 @@ void Sender::SetTransport(enumTransport eTransport)
 
 
 
-Json::Value Sender::GetConnectionStagedJson() const
+Json::Value Sender::GetConnectionStagedJson(const ApiVersion& version) const
 {
-    return m_Staged.GetJson();
+    return m_Staged.GetJson(version);
 }
 
 
-Json::Value Sender::GetConnectionActiveJson() const
+Json::Value Sender::GetConnectionActiveJson(const ApiVersion& version) const
 {
-    return m_Active.GetJson();
+    return m_Active.GetJson(version);
 }
 
 
 
 
-Json::Value Sender::GetConnectionConstraintsJson() const
+Json::Value Sender::GetConnectionConstraintsJson(const ApiVersion& version) const
 {
     Json::Value jsArray(Json::arrayValue);
-    jsArray.append(m_constraints.GetJson());
+    jsArray.append(m_constraints.GetJson(version));
     return jsArray;
 }
 

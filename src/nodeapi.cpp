@@ -453,20 +453,21 @@ void NodeApi::StopRegistrationBrowser()
     }
 }
 
-int NodeApi::RegisterSimple()
+int NodeApi::RegisterSimple(const ApiVersion& version)
 {
     m_nRegistrationStatus = REG_FAILED;
     if(m_sRegistrationNode.empty() == false)
     {
-        long nResponse = RegisterResource("node", m_self.GetJson());
+        long nResponse = RegisterResource("node", m_self.GetJson(version));
         if(nResponse == 200)
         {   //Node already registered. Unregister and start again
             UnregisterSimple();
-            RegisterSimple();
+            RegisterSimple(version);
         }
         else if(nResponse == 201)
         {
-            if(RegisterResources(m_devices) == 201 && RegisterResources(m_sources) == 201 && RegisterResources(m_flows) == 201 && RegisterResources(m_senders) == 201 && RegisterResources(m_receivers))
+            if(RegisterResources(m_devices, version) == 201 && RegisterResources(m_sources, version) == 201 &&
+               RegisterResources(m_flows, version) == 201 && RegisterResources(m_senders, version) == 201 && RegisterResources(m_receivers, version))
             {
                 m_nRegistrationStatus = REG_DONE;
             }
@@ -484,13 +485,13 @@ int NodeApi::RegisterSimple()
     return m_nRegistrationStatus;
 }
 
-int NodeApi::UpdateRegisterSimple()
+int NodeApi::UpdateRegisterSimple(const ApiVersion& version)
 {
-    long nResponse = RegisterResource("node", m_self.GetJson());
-    ReregisterResources(m_devices);
-    ReregisterResources(m_sources);
-    ReregisterResources(m_flows);
-    ReregisterResources(m_senders);
+    long nResponse = RegisterResource("node", m_self.GetJson(version));
+    ReregisterResources(m_devices, version);
+    ReregisterResources(m_sources, version);
+    ReregisterResources(m_flows, version);
+    ReregisterResources(m_senders, version);
     return nResponse;
 }
 
@@ -546,12 +547,12 @@ bool NodeApi::FindRegistrationNode()
 }
 
 
-long NodeApi::RegisterResources(ResourceHolder& holder)
+long NodeApi::RegisterResources(ResourceHolder& holder, const ApiVersion& version)
 {
     for(map<string, shared_ptr<Resource> >::const_iterator itResource = holder.GetResourceBegin(); itResource != holder.GetResourceEnd(); ++itResource)
     {
         Log::Get(Log::LOG_INFO) << "NodeApi: Register. " << holder.GetType() << " : " << itResource->first << endl;
-        long nResult = RegisterResource(holder.GetType(), itResource->second->GetJson());
+        long nResult = RegisterResource(holder.GetType(), itResource->second->GetJson(version));
         if(nResult != 201)
         {
             return nResult;
@@ -560,12 +561,12 @@ long NodeApi::RegisterResources(ResourceHolder& holder)
     return 201;
 }
 
-long NodeApi::ReregisterResources(ResourceHolder& holder)
+long NodeApi::ReregisterResources(ResourceHolder& holder, const ApiVersion& version)
 {
     for(map<string, shared_ptr<Resource> >::const_iterator itResource = holder.GetChangedResourceBegin(); itResource != holder.GetChangedResourceEnd(); ++itResource)
     {
         Log::Get(Log::LOG_INFO) << "NodeApi: Register. " << holder.GetType() << " : " << itResource->first << endl;
-        long nResult = RegisterResource(holder.GetType(), itResource->second->GetJson());
+        long nResult = RegisterResource(holder.GetType(), itResource->second->GetJson(version));
         if(nResult != 200 && nResult != 201)
         {
             return nResult;

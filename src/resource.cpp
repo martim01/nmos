@@ -203,7 +203,7 @@ std::string Resource::GetCurrentTime(bool bIncludeNano)
     return sstr.str();
 }
 
-const Json::Value& Resource::GetJson() const
+const Json::Value& Resource::GetJson(const ApiVersion& version) const
 {
     return m_json;
 }

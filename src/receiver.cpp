@@ -335,15 +335,15 @@ bool Receiver::Commit()
 
 
 
-Json::Value Receiver::GetConnectionStagedJson() const
+Json::Value Receiver::GetConnectionStagedJson(const ApiVersion& version) const
 {
-    return m_Staged.GetJson();
+    return m_Staged.GetJson(version);
 }
 
 
-Json::Value Receiver::GetConnectionActiveJson() const
+Json::Value Receiver::GetConnectionActiveJson(const ApiVersion& version) const
 {
-    return m_Active.GetJson();
+    return m_Active.GetJson(version);
 }
 
 
@@ -372,10 +372,10 @@ void Receiver::SetSender(std::shared_ptr<Sender> pSender)
 }
 
 
-Json::Value Receiver::GetConnectionConstraintsJson() const
+Json::Value Receiver::GetConnectionConstraintsJson(const ApiVersion& version) const
 {
     Json::Value jsArray(Json::arrayValue);
-    jsArray.append(m_constraints.GetJson());
+    jsArray.append(m_constraints.GetJson(version));
     return jsArray;
 }
 

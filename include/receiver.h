@@ -5,6 +5,7 @@
 #include "dlldefine.h"
 #include "constraint.h"
 #include "connection.h"
+#include "version.h"
 
 class Sender;
 class EventPoster;
@@ -36,9 +37,9 @@ class NMOS_EXPOSE Receiver : public Resource
             return m_sDeviceId;
         }
 
-        Json::Value GetConnectionStagedJson() const;
-        Json::Value GetConnectionActiveJson() const;
-        Json::Value GetConnectionConstraintsJson() const;
+        Json::Value GetConnectionStagedJson(const ApiVersion& version) const;
+        Json::Value GetConnectionActiveJson(const ApiVersion& version) const;
+        Json::Value GetConnectionConstraintsJson(const ApiVersion& version) const;
 
         std::shared_ptr<Sender> GetSender() const;
         void SetSender(std::shared_ptr<Sender>);  //this is the IS-04 way of connecting

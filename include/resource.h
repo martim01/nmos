@@ -11,6 +11,7 @@
 #include <chrono>
 #include <mutex>
 #include <sstream>
+#include "version.h"
 
 class Resource
 {
@@ -31,7 +32,7 @@ class Resource
 
         virtual bool UpdateFromJson(const Json::Value& jsValue);
 
-        const Json::Value& GetJson() const;
+        const Json::Value& GetJson(const ApiVersion& version) const;
         virtual bool Commit();
 
         void UpdateLabel(std::string sLabel);

@@ -20,7 +20,8 @@ Self::Self(string sHostname, string sUrl,string sLabel, string sDescription) : R
     m_sUrl(sUrl),
     m_nDnsVersion(0)
 {
-
+    AddApiVersion("v1.1");
+    AddApiVersion("v1.2");
 }
 
 Self::~Self()

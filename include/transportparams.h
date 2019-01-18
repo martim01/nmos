@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include "json/json.h"
+#include "version.h"
 
 struct TransportParamsRTP
 {
@@ -9,7 +10,7 @@ struct TransportParamsRTP
     TransportParamsRTP();
     virtual bool Patch(const Json::Value& jsData);
 
-    virtual Json::Value GetJson() const;
+    virtual Json::Value GetJson(const ApiVersion& version) const;
     void SetPort(Json::Value& js, const std::string& sPort, unsigned short nPort) const;
     bool DecodePort(const Json::Value& jsData, const std::string& sPort, unsigned short& nPort);
 
@@ -40,7 +41,7 @@ struct TransportParamsRTPReceiver : public TransportParamsRTP
 
     TransportParamsRTPReceiver();
     virtual bool Patch(const Json::Value& jsData);
-    virtual Json::Value GetJson() const;
+    virtual Json::Value GetJson(const ApiVersion& version) const;
     void Actualize(const std::string& sInterfaceIp);
     TransportParamsRTPReceiver& operator=(const TransportParamsRTPReceiver& other);
 };
@@ -53,7 +54,7 @@ struct TransportParamsRTPSender : public TransportParamsRTP
     TransportParamsRTPSender();
     virtual bool Patch(const Json::Value& jsData);
 
-    virtual Json::Value GetJson() const;
+    virtual Json::Value GetJson(const ApiVersion& version) const;
 
     void Actualize(const std::string& sSource, const std::string& sDestination);
 

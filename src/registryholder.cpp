@@ -41,14 +41,14 @@ bool RegistryHolder::RemoveResource(std::string sUuid)
 }
 
 
-const Json::Value& RegistryHolder::GetJson()
+const Json::Value& RegistryHolder::GetJson(const ApiVersion& version)
 {
     m_json.clear();
 
     for(std::map<std::string, std::shared_ptr<Resource> >::const_iterator itResource = m_mResource.begin(); itResource != m_mResource.end(); ++itResource)
     {
         itResource->second->Commit();
-        m_json.append(itResource->second->GetJson());
+        m_json.append(itResource->second->GetJson(version));
     }
     return m_json;
 }

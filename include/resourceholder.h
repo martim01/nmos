@@ -2,7 +2,7 @@
 #include "json/json.h"
 #include "dlldefine.h"
 #include <memory>
-
+#include "version.h"
 class Resource;
 
 class NMOS_EXPOSE ResourceHolder
@@ -29,8 +29,8 @@ class NMOS_EXPOSE ResourceHolder
 
         virtual bool Commit();
 
-        const Json::Value& GetJson() const;
-        Json::Value GetConnectionJson() const;
+        const Json::Value& GetJson(const ApiVersion& version) const;
+        Json::Value GetConnectionJson(const ApiVersion& version) const;
 
         bool ResourceExists(const std::string& sUuid) const;
 

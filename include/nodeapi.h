@@ -6,7 +6,7 @@
 #include "dlldefine.h"
 #include <mutex>
 #include <condition_variable>
-
+#include "version.h"
 class ServiceBrowser;
 class ServicePublisher;
 class ServiceBrowserEvent;
@@ -232,10 +232,10 @@ class NMOS_EXPOSE NodeApi
         void StopRun();
         void ModifyTxtRecords();
 
-        int RegisterSimple();
+        int RegisterSimple(const ApiVersion& version);
         int UnregisterSimple();
         long RegistrationHeartbeat();
-        int UpdateRegisterSimple();
+        int UpdateRegisterSimple(const ApiVersion& version);
 
 
 
@@ -259,8 +259,8 @@ class NMOS_EXPOSE NodeApi
 
 
 
-        long RegisterResources(ResourceHolder& holder);
-        long ReregisterResources(ResourceHolder& holder);
+        long RegisterResources(ResourceHolder& holder, const ApiVersion& version);
+        long ReregisterResources(ResourceHolder& holder, const ApiVersion& version);
         long RegisterResource(const std::string& sType, const Json::Value& json);
 
         bool StartUnregistration();

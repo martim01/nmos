@@ -1,5 +1,5 @@
 #pragma once
-
+#include "version.h"
 #include "transportparams.h"
 
 struct connection
@@ -9,7 +9,7 @@ struct connection
     connection();
     connection& operator=(const connection& other);
     virtual bool Patch(const Json::Value& jsData);
-    virtual Json::Value GetJson() const;
+    virtual Json::Value GetJson(const ApiVersion& version) const;
 
 
     bool bMasterEnable;
@@ -27,7 +27,7 @@ struct connectionSender : public connection
     connectionSender& operator=(const connectionSender& other);
     virtual bool Patch(const Json::Value& jsData);
 
-    virtual Json::Value GetJson() const;
+    virtual Json::Value GetJson(const ApiVersion& version) const;
 
     TransportParamsRTPSender tpSender;
     std::string sReceiverId;
@@ -42,7 +42,7 @@ struct connectionReceiver : public connection
     connectionReceiver& operator=(const connectionReceiver& other);
     virtual bool Patch(const Json::Value& jsData);
 
-    virtual Json::Value GetJson() const;
+    virtual Json::Value GetJson(const ApiVersion& version) const;
 
     TransportParamsRTPReceiver tpReceiver;
     std::string sSenderId;

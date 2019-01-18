@@ -60,8 +60,6 @@ class NMOS_EXPOSE Self : public Resource
 
         void Init(std::string sHostname, std::string sUrl,std::string sLabel, std::string sDescription);
 
-        void AddApiVersion(std::string sVersion);
-        void RemoveApiVersion(std::string sVersion);
 
 
 
@@ -102,6 +100,10 @@ class NMOS_EXPOSE Self : public Resource
         void RemoveEndpoint(std::string sHost, unsigned int nPort);
 
     private:
+        void AddApiVersion(std::string sVersion);
+        void RemoveApiVersion(std::string sVersion);
+
+
         std::string m_sHostname;
         std::string m_sUrl;
         unsigned char m_nDnsVersion;

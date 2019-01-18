@@ -2,7 +2,7 @@
 #include "resource.h"
 #include <set>
 #include <memory>
-
+#include "version.h"
 #include "dlldefine.h"
 #include "connection.h"
 #include "constraint.h"
@@ -38,9 +38,9 @@ class NMOS_EXPOSE Sender : public Resource
             return m_sFlowId;
         }
 
-        Json::Value GetConnectionStagedJson() const;
-        Json::Value GetConnectionActiveJson() const;
-        Json::Value GetConnectionConstraintsJson() const;
+        Json::Value GetConnectionStagedJson(const ApiVersion& version) const;
+        Json::Value GetConnectionActiveJson(const ApiVersion& version) const;
+        Json::Value GetConnectionConstraintsJson(const ApiVersion& version) const;
 
         bool CheckConstraints(const connectionSender& conRequest);
         bool IsLocked();

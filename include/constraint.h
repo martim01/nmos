@@ -2,7 +2,7 @@
 #include <string>
 #include "json/json.h"
 #include <vector>
-
+#include "version.h"
 
 class constraint
 {
@@ -33,7 +33,7 @@ class constraint
             return m_sParam;
         }
 
-        Json::Value GetJson() const;
+        Json::Value GetJson(const ApiVersion& version) const;
 
     private:
         std::string m_sParam;
@@ -51,7 +51,7 @@ struct constraints
 {
     constraints();
 
-    virtual Json::Value GetJson() const;
+    virtual Json::Value GetJson(const ApiVersion& version) const;
 
 
     constraint destination_port;
@@ -67,7 +67,7 @@ struct constraints
 struct constraintsSender : public constraints
 {
     constraintsSender();
-    virtual Json::Value GetJson() const;
+    virtual Json::Value GetJson(const ApiVersion& version) const;
 
 
     constraint destination_ip;
@@ -88,7 +88,7 @@ struct constraintsReceiver : public constraints
 {
     constraintsReceiver();
 
-    virtual Json::Value GetJson() const;
+    virtual Json::Value GetJson(const ApiVersion& version) const;
 
     constraint interface_ip;
 };

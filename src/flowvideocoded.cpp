@@ -14,7 +14,7 @@ FlowVideoCoded::FlowVideoCoded(const std::string& sMediaType) : FlowVideo(sMedia
 
 bool FlowVideoCoded::UpdateFromJson(const Json::Value& jsData)
 {
-    FlowVideo::UpdateFromJson(jsData);
+    return FlowVideo::UpdateFromJson(jsData);
 }
 
 bool FlowVideoCoded::Commit()

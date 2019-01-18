@@ -325,6 +325,8 @@ int MicroServer::GetJsonNmosNodeApi(string& sReturn)
 
         if(NodeApi::Get().GetSelf().IsVersionSupported(m_vPath[VERSION]))
         {
+            ApiVersion version(m_vPath[VERSION]);
+
             if(m_vPath.size() == SZ_VERSION)
             {
                 //check the version::
@@ -339,27 +341,27 @@ int MicroServer::GetJsonNmosNodeApi(string& sReturn)
             }
             else if(m_vPath[ENDPOINT] == "self")
             {
-                sReturn  = stw.write(NodeApi::Get().GetSelf().GetJson());
+                sReturn  = stw.write(NodeApi::Get().GetSelf().GetJson(version));
             }
             else if(m_vPath[ENDPOINT] == "sources")
             {
-                sReturn  = stw.write(GetJsonSources());
+                sReturn  = stw.write(GetJsonSources(version));
             }
             else if(m_vPath[ENDPOINT] == "flows")
             {
-                sReturn  = stw.write(GetJsonFlows());
+                sReturn  = stw.write(GetJsonFlows(version));
             }
             else if(m_vPath[ENDPOINT] == "devices")
             {
-                sReturn  = stw.write(GetJsonDevices());
+                sReturn  = stw.write(GetJsonDevices(version));
             }
             else if(m_vPath[ENDPOINT] == "senders")
             {
-                sReturn  = stw.write(GetJsonSenders());
+                sReturn  = stw.write(GetJsonSenders(version));
             }
             else if(m_vPath[ENDPOINT] == "receivers")
             {
-                sReturn  = stw.write(GetJsonReceivers());
+                sReturn  = stw.write(GetJsonReceivers(version));
             }
             else
             {
@@ -376,86 +378,86 @@ int MicroServer::GetJsonNmosNodeApi(string& sReturn)
     return nCode;
 }
 
-Json::Value MicroServer::GetJsonSources()
+Json::Value MicroServer::GetJsonSources(const ApiVersion& version)
 {
     if(m_vPath.size() == SZ_ENDPOINT)
     {
-        return NodeApi::Get().GetSources().GetJson();
+        return NodeApi::Get().GetSources().GetJson(version);
     }
     else
     {
         map<string, std::shared_ptr<Resource> >::const_iterator itSource = NodeApi::Get().GetSources().FindNmosResource(m_vPath[RESOURCE]);
         if(itSource != NodeApi::Get().GetSources().GetResourceEnd())
         {
-            return itSource->second->GetJson();
+            return itSource->second->GetJson(version);
         }
     }
     return GetJsonError();
 }
 
-Json::Value MicroServer::GetJsonDevices()
+Json::Value MicroServer::GetJsonDevices(const ApiVersion& version)
 {
     if(m_vPath.size() == SZ_ENDPOINT)
     {
-        return NodeApi::Get().GetDevices().GetJson();
+        return NodeApi::Get().GetDevices().GetJson(version);
     }
     else
     {
         map<string, shared_ptr<Resource> >::const_iterator itDevice = NodeApi::Get().GetDevices().FindNmosResource(m_vPath[RESOURCE]);
         if(itDevice != NodeApi::Get().GetDevices().GetResourceEnd())
         {
-            return itDevice->second->GetJson();
+            return itDevice->second->GetJson(version);
         }
     }
     return GetJsonError(404, "Device "+m_vPath[RESOURCE]+"does not exist.");
 }
 
-Json::Value MicroServer::GetJsonFlows()
+Json::Value MicroServer::GetJsonFlows(const ApiVersion& version)
 {
     if(m_vPath.size() == SZ_ENDPOINT)
     {
-        return NodeApi::Get().GetFlows().GetJson();
+        return NodeApi::Get().GetFlows().GetJson(version);
     }
     else
     {
         map<string, shared_ptr<Resource> >::const_iterator itFlow = NodeApi::Get().GetFlows().FindNmosResource(m_vPath[RESOURCE]);
         if(itFlow != NodeApi::Get().GetFlows().GetResourceEnd())
         {
-            return itFlow->second->GetJson();
+            return itFlow->second->GetJson(version);
         }
     }
     return GetJsonError(404, "Flow "+m_vPath[RESOURCE]+"does not exist.");
 }
 
-Json::Value MicroServer::GetJsonReceivers()
+Json::Value MicroServer::GetJsonReceivers(const ApiVersion& version)
 {
     if(m_vPath.size() == SZ_ENDPOINT)
     {
-        return NodeApi::Get().GetReceivers().GetJson();
+        return NodeApi::Get().GetReceivers().GetJson(version);
     }
     else
     {
         map<string, shared_ptr<Resource> >::const_iterator itReceiver = NodeApi::Get().GetReceivers().FindNmosResource(m_vPath[RESOURCE]);
         if(itReceiver != NodeApi::Get().GetReceivers().GetResourceEnd())
         {
-            return itReceiver->second->GetJson();
+            return itReceiver->second->GetJson(version);
         }
     }
     return GetJsonError(404, "Receiver "+m_vPath[RESOURCE]+"does not exist.");
 }
 
-Json::Value MicroServer::GetJsonSenders()
+Json::Value MicroServer::GetJsonSenders(const ApiVersion& version)
 {
     if(m_vPath.size() == SZ_ENDPOINT)
     {
-        return NodeApi::Get().GetSenders().GetJson();
+        return NodeApi::Get().GetSenders().GetJson(version);
     }
     else
     {
         map<string, shared_ptr<Resource> >::const_iterator itSender = NodeApi::Get().GetSenders().FindNmosResource(m_vPath[RESOURCE]);
         if(itSender != NodeApi::Get().GetSenders().GetResourceEnd())
         {
-            return itSender->second->GetJson();
+            return itSender->second->GetJson(version);
         }
     }
     return GetJsonError(404, "Sender "+m_vPath[RESOURCE]+"does not exist.");
@@ -490,7 +492,7 @@ int MicroServer::GetJsonNmosConnectionApi(string& sReturn, std::string& sContent
                 }
                 else if(m_vPath[SZ_VERSION] == "single")
                 {
-                    return GetJsonNmosConnectionSingleApi(sReturn, sContentType);
+                    return GetJsonNmosConnectionSingleApi(sReturn, sContentType, ApiVersion(1,0));
 
                 }
                 else
@@ -509,7 +511,7 @@ int MicroServer::GetJsonNmosConnectionApi(string& sReturn, std::string& sContent
     return nCode;
 }
 
-int MicroServer::GetJsonNmosConnectionSingleApi(std::string& sReturn, std::string& sContentType)
+int MicroServer::GetJsonNmosConnectionSingleApi(std::string& sReturn, std::string& sContentType, const ApiVersion& version)
 {
     int nCode(200);
     Json::StyledWriter stw;
@@ -522,11 +524,11 @@ int MicroServer::GetJsonNmosConnectionSingleApi(std::string& sReturn, std::strin
     }
     else if(m_vPath[C_DIRECTION] == "senders")
     {
-        return GetJsonNmosConnectionSingleSenders(sReturn, sContentType);
+        return GetJsonNmosConnectionSingleSenders(sReturn, sContentType, version);
     }
     else if(m_vPath[C_DIRECTION] == "receivers")
     {
-        return GetJsonNmosConnectionSingleReceivers(sReturn);
+        return GetJsonNmosConnectionSingleReceivers(sReturn, version);
     }
     else
     {
@@ -537,13 +539,13 @@ int MicroServer::GetJsonNmosConnectionSingleApi(std::string& sReturn, std::strin
 }
 
 
-int MicroServer::GetJsonNmosConnectionSingleSenders(std::string& sReturn, std::string& sContentType)
+int MicroServer::GetJsonNmosConnectionSingleSenders(std::string& sReturn, std::string& sContentType, const ApiVersion& version)
 {
     int nCode(200);
     Json::StyledWriter stw;
     if(m_vPath.size() == SZC_DIRECTION)
     {
-        sReturn = stw.write(NodeApi::Get().GetSenders().GetConnectionJson());
+        sReturn = stw.write(NodeApi::Get().GetSenders().GetConnectionJson(version));
     }
     else
     {
@@ -564,15 +566,15 @@ int MicroServer::GetJsonNmosConnectionSingleSenders(std::string& sReturn, std::s
                 shared_ptr<Sender> pSender = dynamic_pointer_cast<Sender>(itResource->second);
                 if(m_vPath[C_LAST] == "constraints")
                 {
-                    sReturn = stw.write(pSender->GetConnectionConstraintsJson());
+                    sReturn = stw.write(pSender->GetConnectionConstraintsJson(version));
                 }
                 else if(m_vPath[C_LAST] == "staged")
                 {
-                    sReturn = stw.write(pSender->GetConnectionStagedJson());
+                    sReturn = stw.write(pSender->GetConnectionStagedJson(version));
                 }
                 else if(m_vPath[C_LAST] == "active")
                 {
-                    sReturn = stw.write(pSender->GetConnectionActiveJson());
+                    sReturn = stw.write(pSender->GetConnectionActiveJson(version));
                 }
                 else if(m_vPath[C_LAST] == "transportfile")
                 {
@@ -597,13 +599,13 @@ int MicroServer::GetJsonNmosConnectionSingleSenders(std::string& sReturn, std::s
     return nCode;
 }
 
-int MicroServer::GetJsonNmosConnectionSingleReceivers(std::string& sReturn)
+int MicroServer::GetJsonNmosConnectionSingleReceivers(std::string& sReturn, const ApiVersion& version)
 {
     int nCode(200);
     Json::StyledWriter stw;
     if(m_vPath.size() == SZC_DIRECTION)
     {
-        sReturn = stw.write(NodeApi::Get().GetReceivers().GetConnectionJson());
+        sReturn = stw.write(NodeApi::Get().GetReceivers().GetConnectionJson(version));
     }
     else
     {
@@ -623,15 +625,15 @@ int MicroServer::GetJsonNmosConnectionSingleReceivers(std::string& sReturn)
                 shared_ptr<Receiver> pReceiver(dynamic_pointer_cast<Receiver>(itResource->second));
                 if(m_vPath[C_LAST] == "constraints")
                 {
-                    sReturn = stw.write(pReceiver->GetConnectionConstraintsJson());
+                    sReturn = stw.write(pReceiver->GetConnectionConstraintsJson(version));
                 }
                 else if(m_vPath[C_LAST] == "staged")
                 {
-                    sReturn = stw.write(pReceiver->GetConnectionStagedJson());
+                    sReturn = stw.write(pReceiver->GetConnectionStagedJson(version));
                 }
                 else if(m_vPath[C_LAST] == "active")
                 {
-                    sReturn = stw.write(pReceiver->GetConnectionActiveJson());
+                    sReturn = stw.write(pReceiver->GetConnectionActiveJson(version));
                 }
                 else
                 {
@@ -708,6 +710,7 @@ int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
     {
         if(m_vPath[NMOS] == "x-nmos" && m_vPath[API_TYPE] == "node" &&  NodeApi::Get().GetSelf().IsVersionSupported(m_vPath[VERSION]) && m_vPath[ENDPOINT] == "receivers" && m_vPath[TARGET] == "target")
         {
+            ApiVersion version(m_vPath[VERSION]);
             //does the receiver exist?
             shared_ptr<Receiver> pReceiver  = NodeApi::Get().GetReceiver(m_vPath[RESOURCE]);
             if(!pReceiver)
@@ -750,7 +753,7 @@ int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
                             pReceiver->SetSender(pSender);
                             NodeApi::Get().Commit();   //updates the registration node or txt records
 
-                            sResponse = stw.write(pSender->GetJson());
+                            sResponse = stw.write(pSender->GetJson(version));
                         }
                         else
                         {
@@ -761,7 +764,7 @@ int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
                     else
                     {   //no way of telling main thread to do this so we'll simply assume it's been done
                         nCode = 202;
-                        sResponse = stw.write(pSender->GetJson());
+                        sResponse = stw.write(pSender->GetJson(version));
                     }
                 }
             }
@@ -795,19 +798,21 @@ int MicroServer::PatchJson(string sPath, const string& sJson, string& sResponse)
     }
     else
     {
+        ApiVersion version(m_vPath[VERSION]);
+
         if(m_vPath[C_DIRECTION] == "senders")
         {
-            return PatchJsonSender(sJson, sResponse);
+            return PatchJsonSender(sJson, sResponse, version);
         }
         else
         {
-            return PatchJsonReceiver(sJson, sResponse);
+            return PatchJsonReceiver(sJson, sResponse, version);
         }
     }
     return nCode;
 }
 
-int MicroServer::PatchJsonSender(const std::string& sJson, std::string& sResponse)
+int MicroServer::PatchJsonSender(const std::string& sJson, std::string& sResponse, const ApiVersion& version)
 {
     Log::Get(Log::LOG_DEBUG) << "PatchJsonSender" << std::endl;
     int nCode(200);
@@ -873,7 +878,7 @@ int MicroServer::PatchJsonSender(const std::string& sJson, std::string& sRespons
                     {
                         nCode = 200;
                     }
-                    sResponse = stw.write(pSender->GetConnectionStagedJson());
+                    sResponse = stw.write(pSender->GetConnectionStagedJson(version));
                     Log::Get(Log::LOG_DEBUG) << sResponse << std::endl;
                 }
                 else
@@ -887,7 +892,7 @@ int MicroServer::PatchJsonSender(const std::string& sJson, std::string& sRespons
             {   //no way of telling main thread to do this so we'll simply assume it's been done
                 if(pSender->Stage(conRequest, m_pPoster)) //PATCH the sender
                 {
-                    sResponse = stw.write(pSender->GetConnectionStagedJson());
+                    sResponse = stw.write(pSender->GetConnectionStagedJson(version));
                     Log::Get(Log::LOG_DEBUG) << sResponse << std::endl;
                 }
                 else
@@ -902,7 +907,7 @@ int MicroServer::PatchJsonSender(const std::string& sJson, std::string& sRespons
     return nCode;
 }
 
-int MicroServer::PatchJsonReceiver(const std::string& sJson, std::string& sResponse)
+int MicroServer::PatchJsonReceiver(const std::string& sJson, std::string& sResponse, const ApiVersion& version)
 {
     int nCode(200);
     Json::StyledWriter stw;
@@ -962,7 +967,7 @@ int MicroServer::PatchJsonReceiver(const std::string& sJson, std::string& sRespo
                     {
                         nCode = 200;
                     }
-                    sResponse = stw.write(pReceiver->GetConnectionStagedJson());
+                    sResponse = stw.write(pReceiver->GetConnectionStagedJson(version));
                     Log::Get(Log::LOG_DEBUG) << sResponse << std::endl;
                 }
                 else
@@ -976,7 +981,7 @@ int MicroServer::PatchJsonReceiver(const std::string& sJson, std::string& sRespo
             {   //no way of telling main thread to do this so we'll simply assume it's been done
                 if(pReceiver->Stage(conRequest, m_pPoster)) //PATCH the Receiver
                 {
-                    sResponse = stw.write(pReceiver->GetConnectionStagedJson());
+                    sResponse = stw.write(pReceiver->GetConnectionStagedJson(version));
                     Log::Get(Log::LOG_DEBUG) << sResponse << std::endl;
                 }
                 else

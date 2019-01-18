@@ -85,7 +85,7 @@ bool connection::Patch(const Json::Value& jsData)
 }
 
 
-Json::Value connection::GetJson() const
+Json::Value connection::GetJson(const ApiVersion& version) const
 {
     Json::Value jsConnect;
 
@@ -152,9 +152,9 @@ bool connectionSender::Patch(const Json::Value& jsData)
     return bIsOk;
 }
 
-Json::Value connectionSender::GetJson() const
+Json::Value connectionSender::GetJson(const ApiVersion& version) const
 {
-    Json::Value jsConnect(connection::GetJson());
+    Json::Value jsConnect(connection::GetJson(version));
 
     if(sReceiverId.empty())
     {
@@ -165,7 +165,7 @@ Json::Value connectionSender::GetJson() const
         jsConnect["receiver_id"] = sReceiverId;
     }
     jsConnect["transport_params"] = Json::arrayValue;
-    jsConnect["transport_params"].append(tpSender.GetJson());
+    jsConnect["transport_params"].append(tpSender.GetJson(version));
     return jsConnect;
 }
 
@@ -231,9 +231,9 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
 
 
 
-Json::Value connectionReceiver::GetJson()  const
+Json::Value connectionReceiver::GetJson(const ApiVersion& version)  const
 {
-    Json::Value jsConnect(connection::GetJson());
+    Json::Value jsConnect(connection::GetJson(version));
     jsConnect["transport_file"] = Json::objectValue;
     if(sTransportFileType.empty() || sTransportFileData.empty())
     {
@@ -261,7 +261,7 @@ Json::Value connectionReceiver::GetJson()  const
 
 
     jsConnect["transport_params"] = Json::arrayValue;
-    jsConnect["transport_params"].append(tpReceiver.GetJson());
+    jsConnect["transport_params"].append(tpReceiver.GetJson(version));
     return jsConnect;
 }
 

@@ -5,6 +5,7 @@
 #include <thread>
 #include <vector>
 #include "json/json.h"
+#include "version.h"
 
 class EventPoster;
 class MicroServer;
@@ -91,20 +92,20 @@ class MicroServer
         bool IsOk();
         int GetJsonNmos(std::string& sReturn, std::string& sContentType);
         int GetJsonNmosNodeApi(std::string& sReturn);
-        Json::Value GetJsonSources();
-        Json::Value GetJsonDevices();
-        Json::Value GetJsonFlows();
-        Json::Value GetJsonReceivers();
-        Json::Value GetJsonSenders();
+        Json::Value GetJsonSources(const ApiVersion& version);
+        Json::Value GetJsonDevices(const ApiVersion& version);
+        Json::Value GetJsonFlows(const ApiVersion& version);
+        Json::Value GetJsonReceivers(const ApiVersion& version);
+        Json::Value GetJsonSenders(const ApiVersion& version);
         int GetJsonNmosConnectionApi(std::string& sReturn, std::string& sContentType);
-        int GetJsonNmosConnectionSingleApi(std::string& sReturn, std::string& sContentType);
+        int GetJsonNmosConnectionSingleApi(std::string& sReturn, std::string& sContentType, const ApiVersion& version);
         int GetJsonNmosConnectionBulkApi(std::string& sReturn);
 
-        int GetJsonNmosConnectionSingleSenders(std::string& sReturn, std::string& sContentType);
-        int GetJsonNmosConnectionSingleReceivers(std::string& sReturn);
+        int GetJsonNmosConnectionSingleSenders(std::string& sReturn, std::string& sContentType, const ApiVersion& version);
+        int GetJsonNmosConnectionSingleReceivers(std::string& sReturn, const ApiVersion& version);
 
-        int PatchJsonSender(const std::string& sJson, std::string& sResponse);
-        int PatchJsonReceiver(const std::string& sJson, std::string& sResponse);
+        int PatchJsonSender(const std::string& sJson, std::string& sResponse, const ApiVersion& version);
+        int PatchJsonReceiver(const std::string& sJson, std::string& sResponse, const ApiVersion& version);
 
         Json::Value GetJsonError(unsigned long nCode = 404, std::string sError="Resource not found");
 

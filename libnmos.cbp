@@ -5,7 +5,7 @@
 		<Option title="libnmos" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
-		<Option virtualFolders="nmos\;" />
+		<Option virtualFolders="nmos/;" />
 		<Build>
 			<Target title="Linux Debug">
 				<Option platforms="Unix;" />
@@ -50,7 +50,7 @@
 			</Target>
 			<Target title="Windows Debug">
 				<Option platforms="Windows;" />
-				<Option output="lib/nmosd" prefix_auto="1" extension_auto="1" />
+				<Option output="lib/libnmosd" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="3" />
 				<Option compiler="new_gnu_gcc_compiler" />
@@ -83,7 +83,7 @@
 			</Target>
 			<Target title="Windows Release">
 				<Option platforms="Windows;" />
-				<Option output="lib/nmos" prefix_auto="1" extension_auto="1" />
+				<Option output="lib/libnmos" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="3" />
 				<Option compiler="new_gnu_gcc_compiler" />
@@ -180,6 +180,7 @@
 		<Unit filename="include/sourcegeneric.h" />
 		<Unit filename="include/transportparams.h" />
 		<Unit filename="include/utils.h" />
+		<Unit filename="include/version.h" />
 		<Unit filename="src/avahibrowser.cpp">
 			<Option target="Linux Debug" />
 			<Option target="Linux Release" />

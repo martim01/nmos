@@ -56,7 +56,7 @@ void constraint::RemovePattern()
     m_pairPattern = make_pair(false, "");
 }
 
-Json::Value constraint::GetJson() const
+Json::Value constraint::GetJson(const ApiVersion& version) const
 {
     Json::Value jsConstraint(Json::objectValue);
     if(m_pairMinimum.first)
@@ -265,17 +265,17 @@ constraints::constraints() :
 
 }
 
-Json::Value constraints::GetJson() const
+Json::Value constraints::GetJson(const ApiVersion& version) const
 {
     Json::Value jsConstraints(Json::objectValue);
-    jsConstraints[destination_port.GetParam()] = destination_port.GetJson();
-    jsConstraints[fec_destination_ip.GetParam()] = fec_destination_ip.GetJson();
-    jsConstraints[fec_enabled.GetParam()] = fec_enabled.GetJson();
-    jsConstraints[fec_mode.GetParam()] = fec_mode.GetJson();
-    jsConstraints[fec1D_destination_port.GetParam()] = fec1D_destination_port.GetJson();
-    jsConstraints[fec2D_destination_port.GetParam()] = fec2D_destination_port.GetJson();
-    jsConstraints[rtcp_destination_ip.GetParam()] = rtcp_destination_ip.GetJson();
-    jsConstraints[rtcp_destination_port.GetParam()] = rtcp_destination_port.GetJson();
+    jsConstraints[destination_port.GetParam()] = destination_port.GetJson(version);
+    jsConstraints[fec_destination_ip.GetParam()] = fec_destination_ip.GetJson(version);
+    jsConstraints[fec_enabled.GetParam()] = fec_enabled.GetJson(version);
+    jsConstraints[fec_mode.GetParam()] = fec_mode.GetJson(version);
+    jsConstraints[fec1D_destination_port.GetParam()] = fec1D_destination_port.GetJson(version);
+    jsConstraints[fec2D_destination_port.GetParam()] = fec2D_destination_port.GetJson(version);
+    jsConstraints[rtcp_destination_ip.GetParam()] = rtcp_destination_ip.GetJson(version);
+    jsConstraints[rtcp_destination_port.GetParam()] = rtcp_destination_port.GetJson(version);
     return jsConstraints;
 }
 
@@ -295,20 +295,20 @@ constraintsSender::constraintsSender() : constraints(),
 
 }
 
-Json::Value constraintsSender::GetJson() const
+Json::Value constraintsSender::GetJson(const ApiVersion& version) const
 {
-    Json::Value jsConstraints(constraints::GetJson());
-    jsConstraints[destination_ip.GetParam()] = destination_ip.GetJson();
-    jsConstraints[source_ip.GetParam()] = source_ip.GetJson();
-    jsConstraints[source_port.GetParam()] = source_port.GetJson();
-    jsConstraints[fec_type.GetParam()] = fec_type.GetJson();
-    jsConstraints[fec_block_width.GetParam()] = fec_block_width.GetJson();
-    jsConstraints[fec_block_height.GetParam()] = fec_block_height.GetJson();
-    jsConstraints[fec1D_source_port.GetParam()] = fec1D_source_port.GetJson();
-    jsConstraints[fec2D_source_port.GetParam()] = fec2D_source_port.GetJson();
-    jsConstraints[rtcp_enabled.GetParam()] = rtcp_enabled.GetJson();
-    jsConstraints[rtcp_source_port.GetParam()] = rtcp_source_port.GetJson();
-    jsConstraints[rtp_enabled.GetParam()] = rtp_enabled.GetJson();
+    Json::Value jsConstraints(constraints::GetJson(version));
+    jsConstraints[destination_ip.GetParam()] = destination_ip.GetJson(version);
+    jsConstraints[source_ip.GetParam()] = source_ip.GetJson(version);
+    jsConstraints[source_port.GetParam()] = source_port.GetJson(version);
+    jsConstraints[fec_type.GetParam()] = fec_type.GetJson(version);
+    jsConstraints[fec_block_width.GetParam()] = fec_block_width.GetJson(version);
+    jsConstraints[fec_block_height.GetParam()] = fec_block_height.GetJson(version);
+    jsConstraints[fec1D_source_port.GetParam()] = fec1D_source_port.GetJson(version);
+    jsConstraints[fec2D_source_port.GetParam()] = fec2D_source_port.GetJson(version);
+    jsConstraints[rtcp_enabled.GetParam()] = rtcp_enabled.GetJson(version);
+    jsConstraints[rtcp_source_port.GetParam()] = rtcp_source_port.GetJson(version);
+    jsConstraints[rtp_enabled.GetParam()] = rtp_enabled.GetJson(version);
     return jsConstraints;
 }
 
@@ -318,9 +318,9 @@ constraintsReceiver::constraintsReceiver() : constraints(),
 
 }
 
-Json::Value constraintsReceiver::GetJson() const
+Json::Value constraintsReceiver::GetJson(const ApiVersion& version) const
 {
-    Json::Value jsConstraints(constraints::GetJson());
-    jsConstraints[interface_ip.GetParam()] = interface_ip.GetJson();
+    Json::Value jsConstraints(constraints::GetJson(version));
+    jsConstraints[interface_ip.GetParam()] = interface_ip.GetJson(version);
     return jsConstraints;
 }

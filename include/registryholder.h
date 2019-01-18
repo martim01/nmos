@@ -3,7 +3,7 @@
 #include "json/json.h"
 #include "dlldefine.h"
 #include <memory>
-
+#include "version.h"
 
 class Resource;
 
@@ -20,7 +20,7 @@ class NMOS_EXPOSE RegistryHolder
 
         void RemoveAllResources();
 
-        const Json::Value& GetJson();
+        const Json::Value& GetJson(const ApiVersion& version);
 
         bool ResourceExists(const std::string& sUuid) const;
 

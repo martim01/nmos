@@ -154,7 +154,7 @@ bool TransportParamsRTP::Patch(const Json::Value& jsData)
     return bIsOk;
 }
 
-Json::Value TransportParamsRTP::GetJson() const
+Json::Value TransportParamsRTP::GetJson(const ApiVersion& version) const
 {
     Json::Value jsTp;
 
@@ -349,9 +349,9 @@ bool TransportParamsRTPSender::Patch(const Json::Value& jsData)
     return bIsOk;
 }
 
-Json::Value TransportParamsRTPSender::GetJson() const
+Json::Value TransportParamsRTPSender::GetJson(const ApiVersion& version) const
 {
-    Json::Value jsTp(TransportParamsRTP::GetJson());
+    Json::Value jsTp(TransportParamsRTP::GetJson(version));
 
     jsTp["destination_ip"] = sDestinationIp;
     SetPort(jsTp, "source_port", nSourcePort);
@@ -463,9 +463,9 @@ bool TransportParamsRTPReceiver::Patch(const Json::Value& jsData)
     return bIsOk;
 }
 
-Json::Value TransportParamsRTPReceiver::GetJson() const
+Json::Value TransportParamsRTPReceiver::GetJson(const ApiVersion& version) const
 {
-    Json::Value jsTp(TransportParamsRTP::GetJson());
+    Json::Value jsTp(TransportParamsRTP::GetJson(version));
     jsTp["multicast_ip"] = sMulticastIp;
     jsTp["interface_ip"] = sInterfaceIp;
     return jsTp;

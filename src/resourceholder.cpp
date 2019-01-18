@@ -77,7 +77,7 @@ bool ResourceHolder::Commit()
         {
             m_mResourceChanged.insert(make_pair(itResource->first, itResource->second));
         }
-        m_json.append(itResource->second->GetJson());
+        m_json.append(itResource->second->GetJson(version));
     }
     if(m_mResourceChanged.empty() == false)
     {
@@ -87,7 +87,7 @@ bool ResourceHolder::Commit()
     return false;
 }
 
-const Json::Value& ResourceHolder::GetJson() const
+const Json::Value& ResourceHolder::GetJson(const ApiVersion& version) const
 {
     return m_json;
 }

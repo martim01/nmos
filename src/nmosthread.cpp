@@ -26,7 +26,7 @@ void NodeThread::Main()
             NodeApi::Get().ModifyTxtRecords();
 
             //Run the registered operation loop
-            if(RegisteredOperation())
+            if(RegisteredOperation(ApiVersion(1,2)))    //@todo use the version that the registry wants us to
             {   //exited cleanly so still registered
                 NodeApi::Get().UnregisterSimple();
             }
@@ -43,9 +43,9 @@ void NodeThread::Main()
 
 }
 
-bool NodeThread::RegisteredOperation()
+bool NodeThread::RegisteredOperation(const ApiVersion& version)
 {
-    if(NodeApi::Get().RegisterSimple() == NodeApi::REG_DONE)
+    if(NodeApi::Get().RegisterSimple(version) == NodeApi::REG_DONE)
     {
         while(NodeApi::Get().IsRunning())
         {
@@ -54,7 +54,7 @@ bool NodeThread::RegisteredOperation()
                 switch(NodeApi::Get().GetSignal())
                 {
                     case NodeApi::SIG_COMMIT:
-                        NodeApi::Get().UpdateRegisterSimple();
+                        NodeApi::Get().UpdateRegisterSimple(version);
                         break;
                     default:
                         break;
@@ -68,7 +68,7 @@ bool NodeThread::RegisteredOperation()
             }
             else if(nResponse == 404)
             {
-                if(NodeApi::Get().RegisterSimple() != NodeApi::REG_DONE)
+                if(NodeApi::Get().RegisterSimple(version) != NodeApi::REG_DONE)
                 {
                     return false;
                 }
