@@ -262,6 +262,9 @@ bool NodeApi::StartServices(shared_ptr<EventPoster> pPoster)
 void NodeApi::StopServices()
 {
     StopRun();
+    StopHttpServers();
+    StopmDNSServer();
+    StopRegistrationBrowser();
 }
 
 

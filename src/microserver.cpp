@@ -162,6 +162,7 @@ int MicroServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, cons
 
 bool MicroServer::Init(unsigned int nPort)
 {
+    Log::Get() << "MicroServer: " << nPort << " Try Init" << std::endl;
     m_nPort = nPort;
     m_pmhd = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY, nPort, NULL, NULL, &MicroServer::AnswerToConnection, this, MHD_OPTION_NOTIFY_COMPLETED, RequestCompleted, NULL, MHD_OPTION_END);
     if(m_pmhd)

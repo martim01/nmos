@@ -15,9 +15,11 @@
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-D__GNU__" />
+					<Add directory="$(#nmos.include)" />
 				</Compiler>
 				<Linker>
-					<Add library="../../lib/libnmosd.so" />
+					<Add library="libnmosd" />
+					<Add directory="$(#nmos.lib)" />
 				</Linker>
 			</Target>
 			<Target title="Linux Release">
@@ -29,9 +31,12 @@
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-D__GNU__" />
+					<Add directory="$(#nmos.include)" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add library="libnmos" />
+					<Add directory="$(#nmos.lib)" />
 				</Linker>
 			</Target>
 		</Build>

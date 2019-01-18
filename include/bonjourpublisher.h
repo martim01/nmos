@@ -1,3 +1,4 @@
+#ifdef __GNUWIN32__
 #pragma once
 #include "dns_sd.h"
 #include <string>
@@ -38,3 +39,4 @@ class ServicePublisher
 };
 
 
+#endif

@@ -1,3 +1,4 @@
+#ifdef __GNUWIN32__
 #include "bonjourpublisher.h"
 #include <sstream>
 #include <thread>
@@ -203,3 +204,4 @@ void ServicePublisher::RunSelect(ServicePublisher* pPublisher)
 		}
 	}
 }
+#endif
