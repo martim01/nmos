@@ -19,7 +19,7 @@ The aim is to implement all of the specifications but currently IS-04 and IS-05 
 
 
 # Dependencies
-The library is intended to be platform agnostic and where possible use widely used and opened licenced external libraries.
+The library is intended to be platform agnostic and where possible use widely used and public licenced external libraries.
 - [microhttpd](https://www.gnu.org/software/libmicrohttpd/) for the webserver
 - [libcurl](https://curl.haxx.se/libcurl/) for registering resources and performing queries
 - Linux: [avahi](http://avahi.org/) for service discovery and publishing
