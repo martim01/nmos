@@ -461,7 +461,12 @@ void Sender::CreateSDP()
         std::shared_ptr<Flow> pFlow = std::dynamic_pointer_cast<Flow>(itFlow->second);
         if(pFlow)
         {
-            ssSDP << pFlow->CreateSDPLines(m_Active.tpSender.nDestinationPort);
+            unsigned short nPort(m_Active.tpSender.nDestinationPort);
+            if(nPort == 0)
+            {
+                nPort = 5004;
+            }
+            ssSDP << pFlow->CreateSDPLines(5004);
         }
     }
 
