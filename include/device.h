@@ -1,7 +1,7 @@
 #pragma once
 #include "resource.h"
 #include <set>
-#include "dlldefine.h"
+#include "nmosdlldefine.h"
 
 class NMOS_EXPOSE Device : public Resource
 {

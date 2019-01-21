@@ -3,7 +3,7 @@
 #include "resourceholder.h"
 #include <vector>
 #include <string>
-#include "dlldefine.h"
+#include "nmosdlldefine.h"
 #include <mutex>
 #include <condition_variable>
 #include "version.h"

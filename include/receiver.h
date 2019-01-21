@@ -2,7 +2,7 @@
 #include "resource.h"
 #include <set>
 #include <memory>
-#include "dlldefine.h"
+#include "nmosdlldefine.h"
 #include "constraint.h"
 #include "connection.h"
 #include "version.h"

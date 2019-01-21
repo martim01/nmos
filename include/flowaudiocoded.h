@@ -1,6 +1,6 @@
 #pragma once
 #include "flowaudio.h"
-#include "dlldefine.h"
+#include "nmosdlldefine.h"
 
 class NMOS_EXPOSE FlowAudioCoded : public FlowAudio
 {

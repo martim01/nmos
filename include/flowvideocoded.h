@@ -1,6 +1,6 @@
 #pragma once
 #include "flowvideo.h"
-#include "dlldefine.h"
+#include "nmosdlldefine.h"
 
 class NMOS_EXPOSE FlowVideoCoded : public FlowVideo
 {

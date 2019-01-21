@@ -1,7 +1,7 @@
 #pragma once
 #include <map>
 #include "json/json.h"
-#include "dlldefine.h"
+#include "nmosdlldefine.h"
 #include <memory>
 #include "version.h"
 

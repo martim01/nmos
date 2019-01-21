@@ -90,6 +90,7 @@
 				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>
+					<Add option="-std=c11" />
 					<Add option="-pipe" />
 					<Add option="-mthreads" />
 					<Add option='[[if (PLATFORM == PLATFORM_MSW &amp;&amp; (GetCompilerFactory().GetCompilerVersionString(_T(&quot;gcc&quot;)) &gt;= _T(&quot;4.0.0&quot;))) print(_T(&quot;-Wno-attributes&quot;));]]' />
@@ -149,7 +150,6 @@
 		<Unit filename="include/constraint.h" />
 		<Unit filename="include/curlregister.h" />
 		<Unit filename="include/device.h" />
-		<Unit filename="include/dlldefine.h" />
 		<Unit filename="include/eventposter.h">
 			<Option virtualFolder="nmos/" />
 		</Unit>
@@ -167,6 +167,7 @@
 		<Unit filename="include/log.h" />
 		<Unit filename="include/mdns.h" />
 		<Unit filename="include/microserver.h" />
+		<Unit filename="include/nmosdlldefine.h" />
 		<Unit filename="include/nmosthread.h" />
 		<Unit filename="include/nodeapi.h" />
 		<Unit filename="include/receiver.h" />

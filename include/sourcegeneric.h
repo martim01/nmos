@@ -1,6 +1,6 @@
 #pragma once
 #include "source.h"
-#include "dlldefine.h"
+#include "nmosdlldefine.h"
 
 class NMOS_EXPOSE SourceGeneric : public Source
 {

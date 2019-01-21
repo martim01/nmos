@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <memory>
-#include "dlldefine.h"
+#include "nmosdlldefine.h"
 
 
 class Resource;
