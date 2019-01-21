@@ -43,9 +43,9 @@ bool FlowAudio::UpdateFromJson(const Json::Value& jsData)
     return m_bIsOk;
 }
 
-bool FlowAudio::Commit()
+bool FlowAudio::Commit(const ApiVersion& version)
 {
-    if(Flow::Commit())
+    if(Flow::Commit(version))
     {
         m_json["sample_rate"]["numerator"] = m_nSampleRateNumerator;
         if(m_nSampleRateDenominator != 1)

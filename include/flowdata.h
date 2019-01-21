@@ -10,7 +10,7 @@ class NMOS_EXPOSE FlowData : public Flow
         FlowData(const std::string sMediaType);
         virtual bool UpdateFromJson(const Json::Value& jsData);
 
-        virtual bool Commit();
+        virtual bool Commit(const ApiVersion& version);
         void SetMediaType(std::string sMediaType);
 
     private:

@@ -24,9 +24,10 @@ class NMOS_EXPOSE Sender : public Resource
 
         void SetTransport(enumTransport eTransport);
         void SetManifestHref(std::string sHref);
+        const std::string& GetManifestHref() const;
 
         void SetReceiverId(std::string sReceiverId, bool bActive);
-        virtual bool Commit();
+        virtual bool Commit(const ApiVersion& version);
 
         std::string GetParentResourceId() const
         {

@@ -193,7 +193,6 @@ long CurlRegister::Query(const std::string& sBaseUrl, NodeApi::enumResource eRes
     long nResponseCode(500);
 
 
-
     std::stringstream ssUrl;
     ssUrl << sBaseUrl << "/" << STR_RESOURCE[eResource] << "/" << sQuery;
 
@@ -245,6 +244,50 @@ long CurlRegister::Query(const std::string& sBaseUrl, NodeApi::enumResource eRes
 }
 
 
+long CurlRegister::Get(const std::string& sUrl, std::string& sResponse)
+{
+    char sError[CURL_ERROR_SIZE];
+    CURLcode res;
+    long nResponseCode(500);
+
+
+    Log::Get(Log::LOG_INFO) << "CurlRegister: Get: " << sUrl << std::endl;
+
+    CURL* pCurl = curl_easy_init();
+    if(pCurl)
+    {
+
+        curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1);
+        curl_easy_setopt(pCurl, CURLOPT_HEADER, 0);
+        curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+        curl_easy_setopt(pCurl, CURLOPT_DEBUGFUNCTION, debug_callback);
+        curl_easy_setopt(pCurl, CURLOPT_ERRORBUFFER, sError);
+
+
+        MemoryStruct chunk;
+
+        /* what call to write: */
+        curl_easy_setopt(pCurl, CURLOPT_URL, sUrl.c_str());
+        curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &chunk);
+
+        res = curl_easy_perform(pCurl);
+        /* Check for errors */
+        if(res != CURLE_OK)
+        {
+            curl_easy_getinfo(pCurl, CURLINFO_RESPONSE_CODE, &nResponseCode);
+            sResponse = curl_easy_strerror(res);
+            Log::Get(Log::LOG_INFO) << "CURL Error: " << sResponse << std::endl;
+        }
+        else
+        {
+            sResponse.assign(chunk.pMemory, chunk.nSize);
+            Log::Get(Log::LOG_INFO) << "CURL: " << sResponse << std::endl;
+            curl_easy_getinfo(pCurl, CURLINFO_RESPONSE_CODE, &nResponseCode);
+        }
+        curl_easy_cleanup(pCurl);
+    }
+    return nResponseCode;
+}
 
 void CurlRegister::ParseResults(NodeApi::enumResource eResource, const std::string& sResponse, ResourceHolder* pResults)
 {
@@ -258,7 +301,7 @@ void CurlRegister::ParseResults(NodeApi::enumResource eResource, const std::stri
             //@todo create the correct resources here in the same way as the registryapi does
 
         }
-        pResults->Commit();
+        //pResults->Commit();
     }
     else
     {

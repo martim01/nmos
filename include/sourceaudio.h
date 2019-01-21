@@ -14,7 +14,7 @@ class NMOS_EXPOSE SourceAudio : public Source
         void RemoveChannel(std::string sSymbol);
 
 
-        bool Commit();
+        bool Commit(const ApiVersion& version);
 
         size_t GetNumberOfChannels() const;
 

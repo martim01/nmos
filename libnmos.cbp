@@ -89,31 +89,19 @@
 				<Option compiler="new_gnu_gcc_compiler" />
 				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
-				<Compiler>
-					<Add option="-O2" />
-					<Add option="-std=c11" />
-					<Add option="-pipe" />
-					<Add option="-mthreads" />
-					<Add option='[[if (PLATFORM == PLATFORM_MSW &amp;&amp; (GetCompilerFactory().GetCompilerVersionString(_T(&quot;gcc&quot;)) &gt;= _T(&quot;4.0.0&quot;))) print(_T(&quot;-Wno-attributes&quot;));]]' />
-					<Add option="-std=c++11" />
-					<Add option="-D__GNUWIN32__" />
-					<Add option="-D_MSL_STDINT_H" />
-					<Add directory="external/mdnssd" />
-					<Add directory="$(#curl.INCLUDE)" />
-					<Add directory="$(#microhttp.INCLUDE)" />
-				</Compiler>
-				<Linker>
-					<Add option="-s" />
-					<Add library="dnssd" />
-					<Add library="curl" />
-					<Add library="Ws2_32" />
-					<Add library="Iphlpapi" />
-					<Add library="libmicrohttpd-12" />
-					<Add library="Ole32" />
-					<Add directory="$(#curl.LIB)" />
-					<Add directory="$(#microhttp.LIB)" />
-					<Add directory="external/mdnssd/windows" />
-				</Linker>
+				<Option projectCompilerOptionsRelation="-1" />
+				<Option projectLinkerOptionsRelation="-1" />
+				<Option projectIncludeDirsRelation="-1" />
+				<Option projectResourceIncludeDirsRelation="-1" />
+				<Option projectLibDirsRelation="-1" />
+				<MakeCommands>
+					<Build command="" />
+					<CompileFile command="" />
+					<Clean command="" />
+					<DistClean command="" />
+					<AskRebuildNeeded command="" />
+					<SilentBuild command=" &gt; $(CMD_NULL)" />
+				</MakeCommands>
 			</Target>
 		</Build>
 		<Compiler>
@@ -228,6 +216,7 @@
 		<Unit filename="src/sourcegeneric.cpp" />
 		<Unit filename="src/transportparams.cpp" />
 		<Unit filename="src/utils.cpp" />
+		<Unit filename="src/version.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />

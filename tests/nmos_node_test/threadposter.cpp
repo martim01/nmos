@@ -65,12 +65,12 @@ void ThreadPoster::InstanceRemoved(const std::string& sInstance)
     LaunchThread();
 }
 
-void ThreadPoster::Target(const std::string& sReceiverId, std::shared_ptr<Sender> pSender, unsigned short nPort)
+void ThreadPoster::Target(const std::string& sReceiverId, const std::string& sTransportFile, unsigned short nPort)
 {
     SetReason(TARGET);
     m_sString = sReceiverId;
     m_nShort = nPort;
-    m_pSender = pSender;
+    m_sSDP = sTransportFile;
     LaunchThread();
 }
 
@@ -130,7 +130,3 @@ void ThreadPoster::LaunchThread()
     thNotify.detach();
 }
 
-std::shared_ptr<Sender> ThreadPoster::GetSender()
-{
-    return m_pSender;
-}

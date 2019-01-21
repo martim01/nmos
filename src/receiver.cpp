@@ -292,9 +292,9 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
     }
     return m_bIsOk;
 }
-bool Receiver::Commit()
+bool Receiver::Commit(const ApiVersion& version)
 {
-    if(Resource::Commit())
+    if(Resource::Commit(version))
     {
         m_json["device_id"] = m_sDeviceId;
         m_json["transport"] = STR_TRANSPORT[m_eTransport];
@@ -356,14 +356,14 @@ std::shared_ptr<Sender> Receiver::GetSender() const
 void Receiver::SetSender(std::shared_ptr<Sender> pSender)
 {
 
-    if(pSender->GetId().empty() == false)
+    if(pSender->IsOk() && pSender->GetId().empty() == false)
     {
-        Log::Get(Log::LOG_DEBUG) << "Receiver subscribe to sender " << pSender->GetId() << std::endl;
+        Log::Get(Log::LOG_INFO) << "Receiver subscribe to sender " << pSender->GetId() << std::endl;
         m_pSender = pSender;
     }
     else
     {   //this means unsubscribe
-        Log::Get(Log::LOG_DEBUG) << "Receiver unssubscribe " << std::endl;
+        Log::Get(Log::LOG_INFO) << "Receiver unssubscribe " << std::endl;
         m_pSender = 0;
     }
     UpdateVersionTime();

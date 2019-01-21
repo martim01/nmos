@@ -16,10 +16,7 @@ using namespace std;
 
 int main()
 {
-    //Log::Get().SetOutput(new wxLogOutput(this));
-
     NodeApi::Get().Init(8080, 8081, "host Label", "host Description");
-    NodeApi::Get().GetSelf().AddApiVersion("v1.2");
     NodeApi::Get().GetSelf().AddInternalClock("clk0");
     NodeApi::Get().GetSelf().AddPTPClock("clk1", true, "IEEE1588-2008", "08-00-11-ff-fe-21-e1-b0", true);
     NodeApi::Get().GetSelf().AddInterface("eth0");
@@ -107,7 +104,7 @@ int main()
                     break;
                 case ThreadPoster::TARGET:
                     cout << "----------------------------------------" << endl;
-                    cout << "NMOS Target: " << pPoster->GetString() << " [" << pPoster->GetSender()->GetId() << "]" << endl;
+                    cout << "NMOS Target: " << pPoster->GetString() << " [" << pPoster->GetSDP() << "]" << endl;
                     cout << "----------------------------------------" << endl;
                     //getchar();
                     NodeApi::Get().TargetTaken(pPoster->GetPort(), true);

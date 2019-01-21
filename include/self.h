@@ -5,7 +5,7 @@
 #include <string>
 #include "resource.h"
 #include "dlldefine.h"
-
+#include "version.h"
 
 
 struct endpoint
@@ -61,7 +61,7 @@ class NMOS_EXPOSE Self : public Resource
         void Init(std::string sHostname, std::string sUrl,std::string sLabel, std::string sDescription);
 
 
-
+        const std::set<ApiVersion>& GetApiVersions() const;
 
         void AddService(std::string sUrl, std::string sType);
         void RemoveService(std::string sUrl);
@@ -80,7 +80,8 @@ class NMOS_EXPOSE Self : public Resource
         bool IsVersionSupported(std::string sVersion) const;
         Json::Value JsonVersions() const;
 
-        virtual bool Commit();
+        virtual bool Commit(const ApiVersion& version);
+        bool Commit();
 
         unsigned char GetDnsVersion() const;
 
@@ -100,8 +101,8 @@ class NMOS_EXPOSE Self : public Resource
         void RemoveEndpoint(std::string sHost, unsigned int nPort);
 
     private:
-        void AddApiVersion(std::string sVersion);
-        void RemoveApiVersion(std::string sVersion);
+        void AddApiVersion(unsigned short nMajor, unsigned short nMinor);
+        void RemoveApiVersion(unsigned short nMajor, unsigned short nMinor);
 
 
         std::string m_sHostname;
@@ -144,7 +145,7 @@ class NMOS_EXPOSE Self : public Resource
             enum {INTERNAL, PTP};
         };
 
-        std::set<std::string> m_setVersion;
+        std::set<ApiVersion> m_setVersion;
         std::set<endpoint> m_setEndpoint;
         std::map<std::string, std::string> m_mService;
         std::map<std::string, nodeinterface> m_mInterface;

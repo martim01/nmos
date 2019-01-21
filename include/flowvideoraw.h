@@ -13,7 +13,7 @@ class NMOS_EXPOSE FlowVideoRaw : public FlowVideo
         void AddComponent(enumComponent eComponent, unsigned int nWidth, unsigned int nHeight, unsigned int nBitDepth);
         void RemoveComponent(enumComponent eComponent);
 
-        virtual bool Commit();
+        virtual bool Commit(const ApiVersion& version);
 
         std::string CreateSDPLines(unsigned short nRtpPort) const;
 

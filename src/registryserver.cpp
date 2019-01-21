@@ -271,7 +271,7 @@ int RegistryServer::GetJsonNmos(string& sReturn, std::string& sContentType)
             }
             else if(m_vPath[RES_HEALTH] == "resource")
             {
-                return GetJsonNmosResource(sReturn);
+                return GetJsonNmosResource(sReturn, ApiVersion(1,2));
             }
             else if(m_vPath[API] == "health")
             {
@@ -288,7 +288,7 @@ int RegistryServer::GetJsonNmos(string& sReturn, std::string& sContentType)
     return 404;
 }
 
-int RegistryServer::GetJsonNmosResource(string& sReturn)
+int RegistryServer::GetJsonNmosResource(string& sReturn, const ApiVersion& version)
 {
     Json::StyledWriter stw;
     int nCode = 200;
@@ -304,7 +304,7 @@ int RegistryServer::GetJsonNmosResource(string& sReturn)
         if(pResource)
         {
             nCode = 200;
-            sReturn = stw.write(pResource->GetJson());
+            sReturn = stw.write(pResource->GetJson(version));
         }
         else
         {

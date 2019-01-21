@@ -111,9 +111,9 @@ bool Device::UpdateFromJson(const Json::Value& jsData)
     return m_bIsOk;
 }
 
-bool Device::Commit()
+bool Device::Commit(const ApiVersion& version)
 {
-    if(Resource::Commit())
+    if(Resource::Commit(version))
     {   //something has changed
         m_json["type"] = STR_TYPE[m_eType];
         m_json["node_id"] = m_sNodeId;

@@ -11,6 +11,8 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include "log.h"
+
 
 using namespace std;
 
@@ -20,8 +22,7 @@ Self::Self(string sHostname, string sUrl,string sLabel, string sDescription) : R
     m_sUrl(sUrl),
     m_nDnsVersion(0)
 {
-    AddApiVersion("v1.1");
-    AddApiVersion("v1.2");
+
 }
 
 Self::~Self()
@@ -35,6 +36,8 @@ void Self::Init(std::string sHostname, std::string sUrl,std::string sLabel, std:
     UpdateLabel(sLabel);
     UpdateDescription(sDescription);
 
+    AddApiVersion(1,1);
+    AddApiVersion(1,2);
 }
 
 unsigned char Self::GetDnsVersion() const
@@ -42,14 +45,14 @@ unsigned char Self::GetDnsVersion() const
     return m_nDnsVersion;
 }
 
-void Self::AddApiVersion(string sVersion)
+void Self::AddApiVersion(unsigned short nMajor, unsigned short nMinor)
 {
-    m_setVersion.insert(sVersion);
+    m_setVersion.insert(ApiVersion(nMajor, nMinor));
 }
 
-void Self::RemoveApiVersion(string sVersion)
+void Self::RemoveApiVersion(unsigned short nMajor, unsigned short nMinor)
 {
-    m_setVersion.erase(sVersion);
+    m_setVersion.erase(ApiVersion(nMajor, nMinor));
 }
 
 void Self::AddEndpoint(string sHost, unsigned int nPort, bool bSecure)
@@ -156,7 +159,17 @@ bool Self::UpdateFromJson(const Json::Value& jsData)
 
 bool Self::Commit()
 {
-    if(Resource::Commit())
+    bool bChanged(false);
+    for(std::set<ApiVersion>::const_iterator itVersion = m_setVersion.begin(); itVersion != m_setVersion.end(); ++itVersion)
+    {
+        bChanged |= Commit(*itVersion);
+    }
+    return bChanged;
+}
+
+bool Self::Commit(const ApiVersion& version)
+{
+    if(Resource::Commit(version))
     {
         m_json["hostname"] = m_sHostname;
         m_json["href"] = m_sUrl;
@@ -164,9 +177,9 @@ bool Self::Commit()
         m_json["caps"] = Json::Value(Json::objectValue);
 
         m_json["api"]["versions"] = Json::Value(Json::arrayValue);
-        for(set<string>::iterator itVersion = m_setVersion.begin(); itVersion != m_setVersion.end(); ++itVersion)
+        for(set<ApiVersion>::iterator itVersion = m_setVersion.begin(); itVersion != m_setVersion.end(); ++itVersion)
         {
-            m_json["api"]["versions"].append(*itVersion);
+            m_json["api"]["versions"].append((*itVersion).GetVersionAsString());
         }
 
         m_json["api"]["endpoints"] = Json::Value(Json::arrayValue);
@@ -228,9 +241,9 @@ bool Self::Commit()
 Json::Value Self::JsonVersions() const
 {
     Json::Value jsVersion;
-    for(set<string>::iterator itVersion = m_setVersion.begin(); itVersion != m_setVersion.end(); ++itVersion)
+    for(set<ApiVersion>::iterator itVersion = m_setVersion.begin(); itVersion != m_setVersion.end(); ++itVersion)
     {
-        jsVersion.append(*itVersion);
+        jsVersion.append((*itVersion).GetVersionAsString());
     }
     return jsVersion;
 }
@@ -238,10 +251,13 @@ Json::Value Self::JsonVersions() const
 
 bool Self::IsVersionSupported(std::string sVersion) const
 {
-    return (m_setVersion.find(sVersion) != m_setVersion.end());
+    return (m_setVersion.find(ApiVersion(sVersion)) != m_setVersion.end());
 }
 
-
+const std::set<ApiVersion>& Self::GetApiVersions() const
+{
+    return m_setVersion;
+}
 
 //bool Self::StartServers()
 //{

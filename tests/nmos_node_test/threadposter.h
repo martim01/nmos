@@ -15,7 +15,10 @@ class ThreadPoster : public EventPoster
         const std::string& GetString();
         unsigned short GetPort();
 
-        std::shared_ptr<Sender> GetSender();
+        const std::string GetSDP() const
+        {
+            return m_sSDP;
+        }
 
         void Signal();
         enum {CURL_DONE, INSTANCE_RESOLVED, ALLFORNOW, FINISHED, REGERROR, INSTANCE_REMOVED, TARGET, PATCH_SENDER, PATCH_RECEIVER, ACTIVATE_SENDER, ACTIVATE_RECEIVER};
@@ -28,7 +31,7 @@ class ThreadPoster : public EventPoster
         void Finished();
         void RegistrationNodeError();
         void InstanceRemoved(const std::string& sInstance);
-        void Target(const std::string& sReceiverId, std::shared_ptr<Sender> pSender, unsigned short nPort);
+        void Target(const std::string& sReceiverId, const std::string& sTransportFile, unsigned short nPort);
         void PatchSender(const std::string& sSenderId, const connectionSender& conPatch, unsigned short nPort);
         void PatchReceiver(const std::string& sReceiverId, const connectionReceiver& conPatch, unsigned short nPort);
         void ActivateSender(const std::string& sSenderId);
@@ -43,6 +46,8 @@ class ThreadPoster : public EventPoster
         std::string m_sString;
         unsigned long m_nLong;
         unsigned short m_nShort;
+
+        std::string m_sSDP;
 
         unsigned int m_nReason;
         std::shared_ptr<Sender> m_pSender;

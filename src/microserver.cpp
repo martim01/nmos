@@ -12,12 +12,14 @@
 #include "log.h"
 #include "eventposter.h"
 #include "utils.h"
+#include "curlregister.h"
+
 
 using namespace std;
 
 void MicroServer::RequestCompleted (void *cls, MHD_Connection* pConnection, void **ptr, enum MHD_RequestTerminationCode toe)
 {
-    Log::Get() << "Request completed" << endl;
+    Log::Get(Log::LOG_DEBUG) << "Request completed" << endl;
     ConnectionInfo *pInfo = reinterpret_cast<ConnectionInfo*>(*ptr);
     if (pInfo)
     {
@@ -35,7 +37,7 @@ int MicroServer::DoHttpGet(MHD_Connection* pConnection, string sUrl, ConnectionI
     string sResponse, sContentType;
     int nCode = pInfo->pServer->GetJson(sUrl, sResponse, sContentType);
 
-    Log::Get() << "Response: " << sResponse << endl;
+    Log::Get(Log::LOG_DEBUG) << "Response: " << sResponse << endl;
 
     MHD_Response* pResponse = MHD_create_response_from_buffer (sResponse.length(), (void *) sResponse.c_str(), MHD_RESPMEM_MUST_COPY);
     MHD_add_response_header(pResponse, "Content-Type", sContentType.c_str());
@@ -731,18 +733,21 @@ int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
                 else
                 {
                     //Have we been sent a sender??
-                    std::shared_ptr<Sender> pSender = std::make_shared<Sender>();
-                    if(pSender->UpdateFromJson(jsRequest) == false)
-                    {
-                        nCode = 400;
-                        sResponse = stw.write(GetJsonError(nCode, "Request is ill defined or missing mandatory attributes."));
-                    }
+                    std::shared_ptr<Sender> pRemoteSender = std::make_shared<Sender>();
+                    pRemoteSender->UpdateFromJson(jsRequest);
 
+                    //does the sender have a manifest??
+                    std::string sSdp;
+                    if(pRemoteSender->GetManifestHref().empty() == false)
+                    {
+                        CurlRegister::Get(pRemoteSender->GetManifestHref(), sSdp);
+                        Log::Get(Log::LOG_INFO) << " SDP: " << sSdp << std::endl;
+                    }
                     if(m_pPoster)
                     {
                         PrimeWait();
                         //Tell the main thread to connect
-                        m_pPoster->_Target(m_vPath[RESOURCE], pSender, m_nPort);
+                        m_pPoster->_Target(m_vPath[RESOURCE], sSdp, m_nPort);
                         //Pause the HTTP thread
                         Log::Get(Log::LOG_DEBUG) << "Microserver: Wait" << std::endl;
                         Wait();
@@ -750,10 +755,10 @@ int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
                         if(IsOk())
                         {   //this means the main thread has connected the receiver to the sender
                             nCode = 202;
-                            pReceiver->SetSender(pSender);
+                            pReceiver->SetSender(pRemoteSender);
                             NodeApi::Get().Commit();   //updates the registration node or txt records
 
-                            sResponse = stw.write(pSender->GetJson(version));
+                            sResponse = stw.write(pRemoteSender->GetJson(version));
                         }
                         else
                         {
@@ -764,7 +769,7 @@ int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
                     else
                     {   //no way of telling main thread to do this so we'll simply assume it's been done
                         nCode = 202;
-                        sResponse = stw.write(pSender->GetJson(version));
+                        sResponse = stw.write(pRemoteSender->GetJson(version));
                     }
                 }
             }

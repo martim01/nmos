@@ -20,7 +20,7 @@ class NMOS_EXPOSE Source : public Resource
 
         void SetClock(std::string sClock);
 
-        virtual bool Commit();
+        virtual bool Commit(const ApiVersion& version);
         std::string GetParentResourceId() const
         {
             return m_sDeviceId;

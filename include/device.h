@@ -26,7 +26,7 @@ class NMOS_EXPOSE Device : public Resource
             return m_sNodeId;
         }
 
-        virtual bool Commit();
+        virtual bool Commit(const ApiVersion& version);
     private:
         enumType m_eType;
         std::string m_sNodeId;

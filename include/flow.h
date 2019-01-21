@@ -13,7 +13,7 @@ class NMOS_EXPOSE Flow : public Resource
         void AddParentId(std::string sId);
         void RemoveParentId(std::string sId);
 
-        virtual bool Commit();
+        virtual bool Commit(const ApiVersion& version);
 
         std::string GetParentResourceId() const
         {

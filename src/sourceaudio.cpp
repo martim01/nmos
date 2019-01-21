@@ -71,9 +71,9 @@ bool SourceAudio::UpdateFromJson(const Json::Value& jsData)
     return m_bIsOk;
 }
 
-bool SourceAudio::Commit()
+bool SourceAudio::Commit(const ApiVersion& version)
 {
-    if(Source::Commit())
+    if(Source::Commit(version))
     {
         m_json["channels"] = Json::Value(Json::arrayValue);
 

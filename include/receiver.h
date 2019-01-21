@@ -30,7 +30,7 @@ class NMOS_EXPOSE Receiver : public Resource
         void RemoveCap(std::string sCap);
 
 
-        virtual bool Commit();
+        virtual bool Commit(const ApiVersion& version);
 
         std::string GetParentResourceId() const
         {

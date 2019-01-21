@@ -6,7 +6,7 @@
 			<Depends filename="libnmos.cbp" />
 		</Project>
 		<Project filename="tests/nmos_node_test/nmos_node_test.cbp">
-			<Depends filename="tests/wx/wxnmos.cbp" />
+			<Depends filename="libnmos.cbp" />
 		</Project>
 		<Project filename="tests/wx/wxnmos.cbp">
 			<Depends filename="libnmos.cbp" />

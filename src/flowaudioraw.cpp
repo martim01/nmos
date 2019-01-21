@@ -57,9 +57,9 @@ bool FlowAudioRaw::UpdateFromJson(const Json::Value& jsData)
     return m_bIsOk;
 }
 
-bool FlowAudioRaw::Commit()
+bool FlowAudioRaw::Commit(const ApiVersion& version)
 {
-    if(FlowAudio::Commit())
+    if(FlowAudio::Commit(version))
     {
         switch(m_eFormat)
         {

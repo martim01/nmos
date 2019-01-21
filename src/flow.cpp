@@ -56,9 +56,9 @@ bool Flow::UpdateFromJson(const Json::Value& jsData)
     return m_bIsOk;
 }
 
-bool Flow::Commit()
+bool Flow::Commit(const ApiVersion& version)
 {
-    if(Resource::Commit())
+    if(Resource::Commit(version))
     {
         m_json["format"] = m_sFormat;
         m_json["device_id"] = m_sDeviceId;

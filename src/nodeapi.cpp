@@ -304,11 +304,11 @@ bool NodeApi::Commit()
     m_mutex.lock();
     Log::Get() << "Node: Commit" << endl;
     bool bChange = m_self.Commit();
-    bChange |= m_sources.Commit();
-    bChange |= m_devices.Commit();
-    bChange |= m_flows.Commit();
-    bChange |= m_receivers.Commit();
-    bChange |= m_senders.Commit();
+    bChange |= m_sources.Commit(m_self.GetApiVersions());
+    bChange |= m_devices.Commit(m_self.GetApiVersions());
+    bChange |= m_flows.Commit(m_self.GetApiVersions());
+    bChange |= m_receivers.Commit(m_self.GetApiVersions());
+    bChange |= m_senders.Commit(m_self.GetApiVersions());
     m_mutex.unlock();
 
 

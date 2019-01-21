@@ -44,10 +44,10 @@ bool FlowDataSdiAnc::UpdateFromJson(const Json::Value& jsData)
     return m_bIsOk;
 }
 
-bool FlowDataSdiAnc::Commit()
+bool FlowDataSdiAnc::Commit(const ApiVersion& version)
 {
 
-    if(FlowData::Commit())
+    if(FlowData::Commit(version))
     {
         if(m_lstWords.empty())
         {

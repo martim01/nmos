@@ -99,7 +99,7 @@ void Resource::AddTag(const std::string& sKey, const std::string& sValue)
 }
 
 
-bool Resource::Commit()
+bool Resource::Commit(const ApiVersion& version)
 {
     if(m_sVersion == m_sLastVersion)
     {   //no changes to resource

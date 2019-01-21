@@ -39,9 +39,9 @@ bool FlowAudioCoded::UpdateFromJson(const Json::Value& jsData)
     return m_bIsOk;
 }
 
-bool FlowAudioCoded::Commit()
+bool FlowAudioCoded::Commit(const ApiVersion& version)
 {
-    if(FlowAudio::Commit())
+    if(FlowAudio::Commit(version))
     {
         m_json["media_type"] = m_sMediaType;
         return true;

@@ -110,7 +110,6 @@ wxnmosDialog::wxnmosDialog(wxWindow* parent,wxWindowID id)
     m_bScroll = true;
 
     NodeApi::Get().Init(8080, 8081, "host Label", "host Description");
-    NodeApi::Get().GetSelf().AddApiVersion("v1.2");
     NodeApi::Get().GetSelf().AddInternalClock("clk0");
     NodeApi::Get().GetSelf().AddPTPClock("clk1", true, "IEEE1588-2008", "08-00-11-ff-fe-21-e1-b0", true);
     NodeApi::Get().GetSelf().AddInterface("eth0");

@@ -97,9 +97,9 @@ void FlowVideoRaw::RemoveComponent(enumComponent eComponent)
 
 }
 
-bool FlowVideoRaw::Commit()
+bool FlowVideoRaw::Commit(const ApiVersion& version)
 {
-    if(FlowVideo::Commit())
+    if(FlowVideo::Commit(version))
     {
         m_json["components"] = Json::Value(Json::arrayValue);
         for(map<enumComponent, component>::const_iterator itComponent = m_mComponent.begin(); itComponent != m_mComponent.end(); ++itComponent)

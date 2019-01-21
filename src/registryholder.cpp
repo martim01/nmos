@@ -47,7 +47,7 @@ const Json::Value& RegistryHolder::GetJson(const ApiVersion& version)
 
     for(std::map<std::string, std::shared_ptr<Resource> >::const_iterator itResource = m_mResource.begin(); itResource != m_mResource.end(); ++itResource)
     {
-        itResource->second->Commit();
+        itResource->second->Commit(version);
         m_json.append(itResource->second->GetJson(version));
     }
     return m_json;

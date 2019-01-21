@@ -80,9 +80,9 @@ bool Source::UpdateFromJson(const Json::Value& jsData)
     return m_bIsOk;
 }
 
-bool Source::Commit()
+bool Source::Commit(const ApiVersion& version)
 {
-    if(Resource::Commit())
+    if(Resource::Commit(version))
     {
         m_json["device_id"] = m_sDeviceId;
         if(m_sClock.empty())

@@ -117,9 +117,9 @@ bool FlowVideo::UpdateFromJson(const Json::Value& jsData)
     return m_bIsOk;
 }
 
-bool FlowVideo::Commit()
+bool FlowVideo::Commit(const ApiVersion& version)
 {
-    if(Flow::Commit())
+    if(Flow::Commit(version))
     {
         m_json["media_type"] = m_sMediaType;
         m_json["frame_width"] = m_nFrameWidth;

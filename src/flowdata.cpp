@@ -28,9 +28,9 @@ bool FlowData::UpdateFromJson(const Json::Value& jsData)
     return m_bIsOk;
 }
 
-bool FlowData::Commit()
+bool FlowData::Commit(const ApiVersion& version)
 {
-    if(Flow::Commit())
+    if(Flow::Commit(version))
     {
         m_json["media_type"] = m_sMediaType;
         return true;

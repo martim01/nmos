@@ -38,10 +38,10 @@ void EventPoster::_InstanceRemoved(const std::string& sInstance)
     InstanceRemoved(sInstance);
 }
 
-void EventPoster::_Target(const std::string& sReceiverId, std::shared_ptr<Sender> pSender, unsigned short nPort)
+void EventPoster::_Target(const std::string& sReceiverId, const std::string& sTransportFile, unsigned short nPort)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
-    Target(sReceiverId, pSender, nPort);
+    Target(sReceiverId, sTransportFile, nPort);
 }
 
 void EventPoster::_PatchSender(const std::string& sSenderId, const connectionSender& conPatch, unsigned short nPort)

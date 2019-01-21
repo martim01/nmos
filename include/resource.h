@@ -33,7 +33,7 @@ class Resource
         virtual bool UpdateFromJson(const Json::Value& jsValue);
 
         const Json::Value& GetJson(const ApiVersion& version) const;
-        virtual bool Commit();
+        virtual bool Commit(const ApiVersion& version);
 
         void UpdateLabel(std::string sLabel);
         void UpdateDescription(std::string sDescription);

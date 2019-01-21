@@ -5,7 +5,7 @@
 #include <thread>
 #include <vector>
 #include "json/json.h"
-
+#include "version.h"
 
 class RegistryServer;
 
@@ -85,7 +85,7 @@ class RegistryServer
 
 
         int GetJsonNmos(std::string& sReturn, std::string& sContentType);
-        int GetJsonNmosResource(std::string& sReturn);
+        int GetJsonNmosResource(std::string& sReturn, const ApiVersion& version);
         int GetJsonNmosHealth(std::string& sReturn);
 
         int PostJsonNmosResource(const std::string& sJson, std::string& sReturn, std::string& sLocation);

@@ -152,9 +152,9 @@ void Sender::SetReceiverId(std::string sReceiverId, bool bActive)
 
 }
 
-bool Sender::Commit()
+bool Sender::Commit(const ApiVersion& version)
 {
-    if(Resource::Commit())
+    if(Resource::Commit(version))
     {
         if(m_sFlowId.empty() == false)
         {
@@ -192,6 +192,7 @@ bool Sender::Commit()
         {
             m_json["subscription"]["active"] = false;
         }
+        CreateSDP();
         return true;
     }
     return false;
@@ -504,4 +505,10 @@ const std::string& Sender::GetTransportFile() const
 void Sender::SetManifestHref(std::string sHref)
 {
     m_sManifest = sHref;
+}
+
+
+const std::string& Sender::GetManifestHref() const
+{
+    return m_sManifest;
 }

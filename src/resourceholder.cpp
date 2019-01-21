@@ -61,23 +61,23 @@ void ResourceHolder::RemoveResource(std::string sUuid)
     }
 }
 
-bool ResourceHolder::Commit()
+bool ResourceHolder::Commit(const std::set<ApiVersion>& setVersion)
 {
-    std::cout << "ResourceHolder: Commit" << std::endl;
     m_mResource = m_mResourceStaging;
     m_mResourceChanged.clear();
 
-
-    m_json.clear();
-
-    for(std::map<std::string, std::shared_ptr<Resource> >::const_iterator itResource = m_mResource.begin(); itResource != m_mResource.end(); ++itResource)
+    for(std::set<ApiVersion>::const_iterator itVersion = setVersion.begin(); itVersion != setVersion.end(); ++itVersion)
     {
-        std::cout << "Resource: " << itResource->first << " committed" << std::endl;
-        if(itResource->second->Commit())
+        m_json.clear();
+
+        for(std::map<std::string, std::shared_ptr<Resource> >::const_iterator itResource = m_mResource.begin(); itResource != m_mResource.end(); ++itResource)
         {
-            m_mResourceChanged.insert(make_pair(itResource->first, itResource->second));
+            if(itResource->second->Commit((*itVersion)))
+            {
+                m_mResourceChanged.insert(make_pair(itResource->first, itResource->second));
+            }
+            m_json.append(itResource->second->GetJson((*itVersion)));
         }
-        m_json.append(itResource->second->GetJson(version));
     }
     if(m_mResourceChanged.empty() == false)
     {
@@ -92,7 +92,7 @@ const Json::Value& ResourceHolder::GetJson(const ApiVersion& version) const
     return m_json;
 }
 
-Json::Value ResourceHolder::GetConnectionJson() const
+Json::Value ResourceHolder::GetConnectionJson(const ApiVersion& version) const
 {
     Json::Value jsArray(Json::arrayValue);
     for(std::map<std::string, std::shared_ptr<Resource> >::const_iterator itResource = m_mResource.begin(); itResource != m_mResource.end(); ++itResource)

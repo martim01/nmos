@@ -3,6 +3,7 @@
 #include "dlldefine.h"
 #include <memory>
 #include "version.h"
+#include <set>
 class Resource;
 
 class NMOS_EXPOSE ResourceHolder
@@ -27,7 +28,7 @@ class NMOS_EXPOSE ResourceHolder
 
         void RemoveAllResources();
 
-        virtual bool Commit();
+        virtual bool Commit(const std::set<ApiVersion>& setVersion);
 
         const Json::Value& GetJson(const ApiVersion& version) const;
         Json::Value GetConnectionJson(const ApiVersion& version) const;

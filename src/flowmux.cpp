@@ -27,9 +27,9 @@ bool FlowMux::UpdateFromJson(const Json::Value& jsData)
     return m_bIsOk;
 }
 
-bool FlowMux::Commit()
+bool FlowMux::Commit(const ApiVersion& version)
 {
-    if(Flow::Commit())
+    if(Flow::Commit(version))
     {
         m_json["media_type"] = m_sMediaType;
         return true;

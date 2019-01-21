@@ -17,9 +17,9 @@ bool FlowVideoCoded::UpdateFromJson(const Json::Value& jsData)
     return FlowVideo::UpdateFromJson(jsData);
 }
 
-bool FlowVideoCoded::Commit()
+bool FlowVideoCoded::Commit(const ApiVersion& version)
 {
-    if(FlowVideo::Commit())
+    if(FlowVideo::Commit(version))
     {
         return true;
     }
