@@ -3,7 +3,7 @@
 #include <map>
 #include <list>
 #include <memory>
-#include "dlldefine.h"
+#include "nmosdlldefine.h"
 
 struct NMOS_EXPOSE dnsInstance
 {

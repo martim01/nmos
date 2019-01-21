@@ -2,7 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include "dlldefine.h"
+#include "nmosdlldefine.h"
 
 
 class NMOS_EXPOSE LogOutput

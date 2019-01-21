@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include "json/json.h"
-#include "dlldefine.h"
+#include "nmosdlldefine.h"
 #include "registryholder.h"
 #include <mutex>
 class Registry;

@@ -4,7 +4,7 @@
 #include <map>
 #include <string>
 #include "resource.h"
-#include "dlldefine.h"
+#include "nmosdlldefine.h"
 #include "version.h"
 
 

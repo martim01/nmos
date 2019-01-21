@@ -7,7 +7,7 @@
 #include "json/json.h"
 #include <list>
 #include <map>
-#include "dlldefine.h"
+#include "nmosdlldefine.h"
 #include <chrono>
 #include <mutex>
 #include <sstream>

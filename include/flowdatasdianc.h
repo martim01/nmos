@@ -1,6 +1,6 @@
 #pragma once
 #include "flowdata.h"
-#include "dlldefine.h"
+#include "nmosdlldefine.h"
 #include <list>
 
 class NMOS_EXPOSE FlowDataSdiAnc : public FlowData

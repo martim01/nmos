@@ -1,5 +1,5 @@
 #pragma once
-#include "dlldefine.h"
+#include "nmosdlldefine.h"
 #include <string>
 #include <thread>
 #include <mutex>

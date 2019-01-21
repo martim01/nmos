@@ -1,6 +1,6 @@
 #pragma once
 #include "json/json.h"
-#include "dlldefine.h"
+#include "nmosdlldefine.h"
 #include <memory>
 #include "version.h"
 #include <set>
