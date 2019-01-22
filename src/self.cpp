@@ -310,13 +310,13 @@ void Self::GetAddresses(const std::string& sInterface, nodeinterface& anInterfac
 
 
     std::stringstream ss;
-    ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (int)ifr.ifr_hwaddr.sa_data[0];
+    ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (((int)ifr.ifr_hwaddr.sa_data[0])&0xFF);
     ss << "-";
-    ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (int)ifr.ifr_hwaddr.sa_data[1];
+    ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (((int)ifr.ifr_hwaddr.sa_data[1])&0xFF);
     ss << "-";
-    ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (int)ifr.ifr_hwaddr.sa_data[2];
+    ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (((int)ifr.ifr_hwaddr.sa_data[2])&0xFF);
     ss << "-";
-    ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (int)ifr.ifr_hwaddr.sa_data[3];
+    ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (((int)ifr.ifr_hwaddr.sa_data[3])&0xFF);
     ss << "-";
     ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (((int)ifr.ifr_hwaddr.sa_data[4])&0xFF);
     ss << "-";
@@ -341,7 +341,7 @@ std::string Self::CreateClockSdp(std::string sInterface) const
     {
         if(itClock->second.nType == clock::PTP)
         {
-            ss << "ts-refclk:ptp=";
+            ss << "a=ts-refclk:ptp=";
             if(itClock->second.bTraceable)
             {
                 ss << "traceable\r\n";
@@ -361,11 +361,11 @@ std::string Self::CreateClockSdp(std::string sInterface) const
             map<std::string, nodeinterface>::const_iterator itInterface = m_mInterface.find(sInterface);
             if(itInterface != m_mInterface.end())
             {
-                ss << "ts-refclk:localmac=" << itInterface->second.sPortMac << "\r\n";
+                ss << "a=ts-refclk:localmac=" << itInterface->second.sPortMac << "\r\n";
             }
             else if(m_mInterface.empty())
             {
-                ss << "ts-refclk:localmac=" << m_mInterface.begin()->second.sPortMac << "\r\n";
+                ss << "a=ts-refclk:localmac=" << m_mInterface.begin()->second.sPortMac << "\r\n";
             }
             return ss.str();
         }
