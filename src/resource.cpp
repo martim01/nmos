@@ -103,7 +103,7 @@ bool Resource::Commit(const ApiVersion& version)
 {
     if(m_sVersion == m_sLastVersion)
     {   //no changes to resource
- //       return false;
+        return false;
     }
 
     m_json.clear();
