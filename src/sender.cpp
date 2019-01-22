@@ -393,6 +393,12 @@ void Sender::Activate(std::string sSourceIp, std::string sDestinationIp, std::st
     m_Staged.sRequestedTime.clear();
 }
 
+void Sender::SetDestinationDetails(const std::string& sDestinationIp, unsigned short nDestinationPort)
+{
+    m_Active.tpSender.sDestinationIp = sDestinationIp;
+    m_Active.tpSender.nDestinationPort = nDestinationPort;
+    CreateSDP();
+}
 
 void Sender::CreateSDP()
 {

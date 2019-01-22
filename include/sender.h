@@ -14,8 +14,11 @@ class NMOS_EXPOSE Sender : public Resource
     public:
         enum enumTransport {RTP, RTP_UCAST, RTP_MCAST, DASH};
         Sender(std::string sLabel, std::string sDescription, std::string sFlowId, enumTransport eTransport, std::string sDeviceId, std::string sInterface);
-
         Sender();
+
+        /** @brief Set the active destination details to create an SDP. This will be overwritten by IS-05
+        **/
+        void SetDestinationDetails(const std::string& sDestinationIp, unsigned short nDestinationPort);
 
         virtual bool UpdateFromJson(const Json::Value& jsData);
 
@@ -51,7 +54,6 @@ class NMOS_EXPOSE Sender : public Resource
 
         // called by the main thread as a reply to the eventposter
         void Activate(std::string sSourceIp="", std::string sDestinationIp="", std::string sSDP="");
-
 
         const std::string& GetTransportFile() const;
     private:
