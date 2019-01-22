@@ -398,7 +398,7 @@ void Sender::CreateSDP()
 {
     std::stringstream ssSDP;
     ssSDP << "v=0\r\n";
-    ssSDP << "o=- " << GetCurrentTime(false) << " " << GetCurrentTime(false) << "IN IP ";
+    ssSDP << "o=- " << GetCurrentTime(false) << " " << GetCurrentTime(false) << " IN IP";
     switch(SdpManager::CheckIpAddress(m_Active.tpSender.sSourceIp))
     {
         case SdpManager::IP4_UNI:

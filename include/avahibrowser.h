@@ -10,7 +10,7 @@
 #include <list>
 #include <mutex>
 #include <memory>
-#include "dlldefine.h"
+#include "nmosdlldefine.h"
 
 
 struct dnsService;
