@@ -70,7 +70,7 @@ class CurlRegister
         void Query(const std::string& sBaseUrl, NodeApi::enumResource eResource, const std::string& sQuery, ResourceHolder* pResults, long nUserType);
         long Query(const std::string& sBaseUrl, NodeApi::enumResource eResource, const std::string& sQuery, ResourceHolder* pResults);
 
-        static long Get(const std::string& sUrl, std::string& sResonse);
+        static long Get(const std::string& sUrl, std::string& sResonse, bool bJson=false);
 
     private:
 

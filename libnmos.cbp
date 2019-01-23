@@ -5,7 +5,7 @@
 		<Option title="libnmos" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
-		<Option virtualFolders="nmos\;" />
+		<Option virtualFolders="nmos/;" />
 		<Build>
 			<Target title="Linux Debug">
 				<Option platforms="Unix;" />
@@ -146,6 +146,9 @@
 			<Option target="Windows Debug" />
 			<Option target="Windows Release" />
 		</Unit>
+		<Unit filename="include/clientapi.h" />
+		<Unit filename="include/clientholder.h" />
+		<Unit filename="include/clientposter.h" />
 		<Unit filename="include/connection.h" />
 		<Unit filename="include/constraint.h" />
 		<Unit filename="include/curlregister.h" />
@@ -200,6 +203,9 @@
 			<Option target="Windows Release" />
 		</Unit>
 		<Unit filename="src/bonjourpublisher.cpp" />
+		<Unit filename="src/clientapi.cpp" />
+		<Unit filename="src/clientholder.cpp" />
+		<Unit filename="src/clientposter.cpp" />
 		<Unit filename="src/connection.cpp" />
 		<Unit filename="src/constraint.cpp" />
 		<Unit filename="src/curlregister.cpp" />

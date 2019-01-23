@@ -20,7 +20,7 @@ class NMOS_EXPOSE EventPoster
         void _AllForNow(const std::string& sService);
         void _Finished();
         void _RegistrationNodeError();
-        void _InstanceRemoved(const std::string& sInstance);
+        void _InstanceRemoved(std::shared_ptr<dnsInstance> pInstance);
         void _Target(const std::string& sReceiverId, const std::string& sTransportFile, unsigned short nPort);
         void _PatchSender(const std::string& sSenderId, const connectionSender& conPatch, unsigned short nPort);
         void _PatchReceiver(const std::string& sReceiverId, const connectionReceiver& conPatch, unsigned short nPort);
@@ -61,10 +61,11 @@ class NMOS_EXPOSE EventPoster
         virtual void RegistrationNodeError()=0;
 
         /** @brief Called by AvahiBrowser when a dns service instance has been removed
-        *   @param sInstance the name of the instance.
+        *   @param pInstance a pointer to the removed instance.
+        *   @param sService the name of the service.
         *   @note this is a non-blocking event
         **/
-        virtual void InstanceRemoved(const std::string& sInstance)=0;
+        virtual void InstanceRemoved(std::shared_ptr<dnsInstance> pInstance)=0;
 
         /** @brief Called by MicroServer when a IS-04 Target PUT is performed
         *   @param sReceiverId the uuid of the Receiver to apply the PU to

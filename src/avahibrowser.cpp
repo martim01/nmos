@@ -40,7 +40,8 @@ void resolve_callback(AvahiServiceResolver *r, AVAHI_GCC_UNUSED AvahiIfIndex int
 
 
 
-ServiceBrowser::ServiceBrowser(std::shared_ptr<EventPoster> pPoster) :
+ServiceBrowser::ServiceBrowser(std::shared_ptr<EventPoster> pPoster, bool bFree) :
+    m_bFree(bFree),
     m_pPoster(pPoster),
     m_pThreadedPoll(0),
     m_pClient(0),
@@ -183,6 +184,8 @@ void ServiceBrowser::ClientCallback(AvahiClient * pClient, AvahiClientState stat
         case AVAHI_CLIENT_CONNECTING:
             Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: Waiting for daemon ..." << endl;
             break;
+        default:
+            Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: ClientCallback: " << state << endl;
     }
 
 }
@@ -231,6 +234,8 @@ void ServiceBrowser::TypeCallback(AvahiIfIndex interface, AvahiProtocol protocol
         case AVAHI_BROWSER_ALL_FOR_NOW:
             CheckStop();
             break;
+        default:
+            Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: TypeCallback: " << event << endl;
     }
 }
 
@@ -250,10 +255,6 @@ void ServiceBrowser::BrowseCallback(AvahiServiceBrowser* pBrowser, AvahiIfIndex 
 
                 Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: (Browser) NEW: service '" << name << "' of type '" << type << "' in domain '" << domain << "'" << endl;
 
-                /* We ignore the returned resolver object. In the callback
-                   function we free it. If the server is terminated before
-                   the callback function is called the server will free
-                   the resolver for us. */
                 if (!(avahi_service_resolver_new(m_pClient, interface, protocol, name, type, domain, AVAHI_PROTO_INET, (AvahiLookupFlags)0, resolve_callback, reinterpret_cast<void*>(this))))
                 {
                     Log::Get(Log::LOG_ERROR) << "ServiceBrowser: Failed to resolve service " << name << ": " << avahi_strerror(avahi_client_errno(m_pClient)) << endl;
@@ -276,21 +277,25 @@ void ServiceBrowser::BrowseCallback(AvahiServiceBrowser* pBrowser, AvahiIfIndex 
                     m_pPoster->_AllForNow(type);
                 }
 
-
-               set<AvahiServiceBrowser*>::iterator itBrowser = m_setBrowser.find(pBrowser);
-                if(itBrowser != m_setBrowser.end())
+                if(m_bFree)
                 {
-                    avahi_service_browser_free((*itBrowser));
-                    m_setBrowser.erase(itBrowser);
-                }
-                CheckStop();
+                   set<AvahiServiceBrowser*>::iterator itBrowser = m_setBrowser.find(pBrowser);
+                    if(itBrowser != m_setBrowser.end())
+                    {
+                        avahi_service_browser_free((*itBrowser));
+                        m_setBrowser.erase(itBrowser);
+                    }
+                    CheckStop();
+               }
             }
             break;
         case AVAHI_BROWSER_CACHE_EXHAUSTED:
             {
-
+                Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: (Browser) ' CACHE_EXHAUSTED " << endl;
             }
             break;
+        default:
+            Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: BrowseCallback: " << event << endl;
     }
 }
 
@@ -339,10 +344,16 @@ void ServiceBrowser::ResolveCallback(AvahiServiceResolver* pResolver, AvahiResol
                 Log::Get() << "ServiceBrowser: Instance '" << pInstance->sName << "' resolved at '" << pInstance->sHostIP << "'" << endl;
 
             }
+            break;
+            default:
+                Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: ResolveCallback: " << event << endl;
         }
     }
     avahi_service_resolver_free(pResolver);
-    CheckStop();
+    if(m_bFree)
+    {
+        CheckStop();
+    }
 }
 
 void ServiceBrowser::RemoveServiceInstance(const std::string& sService, const std::string& sInstance)
@@ -356,13 +367,13 @@ void ServiceBrowser::RemoveServiceInstance(const std::string& sService, const st
         {
             if((*itInstance)->sName == sInstance)
             {
+                if(m_pPoster)
+                {
+                    m_pPoster->_InstanceRemoved((*itInstance));
+                }
                 list<shared_ptr<dnsInstance> >::iterator itDelete(itInstance);
                 ++itInstance;
                 itService->second->lstInstances.erase(itDelete);
-                if(m_pPoster)
-                {
-                    m_pPoster->_InstanceRemoved(sInstance);
-                }
             }
             else
             {

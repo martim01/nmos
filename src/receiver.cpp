@@ -158,7 +158,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
         bool bFound(false);
         for(int i = 3; i >= 0; i--)
         {
-            if(STR_TRANSPORT[i].find(jsData["transport"].asString()) == std::string::npos)
+            if(STR_TRANSPORT[i].find(jsData["transport"].asString()) != std::string::npos)
             {
                 m_eTransport = enumTransport(i);
                 bFound = true;
@@ -173,7 +173,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
         m_bIsOk &= bFound;
         for(int i = 0; i < 4; i++)
         {
-            if(STR_TYPE[i].find(jsData["format"].asString()) == std::string::npos)
+            if(STR_TYPE[i].find(jsData["format"].asString()) != std::string::npos)
             {
                 m_eType = enumType(i);
                 bFound = true;
@@ -219,7 +219,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
                     if(jsData["caps"]["media_types"][ai].asString().find("audio/") == std::string::npos)
                     {
                         m_bIsOk = false;
-                        m_ssJsonError << "'caps' 'media_types' #" << ai << "not audio whilst 'format' is" << std::endl;
+                        m_ssJsonError << "'caps' 'media_types' #" << ai << " not audio whilst 'format' is" << std::endl;
                     }
                     else
                     {
@@ -230,7 +230,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
                     if(jsData["caps"]["media_types"][ai].asString().find("video/") == std::string::npos)
                     {
                         m_bIsOk = false;
-                        m_ssJsonError << "'caps' 'media_types' #" << ai << "not video whilst 'format' is" << std::endl;
+                        m_ssJsonError << "'caps' 'media_types' #" << ai << " not video whilst 'format' is" << std::endl;
                     }
                     else
                     {
@@ -241,7 +241,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
                     if(jsData["caps"]["media_types"][ai].asString() != "video/smpte291")
                     {
                         m_bIsOk = false;
-                        m_ssJsonError << "'caps' 'media_types' #" << ai << "not smpte291 whilst 'format' is data" << std::endl;
+                        m_ssJsonError << "'caps' 'media_types' #" << ai << " not smpte291 whilst 'format' is data" << std::endl;
                     }
                     else
                     {

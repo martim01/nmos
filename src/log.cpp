@@ -13,7 +13,7 @@ Log& Log::Get(enumLevel eLevel)
 
 void LogOutput::Flush(int nLogLevel, const std::stringstream&  logStream)
 {
-    if(nLogLevel != Log::LOG_DEBUG)
+
     std::cout << Log::STR_LEVEL[nLogLevel] << "\t" << logStream.str();
 }
 

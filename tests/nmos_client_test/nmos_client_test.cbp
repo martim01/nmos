@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="nmos_client_test" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Windows Debug">
+				<Option platforms="Windows;" />
+				<Option output="bin/Debug/nmos_node_test" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="new_gnu_gcc_compiler" />
+				<Compiler>
+					<Add option="-std=c11" />
+					<Add option="-g" />
+					<Add option="-pipe" />
+					<Add option="-mthreads" />
+					<Add option='[[if (PLATFORM == PLATFORM_MSW &amp;&amp; (GetCompilerFactory().GetCompilerVersionString(_T(&quot;gcc&quot;)) &gt;= _T(&quot;4.0.0&quot;))) print(_T(&quot;-Wno-attributes&quot;));]]' />
+					<Add option="-std=c++11" />
+					<Add option="-D__GNUWIN32__" />
+					<Add directory="$(#microhttp.include)" />
+					<Add directory="$(#nmos.INCLUDE)" />
+				</Compiler>
+				<Linker>
+					<Add library="ole32" />
+					<Add library="nmosd" />
+					<Add directory="$(#microhttp.lib)" />
+					<Add directory="$(#nmos.LIB)" />
+					<Add directory="$(#curl.LIB)" />
+				</Linker>
+			</Target>
+			<Target title="Windows Release">
+				<Option platforms="Windows;" />
+				<Option output="bin/Release/nmos_client_test" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="new_gnu_gcc_compiler" />
+				<Option projectCompilerOptionsRelation="-1" />
+				<Option projectLinkerOptionsRelation="-1" />
+				<Option projectIncludeDirsRelation="-1" />
+				<Option projectResourceIncludeDirsRelation="-1" />
+				<Option projectLibDirsRelation="-1" />
+				<MakeCommands>
+					<Build command="" />
+					<CompileFile command="" />
+					<Clean command="" />
+					<DistClean command="" />
+					<AskRebuildNeeded command="" />
+					<SilentBuild command=" &gt; $(CMD_NULL)" />
+				</MakeCommands>
+			</Target>
+			<Target title="Linux Debug">
+				<Option platforms="Unix;" />
+				<Option output="bin/Linux Debug/nmos_client_test" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-std=c++14" />
+					<Add option="-g" />
+					<Add option="-pthread" />
+					<Add option="-D__GNU__" />
+					<Add directory="$(#microhttp.include)" />
+				</Compiler>
+				<Linker>
+					<Add option="`pkg-config --libs libmicrohttpd`" />
+					<Add option="`pkg-config --libs avahi-client`" />
+					<Add option="`pkg-config --libs uuid`" />
+					<Add option="`pkg-config --libs libcurl`" />
+					<Add library="../../lib/libnmosd.so" />
+					<Add library="pthread" />
+					<Add directory="$(#microhttp.lib)" />
+				</Linker>
+			</Target>
+			<Target title="Linux Release">
+				<Option platforms="Unix;" />
+				<Option output="bin/Linux Release/nmos_client_test" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-std=c++11" />
+					<Add option="-D__GNU__" />
+					<Add directory="$(#microhttp.include)" />
+					<Add directory="../../lib" />
+				</Compiler>
+				<Linker>
+					<Add option="`pkg-config --libs libmicrohttpd`" />
+					<Add option="`pkg-config --libs avahi-client`" />
+					<Add option="`pkg-config --libs uuid`" />
+					<Add option="`pkg-config --libs libcurl`" />
+					<Add library="libnmos" />
+					<Add library="pthread" />
+					<Add directory="$(#microhttp.lib)" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-fexceptions" />
+			<Add directory="$(#json.include)" />
+			<Add directory="../../include" />
+		</Compiler>
+		<Unit filename="main.cpp" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

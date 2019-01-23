@@ -27,7 +27,7 @@ class ServiceBrowser
 {
 // Construction
     public:
-        ServiceBrowser(std::shared_ptr<EventPoster> pPoster);
+        ServiceBrowser(std::shared_ptr<EventPoster> pPoster, bool bFree=false);
         virtual ~ServiceBrowser();
 
 
@@ -53,6 +53,7 @@ class ServiceBrowser
         bool Start(AvahiClient* pClient);
         void Stop();
         void CheckStop();
+        bool m_bFree;
 
         std::mutex m_mutex;
 //        void OnStop(wxCommandEvent& event);
