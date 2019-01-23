@@ -37,25 +37,19 @@
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="new_gnu_gcc_compiler" />
-				<Compiler>
-					<Add option="-O2" />
-					<Add option="-std=c11" />
-					<Add option="-pipe" />
-					<Add option="-mthreads" />
-					<Add option='[[if (PLATFORM == PLATFORM_MSW &amp;&amp; (GetCompilerFactory().GetCompilerVersionString(_T(&quot;gcc&quot;)) &gt;= _T(&quot;4.0.0&quot;))) print(_T(&quot;-Wno-attributes&quot;));]]' />
-					<Add option="-std=c++11" />
-					<Add option="-D__GNUWIN32__" />
-					<Add directory="$(#microhttp.include)" />
-					<Add directory="$(#nmos.INCLUDE)" />
-				</Compiler>
-				<Linker>
-					<Add option="-s" />
-					<Add library="ole32" />
-					<Add library="nmos" />
-					<Add directory="$(#microhttp.lib)" />
-					<Add directory="$(#nmos.LIB)" />
-					<Add directory="$(#curl.LIB)" />
-				</Linker>
+				<Option projectCompilerOptionsRelation="-1" />
+				<Option projectLinkerOptionsRelation="-1" />
+				<Option projectIncludeDirsRelation="-1" />
+				<Option projectResourceIncludeDirsRelation="-1" />
+				<Option projectLibDirsRelation="-1" />
+				<MakeCommands>
+					<Build command="" />
+					<CompileFile command="" />
+					<Clean command="" />
+					<DistClean command="" />
+					<AskRebuildNeeded command="" />
+					<SilentBuild command=" &gt; $(CMD_NULL)" />
+				</MakeCommands>
 			</Target>
 			<Target title="Linux Debug">
 				<Option platforms="Unix;" />
@@ -88,17 +82,20 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-std=c++11" />
+					<Add option="-std=c++14" />
+					<Add option="--pthread" />
 					<Add option="-D__GNU__" />
 					<Add directory="$(#microhttp.include)" />
 				</Compiler>
 				<Linker>
-					<Add option="-s" />
 					<Add option="`pkg-config --libs libmicrohttpd`" />
 					<Add option="`pkg-config --libs avahi-client`" />
 					<Add option="`pkg-config --libs uuid`" />
 					<Add option="`pkg-config --libs libcurl`" />
+					<Add library="pthread" />
+					<Add library="libnmos" />
 					<Add directory="$(#microhttp.lib)" />
+					<Add directory="../../lib" />
 				</Linker>
 			</Target>
 		</Build>

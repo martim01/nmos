@@ -126,6 +126,7 @@ wxnmosDialog::wxnmosDialog(wxWindow* parent,wxWindowID id)
     pSender->AddInterfaceBinding("eth0");
 
 
+
     shared_ptr<Receiver> pReceiver = make_shared<Receiver>("Test Receiver", "TestDescription", Receiver::RTP_MCAST, pDevice->GetId(), Receiver::AUDIO);
     pReceiver->AddCap("audio/L24");
     pReceiver->AddCap("audio/L20");

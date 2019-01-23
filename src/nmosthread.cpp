@@ -33,7 +33,7 @@ void NodeThread::Main()
         }
         else
         {
-            Log::Get() << "Try again in 30s..." << std::endl;
+            Log::Get() << "Try again in 30s..." << std::endl;   // @todo backoff each time by a certain amount
             for(int i = 30; i > 0 && NodeApi::Get().IsRunning(); i--)
             {   //loop so we wake up to check if the thread should close...
                 this_thread::sleep_for(chrono::seconds(1));
