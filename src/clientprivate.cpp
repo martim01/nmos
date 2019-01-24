@@ -300,24 +300,7 @@ ClientApiPrivate::enumMode ClientApiPrivate::GetMode()
     return m_eMode;
 }
 
-bool ClientApiPrivate::UpdateResource(ClientHolder& holder, const Json::Value& jsData)
-{
-    map<string, shared_ptr<Resource> >::iterator itResource = holder.GetNmosResource(jsData["id"].asString());
-    if(itResource != holder.GetResourceEnd())
-    {
-        Log::Get() <<  itResource->first << " found already " << endl;
-        if(itResource->second->UpdateFromJson(jsData))
-        {
-            Log::Get() <<  itResource->first << " updated " << endl;
-        }
-        else
-        {
-            Log::Get() << "Found node but json data incorrect: " << itResource->second->GetJsonParseError() << endl;
-        }
-        return true;
-    }
-    return false;
-}
+
 
 void ClientApiPrivate::AddNode(const std::string& sIpAddress, const std::string& sData)
 {
@@ -329,7 +312,7 @@ void ClientApiPrivate::AddNode(const std::string& sIpAddress, const std::string&
     {
         if(jsData["id"].isString())
         {
-            if(!UpdateResource(m_nodes, jsData))
+            if(!m_nodes.UpdateResource(jsData))
             {
                 shared_ptr<Self> pSelf = (make_shared<Self>());
                 if(pSelf->UpdateFromJson(jsData))
@@ -367,7 +350,7 @@ void ClientApiPrivate::AddDevices(const std::string& sIpAddress, const std::stri
             {
                 if(jsData[ai].isObject() && jsData[ai]["id"].isString())
                 {
-                    if(!UpdateResource(m_devices, jsData[ai]))
+                    if(!m_devices.UpdateResource(jsData[ai]))
                     {
                         shared_ptr<Device> pResource(make_shared<Device>());
                         if(pResource->UpdateFromJson(jsData[ai]))
@@ -411,7 +394,7 @@ void ClientApiPrivate::AddSources(const std::string& sIpAddress, const std::stri
             {
                 if(jsData[ai].isObject() && jsData[ai]["format"].isString() && jsData[ai]["id"].isString())
                 {
-                    if(!UpdateResource(m_sources, jsData[ai]))
+                    if(!m_sources.UpdateResource(jsData[ai]))
                     {
                         if(jsData[ai]["format"].asString().find("urn:x-nmos:format:audio") != string::npos)
                         {   //Audio
@@ -471,7 +454,7 @@ void ClientApiPrivate::AddFlows(const std::string& sIpAddress, const std::string
             {
                 if(jsData[ai].isObject() && jsData[ai]["format"].isString() && jsData[ai]["id"].isString())
                 {
-                    if(!UpdateResource(m_flows, jsData[ai]))
+                    if(!m_flows.UpdateResource(jsData[ai]))
                     {
                         if(jsData[ai]["format"].asString().find("urn:x-nmos:format:audio") != string::npos)
                         {
@@ -600,7 +583,7 @@ void ClientApiPrivate::AddSenders(const std::string& sIpAddress, const std::stri
             {
                 if(jsData[ai].isObject() && jsData[ai]["id"].isString())
                 {
-                    if(!UpdateResource(m_senders, jsData[ai]))
+                    if(!m_senders.UpdateResource(jsData[ai]))
                     {
                         shared_ptr<Sender> pResource(make_shared<Sender>());
                         if(pResource->UpdateFromJson(jsData[ai]))
@@ -644,7 +627,7 @@ void ClientApiPrivate::AddReceivers(const std::string& sIpAddress, const std::st
             {
                 if(jsData[ai].isObject() && jsData[ai]["id"].isString())
                 {
-                    if(!UpdateResource(m_receivers, jsData[ai]))
+                    if(!m_receivers.UpdateResource(jsData[ai]))
                     {
                         shared_ptr<Receiver> pResource(make_shared<Receiver>());
                         if(pResource->UpdateFromJson(jsData[ai]))
@@ -721,4 +704,15 @@ int ClientApiPrivate::GetInterestFlags()
 {
     lock_guard<mutex> lg(m_mutex);
     return m_nFlags;
+}
+
+
+std::map<std::string, std::shared_ptr<Self> >::const_iterator ClientApiPrivate::GetNodeBegin()
+{
+    return m_nodes.GetResourceBegin();
+}
+
+std::map<std::string, std::shared_ptr<Self> >::const_iterator ClientApiPrivate::GetNodeEnd()
+{
+    return m_nodes.GetResourceEnd();
 }

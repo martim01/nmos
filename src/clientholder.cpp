@@ -1,19 +1,27 @@
 #include "clientholder.h"
 #include "resource.h"
+#include "log.h"
+#include "self.h"
+#include "device.h"
+#include "source.h"
+#include "sender.h"
+#include "flow.h"
+#include "receiver.h"
+
 using namespace std;
 
-ClientHolder::ClientHolder()
+template<class T> ClientHolder<T>::ClientHolder()
 {
 
 }
 
-ClientHolder::~ClientHolder()
+template<class T> ClientHolder<T>::~ClientHolder()
 {
 
 }
 
 
-bool ClientHolder::AddResource(const string& sIpAddres, shared_ptr<Resource> pResource)
+template<class T> bool ClientHolder<T>::AddResource(const string& sIpAddres, shared_ptr<T> pResource)
 {
     if(pResource && m_mResource.insert(make_pair(pResource->GetId(), pResource)).second)
     {
@@ -23,7 +31,7 @@ bool ClientHolder::AddResource(const string& sIpAddres, shared_ptr<Resource> pRe
     return false;
 }
 
-bool ClientHolder::RemoveResource(shared_ptr<Resource> pResource)
+template<class T> bool ClientHolder<T>::RemoveResource(shared_ptr<T> pResource)
 {
     if(pResource)
     {
@@ -32,7 +40,7 @@ bool ClientHolder::RemoveResource(shared_ptr<Resource> pResource)
     return false;
 }
 
-bool ClientHolder::RemoveResource(string sUuid)
+template<class T> bool ClientHolder<T>::RemoveResource(string sUuid)
 {
     for(multimap<string, string>::iterator itAddress = m_mmAddressResourceId.begin(); itAddress != m_mmAddressResourceId.end(); ++itAddress)
     {
@@ -46,7 +54,7 @@ bool ClientHolder::RemoveResource(string sUuid)
     return true;
 }
 
-size_t ClientHolder::RemoveResources(const string& sIpAddres)
+template<class T> size_t ClientHolder<T>::RemoveResources(const string& sIpAddres)
 {
     size_t nResources = m_mResource.size();
     for(multimap<string, string>::iterator itResource = m_mmAddressResourceId.lower_bound(sIpAddres); itResource != m_mmAddressResourceId.upper_bound(sIpAddres); ++itResource)
@@ -57,41 +65,65 @@ size_t ClientHolder::RemoveResources(const string& sIpAddres)
     return (nResources-m_mResource.size());
 }
 
-void ClientHolder::RemoveAllResources()
+template<class T> void ClientHolder<T>::RemoveAllResources()
 {
     m_mmAddressResourceId.clear();
     m_mResource.clear();
 }
 
-bool ClientHolder::ResourceExists(const string& sUuid) const
+template<class T> bool ClientHolder<T>::ResourceExists(const string& sUuid) const
 {
     return (m_mResource.find(sUuid) != m_mResource.end());
 }
 
-map<string, shared_ptr<Resource> >::const_iterator ClientHolder::GetResourceBegin() const
+template<class T> typename map<string, shared_ptr<T> >::const_iterator ClientHolder<T>::GetResourceBegin() const
 {
     return m_mResource.begin();
 }
 
-map<string, shared_ptr<Resource> >::const_iterator ClientHolder::GetResourceEnd() const
+template<class T> typename map<string, shared_ptr<T> >::const_iterator ClientHolder<T>::GetResourceEnd() const
 {
     return m_mResource.end();
 }
 
-map<string, shared_ptr<Resource> >::const_iterator ClientHolder::FindNmosResource(string sUuid) const
+template<class T> typename map<string, shared_ptr<T> >::const_iterator ClientHolder<T>::FindNmosResource(string sUuid) const
 {
     return m_mResource.find(sUuid);
 }
 
-map<string, shared_ptr<Resource> >::iterator ClientHolder::GetNmosResource(string sUuid)
+template<class T> typename map<string, shared_ptr<T> >::iterator ClientHolder<T>::GetNmosResource(string sUuid)
 {
     return m_mResource.find(sUuid);
 }
 
-size_t ClientHolder::GetResourceCount() const
+template<class T> size_t ClientHolder<T>::GetResourceCount() const
 {
     return m_mResource.size();
 }
 
+template<class T> bool ClientHolder<T>::UpdateResource(const Json::Value& jsData)
+{
+    typename map<string, shared_ptr<T> >::iterator itResource = GetNmosResource(jsData["id"].asString());
+    if(itResource != GetResourceEnd())
+    {
+        Log::Get() <<  itResource->first << " found already " << endl;
+        if(itResource->second->UpdateFromJson(jsData))
+        {
+            Log::Get() <<  itResource->first << " updated " << endl;
+        }
+        else
+        {
+            Log::Get() << "Found node but json data incorrect: " << itResource->second->GetJsonParseError() << endl;
+        }
+        return true;
+    }
+    return false;
+}
 
 
+template class ClientHolder<Self>;
+template class ClientHolder<Sender>;
+template class ClientHolder<Device>;
+template class ClientHolder<Source>;
+template class ClientHolder<Receiver>;
+template class ClientHolder<Flow>;

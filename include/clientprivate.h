@@ -5,6 +5,14 @@
 #include <list>
 #include "json/json.h"
 
+#include "self.h"
+#include "device.h"
+#include "source.h"
+#include "sender.h"
+#include "flow.h"
+#include "receiver.h"
+
+
 class ServiceBrowser;
 class EventPoster;
 class dnsInstance;
@@ -52,22 +60,27 @@ class ClientApiPrivate
         void GetNodeDetails();
         int GetInterestFlags();
 
+
+
+        std::map<std::string, std::shared_ptr<Self> >::const_iterator GetNodeBegin();
+        std::map<std::string, std::shared_ptr<Self> >::const_iterator GetNodeEnd();
+
     private:
         friend class ClientPoster;
         void ConnectToQueryServer();
         void RemoveResources(const std::string& sIpAddress);
         void StoreNodeVersion(const std::string& sIpAddress, std::shared_ptr<dnsInstance> pInstance);
-        bool UpdateResource(ClientHolder& holder, const Json::Value& jsData);
+
 
 
         enumMode m_eMode;
 
-        ClientHolder m_nodes;
-        ClientHolder m_devices;
-        ClientHolder m_sources;
-        ClientHolder m_flows;
-        ClientHolder m_senders;
-        ClientHolder m_receivers;
+        ClientHolder<Self> m_nodes;
+        ClientHolder<Device> m_devices;
+        ClientHolder<Source> m_sources;
+        ClientHolder<Flow> m_flows;
+        ClientHolder<Sender> m_senders;
+        ClientHolder<Receiver> m_receivers;
 
         ServiceBrowser* m_pBrowser;
         bool m_bRun;

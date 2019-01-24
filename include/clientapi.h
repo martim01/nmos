@@ -1,6 +1,10 @@
 #pragma once
 #include "nmosdlldefine.h"
+#include <string>
+#include <map>
+#include <memory>
 
+class Self;
 class ClientApiPrivate;
 
 class NMOS_EXPOSE ClientApi
@@ -15,6 +19,12 @@ class NMOS_EXPOSE ClientApi
         void Stop();
 
         void ChangeInterest(flagResource eInterest);
+
+        void Subscribe(const std::string& sSenderId, const std::string& sReceiverId);
+
+        std::map<std::string, std::shared_ptr<Self> >::const_iterator GetNodeBegin();
+        std::map<std::string, std::shared_ptr<Self> >::const_iterator GetNodeEnd();
+
 
     private:
         friend void NodeBrowser();

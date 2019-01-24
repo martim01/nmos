@@ -36,3 +36,12 @@ ClientApi::~ClientApi()
     delete m_pApi;
 }
 
+std::map<std::string, std::shared_ptr<Self> >::const_iterator ClientApi::GetNodeBegin()
+{
+    return m_pApi->GetNodeBegin();
+}
+
+std::map<std::string, std::shared_ptr<Self> >::const_iterator ClientApi::GetNodeEnd()
+{
+    return m_pApi->GetNodeBegin();
+}
