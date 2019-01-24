@@ -43,5 +43,5 @@ std::map<std::string, std::shared_ptr<Self> >::const_iterator ClientApi::GetNode
 
 std::map<std::string, std::shared_ptr<Self> >::const_iterator ClientApi::GetNodeEnd()
 {
-    return m_pApi->GetNodeBegin();
+    return m_pApi->GetNodeEnd();
 }
