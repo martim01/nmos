@@ -59,7 +59,7 @@ void ThreadPoster::RegistrationNodeError()
     LaunchThread();
 }
 
-void ThreadPoster::InstanceRemoved(const std::string& sInstance)
+void ThreadPoster::InstanceRemoved(std::shared_ptr<dnsInstance> pInstance)
 {
     SetReason(INSTANCE_REMOVED);
     LaunchThread();

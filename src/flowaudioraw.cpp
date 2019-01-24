@@ -94,6 +94,7 @@ void FlowAudioRaw::SetFormat(enumFormat eFormat)
 void FlowAudioRaw::SetPacketTime(enumPacket ePacketTime)
 {
     m_ePacketTime = ePacketTime;
+    UpdateVersionTime();
 }
 
 std::string FlowAudioRaw::CreateSDPLines(unsigned short nRtpPort) const

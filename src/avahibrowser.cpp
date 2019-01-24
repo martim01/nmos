@@ -197,10 +197,10 @@ void ServiceBrowser::TypeCallback(AvahiIfIndex interface, AvahiProtocol protocol
         case AVAHI_BROWSER_NEW:
             {
                 string sService(type);
-
+                Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: Service '" << type << "' found in domain '" << domain << "'" << endl;
                 if(m_setServices.find(sService) != m_setServices.end())
                 {
-                    Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: Service '" << type << "' found in domain '" << domain << "'" << endl;
+
                     m_mutex.lock();
                     if(m_mServices.insert(make_pair(sService, make_shared<dnsService>(dnsService(sService)))).second)
                     {
@@ -331,6 +331,7 @@ void ServiceBrowser::ResolveCallback(AvahiServiceResolver* pResolver, AvahiResol
                     size_t nFind = sPair.find("=");
                     if(nFind != string::npos)
                     {
+                        Log::Get(Log::LOG_DEBUG) << sPair.substr(0,nFind) << "=" << sPair.substr(nFind+1) << endl;
                         pInstance->mTxt.insert(make_pair(sPair.substr(0,nFind), sPair.substr(nFind+1)));
                     }
                 }
@@ -345,8 +346,6 @@ void ServiceBrowser::ResolveCallback(AvahiServiceResolver* pResolver, AvahiResol
 
             }
             break;
-            default:
-                Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: ResolveCallback: " << event << endl;
         }
     }
     avahi_service_resolver_free(pResolver);

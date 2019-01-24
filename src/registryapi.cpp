@@ -133,7 +133,7 @@ const shared_ptr<Resource> RegistryApi::FindNmosResource(const std::string& sTyp
     lock_guard<mutex> lg(m_mutex);
     if(m_pRegistry)
     {
-        return m_pRegistry->FindResource(sType, sId);
+        return m_pRegistry->FindNmosResource(sType, sId);
     }
     return shared_ptr<Resource>(0);
 }
@@ -153,7 +153,7 @@ unsigned short RegistryApi::AddUpdateResource(const string& sType, const Json::V
     //lock_guard<mutex> lg(m_mutex);
     if(m_pRegistry)
     {
-        shared_ptr<Resource> pResource = m_pRegistry->FindResource(sType, jsData["id"].asString());
+        shared_ptr<Resource> pResource = m_pRegistry->FindNmosResource(sType, jsData["id"].asString());
         if(pResource)
         {
             if(UpdateNmosResource(jsData, pResource,sError))
