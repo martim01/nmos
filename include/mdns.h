@@ -8,7 +8,7 @@
 struct NMOS_EXPOSE dnsInstance
 {
     dnsInstance(){}
-    dnsInstance(std::string sN) : sName(sN){}
+    dnsInstance(std::string sN) : sName(sN), nPort(0), nUpdate(0){}
 
     std::string sName;
     std::string sHostName;
@@ -17,6 +17,8 @@ struct NMOS_EXPOSE dnsInstance
     unsigned long nPort;
     std::string sInterface;
     std::map<std::string, std::string> mTxt;
+    std::map<std::string, std::string> mTxtLast;
+    size_t nUpdate;
 
 };
 
@@ -28,11 +30,11 @@ struct NMOS_EXPOSE dnsService
 
     ~dnsService()
     {
-        lstInstances.clear();
+        mInstances.clear();
     }
 
     std::string sService;
-    std::list<std::shared_ptr<dnsInstance> > lstInstances;
+    std::map<std::string, std::shared_ptr<dnsInstance> > mInstances;
 
 };
 

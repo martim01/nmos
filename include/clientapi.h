@@ -4,6 +4,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <list>
+#include "json/json.h"
 
 class ServiceBrowser;
 class EventPoster;
@@ -58,6 +59,9 @@ class NMOS_EXPOSE ClientApi
         void RemoveResources(const std::string& sIpAddress);
 
         void NodeDetailsDone();
+        void StoreNodeVersion(const std::string& sIpAddress, std::shared_ptr<dnsInstance> pInstance);
+
+        bool UpdateResource(ClientHolder& holder, const Json::Value& jsData);
 
         ClientApi();
         ~ClientApi();
@@ -81,4 +85,5 @@ class NMOS_EXPOSE ClientApi
         std::condition_variable m_cvBrowse; //sync between nmos thread and ServiceBrowser thread
         enumSignal m_eSignal;
         unsigned short m_nCurlThreadCount;
+
 };

@@ -504,24 +504,24 @@ bool NodeApi::FindRegistrationNode()
         Log::Get(Log::LOG_INFO) << "NodeApi: Register. Found nmos registration service." << endl;
         shared_ptr<dnsInstance>  pInstance(0);
         string sApiVersion;
-        for(list<shared_ptr<dnsInstance> >::const_iterator itInstance = itService->second->lstInstances.begin(); itInstance != itService->second->lstInstances.end(); ++itInstance)
+        for(map<string, shared_ptr<dnsInstance> >::const_iterator itInstance = itService->second->mInstances.begin(); itInstance != itService->second->mInstances.end(); ++itInstance)
         {   //get the registration node with smallest priority number
 
-            Log::Get(Log::LOG_INFO) << "NodeApi: Register. Found nmos registration node: " << (*itInstance)->sName << endl;
+            Log::Get(Log::LOG_INFO) << "NodeApi: Register. Found nmos registration node: " << itInstance->first << endl;
             //get top priority
             unsigned long nPriority(200);
-            map<string, string>::const_iterator itPriority = (*itInstance)->mTxt.find("pri");
-            map<string, string>::const_iterator itVersion = (*itInstance)->mTxt.find("api_ver");
-            if(itPriority != (*itInstance)->mTxt.end() && itVersion != (*itInstance)->mTxt.end() && SdpManager::CheckIpAddress((*itInstance)->sHostIP) == SdpManager::IP4_UNI)
+            map<string, string>::const_iterator itPriority = itInstance->second->mTxt.find("pri");
+            map<string, string>::const_iterator itVersion = itInstance->second->mTxt.find("api_ver");
+            if(itPriority != itInstance->second->mTxt.end() && itVersion != itInstance->second->mTxt.end() && SdpManager::CheckIpAddress(itInstance->second->sHostIP) == SdpManager::IP4_UNI)
             {
                 if(stoul(itPriority->second) < nPriority && itVersion->second.find("v1.2") != string::npos)
                 {//for now only doing v1.2
 
 
-                    pInstance = (*itInstance);
+                    pInstance = itInstance->second;
                     nPriority = stoi(itPriority->second);
 
-                    Log::Get(Log::LOG_INFO) << "NodeApi: Register. Found nmos registration node with v1.2 and low priority: " << (*itInstance)->sName << " " << nPriority << endl;
+                    Log::Get(Log::LOG_INFO) << "NodeApi: Register. Found nmos registration node with v1.2 and low priority: " << itInstance->second->sName << " " << nPriority << endl;
 
                     //vector<string> vApi;
                     //SplitString(vApi, itVersion->second, ',');
@@ -660,23 +660,23 @@ bool NodeApi::FindQueryNode()
             Log::Get(Log::LOG_INFO) << "NodeApi: Query. Found nmos query service." << endl;
             shared_ptr<dnsInstance>  pInstance(0);
             string sApiVersion;
-            for(list<shared_ptr<dnsInstance> >::const_iterator itInstance = itService->second->lstInstances.begin(); itInstance != itService->second->lstInstances.end(); ++itInstance)
+            for(map<string, shared_ptr<dnsInstance> >::const_iterator itInstance = itService->second->mInstances.begin(); itInstance != itService->second->mInstances.end(); ++itInstance)
             {   //get the registration node with smallest priority number
 
-                Log::Get(Log::LOG_INFO) << "NodeApi: Query. Found nmos query node: " << (*itInstance)->sName << endl;
+                Log::Get(Log::LOG_INFO) << "NodeApi: Query. Found nmos query node: " << itInstance->second->sName << endl;
                 //get top priority
                 unsigned long nPriority(200);
-                map<string, string>::const_iterator itPriority = (*itInstance)->mTxt.find("pri");
-                map<string, string>::const_iterator itVersion = (*itInstance)->mTxt.find("api_ver");
-                if(itPriority != (*itInstance)->mTxt.end() && itVersion != (*itInstance)->mTxt.end())
+                map<string, string>::const_iterator itPriority = itInstance->second->mTxt.find("pri");
+                map<string, string>::const_iterator itVersion = itInstance->second->mTxt.find("api_ver");
+                if(itPriority != itInstance->second->mTxt.end() && itVersion != itInstance->second->mTxt.end())
                 {
                     if(stoul(itPriority->second) < nPriority && itVersion->second.find("v1.2") != string::npos)
                     {//for now only doing v1.2
                         // @todo maybe support other versions?
-                        pInstance = (*itInstance);
+                        pInstance = itInstance->second;
                         nPriority = stoi(itPriority->second);
 
-                        Log::Get(Log::LOG_INFO) << "NodeApi: Query. Found nmos query node with v1.2 and low priority: " << (*itInstance)->sName << " " << nPriority << endl;
+                        Log::Get(Log::LOG_INFO) << "NodeApi: Query. Found nmos query node with v1.2 and low priority: " << itInstance->second->sName << " " << nPriority << endl;
 
                     }
                 }

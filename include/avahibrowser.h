@@ -67,6 +67,7 @@ class ServiceBrowser
         bool m_bBrowsing;
         unsigned long m_nWaitingOn;
         std::set<AvahiServiceBrowser*> m_setBrowser;
+        std::map<std::string, AvahiServiceResolver*> m_mResolvers;
         std::map<std::string, std::shared_ptr<dnsService> > m_mServices;
 };
 

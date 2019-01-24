@@ -8,7 +8,7 @@
 #include "avahibrowser.h"
 #endif // __GNU__
 #include "curlregister.h"
-#include "json/json.h"
+
 #include "self.h"
 #include "device.h"
 #include "sourceaudio.h"
@@ -61,6 +61,24 @@ void ClientThread()
     ClientApi::Get().m_pBrowser = 0;
 }
 
+bool VersionChanged(shared_ptr<dnsInstance> pInstance, const string& sVersion)
+{
+    if(pInstance->nUpdate != 0)
+    {
+        map<string, string>::iterator itVer = pInstance->mTxt.find(sVersion);
+        map<string, string>::iterator itVerLast = pInstance->mTxtLast.find(sVersion);
+
+        if(itVer != pInstance->mTxt.end() && itVerLast != pInstance->mTxtLast.end())
+        {
+            if(itVer->second != itVerLast->second)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    return true;
+}
 
 static void NodeBrowser(shared_ptr<dnsInstance> pInstance)
 {
@@ -72,18 +90,39 @@ static void NodeBrowser(shared_ptr<dnsInstance> pInstance)
             stringstream ss;
             ss << pInstance->sHostIP << ":" << pInstance->nPort << "/x-nmos/node/v1.2/";
             string sResponse;
-            CurlRegister::Get(string(ss.str()+"self"), sResponse, true);
-            ClientApi::Get().AddNode(pInstance->sHostIP, sResponse);
-            CurlRegister::Get(string(ss.str()+"devices"), sResponse, true);
-            ClientApi::Get().AddDevices(pInstance->sHostIP, sResponse);
-            CurlRegister::Get(string(ss.str()+"sources"), sResponse, true);
-            ClientApi::Get().AddSources(pInstance->sHostIP, sResponse);
-            CurlRegister::Get(string(ss.str()+"flows"), sResponse, true);
-            ClientApi::Get().AddFlows(pInstance->sHostIP, sResponse);
-            CurlRegister::Get(string(ss.str()+"senders"), sResponse, true);
-            ClientApi::Get().AddSenders(pInstance->sHostIP, sResponse);
-            CurlRegister::Get(string(ss.str()+"receivers"), sResponse, true);
-            ClientApi::Get().AddReceivers(pInstance->sHostIP, sResponse);
+
+
+
+            if(VersionChanged(pInstance, "ver_slf"))
+            {
+                CurlRegister::Get(string(ss.str()+"self"), sResponse, true);
+                ClientApi::Get().AddNode(pInstance->sHostIP, sResponse);
+            }
+            if(VersionChanged(pInstance, "ver_dvc"))
+            {
+                CurlRegister::Get(string(ss.str()+"devices"), sResponse, true);
+                ClientApi::Get().AddDevices(pInstance->sHostIP, sResponse);
+            }
+            if(VersionChanged(pInstance, "ver_src"))
+            {
+                CurlRegister::Get(string(ss.str()+"sources"), sResponse, true);
+                ClientApi::Get().AddSources(pInstance->sHostIP, sResponse);
+            }
+            if(VersionChanged(pInstance, "ver_flw"))
+            {
+                CurlRegister::Get(string(ss.str()+"flows"), sResponse, true);
+                ClientApi::Get().AddFlows(pInstance->sHostIP, sResponse);
+            }
+            if(VersionChanged(pInstance, "ver_snd"))
+            {
+                CurlRegister::Get(string(ss.str()+"senders"), sResponse, true);
+                ClientApi::Get().AddSenders(pInstance->sHostIP, sResponse);
+            }
+            if(VersionChanged(pInstance, "ver_rcv"))
+            {
+                CurlRegister::Get(string(ss.str()+"receivers"), sResponse, true);
+                ClientApi::Get().AddReceivers(pInstance->sHostIP, sResponse);
+            }
 
         }
     }
@@ -200,8 +239,16 @@ void ClientApi::HandleInstanceResolved()
         }
         else if(m_pInstance->sService == "_nmos-node._tcp" && m_eMode == MODE_P2P)
         {
-            Log::Get(Log::LOG_INFO) << "Nmos node found" << endl;
-            m_lstResolve.push_back(m_pInstance);
+            if(m_pInstance->nUpdate == 0)
+            {
+                Log::Get(Log::LOG_INFO) << "Nmos node found" << endl;
+                m_lstResolve.push_back(m_pInstance);
+            }
+            else
+            {
+                Log::Get(Log::LOG_INFO) << "Nmos node updated" << endl;
+                m_lstResolve.push_back(m_pInstance);
+            }
         }
         m_pInstance = 0;
     }
@@ -258,6 +305,24 @@ ClientApi::enumMode ClientApi::GetMode()
     return m_eMode;
 }
 
+bool ClientApi::UpdateResource(ClientHolder& holder, const Json::Value& jsData)
+{
+    map<string, shared_ptr<Resource> >::iterator itResource = holder.GetNmosResource(jsData["id"].asString());
+    if(itResource != holder.GetResourceEnd())
+    {
+        Log::Get() <<  itResource->first << " found already " << endl;
+        if(itResource->second->UpdateFromJson(jsData))
+        {
+            Log::Get() <<  itResource->first << " updated " << endl;
+        }
+        else
+        {
+            Log::Get() << "Found node but json data incorrect: " << itResource->second->GetJsonParseError() << endl;
+        }
+        return true;
+    }
+    return false;
+}
 
 void ClientApi::AddNode(const std::string& sIpAddress, const std::string& sData)
 {
@@ -267,15 +332,25 @@ void ClientApi::AddNode(const std::string& sIpAddress, const std::string& sData)
     Json::Reader jsReader;
     if(jsReader.parse(sData, jsData))
     {
-        shared_ptr<Self> pSelf(make_shared<Self>());
-        if(pSelf->UpdateFromJson(jsData))
+        if(jsData["id"].isString())
         {
-            m_nodes.AddResource(sIpAddress, pSelf);
-            Log::Get() << "Node: " << pSelf->GetId() << " found at " << sIpAddress << endl;
+            if(!UpdateResource(m_nodes, jsData))
+            {
+                shared_ptr<Self> pSelf = (make_shared<Self>());
+                if(pSelf->UpdateFromJson(jsData))
+                {
+                    m_nodes.AddResource(sIpAddress, pSelf);
+                    Log::Get() << "Node: " << pSelf->GetId() << " found at " << sIpAddress << endl;
+                }
+                else
+                {
+                    Log::Get() << "Found node but json data incorrect: " << pSelf->GetJsonParseError() << endl;
+                }
+            }
         }
         else
         {
-            Log::Get() << "Found node but json data incorrect: " << pSelf->GetJsonParseError() << endl;
+            Log::Get() << "Reply from " << sIpAddress << "but not valid JSON - id not correct" << endl;
         }
     }
     else
@@ -295,17 +370,20 @@ void ClientApi::AddDevices(const std::string& sIpAddress, const std::string& sDa
         {
             for(Json::ArrayIndex ai = 0; ai < jsData.size(); ++ai)
             {
-                if(jsData[ai].isObject())
+                if(jsData[ai].isObject() && jsData[ai]["id"].isString())
                 {
-                    shared_ptr<Device> pResource(make_shared<Device>());
-                    if(pResource->UpdateFromJson(jsData[ai]))
+                    if(!UpdateResource(m_devices, jsData[ai]))
                     {
-                        m_devices.AddResource(sIpAddress, pResource);
-                        Log::Get() << "Device: " << pResource->GetId() << " found at " << sIpAddress << endl;
-                    }
-                    else
-                    {
-                        Log::Get() << "Found device but json data incorrect: " << pResource->GetJsonParseError() << endl;
+                        shared_ptr<Device> pResource(make_shared<Device>());
+                        if(pResource->UpdateFromJson(jsData[ai]))
+                        {
+                            m_devices.AddResource(sIpAddress, pResource);
+                            Log::Get() << "Device: " << pResource->GetId() << " found at " << sIpAddress << endl;
+                        }
+                        else
+                        {
+                            Log::Get() << "Found device but json data incorrect: " << pResource->GetJsonParseError() << endl;
+                        }
                     }
                 }
                 else
@@ -336,32 +414,35 @@ void ClientApi::AddSources(const std::string& sIpAddress, const std::string& sDa
         {
             for(Json::ArrayIndex ai = 0; ai < jsData.size(); ++ai)
             {
-                if(jsData[ai].isObject() && jsData[ai]["format"].isString())
+                if(jsData[ai].isObject() && jsData[ai]["format"].isString() && jsData[ai]["id"].isString())
                 {
-                    if(jsData[ai]["format"].asString().find("urn:x-nmos:format:audio") != string::npos)
-                    {   //Audio
-                        shared_ptr<SourceAudio> pResource = make_shared<SourceAudio>();
-                        if(pResource->UpdateFromJson(jsData[ai]))
-                        {
-                            m_sources.AddResource(sIpAddress, pResource);
-                            Log::Get() << "SourceAudio: " << pResource->GetId() << " found at " << sIpAddress << endl;
+                    if(!UpdateResource(m_sources, jsData[ai]))
+                    {
+                        if(jsData[ai]["format"].asString().find("urn:x-nmos:format:audio") != string::npos)
+                        {   //Audio
+                            shared_ptr<SourceAudio> pResource = make_shared<SourceAudio>();
+                            if(pResource->UpdateFromJson(jsData[ai]))
+                            {
+                                m_sources.AddResource(sIpAddress, pResource);
+                                Log::Get() << "SourceAudio: " << pResource->GetId() << " found at " << sIpAddress << endl;
+                            }
+                            else
+                            {
+                                Log::Get() << "Found Source but json data incorrect: " << pResource->GetJsonParseError() << endl;
+                            }
                         }
                         else
-                        {
-                            Log::Get() << "Found Source but json data incorrect: " << pResource->GetJsonParseError() << endl;
-                        }
-                    }
-                    else
-                    {   //Generic
-                        shared_ptr<SourceGeneric> pResource = make_shared<SourceGeneric>();
-                        if(pResource->UpdateFromJson(jsData[ai]))
-                        {
-                            m_sources.AddResource(sIpAddress, pResource);
-                            Log::Get() << "SourceGeneric: " << pResource->GetId() << " found at " << sIpAddress << endl;
-                        }
-                        else
-                        {
-                            Log::Get() << "Found Source but json data incorrect: " << pResource->GetJsonParseError() << endl;
+                        {   //Generic
+                            shared_ptr<SourceGeneric> pResource = make_shared<SourceGeneric>();
+                            if(pResource->UpdateFromJson(jsData[ai]))
+                            {
+                                m_sources.AddResource(sIpAddress, pResource);
+                                Log::Get() << "SourceGeneric: " << pResource->GetId() << " found at " << sIpAddress << endl;
+                            }
+                            else
+                            {
+                                Log::Get() << "Found Source but json data incorrect: " << pResource->GetJsonParseError() << endl;
+                            }
                         }
                     }
                 }
@@ -393,101 +474,104 @@ void ClientApi::AddFlows(const std::string& sIpAddress, const std::string& sData
         {
             for(Json::ArrayIndex ai = 0; ai < jsData.size(); ++ai)
             {
-                if(jsData[ai].isObject() && jsData[ai]["format"].isString())
+                if(jsData[ai].isObject() && jsData[ai]["format"].isString() && jsData[ai]["id"].isString())
                 {
-                    if(jsData[ai]["format"].asString().find("urn:x-nmos:format:audio") != string::npos)
+                    if(!UpdateResource(m_flows, jsData[ai]))
                     {
-                        if(jsData[ai]["media_type"].isString())
+                        if(jsData[ai]["format"].asString().find("urn:x-nmos:format:audio") != string::npos)
                         {
-                            if(jsData[ai]["media_type"].asString() == "audio/L24" || jsData[ai]["media_type"].asString() == "audio/L20" || jsData[ai]["media_type"].asString() == "audio/L16" || jsData[ai]["media_type"].asString() == "audio/L8")
-                            {   //Raw Audio
-                                shared_ptr<FlowAudioRaw> pResource = make_shared<FlowAudioRaw>();
-                                if(pResource->UpdateFromJson(jsData[ai]))
-                                {
-                                    m_flows.AddResource(sIpAddress, pResource);
-                                    Log::Get() << "FlowAudioRaw: " << pResource->GetId() << " found at " << sIpAddress << endl;
+                            if(jsData[ai]["media_type"].isString())
+                            {
+                                if(jsData[ai]["media_type"].asString() == "audio/L24" || jsData[ai]["media_type"].asString() == "audio/L20" || jsData[ai]["media_type"].asString() == "audio/L16" || jsData[ai]["media_type"].asString() == "audio/L8")
+                                {   //Raw Audio
+                                    shared_ptr<FlowAudioRaw> pResource = make_shared<FlowAudioRaw>();
+                                    if(pResource->UpdateFromJson(jsData[ai]))
+                                    {
+                                        m_flows.AddResource(sIpAddress, pResource);
+                                        Log::Get() << "FlowAudioRaw: " << pResource->GetId() << " found at " << sIpAddress << endl;
+                                    }
+                                    else
+                                    {
+                                        Log::Get() << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() << endl;
+                                    }
                                 }
                                 else
-                                {
-                                    Log::Get() << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() << endl;
-                                }
-                            }
-                            else
-                            {   //Code audio
-                                shared_ptr<FlowAudioCoded> pResource = make_shared<FlowAudioCoded>();
-                                if(pResource->UpdateFromJson(jsData[ai]))
-                                {
-                                    m_flows.AddResource(sIpAddress, pResource);
-                                    Log::Get() << "FlowAudioCoded: " << pResource->GetId() << " found at " << sIpAddress << endl;
-                                }
-                                else
-                                {
-                                    Log::Get() << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() << endl;
+                                {   //Code audio
+                                    shared_ptr<FlowAudioCoded> pResource = make_shared<FlowAudioCoded>();
+                                    if(pResource->UpdateFromJson(jsData[ai]))
+                                    {
+                                        m_flows.AddResource(sIpAddress, pResource);
+                                        Log::Get() << "FlowAudioCoded: " << pResource->GetId() << " found at " << sIpAddress << endl;
+                                    }
+                                    else
+                                    {
+                                        Log::Get() << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() << endl;
+                                    }
                                 }
                             }
                         }
-                    }
-                    else if(jsData[ai]["format"].asString().find("urn:x-nmos:format:video") != string::npos)
-                    {
-                        if(jsData[ai]["media_type"].isString())
-                        {//Coded vidoe
-                            if(jsData[ai]["media_type"].asString() == "vidoe/raw")
-                            {
-                                shared_ptr<FlowVideoRaw> pResource = make_shared<FlowVideoRaw>();
-                                if(pResource->UpdateFromJson(jsData[ai]))
+                        else if(jsData[ai]["format"].asString().find("urn:x-nmos:format:video") != string::npos)
+                        {
+                            if(jsData[ai]["media_type"].isString())
+                            {//Coded vidoe
+                                if(jsData[ai]["media_type"].asString() == "vidoe/raw")
                                 {
-                                    m_flows.AddResource(sIpAddress, pResource);
-                                    Log::Get() << "FlowVideoRaw: " << pResource->GetId() << " found at " << sIpAddress << endl;
+                                    shared_ptr<FlowVideoRaw> pResource = make_shared<FlowVideoRaw>();
+                                    if(pResource->UpdateFromJson(jsData[ai]))
+                                    {
+                                        m_flows.AddResource(sIpAddress, pResource);
+                                        Log::Get() << "FlowVideoRaw: " << pResource->GetId() << " found at " << sIpAddress << endl;
+                                    }
+                                    else
+                                    {
+                                        Log::Get() << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() << endl;
+                                    }
                                 }
                                 else
                                 {
-                                    Log::Get() << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() << endl;
-                                }
-                            }
-                            else
-                            {
-                                shared_ptr<FlowVideoCoded> pResource = make_shared<FlowVideoCoded>(jsData[ai]["media_type"].asString());
-                                if(pResource->UpdateFromJson(jsData[ai]))
-                                {
-                                    m_flows.AddResource(sIpAddress, pResource);
-                                    Log::Get() << "FlowVideoCoded: " << pResource->GetId() << " found at " << sIpAddress << endl;
-                                }
-                                else
-                                {
-                                    Log::Get() << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() << endl;
+                                    shared_ptr<FlowVideoCoded> pResource = make_shared<FlowVideoCoded>(jsData[ai]["media_type"].asString());
+                                    if(pResource->UpdateFromJson(jsData[ai]))
+                                    {
+                                        m_flows.AddResource(sIpAddress, pResource);
+                                        Log::Get() << "FlowVideoCoded: " << pResource->GetId() << " found at " << sIpAddress << endl;
+                                    }
+                                    else
+                                    {
+                                        Log::Get() << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() << endl;
+                                    }
                                 }
                             }
                         }
-                    }
-                    else if(jsData[ai]["format"].asString().find("urn:x-nmos:format:data") != string::npos)
-                    {
-                        if(jsData[ai]["media_type"] == "video/smpte291")
+                        else if(jsData[ai]["format"].asString().find("urn:x-nmos:format:data") != string::npos)
                         {
-                            shared_ptr<FlowDataSdiAnc> pResource = make_shared<FlowDataSdiAnc>();
+                            if(jsData[ai]["media_type"] == "video/smpte291")
+                            {
+                                shared_ptr<FlowDataSdiAnc> pResource = make_shared<FlowDataSdiAnc>();
+                                if(pResource->UpdateFromJson(jsData[ai]))
+                                {
+                                    m_flows.AddResource(sIpAddress, pResource);
+                                    Log::Get() << "FlowDataSdiAnc: " << pResource->GetId() << " found at " << sIpAddress << endl;
+                                }
+                                else
+                                {
+                                    Log::Get() << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() << endl;
+                                }
+                            }
+                            //SDIAncData only at the moment
+                        }
+                        else if(jsData[ai]["format"].asString().find("urn:x-nmos:format:mux") != string::npos)
+                        {
+                            //Mux only at the momemnt
+                            shared_ptr<FlowMux> pResource = make_shared<FlowMux>();
                             if(pResource->UpdateFromJson(jsData[ai]))
                             {
                                 m_flows.AddResource(sIpAddress, pResource);
-                                Log::Get() << "FlowDataSdiAnc: " << pResource->GetId() << " found at " << sIpAddress << endl;
+                                Log::Get() << "FlowMux: " << pResource->GetId() << " found at " << sIpAddress << endl;
                             }
                             else
                             {
                                 Log::Get() << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() << endl;
                             }
-                        }
-                        //SDIAncData only at the moment
-                    }
-                    else if(jsData[ai]["format"].asString().find("urn:x-nmos:format:mux") != string::npos)
-                    {
-                        //Mux only at the momemnt
-                        shared_ptr<FlowMux> pResource = make_shared<FlowMux>();
-                        if(pResource->UpdateFromJson(jsData[ai]))
-                        {
-                            m_flows.AddResource(sIpAddress, pResource);
-                            Log::Get() << "FlowMux: " << pResource->GetId() << " found at " << sIpAddress << endl;
-                        }
-                        else
-                        {
-                            Log::Get() << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() << endl;
                         }
                     }
                 }
@@ -519,17 +603,20 @@ void ClientApi::AddSenders(const std::string& sIpAddress, const std::string& sDa
         {
             for(Json::ArrayIndex ai = 0; ai < jsData.size(); ++ai)
             {
-                if(jsData[ai].isObject())
+                if(jsData[ai].isObject() && jsData[ai]["id"].isString())
                 {
-                    shared_ptr<Sender> pResource(make_shared<Sender>());
-                    if(pResource->UpdateFromJson(jsData[ai]))
+                    if(!UpdateResource(m_senders, jsData[ai]))
                     {
-                        m_senders.AddResource(sIpAddress, pResource);
-                        Log::Get() << "Sender: " << pResource->GetId() << " found at " << sIpAddress << endl;
-                    }
-                    else
-                    {
-                        Log::Get() << "Found Sender but json data incorrect: " << pResource->GetJsonParseError() << endl;
+                        shared_ptr<Sender> pResource(make_shared<Sender>());
+                        if(pResource->UpdateFromJson(jsData[ai]))
+                        {
+                            m_senders.AddResource(sIpAddress, pResource);
+                            Log::Get() << "Sender: " << pResource->GetId() << " found at " << sIpAddress << endl;
+                        }
+                        else
+                        {
+                            Log::Get() << "Found Sender but json data incorrect: " << pResource->GetJsonParseError() << endl;
+                        }
                     }
                 }
                 else
@@ -560,17 +647,20 @@ void ClientApi::AddReceivers(const std::string& sIpAddress, const std::string& s
         {
             for(Json::ArrayIndex ai = 0; ai < jsData.size(); ++ai)
             {
-                if(jsData[ai].isObject())
+                if(jsData[ai].isObject() && jsData[ai]["id"].isString())
                 {
-                    shared_ptr<Receiver> pResource(make_shared<Receiver>());
-                    if(pResource->UpdateFromJson(jsData[ai]))
+                    if(!UpdateResource(m_receivers, jsData[ai]))
                     {
-                        m_receivers.AddResource(sIpAddress, pResource);
-                        Log::Get() << "Receiver: " << pResource->GetId() << " found at " << sIpAddress << endl;
-                    }
-                    else
-                    {
-                        Log::Get() << "Found Receiver but json data incorrect: " << pResource->GetJsonParseError() << endl;
+                        shared_ptr<Receiver> pResource(make_shared<Receiver>());
+                        if(pResource->UpdateFromJson(jsData[ai]))
+                        {
+                            m_receivers.AddResource(sIpAddress, pResource);
+                            Log::Get() << "Receiver: " << pResource->GetId() << " found at " << sIpAddress << endl;
+                        }
+                        else
+                        {
+                            Log::Get() << "Found Receiver but json data incorrect: " << pResource->GetJsonParseError() << endl;
+                        }
                     }
                 }
                 else
@@ -593,6 +683,7 @@ void ClientApi::AddReceivers(const std::string& sIpAddress, const std::string& s
 
 void ClientApi::RemoveResources(const std::string& sIpAddress)
 {
+
     size_t nRemoved = m_nodes.RemoveResources(sIpAddress);
     Log::Get() << nRemoved << " node(s) removed" << endl;
 
@@ -612,3 +703,4 @@ void ClientApi::NodeDetailsDone()
 {
     m_nCurlThreadCount--;
 }
+

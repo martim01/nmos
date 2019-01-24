@@ -26,6 +26,7 @@ class NMOS_EXPOSE ClientHolder
         std::map<std::string, std::shared_ptr<Resource> >::const_iterator GetResourceBegin() const;
         std::map<std::string, std::shared_ptr<Resource> >::const_iterator GetResourceEnd() const;
         std::map<std::string, std::shared_ptr<Resource> >::const_iterator FindNmosResource(std::string sUuid) const;
+        std::map<std::string, std::shared_ptr<Resource> >::iterator GetNmosResource(std::string sUuid);
 
         size_t GetResourceCount() const;
     protected:

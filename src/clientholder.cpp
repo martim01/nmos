@@ -83,6 +83,11 @@ map<string, shared_ptr<Resource> >::const_iterator ClientHolder::FindNmosResourc
     return m_mResource.find(sUuid);
 }
 
+map<string, shared_ptr<Resource> >::iterator ClientHolder::GetNmosResource(string sUuid)
+{
+    return m_mResource.find(sUuid);
+}
+
 size_t ClientHolder::GetResourceCount() const
 {
     return m_mResource.size();

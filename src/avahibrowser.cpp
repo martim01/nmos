@@ -176,6 +176,7 @@ void ServiceBrowser::ClientCallback(AvahiClient * pClient, AvahiClientState stat
         case AVAHI_CLIENT_S_REGISTERING:
         case AVAHI_CLIENT_S_RUNNING:
         case AVAHI_CLIENT_S_COLLISION:
+            Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: Registering/Running ..." << endl;
             if (!m_bBrowsing)
             {
                 Start(pClient);
@@ -230,8 +231,10 @@ void ServiceBrowser::TypeCallback(AvahiIfIndex interface, AvahiProtocol protocol
             Stop();
             break;
         case AVAHI_BROWSER_CACHE_EXHAUSTED:
+            Log::Get(Log::LOG_ERROR) << "ServiceBrowser: AVAHI_BROWSER_CACHE_EXHAUSTED" << endl;
             break;
         case AVAHI_BROWSER_ALL_FOR_NOW:
+            Log::Get(Log::LOG_ERROR) << "ServiceBrowser: AVAHI_BROWSER_ALL_FOR_NOW" << endl;
             CheckStop();
             break;
         default:
@@ -254,13 +257,14 @@ void ServiceBrowser::BrowseCallback(AvahiServiceBrowser* pBrowser, AvahiIfIndex 
                 string sName(name);
 
                 Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: (Browser) NEW: service '" << name << "' of type '" << type << "' in domain '" << domain << "'" << endl;
-
-                if (!(avahi_service_resolver_new(m_pClient, interface, protocol, name, type, domain, AVAHI_PROTO_INET, (AvahiLookupFlags)0, resolve_callback, reinterpret_cast<void*>(this))))
+                AvahiServiceResolver* pResolver= avahi_service_resolver_new(m_pClient, interface, protocol, name, type, domain, AVAHI_PROTO_INET, (AvahiLookupFlags)0, resolve_callback, reinterpret_cast<void*>(this));
+                if(!pResolver)
                 {
                     Log::Get(Log::LOG_ERROR) << "ServiceBrowser: Failed to resolve service " << name << ": " << avahi_strerror(avahi_client_errno(m_pClient)) << endl;
                 }
                 else
                 {
+                    m_mResolvers.insert(make_pair(string(name)+"__"+string(type), pResolver));
                     m_nWaitingOn++;
                 }
             }
@@ -312,6 +316,8 @@ void ServiceBrowser::ResolveCallback(AvahiServiceResolver* pResolver, AvahiResol
         {
             case AVAHI_RESOLVER_FAILURE:
                 Log::Get(Log::LOG_ERROR) << "ServiceBrowser: (Resolver) Failed to resolve service '" << name << "' of type '" << type << "' in domain '" << domain << "': " << avahi_strerror(avahi_client_errno(m_pClient)) << endl;
+                m_mResolvers.erase(string(name)+"__"+string(type));
+                avahi_service_resolver_free(pResolver);
                 break;
             case AVAHI_RESOLVER_FOUND:
             {
@@ -319,38 +325,57 @@ void ServiceBrowser::ResolveCallback(AvahiServiceResolver* pResolver, AvahiResol
                 avahi_address_snprint(a, sizeof(a), address);
                 m_mutex.lock();
                 map<string, shared_ptr<dnsService> >::iterator itService = m_mServices.find(sService);
-                shared_ptr<dnsInstance> pInstance = make_shared<dnsInstance>(dnsInstance(sName));
-                pInstance->sHostName = host_name;
-                pInstance->nPort = port;
-                pInstance->sHostIP = a;
-                pInstance->sService = sService;
-
-                for(AvahiStringList* pIterator = txt; pIterator; pIterator = avahi_string_list_get_next(pIterator))
+                if(itService != m_mServices.end())
                 {
-                    string sPair(reinterpret_cast<char*>(avahi_string_list_get_text(pIterator)));
-                    size_t nFind = sPair.find("=");
-                    if(nFind != string::npos)
+                    map<string, shared_ptr<dnsInstance> >::iterator itInstance = itService->second->mInstances.find(sName);
+                    if(itInstance == itService->second->mInstances.end())
                     {
-                        Log::Get(Log::LOG_DEBUG) << sPair.substr(0,nFind) << "=" << sPair.substr(nFind+1) << endl;
-                        pInstance->mTxt.insert(make_pair(sPair.substr(0,nFind), sPair.substr(nFind+1)));
+                        itInstance = itService->second->mInstances.insert(make_pair(sName, make_shared<dnsInstance>(dnsInstance(sName)))).first;
+                    }
+                    else
+                    {
+                        itInstance->second->nUpdate++;
+                        itInstance->second->mTxtLast = itInstance->second->mTxt;
+                    }
+
+                    itInstance->second->sHostName = host_name;
+                    itInstance->second->nPort = port;
+                    itInstance->second->sHostIP = a;
+                    itInstance->second->sService = sService;
+
+                    for(AvahiStringList* pIterator = txt; pIterator; pIterator = avahi_string_list_get_next(pIterator))
+                    {
+                        string sPair(reinterpret_cast<char*>(avahi_string_list_get_text(pIterator)));
+                        size_t nFind = sPair.find("=");
+                        if(nFind != string::npos)
+                        {
+                            itInstance->second->mTxt[sPair.substr(0,nFind)] = sPair.substr(nFind+1);
+                        }
+                    }
+                    if(m_pPoster)
+                    {
+                        m_pPoster->_InstanceResolved(itInstance->second);
+                    }
+                    m_mutex.unlock();
+                    if(itInstance->second->nUpdate == 0)
+                    {
+                        Log::Get() << "ServiceBrowser: Instance '" << itInstance->second->sName << "' resolved at '" << itInstance->second->sHostIP << "'" << endl;
+                    }
+                    else
+                    {
+                        Log::Get() << "ServiceBrowser: Instance '" << itInstance->second->sName << "' updated at '" << itInstance->second->sHostIP << "'" << endl;
                     }
                 }
-                itService->second->lstInstances.push_back(pInstance);
-                if(m_pPoster)
-                {
-                    m_pPoster->_InstanceResolved(pInstance);
-                }
-                m_mutex.unlock();
-
-                Log::Get() << "ServiceBrowser: Instance '" << pInstance->sName << "' resolved at '" << pInstance->sHostIP << "'" << endl;
 
             }
             break;
         }
     }
-    avahi_service_resolver_free(pResolver);
+
     if(m_bFree)
     {
+        m_mResolvers.erase(string(name)+"__"+string(type));
+        avahi_service_resolver_free(pResolver);
         CheckStop();
     }
 }
@@ -359,25 +384,25 @@ void ServiceBrowser::RemoveServiceInstance(const std::string& sService, const st
 {
     lock_guard<mutex> lock(m_mutex);
 
+    map<string, AvahiServiceResolver*>::iterator itResolver = m_mResolvers.find((sInstance+"__"+sService));
+    if(itResolver != m_mResolvers.end())
+    {
+        avahi_service_resolver_free(itResolver->second);
+        m_mResolvers.erase(itResolver);
+    }
+
+
     map<string, shared_ptr<dnsService> >::iterator itService = m_mServices.find(sService);
     if(itService != m_mServices.end())
     {
-        for(list<shared_ptr<dnsInstance> >::iterator itInstance = itService->second->lstInstances.begin(); itInstance != itService->second->lstInstances.end(); )
+        map<string, shared_ptr<dnsInstance> >::iterator itInstance = itService->second->mInstances.find(sInstance);
+        if(itInstance != itService->second->mInstances.end())
         {
-            if((*itInstance)->sName == sInstance)
+            if(m_pPoster)
             {
-                if(m_pPoster)
-                {
-                    m_pPoster->_InstanceRemoved((*itInstance));
-                }
-                list<shared_ptr<dnsInstance> >::iterator itDelete(itInstance);
-                ++itInstance;
-                itService->second->lstInstances.erase(itDelete);
+                m_pPoster->_InstanceRemoved(itInstance->second);
             }
-            else
-            {
-                ++itInstance;
-            }
+            itService->second->mInstances.erase(sInstance);
         }
     }
 }
