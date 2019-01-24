@@ -1,5 +1,6 @@
 #include "clientposter.h"
 #include "clientapi.h"
+#include "clientprivate.h"
 
 void ClientPoster::CurlDone(unsigned long nResult, const std::string& sResponse, long nType)
 {
@@ -8,7 +9,7 @@ void ClientPoster::CurlDone(unsigned long nResult, const std::string& sResponse,
 
 void ClientPoster::InstanceResolved(std::shared_ptr<dnsInstance> pInstance)
 {
-    ClientApi::Get().SetInstanceResolved(pInstance);
+    ClientApi::Get().m_pApi->SetInstanceResolved(pInstance);
 }
 
 void ClientPoster::AllForNow(const std::string& sService)
@@ -28,7 +29,7 @@ void ClientPoster::RegistrationNodeError()
 
 void ClientPoster::InstanceRemoved(std::shared_ptr<dnsInstance> pInstance)
 {
-    ClientApi::Get().SetInstanceRemoved(pInstance);
+    ClientApi::Get().m_pApi->SetInstanceRemoved(pInstance);
 }
 
 

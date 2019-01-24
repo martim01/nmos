@@ -149,6 +149,7 @@
 		<Unit filename="include/clientapi.h" />
 		<Unit filename="include/clientholder.h" />
 		<Unit filename="include/clientposter.h" />
+		<Unit filename="include/clientprivate.h" />
 		<Unit filename="include/connection.h" />
 		<Unit filename="include/constraint.h" />
 		<Unit filename="include/curlregister.h" />
@@ -206,6 +207,7 @@
 		<Unit filename="src/clientapi.cpp" />
 		<Unit filename="src/clientholder.cpp" />
 		<Unit filename="src/clientposter.cpp" />
+		<Unit filename="src/clientprivate.cpp" />
 		<Unit filename="src/connection.cpp" />
 		<Unit filename="src/constraint.cpp" />
 		<Unit filename="src/curlregister.cpp" />
