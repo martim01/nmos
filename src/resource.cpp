@@ -276,3 +276,4 @@ std::string Resource::GetJsonParseError()
 {
     return m_ssJsonError.str();
 }
+

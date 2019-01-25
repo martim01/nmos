@@ -94,6 +94,11 @@ class NMOS_EXPOSE Self : public Resource
         std::map<std::string, nodeinterface>::const_iterator GetInterfaceEnd() const;
         std::map<std::string, nodeinterface>::const_iterator FindInterface(const std::string& sInterface) const;
 
+        std::set<ApiVersion>::const_iterator GetApiVersionBegin() const;
+        std::set<ApiVersion>::const_iterator GetApiVersionEnd() const;
+
+
+
     protected:
         friend class NodeApi;
 

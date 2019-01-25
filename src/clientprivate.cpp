@@ -135,7 +135,9 @@ void ClientApiPrivate::Start(int nFlags)
     m_nFlags = nFlags;
     if(!m_pBrowser)
     {
-        m_pBrowser = new ServiceBrowser(make_shared<ClientPoster>(), false);
+        shared_ptr<ClientPoster> pPoster(make_shared<ClientPoster>());
+        m_pBrowser = new ServiceBrowser(pPoster, false);
+        m_pCurl = new CurlRegister(pPoster);
         thread th(ClientThread, this);
         th.detach();
     }
@@ -194,7 +196,7 @@ ClientApiPrivate::enumSignal ClientApiPrivate::GetSignal()
 
 
 
-void ClientApiPrivate::SetInstanceResolved(std::shared_ptr<dnsInstance> pInstance)
+void ClientApiPrivate::SetInstanceResolved(shared_ptr<dnsInstance> pInstance)
 {
     m_mutex.lock();
     m_pInstance = pInstance;
@@ -204,7 +206,7 @@ void ClientApiPrivate::SetInstanceResolved(std::shared_ptr<dnsInstance> pInstanc
     m_cvBrowse.notify_one();
 }
 
-void ClientApiPrivate::SetInstanceRemoved(std::shared_ptr<dnsInstance> pInstance)
+void ClientApiPrivate::SetInstanceRemoved(shared_ptr<dnsInstance> pInstance)
 {
     m_mutex.lock();
     m_pInstance = pInstance;
@@ -302,7 +304,7 @@ ClientApiPrivate::enumMode ClientApiPrivate::GetMode()
 
 
 
-void ClientApiPrivate::AddNode(const std::string& sIpAddress, const std::string& sData)
+void ClientApiPrivate::AddNode(const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
 
@@ -337,7 +339,7 @@ void ClientApiPrivate::AddNode(const std::string& sIpAddress, const std::string&
     }
 }
 
-void ClientApiPrivate::AddDevices(const std::string& sIpAddress, const std::string& sData)
+void ClientApiPrivate::AddDevices(const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
     Json::Value jsData;
@@ -381,7 +383,7 @@ void ClientApiPrivate::AddDevices(const std::string& sIpAddress, const std::stri
     }
 }
 
-void ClientApiPrivate::AddSources(const std::string& sIpAddress, const std::string& sData)
+void ClientApiPrivate::AddSources(const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
     Json::Value jsData;
@@ -441,7 +443,7 @@ void ClientApiPrivate::AddSources(const std::string& sIpAddress, const std::stri
     }
 }
 
-void ClientApiPrivate::AddFlows(const std::string& sIpAddress, const std::string& sData)
+void ClientApiPrivate::AddFlows(const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
     Json::Value jsData;
@@ -570,7 +572,7 @@ void ClientApiPrivate::AddFlows(const std::string& sIpAddress, const std::string
     }
 }
 
-void ClientApiPrivate::AddSenders(const std::string& sIpAddress, const std::string& sData)
+void ClientApiPrivate::AddSenders(const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
     Json::Value jsData;
@@ -614,7 +616,7 @@ void ClientApiPrivate::AddSenders(const std::string& sIpAddress, const std::stri
     }
 }
 
-void ClientApiPrivate::AddReceivers(const std::string& sIpAddress, const std::string& sData)
+void ClientApiPrivate::AddReceivers(const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
     Json::Value jsData;
@@ -659,7 +661,7 @@ void ClientApiPrivate::AddReceivers(const std::string& sIpAddress, const std::st
 }
 
 
-void ClientApiPrivate::RemoveResources(const std::string& sIpAddress)
+void ClientApiPrivate::RemoveResources(const string& sIpAddress)
 {
 
     size_t nRemoved = m_nodes.RemoveResources(sIpAddress);
@@ -691,6 +693,8 @@ void ClientApiPrivate::DeleteServiceBrowser()
 {
     delete m_pBrowser;
     m_pBrowser = 0;
+    delete m_pCurl;
+    m_pCurl = 0;
 }
 
 
@@ -707,12 +711,205 @@ int ClientApiPrivate::GetInterestFlags()
 }
 
 
-std::map<std::string, std::shared_ptr<Self> >::const_iterator ClientApiPrivate::GetNodeBegin()
+map<string, shared_ptr<Self> >::const_iterator ClientApiPrivate::GetNodeBegin()
 {
     return m_nodes.GetResourceBegin();
 }
 
-std::map<std::string, std::shared_ptr<Self> >::const_iterator ClientApiPrivate::GetNodeEnd()
+map<string, shared_ptr<Self> >::const_iterator ClientApiPrivate::GetNodeEnd()
 {
     return m_nodes.GetResourceEnd();
+}
+
+map<string, shared_ptr<Self> >::const_iterator ClientApiPrivate::FindNode(const string& sUid)
+{
+    return m_nodes.FindNmosResource(sUid);
+}
+
+map<string, shared_ptr<Device> >::const_iterator ClientApiPrivate::GetDeviceBegin()
+{
+    return m_devices.GetResourceBegin();
+}
+
+map<string, shared_ptr<Device> >::const_iterator ClientApiPrivate::GetDeviceEnd()
+{
+    return m_devices.GetResourceEnd();
+}
+
+map<string, shared_ptr<Device> >::const_iterator ClientApiPrivate::FindDevice(const string& sUid)
+{
+    return m_devices.FindNmosResource(sUid);
+}
+
+
+map<string, shared_ptr<Source> >::const_iterator ClientApiPrivate::GetSourceBegin()
+{
+    return m_sources.GetResourceBegin();
+}
+
+map<string, shared_ptr<Source> >::const_iterator ClientApiPrivate::GetSourceEnd()
+{
+    return m_sources.GetResourceEnd();
+}
+
+map<string, shared_ptr<Source> >::const_iterator ClientApiPrivate::FindSource(const string& sUid)
+{
+    return m_sources.FindNmosResource(sUid);
+}
+
+
+map<string, shared_ptr<Flow> >::const_iterator ClientApiPrivate::GetFlowBegin()
+{
+    return m_flows.GetResourceBegin();
+}
+
+map<string, shared_ptr<Flow> >::const_iterator ClientApiPrivate::GetFlowEnd()
+{
+    return m_flows.GetResourceEnd();
+}
+
+map<string, shared_ptr<Flow> >::const_iterator ClientApiPrivate::FindFlow(const string& sUid)
+{
+    return m_flows.FindNmosResource(sUid);
+}
+
+
+
+map<string, shared_ptr<Sender> >::const_iterator ClientApiPrivate::GetSenderBegin()
+{
+    return m_senders.GetResourceBegin();
+}
+
+map<string, shared_ptr<Sender> >::const_iterator ClientApiPrivate::GetSenderEnd()
+{
+    return m_senders.GetResourceEnd();
+}
+
+map<string, shared_ptr<Sender> >::const_iterator ClientApiPrivate::FindSender(const string& sUid)
+{
+    return m_senders.FindNmosResource(sUid);
+}
+
+
+
+map<string, shared_ptr<Receiver> >::const_iterator ClientApiPrivate::GetReceiverBegin()
+{
+    return m_receivers.GetResourceBegin();
+}
+
+map<string, shared_ptr<Receiver> >::const_iterator ClientApiPrivate::GetReceiverEnd()
+{
+    return m_receivers.GetResourceEnd();
+}
+
+map<string, shared_ptr<Receiver> >::const_iterator ClientApiPrivate::FindReceiver(const string& sUid)
+{
+    return m_receivers.FindNmosResource(sUid);
+}
+
+
+bool ClientApiPrivate::Subscribe(const std::string& sSenderId, const std::string& sReceiverId)
+{
+    lock_guard<mutex> lg(m_mutex);
+    map<string, shared_ptr<Sender> >::const_iterator itSender=  m_senders.FindNmosResource(sSenderId);
+    map<string, shared_ptr<Receiver>  >::const_iterator itReceiver =  m_receivers.FindNmosResource(sReceiverId);
+    if(itSender == m_senders.GetResourceEnd() || itReceiver == m_receivers.GetResourceEnd())
+    {
+        Log::Get(Log::LOG_ERROR) << "Sender: " << sSenderId << " or Receiver: " << sReceiverId << " not found" << endl;
+        return false;
+    }
+    ApiVersion version(0,0);
+    string sUrl(GetTargetUrl(itReceiver->second, version));
+    if(sUrl.empty() == false)
+    {
+        //do a PUT to the correct place on the URL
+        Json::StyledWriter sw;
+        string sJson(sw.write(itSender->second->GetJson(version)));
+        m_pCurl->Put(sUrl, sJson, ClientPoster::CURLTYPE_TARGET);
+
+        return true;
+    }
+    return false;
+}
+
+bool ClientApiPrivate::Unsubscribe(const std::string& sReceiverId)
+{
+    lock_guard<mutex> lg(m_mutex);
+    map<string, shared_ptr<Receiver> >::const_iterator itReceiver =  m_receivers.FindNmosResource(sReceiverId);
+    if(itReceiver == m_receivers.GetResourceEnd())
+    {
+        Log::Get(Log::LOG_ERROR) << "Receiver: " << sReceiverId << " not found" << endl;
+        return false;
+    }
+
+    ApiVersion version(0,0);
+    string sUrl(GetTargetUrl(itReceiver->second, version));
+    if(sUrl.empty() == false)
+    {
+        //do a PUT to the correct place on the URL
+        m_pCurl->Put(sUrl, "{}", ClientPoster::CURLTYPE_TARGET);
+
+        return true;
+    }
+    return false;
+}
+
+std::string ClientApiPrivate::GetTargetUrl(shared_ptr<Receiver> pReceiver, ApiVersion& version)
+{
+    //get the device id
+    map<string, shared_ptr<Device> >::const_iterator itDevice =  m_devices.FindNmosResource(pReceiver->GetParentResourceId());
+    if(itDevice == m_devices.GetResourceEnd())
+    {
+        Log::Get(Log::LOG_ERROR) << "Device: " << pReceiver->GetParentResourceId() << " not found" << endl;
+        return string();
+    }
+
+    map<string, shared_ptr<Self> >::const_iterator itNode =  m_nodes.FindNmosResource(itDevice->second->GetParentResourceId());
+    if(itNode == m_nodes.GetResourceEnd())
+    {
+        Log::Get(Log::LOG_ERROR) << "Node: " << itDevice->second->GetParentResourceId() << " not found" << endl;
+        return string();
+    }
+
+    //decide on the version to use - for now get highest v1.x @todo deciding on version should possibly work in a user defined way
+    version = ApiVersion(0,0);
+
+    for(set<ApiVersion>::const_iterator itVersion = itNode->second->GetApiVersionBegin(); itVersion != itNode->second->GetApiVersionEnd(); ++itVersion)
+    {
+        Log::Get(Log::LOG_DEBUG) << itVersion->GetVersionAsString() << endl;
+        if((*itVersion).GetMajor() == 1)
+        {
+            version = (*itVersion);
+        }
+        else if((*itVersion).GetMajor() > 1)
+        {
+            break;
+        }
+    }
+    if(version.GetMajor() == 0)
+    {
+        Log::Get(Log::LOG_ERROR) << "Version 1.x not found" << endl;
+        return string();
+    }
+    //get the endpoint to use... for now the first non https one @todo deciding on endpoint should probably work in a better way
+    set<endpoint>::const_iterator itEndpoint = itNode->second->GetEndpointsBegin();
+    for(; itEndpoint != itNode->second->GetEndpointsEnd(); ++itEndpoint)
+    {
+        if(itEndpoint->bSecure == false)
+        {
+            break;
+        }
+    }
+    if(itEndpoint == itNode->second->GetEndpointsEnd())
+    {
+        Log::Get(Log::LOG_ERROR) << "Non-secure endpoint not found" << endl;
+        return string();
+    }
+
+    //now we can build our url...
+    stringstream ssurl;
+    ssurl << itEndpoint->sHost << ":" << itEndpoint->nPort << "/x-nmos/node/" << version.GetVersionAsString() << "/receivers/" << pReceiver->GetId() << "/target";
+
+    return ssurl.str();
+
 }

@@ -37,6 +37,15 @@ static void QueryThreaded(const std::string& sBaseUrl, NodeApi::enumResource eRe
     }
 }
 
+static void PutThreaded(const std::string& sUrl, const std::string& sJson, CurlRegister* pRegister, long nUserType)
+{
+    std::string sResponse;
+    long nResponseCode = pRegister->Put(sUrl, sJson, sResponse);
+    if(pRegister->GetPoster())
+    {
+        pRegister->GetPoster()->_CurlDone(nResponseCode, sResponse, nUserType);
+    }
+}
 
 CurlRegister::CurlRegister(std::shared_ptr<EventPoster> pPoster) :
     m_pPoster(pPoster)
@@ -314,6 +323,63 @@ void CurlRegister::ParseResults(NodeApi::enumResource eResource, const std::stri
     {
         Log::Get(Log::LOG_ERROR) << "Query: Could not parse response" << std::endl;
     }
+}
+
+
+
+void CurlRegister::Put(const std::string& sBaseUrl, const std::string& sJson, long nUserType)
+{
+    std::thread threadPut(PutThreaded, sBaseUrl, sJson, this, nUserType);
+    threadPut.detach();
+}
+
+long CurlRegister::Put(const std::string& sUrl, const std::string& sJson, std::string& sResponse)
+{
+
+    char sError[CURL_ERROR_SIZE];
+    CURLcode res;
+    long nResponseCode(500);
+
+    CURL* pCurl = curl_easy_init();
+    if(pCurl)
+    {
+
+        curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1);
+        curl_easy_setopt(pCurl, CURLOPT_HEADER, 0);
+        curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+        curl_easy_setopt(pCurl, CURLOPT_DEBUGFUNCTION, debug_callback);
+        curl_easy_setopt(pCurl, CURLOPT_ERRORBUFFER, sError);
+        curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "PUT");
+
+        MemoryStruct chunk;
+
+        /* what call to write: */
+        curl_easy_setopt(pCurl, CURLOPT_URL, sUrl.c_str());
+        curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &chunk);
+
+        struct curl_slist * pHeaders = NULL;
+        pHeaders = curl_slist_append(pHeaders, "Accept: application/json");
+        pHeaders = curl_slist_append(pHeaders, "Content-Type: application/json");
+
+        curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);
+        curl_easy_setopt(pCurl, CURLOPT_POSTFIELDS, sJson.c_str());
+
+        res = curl_easy_perform(pCurl);
+        /* Check for errors */
+        if(res != CURLE_OK)
+        {
+            curl_easy_getinfo(pCurl, CURLINFO_RESPONSE_CODE, &nResponseCode);
+            sResponse = curl_easy_strerror(res);
+        }
+        else
+        {
+            sResponse.assign(chunk.pMemory, chunk.nSize);
+            curl_easy_getinfo(pCurl, CURLINFO_RESPONSE_CODE, &nResponseCode);
+        }
+        curl_slist_free_all(pHeaders);
+        curl_easy_cleanup(pCurl);
+    }
+    return nResponseCode;
 }
 
 

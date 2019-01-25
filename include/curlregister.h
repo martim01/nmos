@@ -59,6 +59,7 @@ class CurlRegister
         ~CurlRegister();
 
         std::shared_ptr<EventPoster> GetPoster();
+
         //threaded version
         void Post(const std::string& sBaseUrl, const std::string& sJson, long nUserType);
         //simple versions
@@ -70,6 +71,12 @@ class CurlRegister
         void Query(const std::string& sBaseUrl, NodeApi::enumResource eResource, const std::string& sQuery, ResourceHolder* pResults, long nUserType);
         long Query(const std::string& sBaseUrl, NodeApi::enumResource eResource, const std::string& sQuery, ResourceHolder* pResults);
 
+        //threaded version
+        void Put(const std::string& sBaseUrl, const std::string& sJson, long nUserType);
+        //simple versions
+        long Put(const std::string& sBaseUrl, const std::string& sJson, std::string& sResponse);
+
+        //static simple version
         static long Get(const std::string& sUrl, std::string& sResonse, bool bJson=false);
 
     private:

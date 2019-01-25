@@ -5,6 +5,11 @@
 #include <memory>
 
 class Self;
+class Device;
+class Source;
+class Flow;
+class Sender;
+class Receiver;
 class ClientApiPrivate;
 
 class NMOS_EXPOSE ClientApi
@@ -20,10 +25,27 @@ class NMOS_EXPOSE ClientApi
 
         void ChangeInterest(flagResource eInterest);
 
-        void Subscribe(const std::string& sSenderId, const std::string& sReceiverId);
+        bool Subscribe(const std::string& sSenderId, const std::string& sReceiverId);
+        bool Unsubscribe(const std::string& sReceiverId);
 
         std::map<std::string, std::shared_ptr<Self> >::const_iterator GetNodeBegin();
         std::map<std::string, std::shared_ptr<Self> >::const_iterator GetNodeEnd();
+        std::map<std::string, std::shared_ptr<Self> >::const_iterator FindNode(const std::string& sUid);
+        std::map<std::string, std::shared_ptr<Device> >::const_iterator GetDeviceBegin();
+        std::map<std::string, std::shared_ptr<Device> >::const_iterator GetDeviceEnd();
+        std::map<std::string, std::shared_ptr<Device> >::const_iterator FindDevice(const std::string& sUid);
+        std::map<std::string, std::shared_ptr<Source> >::const_iterator GetSourceBegin();
+        std::map<std::string, std::shared_ptr<Source> >::const_iterator GetSourceEnd();
+        std::map<std::string, std::shared_ptr<Source> >::const_iterator FindSource(const std::string& sUid);
+        std::map<std::string, std::shared_ptr<Flow> >::const_iterator GetFlowBegin();
+        std::map<std::string, std::shared_ptr<Flow> >::const_iterator GetFlowEnd();
+        std::map<std::string, std::shared_ptr<Flow> >::const_iterator FindFlow(const std::string& sUid);
+        std::map<std::string, std::shared_ptr<Sender> >::const_iterator GetSenderBegin();
+        std::map<std::string, std::shared_ptr<Sender> >::const_iterator GetSenderEnd();
+        std::map<std::string, std::shared_ptr<Sender> >::const_iterator FindSender(const std::string& sUid);
+        std::map<std::string, std::shared_ptr<Receiver> >::const_iterator GetReceiverBegin();
+        std::map<std::string, std::shared_ptr<Receiver> >::const_iterator GetReceiverEnd();
+        std::map<std::string, std::shared_ptr<Receiver> >::const_iterator FindReceiver(const std::string& sUid);
 
 
     private:

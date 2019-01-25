@@ -49,6 +49,7 @@ class Resource
 
         std::string GetJsonParseError();
 
+
     protected:
         void UpdateVersionTime();
 
@@ -70,7 +71,6 @@ class Resource
         std::string m_sVersion;
         std::string m_sLastVersion;
         std::multimap<std::string, std::string> m_mmTag;
-
 
 
         size_t m_nHeartbeat;

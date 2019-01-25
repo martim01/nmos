@@ -26,6 +26,7 @@ template<class T> bool ClientHolder<T>::AddResource(const string& sIpAddres, sha
     if(pResource && m_mResource.insert(make_pair(pResource->GetId(), pResource)).second)
     {
         m_mmAddressResourceId.insert(make_pair(sIpAddres, pResource->GetId()));
+        m_mResourceIdAddress.insert(make_pair(pResource->GetId(), sIpAddres));
         return true;
     }
     return false;
@@ -40,16 +41,14 @@ template<class T> bool ClientHolder<T>::RemoveResource(shared_ptr<T> pResource)
     return false;
 }
 
-template<class T> bool ClientHolder<T>::RemoveResource(string sUuid)
+template<class T> bool ClientHolder<T>::RemoveResource(const string& sUuid)
 {
-    for(multimap<string, string>::iterator itAddress = m_mmAddressResourceId.begin(); itAddress != m_mmAddressResourceId.end(); ++itAddress)
+    map<string, string>::iterator itAddress = m_mResourceIdAddress.find(sUuid);
+    if(itAddress != m_mResourceIdAddress.end())
     {
-        if(itAddress->second == sUuid)
-        {
-            m_mmAddressResourceId.erase(itAddress);
-            break;
-        }
+        m_mmAddressResourceId.erase(itAddress->second);
     }
+    m_mResourceIdAddress.erase(sUuid);
     m_mResource.erase(sUuid);
     return true;
 }
@@ -60,6 +59,7 @@ template<class T> size_t ClientHolder<T>::RemoveResources(const string& sIpAddre
     for(multimap<string, string>::iterator itResource = m_mmAddressResourceId.lower_bound(sIpAddres); itResource != m_mmAddressResourceId.upper_bound(sIpAddres); ++itResource)
     {
         m_mResource.erase(itResource->second);
+        m_mResourceIdAddress.erase(itResource->second);
     }
     m_mmAddressResourceId.erase(sIpAddres);
     return (nResources-m_mResource.size());
@@ -68,6 +68,7 @@ template<class T> size_t ClientHolder<T>::RemoveResources(const string& sIpAddre
 template<class T> void ClientHolder<T>::RemoveAllResources()
 {
     m_mmAddressResourceId.clear();
+    m_mResourceIdAddress.clear();
     m_mResource.clear();
 }
 
@@ -86,12 +87,12 @@ template<class T> typename map<string, shared_ptr<T> >::const_iterator ClientHol
     return m_mResource.end();
 }
 
-template<class T> typename map<string, shared_ptr<T> >::const_iterator ClientHolder<T>::FindNmosResource(string sUuid) const
+template<class T> typename map<string, shared_ptr<T> >::const_iterator ClientHolder<T>::FindNmosResource(const string& sUuid) const
 {
     return m_mResource.find(sUuid);
 }
 
-template<class T> typename map<string, shared_ptr<T> >::iterator ClientHolder<T>::GetNmosResource(string sUuid)
+template<class T> typename map<string, shared_ptr<T> >::iterator ClientHolder<T>::GetNmosResource(const string& sUuid)
 {
     return m_mResource.find(sUuid);
 }
@@ -120,6 +121,17 @@ template<class T> bool ClientHolder<T>::UpdateResource(const Json::Value& jsData
     return false;
 }
 
+
+
+template<class T> string ClientHolder<T>::GetResourceIpAddress(const std::string& sUid)
+{
+    map<string, string>::const_iterator itResource = m_mResourceIdAddress.find(sUid);
+    if(itResource != m_mResourceIdAddress.end())
+    {
+        return itResource->second;
+    }
+    return "";
+}
 
 template class ClientHolder<Self>;
 template class ClientHolder<Sender>;

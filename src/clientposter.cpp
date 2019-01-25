@@ -1,10 +1,16 @@
 #include "clientposter.h"
 #include "clientapi.h"
 #include "clientprivate.h"
+#include "log.h"
 
 void ClientPoster::CurlDone(unsigned long nResult, const std::string& sResponse, long nType)
 {
-
+    switch(nType)
+    {
+        case CURLTYPE_TARGET:
+            Log::Get() << "TARGET: " << nResult << "  " << sResponse << std::endl;
+            break;
+    }
 }
 
 void ClientPoster::InstanceResolved(std::shared_ptr<dnsInstance> pInstance)

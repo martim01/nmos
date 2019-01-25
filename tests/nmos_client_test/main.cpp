@@ -14,9 +14,20 @@ int main()
 {
     ClientApi::Get().Start();
     getchar();
-    for(map<string, shared_ptr<Self> >::const_iterator itNode = ClientApi::Get().GetNodeBegin(); itNode != ClientApi::Get().GetNodeEnd(); ++itNode)
+    map<string, shared_ptr<Sender> >::const_iterator itSender = ClientApi::Get().GetSenderBegin();
+    map<string, shared_ptr<Receiver> >::const_iterator itReceiver = ClientApi::Get().GetReceiverBegin();
+
+    if(itSender != ClientApi::Get().GetSenderEnd() && itReceiver != ClientApi::Get().GetReceiverEnd())
     {
-        cout << itNode->second->GetId() << " :" << itNode->second->GetLabel() << endl;
+        cout << "TARGET" << endl;
+        cout << "-----------------------------------------------" << endl;
+        ClientApi::Get().Subscribe(itSender->first, itReceiver->first);
+        getchar();
+        cout << "PARK" << endl;
+        cout << "-----------------------------------------------" << endl;
+        ClientApi::Get().Unsubscribe(itReceiver->first);
     }
+    getchar();
+
     ClientApi::Get().Stop();
 }
