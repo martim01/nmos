@@ -137,7 +137,16 @@ bool connectionSender::Patch(const Json::Value& jsData)
     bool bIsOk = connection::Patch(jsData);
     if(bIsOk)
     {
-        bIsOk &= tpSender.Patch(jsData["transport_params"]);
+        if(jsData["transport_params"].isArray())
+        {
+            bIsOk &= tpSender.Patch(jsData["transport_params"][0]);
+            // @todo second tp for SMPTE2022
+        }
+        else
+        {
+            Log::Get(Log::LOG_DEBUG) << "Patch: transport_params not an array." << std::endl;
+            bIsOk = false;
+        }
 
         if(jsData["receiver_id"].isString())
         {
@@ -209,7 +218,16 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
     bIsOk &= connection::Patch(jsData);
     if(bIsOk)
     {
-        bIsOk &= tpReceiver.Patch(jsData["transport_params"]);
+        if(jsData["transport_params"].isArray())
+        {
+            bIsOk &= tpReceiver.Patch(jsData["transport_params"][0]);
+            // @todo second tp for SMPTE2022
+        }
+        else
+        {
+            Log::Get(Log::LOG_DEBUG) << "Patch: transport_params not an array." << std::endl;
+            bIsOk = false;
+        }
 
         if(jsData["sender_id"].isString())
         {

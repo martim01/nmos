@@ -814,7 +814,7 @@ bool ClientApiPrivate::Subscribe(const string& sSenderId, const string& sReceive
 
     shared_ptr<Sender> pSender = GetSender(sSenderId);
     shared_ptr<Receiver> pReceiver = GetReceiver(sReceiverId);
-    if(!pSender || pReceiver)
+    if(!pSender || !pReceiver)
     {
         return false;
     }
@@ -826,10 +826,11 @@ bool ClientApiPrivate::Subscribe(const string& sSenderId, const string& sReceive
         //do a PUT to the correct place on the URL
         Json::StyledWriter sw;
         string sJson(sw.write(pSender->GetJson(version)));
-        m_pCurl->Put(sUrl, sJson, ClientPoster::CURLTYPE_TARGET);
-
+        m_pCurl->PutPatch(sUrl, sJson, ClientPoster::CURLTYPE_TARGET, true);
+        Log::Get(Log::LOG_DEBUG) << "TARGET: " << sUrl << endl;
         return true;
     }
+    Log::Get(Log::LOG_ERROR) << "Couldn't create target url" << endl;
     return false;
 }
 
@@ -846,8 +847,9 @@ bool ClientApiPrivate::Unsubscribe(const string& sReceiverId)
     string sUrl(GetTargetUrl(pReceiver, version));
     if(sUrl.empty() == false)
     {
+        Log::Get(Log::LOG_DEBUG) << "TARGET: " << sUrl << endl;
         //do a PUT to the correct place on the URL
-        m_pCurl->Put(sUrl, "{}", ClientPoster::CURLTYPE_TARGET);
+        m_pCurl->PutPatch(sUrl, "{}", ClientPoster::CURLTYPE_TARGET, true);
 
         return true;
     }
@@ -1007,19 +1009,56 @@ bool ClientApiPrivate::RequestReceiverActive(const string& sReceiverId)
 
 bool ClientApiPrivate::PatchSenderStaged(const string& sSenderId, const connectionSender& aConnection)
 {
-    //@todo
+    lock_guard<mutex> lg(m_mutex);
+    shared_ptr<Sender> pSender = GetSender(sSenderId);
+    if(!pSender)
+    {
+        return false;
+    }
+
+    ApiVersion version(0,0);
+    string sConnectionUrl(GetConnectionUrlSingle(pSender, "senders", ClientPoster::STR_TYPE[ClientPoster::CURLTYPE_SENDER_STAGED], version));
+    if(sConnectionUrl.empty())
+    {
+        return false;
+    }
+
+    Json::StyledWriter sw;
+    string sJson = sw.write(aConnection.GetJson(version));
+    Log::Get(Log::LOG_DEBUG) << sJson << endl;
+    m_pCurl->PutPatch(sConnectionUrl, sJson, ClientPoster::CURLTYPE_SENDER_PATCH, false);
+
+    return true;
 }
 
 bool ClientApiPrivate::PatchReceiverStaged(const string& sReceiverId, const connectionReceiver& aConnection)
 {
-    //@todo
+    lock_guard<mutex> lg(m_mutex);
+    shared_ptr<Receiver> pReceiver = GetReceiver(sReceiverId);
+    if(!pReceiver)
+    {
+        return false;
+    }
+
+    ApiVersion version(0,0);
+    string sConnectionUrl(GetConnectionUrlSingle(pReceiver, "receivers", ClientPoster::STR_TYPE[ClientPoster::CURLTYPE_SENDER_STAGED], version));
+    if(sConnectionUrl.empty())
+    {
+        return false;
+    }
+
+    Json::StyledWriter sw;
+    string sJson = sw.write(aConnection.GetJson(version));
+    m_pCurl->PutPatch(sConnectionUrl, sJson, ClientPoster::CURLTYPE_RECEIVER_PATCH, false);
+
+    return true;
 }
 
 
 shared_ptr<Sender> ClientApiPrivate::GetSender(const string& sSenderId)
 {
     map<string, shared_ptr<Sender> >::const_iterator itSender = m_senders.FindNmosResource(sSenderId);
-    if(itSender != m_senders.GetResourceEnd())
+    if(itSender == m_senders.GetResourceEnd())
     {
         Log::Get(Log::LOG_ERROR) << "Sender: " << sSenderId << " not found." << endl;
         return 0;
@@ -1030,7 +1069,7 @@ shared_ptr<Sender> ClientApiPrivate::GetSender(const string& sSenderId)
 shared_ptr<Receiver> ClientApiPrivate::GetReceiver(const string& sReceiverId)
 {
     map<string, shared_ptr<Receiver> >::const_iterator itReceiver = m_receivers.FindNmosResource(sReceiverId);
-    if(itReceiver != m_receivers.GetResourceEnd())
+    if(itReceiver == m_receivers.GetResourceEnd())
     {
         Log::Get(Log::LOG_ERROR) << "Receiver: " << sReceiverId << " not found." << endl;
         return 0;

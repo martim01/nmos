@@ -72,12 +72,13 @@ class CurlRegister
         long Query(const std::string& sBaseUrl, NodeApi::enumResource eResource, const std::string& sQuery, ResourceHolder* pResults);
 
         //threaded version
-        void Put(const std::string& sBaseUrl, const std::string& sJson, long nUserType);
+        void PutPatch(const std::string& sBaseUrl, const std::string& sJson, long nUserType, bool bPut);
         //simple versions
-        long Put(const std::string& sBaseUrl, const std::string& sJson, std::string& sResponse);
+        long PutPatch(const std::string& sBaseUrl, const std::string& sJson, std::string& sResponse, bool bPut);
 
-        //static simple version
+
         void Get(const std::string& sUrl, long nUserType);
+        //static simple version
         static long Get(const std::string& sUrl, std::string& sResonse, bool bJson=false);
 
     private:

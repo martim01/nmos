@@ -37,10 +37,10 @@ static void QueryThreaded(const std::string& sBaseUrl, NodeApi::enumResource eRe
     }
 }
 
-static void PutThreaded(const std::string& sUrl, const std::string& sJson, CurlRegister* pRegister, long nUserType)
+static void PutThreaded(const std::string& sUrl, const std::string& sJson, CurlRegister* pRegister, long nUserType, bool bPut)
 {
     std::string sResponse;
-    long nResponseCode = pRegister->Put(sUrl, sJson, sResponse);
+    long nResponseCode = pRegister->PutPatch(sUrl, sJson, sResponse, bPut);
     if(pRegister->GetPoster())
     {
         pRegister->GetPoster()->_CurlDone(nResponseCode, sResponse, nUserType);
@@ -343,13 +343,13 @@ void CurlRegister::ParseResults(NodeApi::enumResource eResource, const std::stri
 
 
 
-void CurlRegister::Put(const std::string& sBaseUrl, const std::string& sJson, long nUserType)
+void CurlRegister::PutPatch(const std::string& sBaseUrl, const std::string& sJson, long nUserType, bool bPut)
 {
-    std::thread threadPut(PutThreaded, sBaseUrl, sJson, this, nUserType);
+    std::thread threadPut(PutThreaded, sBaseUrl, sJson, this, nUserType, bPut);
     threadPut.detach();
 }
 
-long CurlRegister::Put(const std::string& sUrl, const std::string& sJson, std::string& sResponse)
+long CurlRegister::PutPatch(const std::string& sUrl, const std::string& sJson, std::string& sResponse, bool bPut)
 {
 
     char sError[CURL_ERROR_SIZE];
@@ -365,7 +365,14 @@ long CurlRegister::Put(const std::string& sUrl, const std::string& sJson, std::s
         curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
         curl_easy_setopt(pCurl, CURLOPT_DEBUGFUNCTION, debug_callback);
         curl_easy_setopt(pCurl, CURLOPT_ERRORBUFFER, sError);
-        curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "PUT");
+        if(bPut)
+        {
+            curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "PUT");
+        }
+        else
+        {
+            curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "PATCH");
+        }
 
         MemoryStruct chunk;
 

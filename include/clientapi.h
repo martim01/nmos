@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include <memory>
+#include "connection.h"
 
 class Self;
 class Device;
@@ -27,6 +28,15 @@ class NMOS_EXPOSE ClientApi
 
         bool Subscribe(const std::string& sSenderId, const std::string& sReceiverId);
         bool Unsubscribe(const std::string& sReceiverId);
+        bool RequestSenderStaged(const std::string& sSenderId);
+        bool RequestSenderActive(const std::string& sSenderId);
+        bool RequestSenderTransportFile(const std::string& sSenderId);
+
+        bool RequestReceiverStaged(const std::string& sReceiverId);
+        bool RequestReceiverActive(const std::string& sReceiverId);
+
+        bool PatchSenderStaged(const std::string& sSenderId, const connectionSender& aConnection);
+        bool PatchReceiverStaged(const std::string& sReceiverId, const connectionReceiver& aConnection);
 
         std::map<std::string, std::shared_ptr<Self> >::const_iterator GetNodeBegin();
         std::map<std::string, std::shared_ptr<Self> >::const_iterator GetNodeEnd();

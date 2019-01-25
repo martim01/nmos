@@ -137,3 +137,39 @@ bool ClientApi::Unsubscribe(const std::string& sReceiverId)
 {
     return m_pApi->Unsubscribe(sReceiverId);
 }
+
+
+bool ClientApi::RequestSenderStaged(const std::string& sSenderId)
+{
+    return m_pApi->RequestSenderStaged(sSenderId);
+}
+
+bool ClientApi::RequestSenderActive(const std::string& sSenderId)
+{
+    return m_pApi->RequestSenderActive(sSenderId);
+}
+
+bool ClientApi::RequestSenderTransportFile(const std::string& sSenderId)
+{
+    return m_pApi->RequestSenderTransportFile(sSenderId);
+}
+
+bool ClientApi::RequestReceiverStaged(const std::string& sReceiverId)
+{
+    return m_pApi->RequestReceiverStaged(sReceiverId);
+}
+
+bool ClientApi::RequestReceiverActive(const std::string& sReceiverId)
+{
+    return m_pApi->RequestReceiverActive(sReceiverId);
+}
+
+bool ClientApi::PatchSenderStaged(const std::string& sSenderId, const connectionSender& aConnection)
+{
+    return m_pApi->PatchSenderStaged(sSenderId, aConnection);
+}
+
+bool ClientApi::PatchReceiverStaged(const std::string& sReceiverId, const connectionReceiver& aConnection)
+{
+    return m_pApi->PatchReceiverStaged(sReceiverId, aConnection);
+}
