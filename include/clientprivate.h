@@ -11,7 +11,7 @@
 #include "sender.h"
 #include "flow.h"
 #include "receiver.h"
-
+#include "clientposter.h"
 
 class ServiceBrowser;
 class EventPoster;
@@ -64,6 +64,17 @@ class ClientApiPrivate
         bool Subscribe(const std::string& sSenderId, const std::string& sReceiverId);
         bool Unsubscribe(const std::string& sReceiverId);
 
+        bool RequestSenderStaged(const std::string& sSenderId);
+        bool RequestSenderActive(const std::string& sSenderId);
+        bool RequestSenderTransportFile(const std::string& sSenderId);
+
+        bool RequestReceiverStaged(const std::string& sReceiverId);
+        bool RequestReceiverActive(const std::string& sReceiverId);
+
+        bool PatchSenderStaged(const std::string& sSenderId, const connectionSender& aConnection);
+        bool PatchReceiverStaged(const std::string& sReceiverId, const connectionReceiver& aConnection);
+
+
         std::map<std::string, std::shared_ptr<Self> >::const_iterator GetNodeBegin();
         std::map<std::string, std::shared_ptr<Self> >::const_iterator GetNodeEnd();
         std::map<std::string, std::shared_ptr<Self> >::const_iterator FindNode(const std::string& sUid);
@@ -97,6 +108,13 @@ class ClientApiPrivate
         void StoreNodeVersion(const std::string& sIpAddress, std::shared_ptr<dnsInstance> pInstance);
 
         std::string GetTargetUrl(std::shared_ptr<Receiver> pReceiver, ApiVersion& version);
+        std::string GetConnectionUrlSingle(std::shared_ptr<Resource> pResource, const std::string& sDirection, const std::string& sEndpoint, ApiVersion& version);
+
+        std::shared_ptr<Sender> GetSender(const std::string& sSenderId);
+        std::shared_ptr<Receiver> GetReceiver(const std::string& sSenderId);
+
+        bool RequestSender(const std::string& sSenderId, ClientPoster::enumCurlType eType);
+        bool RequestReceiver(const std::string& sReceiverId, ClientPoster::enumCurlType eType);
 
         enumMode m_eMode;
 

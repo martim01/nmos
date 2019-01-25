@@ -77,6 +77,7 @@ class CurlRegister
         long Put(const std::string& sBaseUrl, const std::string& sJson, std::string& sResponse);
 
         //static simple version
+        void Get(const std::string& sUrl, long nUserType);
         static long Get(const std::string& sUrl, std::string& sResonse, bool bJson=false);
 
     private:

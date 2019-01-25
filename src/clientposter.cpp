@@ -3,6 +3,8 @@
 #include "clientprivate.h"
 #include "log.h"
 
+const std::string ClientPoster::STR_TYPE[5] = {"staged", "active", "transportfile", "staged", "active"};
+
 void ClientPoster::CurlDone(unsigned long nResult, const std::string& sResponse, long nType)
 {
     switch(nType)
@@ -10,7 +12,28 @@ void ClientPoster::CurlDone(unsigned long nResult, const std::string& sResponse,
         case CURLTYPE_TARGET:
             Log::Get() << "TARGET: " << nResult << "  " << sResponse << std::endl;
             break;
-    }
+        case CURLTYPE_SENDER_STAGED:
+            // @todo
+            break;
+        case CURLTYPE_SENDER_ACTIVE:
+            // @todo
+            break;
+        case CURLTYPE_SENDER_TRANSPORTFILE:
+            // @todo
+            break;
+        case CURLTYPE_RECEIVER_STAGED:
+            // @todo
+            break;
+        case CURLTYPE_RECEIVER_ACTIVE:
+            // @todo
+            break;
+        case CURLTYPE_SENDER_PATCH:
+            // @todo
+            break;
+        case CURLTYPE_RECEIVER_PATCH:
+            // @todo
+            break;
+     }
 }
 
 void ClientPoster::InstanceResolved(std::shared_ptr<dnsInstance> pInstance)

@@ -5,7 +5,8 @@ class ClientPoster : public EventPoster
 {
     public:
         ClientPoster(){}
-        enum {CURLTYPE_TARGET};
+        enum enumCurlType {CURLTYPE_SENDER_STAGED=0, CURLTYPE_SENDER_ACTIVE, CURLTYPE_SENDER_TRANSPORTFILE, CURLTYPE_RECEIVER_STAGED, CURLTYPE_RECEIVER_ACTIVE, CURLTYPE_SENDER_PATCH, CURLTYPE_RECEIVER_PATCH, CURLTYPE_TARGET};
+        static const std::string STR_TYPE[5];
     protected:
 
         virtual void CurlDone(unsigned long nResult, const std::string& sResponse, long nType);

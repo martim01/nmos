@@ -47,6 +47,16 @@ static void PutThreaded(const std::string& sUrl, const std::string& sJson, CurlR
     }
 }
 
+static void GetThreaded(const std::string& sUrl, CurlRegister* pRegister, long nUserType)
+{
+    std::string sResponse;
+    long nResponseCode = pRegister->Get(sUrl, sResponse);
+    if(pRegister->GetPoster())
+    {
+        pRegister->GetPoster()->_CurlDone(nResponseCode, sResponse, nUserType);
+    }
+}
+
 CurlRegister::CurlRegister(std::shared_ptr<EventPoster> pPoster) :
     m_pPoster(pPoster)
 {
@@ -248,6 +258,12 @@ long CurlRegister::Query(const std::string& sBaseUrl, NodeApi::enumResource eRes
     return nResponseCode;
 }
 
+
+void CurlRegister::Get(const std::string& sUrl, long nUserType)
+{
+    std::thread threadGet(GetThreaded, sUrl, this, nUserType);
+    threadGet.detach();
+}
 
 long CurlRegister::Get(const std::string& sUrl, std::string& sResponse, bool bJson)
 {

@@ -808,23 +808,24 @@ map<string, shared_ptr<Receiver> >::const_iterator ClientApiPrivate::FindReceive
 }
 
 
-bool ClientApiPrivate::Subscribe(const std::string& sSenderId, const std::string& sReceiverId)
+bool ClientApiPrivate::Subscribe(const string& sSenderId, const string& sReceiverId)
 {
     lock_guard<mutex> lg(m_mutex);
-    map<string, shared_ptr<Sender> >::const_iterator itSender=  m_senders.FindNmosResource(sSenderId);
-    map<string, shared_ptr<Receiver>  >::const_iterator itReceiver =  m_receivers.FindNmosResource(sReceiverId);
-    if(itSender == m_senders.GetResourceEnd() || itReceiver == m_receivers.GetResourceEnd())
+
+    shared_ptr<Sender> pSender = GetSender(sSenderId);
+    shared_ptr<Receiver> pReceiver = GetReceiver(sReceiverId);
+    if(!pSender || pReceiver)
     {
-        Log::Get(Log::LOG_ERROR) << "Sender: " << sSenderId << " or Receiver: " << sReceiverId << " not found" << endl;
         return false;
     }
+
     ApiVersion version(0,0);
-    string sUrl(GetTargetUrl(itReceiver->second, version));
+    string sUrl(GetTargetUrl(pReceiver, version));
     if(sUrl.empty() == false)
     {
         //do a PUT to the correct place on the URL
         Json::StyledWriter sw;
-        string sJson(sw.write(itSender->second->GetJson(version)));
+        string sJson(sw.write(pSender->GetJson(version)));
         m_pCurl->Put(sUrl, sJson, ClientPoster::CURLTYPE_TARGET);
 
         return true;
@@ -832,18 +833,17 @@ bool ClientApiPrivate::Subscribe(const std::string& sSenderId, const std::string
     return false;
 }
 
-bool ClientApiPrivate::Unsubscribe(const std::string& sReceiverId)
+bool ClientApiPrivate::Unsubscribe(const string& sReceiverId)
 {
     lock_guard<mutex> lg(m_mutex);
-    map<string, shared_ptr<Receiver> >::const_iterator itReceiver =  m_receivers.FindNmosResource(sReceiverId);
-    if(itReceiver == m_receivers.GetResourceEnd())
+    shared_ptr<Receiver> pReceiver = GetReceiver(sReceiverId);
+    if(!pReceiver)
     {
-        Log::Get(Log::LOG_ERROR) << "Receiver: " << sReceiverId << " not found" << endl;
         return false;
     }
 
     ApiVersion version(0,0);
-    string sUrl(GetTargetUrl(itReceiver->second, version));
+    string sUrl(GetTargetUrl(pReceiver, version));
     if(sUrl.empty() == false)
     {
         //do a PUT to the correct place on the URL
@@ -854,7 +854,7 @@ bool ClientApiPrivate::Unsubscribe(const std::string& sReceiverId)
     return false;
 }
 
-std::string ClientApiPrivate::GetTargetUrl(shared_ptr<Receiver> pReceiver, ApiVersion& version)
+string ClientApiPrivate::GetTargetUrl(shared_ptr<Receiver> pReceiver, ApiVersion& version)
 {
     //get the device id
     map<string, shared_ptr<Device> >::const_iterator itDevice =  m_devices.FindNmosResource(pReceiver->GetParentResourceId());
@@ -912,4 +912,128 @@ std::string ClientApiPrivate::GetTargetUrl(shared_ptr<Receiver> pReceiver, ApiVe
 
     return ssurl.str();
 
+}
+
+
+
+string ClientApiPrivate::GetConnectionUrlSingle(shared_ptr<Resource> pResource, const string& sDirection, const string& sEndpoint, ApiVersion& version)
+{
+    map<string, shared_ptr<Device> >::const_iterator itDevice =  m_devices.FindNmosResource(pResource->GetParentResourceId());
+    if(itDevice == m_devices.GetResourceEnd())
+    {
+        Log::Get(Log::LOG_ERROR) << "Device: " << pResource->GetParentResourceId() << " not found" << endl;
+        return string();
+    }
+
+    for(set<pair<string, string> >::const_iterator itControl = itDevice->second->GetControlsBegin(); itControl != itDevice->second->GetControlsEnd(); ++itControl)
+    {
+        if("urn:x-nmos:control:sr-ctrl/v1.0" == itControl->first)
+        {
+            version = ApiVersion(1,0);
+            stringstream ssUrl;
+            ssUrl << itControl->second << "/single/" << sDirection << "/" << pResource->GetId() << "/" << sEndpoint;
+            return ssUrl.str();
+        }
+    }
+    version = ApiVersion(0,0);
+    return string();
+}
+
+bool ClientApiPrivate::RequestSender(const std::string& sSenderId, ClientPoster::enumCurlType eType)
+{
+    lock_guard<mutex> lg(m_mutex);
+    shared_ptr<Sender> pSender = GetSender(sSenderId);
+    if(!pSender)
+    {
+        return false;
+    }
+
+    ApiVersion version(0,0);
+    string sConnectionUrl(GetConnectionUrlSingle(pSender, "senders", ClientPoster::STR_TYPE[eType], version));
+    if(sConnectionUrl.empty())
+    {
+        return false;
+    }
+
+    m_pCurl->Get(sConnectionUrl, eType);
+    return true;
+}
+
+bool ClientApiPrivate::RequestReceiver(const std::string& sReceiverId, ClientPoster::enumCurlType eType)
+{
+    lock_guard<mutex> lg(m_mutex);
+    shared_ptr<Receiver> pReceiver = GetReceiver(sReceiverId);
+    if(!pReceiver)
+    {
+        return false;
+    }
+
+    ApiVersion version(0,0);
+    string sConnectionUrl(GetConnectionUrlSingle(pReceiver, "receivers", ClientPoster::STR_TYPE[eType], version));
+    if(sConnectionUrl.empty())
+    {
+        return false;
+    }
+
+    m_pCurl->Get(sConnectionUrl, eType);
+    return true;
+}
+
+bool ClientApiPrivate::RequestSenderStaged(const string& sSenderId)
+{
+    return RequestSender(sSenderId, ClientPoster::CURLTYPE_SENDER_STAGED);
+}
+
+bool ClientApiPrivate::RequestSenderActive(const string& sSenderId)
+{
+    return RequestSender(sSenderId, ClientPoster::CURLTYPE_SENDER_ACTIVE);
+}
+
+bool ClientApiPrivate::RequestSenderTransportFile(const string& sSenderId)
+{
+    return RequestSender(sSenderId, ClientPoster::CURLTYPE_SENDER_TRANSPORTFILE);
+}
+
+bool ClientApiPrivate::RequestReceiverStaged(const string& sReceiverId)
+{
+    return RequestReceiver(sReceiverId, ClientPoster::CURLTYPE_RECEIVER_STAGED);
+}
+
+bool ClientApiPrivate::RequestReceiverActive(const string& sReceiverId)
+{
+    return RequestReceiver(sReceiverId, ClientPoster::CURLTYPE_RECEIVER_ACTIVE);
+}
+
+
+bool ClientApiPrivate::PatchSenderStaged(const string& sSenderId, const connectionSender& aConnection)
+{
+    //@todo
+}
+
+bool ClientApiPrivate::PatchReceiverStaged(const string& sReceiverId, const connectionReceiver& aConnection)
+{
+    //@todo
+}
+
+
+shared_ptr<Sender> ClientApiPrivate::GetSender(const string& sSenderId)
+{
+    map<string, shared_ptr<Sender> >::const_iterator itSender = m_senders.FindNmosResource(sSenderId);
+    if(itSender != m_senders.GetResourceEnd())
+    {
+        Log::Get(Log::LOG_ERROR) << "Sender: " << sSenderId << " not found." << endl;
+        return 0;
+    }
+    return itSender->second;
+}
+
+shared_ptr<Receiver> ClientApiPrivate::GetReceiver(const string& sReceiverId)
+{
+    map<string, shared_ptr<Receiver> >::const_iterator itReceiver = m_receivers.FindNmosResource(sReceiverId);
+    if(itReceiver != m_receivers.GetResourceEnd())
+    {
+        Log::Get(Log::LOG_ERROR) << "Receiver: " << sReceiverId << " not found." << endl;
+        return 0;
+    }
+    return itReceiver->second;
 }
