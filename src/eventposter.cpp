@@ -32,10 +32,10 @@ void EventPoster::_RegistrationNodeError()
     RegistrationNodeError();
 }
 
-void EventPoster::_InstanceRemoved(const std::string& sInstance)
+void EventPoster::_InstanceRemoved(std::shared_ptr<dnsInstance> pInstance)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
-    InstanceRemoved(sInstance);
+    InstanceRemoved(pInstance);
 }
 
 void EventPoster::_Target(const std::string& sReceiverId, const std::string& sTransportFile, unsigned short nPort)

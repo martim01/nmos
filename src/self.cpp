@@ -296,6 +296,16 @@ set<endpoint>::const_iterator Self::GetEndpointsEnd() const
     return m_setEndpoint.end();
 }
 
+set<ApiVersion>::const_iterator Self::GetApiVersionBegin() const
+{
+    return m_setVersion.begin();
+}
+
+set<ApiVersion>::const_iterator Self::GetApiVersionEnd() const
+{
+    return m_setVersion.end();
+}
+
 
 void Self::GetAddresses(const std::string& sInterface, nodeinterface& anInterface)
 {

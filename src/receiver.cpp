@@ -21,7 +21,7 @@ const std::string Receiver::STR_TYPE[4] = {"urn:x-nmos:format:audio", "urn:x-nmo
 
 
 
-Receiver::Receiver(std::string sLabel, std::string sDescription, enumTransport eTransport, std::string sDeviceId, enumType eFormat) :
+Receiver::Receiver(std::string sLabel, std::string sDescription, enumTransport eTransport, std::string sDeviceId, enumType eFormat, TransportParamsRTP::flagsTP flagsTransport) :
     Resource("receiver", sLabel, sDescription),
     m_eTransport(eTransport),
     m_sDeviceId(sDeviceId),
@@ -30,7 +30,37 @@ Receiver::Receiver(std::string sLabel, std::string sDescription, enumTransport e
     m_eType(eFormat),
     m_pSender(0)
 {
+    if(flagsTransport & TransportParamsRTP::FEC)
+    {
+        m_Staged.tpReceiver.eFec = TransportParamsRTP::TP_SUPPORTED;
+        m_Active.tpReceiver.eFec = TransportParamsRTP::TP_SUPPORTED;
+    }
+    else
+    {
+        m_Staged.tpReceiver.eFec = TransportParamsRTP::TP_NOT_SUPPORTED;
+        m_Active.tpReceiver.eFec = TransportParamsRTP::TP_NOT_SUPPORTED;
+    }
 
+    if(flagsTransport & TransportParamsRTP::RTCP)
+    {
+        m_Staged.tpReceiver.eRTCP = TransportParamsRTP::TP_SUPPORTED;
+        m_Active.tpReceiver.eRTCP = TransportParamsRTP::TP_SUPPORTED;
+    }
+    else
+    {
+        m_Staged.tpReceiver.eRTCP = TransportParamsRTP::TP_NOT_SUPPORTED;
+        m_Active.tpReceiver.eRTCP = TransportParamsRTP::TP_NOT_SUPPORTED;
+    }
+    if(flagsTransport & TransportParamsRTP::MULTICAST)
+    {
+        m_Staged.tpReceiver.eMulticast = TransportParamsRTP::TP_SUPPORTED;
+        m_Active.tpReceiver.eMulticast = TransportParamsRTP::TP_SUPPORTED;
+    }
+    else
+    {
+        m_Staged.tpReceiver.eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
+        m_Active.tpReceiver.eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
+    }
 }
 
 Receiver::~Receiver()
@@ -158,7 +188,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
         bool bFound(false);
         for(int i = 3; i >= 0; i--)
         {
-            if(STR_TRANSPORT[i].find(jsData["transport"].asString()) == std::string::npos)
+            if(STR_TRANSPORT[i].find(jsData["transport"].asString()) != std::string::npos)
             {
                 m_eTransport = enumTransport(i);
                 bFound = true;
@@ -173,7 +203,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
         m_bIsOk &= bFound;
         for(int i = 0; i < 4; i++)
         {
-            if(STR_TYPE[i].find(jsData["format"].asString()) == std::string::npos)
+            if(STR_TYPE[i].find(jsData["format"].asString()) != std::string::npos)
             {
                 m_eType = enumType(i);
                 bFound = true;
@@ -219,7 +249,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
                     if(jsData["caps"]["media_types"][ai].asString().find("audio/") == std::string::npos)
                     {
                         m_bIsOk = false;
-                        m_ssJsonError << "'caps' 'media_types' #" << ai << "not audio whilst 'format' is" << std::endl;
+                        m_ssJsonError << "'caps' 'media_types' #" << ai << " not audio whilst 'format' is" << std::endl;
                     }
                     else
                     {
@@ -230,7 +260,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
                     if(jsData["caps"]["media_types"][ai].asString().find("video/") == std::string::npos)
                     {
                         m_bIsOk = false;
-                        m_ssJsonError << "'caps' 'media_types' #" << ai << "not video whilst 'format' is" << std::endl;
+                        m_ssJsonError << "'caps' 'media_types' #" << ai << " not video whilst 'format' is" << std::endl;
                     }
                     else
                     {
@@ -241,7 +271,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
                     if(jsData["caps"]["media_types"][ai].asString() != "video/smpte291")
                     {
                         m_bIsOk = false;
-                        m_ssJsonError << "'caps' 'media_types' #" << ai << "not smpte291 whilst 'format' is data" << std::endl;
+                        m_ssJsonError << "'caps' 'media_types' #" << ai << " not smpte291 whilst 'format' is data" << std::endl;
                     }
                     else
                     {

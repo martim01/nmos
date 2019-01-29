@@ -13,7 +13,8 @@ class NMOS_EXPOSE Sender : public Resource
 {
     public:
         enum enumTransport {RTP, RTP_UCAST, RTP_MCAST, DASH};
-        Sender(std::string sLabel, std::string sDescription, std::string sFlowId, enumTransport eTransport, std::string sDeviceId, std::string sInterface);
+
+        Sender(std::string sLabel, std::string sDescription, std::string sFlowId, enumTransport eTransport, std::string sDeviceId, std::string sInterface, TransportParamsRTP::flagsTP flagsTransport=TransportParamsRTP::CORE);
         Sender();
 
         /** @brief Set the active destination details to create an SDP. This will be overwritten by IS-05
@@ -51,6 +52,7 @@ class NMOS_EXPOSE Sender : public Resource
 
         bool Stage(const connectionSender& conRequest, std::shared_ptr<EventPoster> pPoster);
         connectionSender GetStaged();
+        connectionSender GetActive();
 
         // called by the main thread as a reply to the eventposter
         void Activate(std::string sSourceIp="", std::string sDestinationIp="", std::string sSDP="");

@@ -580,10 +580,18 @@ int MicroServer::GetJsonNmosConnectionSingleSenders(std::string& sReturn, std::s
                 }
                 else if(m_vPath[C_LAST] == "transportfile")
                 {
-                    // transportfile get
-                    sContentType = "application/sdp";
-                    sReturn = pSender->GetTransportFile();
-                    nCode = 200;
+                    if(pSender->GetActive().bMasterEnable)
+                    {
+                        // transportfile get
+                        sContentType = "application/sdp";
+                        sReturn = pSender->GetTransportFile();
+                        nCode = 200;
+                    }
+                    else
+                    {
+                        nCode = 404;
+                        sReturn = stw.write(GetJsonError(404, "MasterEnable=false"));
+                    }
                 }
                 else
                 {
@@ -706,7 +714,7 @@ int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
     if(m_vPath.size() < SZ_TARGET)
     {
         nCode = 405;
-        sResponse = stw.write(GetJsonError(nCode, "Method not allowed here."));
+        sResponse = stw.write(GetJsonError(nCode, "Method not allowed here: "+sPath));
     }
     else
     {

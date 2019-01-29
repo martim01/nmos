@@ -2,7 +2,7 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="nmos_node_test" />
+		<Option title="nmos_client_test" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
@@ -33,14 +33,13 @@
 			</Target>
 			<Target title="Windows Release">
 				<Option platforms="Windows;" />
-				<Option output="bin/Release/nmos_node_test" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Release/nmos_client_test" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="new_gnu_gcc_compiler" />
 				<Option projectCompilerOptionsRelation="-1" />
 				<Option projectLinkerOptionsRelation="-1" />
 				<Option projectIncludeDirsRelation="-1" />
-				<Option projectResourceIncludeDirsRelation="-1" />
 				<Option projectLibDirsRelation="-1" />
 				<MakeCommands>
 					<Build command="" />
@@ -53,7 +52,7 @@
 			</Target>
 			<Target title="Linux Debug">
 				<Option platforms="Unix;" />
-				<Option output="bin/Linux Debug/nmos_node_test" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Linux Debug/nmos_client_test" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -69,39 +68,32 @@
 					<Add option="`pkg-config --libs avahi-client`" />
 					<Add option="`pkg-config --libs uuid`" />
 					<Add option="`pkg-config --libs libcurl`" />
-					<Add library="nmosd" />
+					<Add library="../../lib/libnmosd.so" />
 					<Add library="pthread" />
 					<Add directory="$(#microhttp.lib)" />
-					<Add directory="../../lib" />
 				</Linker>
 			</Target>
 			<Target title="Linux Release">
 				<Option platforms="Unix;" />
-				<Option output="bin/Linux Release/nmos_node_test" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Linux Release/nmos_client_test" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-std=c++14" />
-					<Add option="--pthread" />
+					<Add option="-std=c++11" />
 					<Add option="-D__GNU__" />
 					<Add directory="$(#microhttp.include)" />
+					<Add directory="../../lib" />
 				</Compiler>
 				<Linker>
 					<Add option="`pkg-config --libs libmicrohttpd`" />
 					<Add option="`pkg-config --libs avahi-client`" />
 					<Add option="`pkg-config --libs uuid`" />
 					<Add option="`pkg-config --libs libcurl`" />
-<<<<<<< HEAD
-					<Add library="pthread" />
 					<Add library="libnmos" />
-=======
-					<Add library="nmos" />
 					<Add library="pthread" />
->>>>>>> 2d5fb0b9ec8e392ac1d8bd22c512d2e8e00eaf1c
 					<Add directory="$(#microhttp.lib)" />
-					<Add directory="../../lib" />
 				</Linker>
 			</Target>
 		</Build>
@@ -112,8 +104,8 @@
 			<Add directory="../../include" />
 		</Compiler>
 		<Unit filename="main.cpp" />
-		<Unit filename="threadposter.cpp" />
-		<Unit filename="threadposter.h" />
+		<Unit filename="testposter.cpp" />
+		<Unit filename="testposter.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

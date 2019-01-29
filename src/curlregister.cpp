@@ -37,6 +37,25 @@ static void QueryThreaded(const std::string& sBaseUrl, NodeApi::enumResource eRe
     }
 }
 
+static void PutThreaded(const std::string& sUrl, const std::string& sJson, CurlRegister* pRegister, long nUserType, bool bPut)
+{
+    std::string sResponse;
+    long nResponseCode = pRegister->PutPatch(sUrl, sJson, sResponse, bPut);
+    if(pRegister->GetPoster())
+    {
+        pRegister->GetPoster()->_CurlDone(nResponseCode, sResponse, nUserType);
+    }
+}
+
+static void GetThreaded(const std::string& sUrl, CurlRegister* pRegister, long nUserType)
+{
+    std::string sResponse;
+    long nResponseCode = pRegister->Get(sUrl, sResponse);
+    if(pRegister->GetPoster())
+    {
+        pRegister->GetPoster()->_CurlDone(nResponseCode, sResponse, nUserType);
+    }
+}
 
 CurlRegister::CurlRegister(std::shared_ptr<EventPoster> pPoster) :
     m_pPoster(pPoster)
@@ -64,8 +83,6 @@ void CurlRegister::Post(const std::string& sBaseUrl, const std::string& sJson, l
 
 long CurlRegister::Post(const std::string& sUrl, const std::string& sJson, std::string& sResponse)
 {
-    Log::Get(Log::LOG_DEBUG) << "CurlRegister: Post '" << sUrl << "'" << std::endl;
-    Log::Get(Log::LOG_DEBUG) << "CurlRegster: Json '" << sJson << "'" << std::endl;
 
     char sError[CURL_ERROR_SIZE];
     CURLcode res;
@@ -88,11 +105,11 @@ long CurlRegister::Post(const std::string& sUrl, const std::string& sJson, std::
         curl_easy_setopt(pCurl, CURLOPT_URL, sUrl.c_str());
         curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &chunk);
 
-        struct curl_slist *headers = NULL;
-        headers = curl_slist_append(headers, "Accept: application/json");
-        headers = curl_slist_append(headers, "Content-Type: application/json");
+        struct curl_slist * pHeaders = NULL;
+        pHeaders = curl_slist_append(pHeaders, "Accept: application/json");
+        pHeaders = curl_slist_append(pHeaders, "Content-Type: application/json");
 
-        curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headers);
+        curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);
         curl_easy_setopt(pCurl, CURLOPT_POSTFIELDS, sJson.c_str());
 
         res = curl_easy_perform(pCurl);
@@ -107,7 +124,7 @@ long CurlRegister::Post(const std::string& sUrl, const std::string& sJson, std::
             sResponse.assign(chunk.pMemory, chunk.nSize);
             curl_easy_getinfo(pCurl, CURLINFO_RESPONSE_CODE, &nResponseCode);
         }
-        curl_slist_free_all(headers);
+        curl_slist_free_all(pHeaders);
         curl_easy_cleanup(pCurl);
     }
     return nResponseCode;
@@ -128,7 +145,6 @@ long CurlRegister::Delete(const std::string& sUrl, const std::string& sType, con
 {
     std::stringstream ssUrl;
     ssUrl << sUrl << "/" << sType << "/" << sId;
-    Log::Get(Log::LOG_DEBUG) << "CurlRegister: Delete " << ssUrl.str() << std::endl;
 
 
     char sError[CURL_ERROR_SIZE];
@@ -153,11 +169,11 @@ long CurlRegister::Delete(const std::string& sUrl, const std::string& sType, con
         curl_easy_setopt(pCurl, CURLOPT_URL, ssUrl.str().c_str());
         curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &chunk);
 
-        struct curl_slist *headers = NULL;
-        headers = curl_slist_append(headers, "Accept: application/json");
-        headers = curl_slist_append(headers, "Content-Type: application/json");
+        struct curl_slist *pHeaders = NULL;
+        pHeaders = curl_slist_append(pHeaders, "Accept: application/json");
+        pHeaders = curl_slist_append(pHeaders, "Content-Type: application/json");
 
-        curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headers);
+        curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);
         curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "DELETE");
 
         res = curl_easy_perform(pCurl);
@@ -172,7 +188,7 @@ long CurlRegister::Delete(const std::string& sUrl, const std::string& sType, con
             sResponse.assign(chunk.pMemory, chunk.nSize);
             curl_easy_getinfo(pCurl, CURLINFO_RESPONSE_CODE, &nResponseCode);
         }
-        curl_slist_free_all(headers);
+        curl_slist_free_all(pHeaders);
         curl_easy_cleanup(pCurl);
     }
     return nResponseCode;
@@ -196,7 +212,6 @@ long CurlRegister::Query(const std::string& sBaseUrl, NodeApi::enumResource eRes
     std::stringstream ssUrl;
     ssUrl << sBaseUrl << "/" << STR_RESOURCE[eResource] << "/" << sQuery;
 
-    Log::Get(Log::LOG_DEBUG) << "CurlRegister: Query: " << ssUrl.str() << std::endl;
 
     std::string sResponse;
 
@@ -217,11 +232,11 @@ long CurlRegister::Query(const std::string& sBaseUrl, NodeApi::enumResource eRes
         curl_easy_setopt(pCurl, CURLOPT_URL, ssUrl.str().c_str());
         curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &chunk);
 
-        struct curl_slist *headers = NULL;
-        headers = curl_slist_append(headers, "Accept: application/json");
-        headers = curl_slist_append(headers, "Content-Type: application/json");
+        struct curl_slist *pHeaders = NULL;
+        pHeaders = curl_slist_append(pHeaders, "Accept: application/json");
+        pHeaders = curl_slist_append(pHeaders, "Content-Type: application/json");
 
-        curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headers);
+        curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);
 
         res = curl_easy_perform(pCurl);
         /* Check for errors */
@@ -233,25 +248,30 @@ long CurlRegister::Query(const std::string& sBaseUrl, NodeApi::enumResource eRes
         else
         {
             sResponse.assign(chunk.pMemory, chunk.nSize);
-            Log::Get(Log::LOG_DEBUG) << sResponse << std::endl;
+
             ParseResults(eResource, sResponse, pResults);
             curl_easy_getinfo(pCurl, CURLINFO_RESPONSE_CODE, &nResponseCode);
         }
-        curl_slist_free_all(headers);
+        curl_slist_free_all(pHeaders);
         curl_easy_cleanup(pCurl);
     }
     return nResponseCode;
 }
 
 
-long CurlRegister::Get(const std::string& sUrl, std::string& sResponse)
+void CurlRegister::Get(const std::string& sUrl, long nUserType)
+{
+    std::thread threadGet(GetThreaded, sUrl, this, nUserType);
+    threadGet.detach();
+}
+
+long CurlRegister::Get(const std::string& sUrl, std::string& sResponse, bool bJson)
 {
     char sError[CURL_ERROR_SIZE];
     CURLcode res;
     long nResponseCode(500);
 
 
-    Log::Get(Log::LOG_INFO) << "CurlRegister: Get: " << sUrl << std::endl;
 
     CURL* pCurl = curl_easy_init();
     if(pCurl)
@@ -270,21 +290,33 @@ long CurlRegister::Get(const std::string& sUrl, std::string& sResponse)
         curl_easy_setopt(pCurl, CURLOPT_URL, sUrl.c_str());
         curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &chunk);
 
+        struct curl_slist *pHeaders = NULL;
+        if(bJson)
+        {
+            pHeaders = curl_slist_append(pHeaders, "Accept: application/json");
+            pHeaders = curl_slist_append(pHeaders, "Content-Type: application/json");
+            curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);
+        }
+
         res = curl_easy_perform(pCurl);
         /* Check for errors */
         if(res != CURLE_OK)
         {
             curl_easy_getinfo(pCurl, CURLINFO_RESPONSE_CODE, &nResponseCode);
             sResponse = curl_easy_strerror(res);
-            Log::Get(Log::LOG_INFO) << "CURL Error: " << sResponse << std::endl;
+            Log::Get(Log::LOG_ERROR) << "CURL Error: " << sResponse << std::endl;
         }
         else
         {
             sResponse.assign(chunk.pMemory, chunk.nSize);
-            Log::Get(Log::LOG_INFO) << "CURL: " << sResponse << std::endl;
             curl_easy_getinfo(pCurl, CURLINFO_RESPONSE_CODE, &nResponseCode);
         }
+        if(pHeaders)
+        {
+            curl_slist_free_all(pHeaders);
+        }
         curl_easy_cleanup(pCurl);
+
     }
     return nResponseCode;
 }
@@ -307,6 +339,70 @@ void CurlRegister::ParseResults(NodeApi::enumResource eResource, const std::stri
     {
         Log::Get(Log::LOG_ERROR) << "Query: Could not parse response" << std::endl;
     }
+}
+
+
+
+void CurlRegister::PutPatch(const std::string& sBaseUrl, const std::string& sJson, long nUserType, bool bPut)
+{
+    std::thread threadPut(PutThreaded, sBaseUrl, sJson, this, nUserType, bPut);
+    threadPut.detach();
+}
+
+long CurlRegister::PutPatch(const std::string& sUrl, const std::string& sJson, std::string& sResponse, bool bPut)
+{
+
+    char sError[CURL_ERROR_SIZE];
+    CURLcode res;
+    long nResponseCode(500);
+
+    CURL* pCurl = curl_easy_init();
+    if(pCurl)
+    {
+
+        curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1);
+        curl_easy_setopt(pCurl, CURLOPT_HEADER, 0);
+        curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+        curl_easy_setopt(pCurl, CURLOPT_DEBUGFUNCTION, debug_callback);
+        curl_easy_setopt(pCurl, CURLOPT_ERRORBUFFER, sError);
+        if(bPut)
+        {
+            curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "PUT");
+        }
+        else
+        {
+            curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "PATCH");
+        }
+
+        MemoryStruct chunk;
+
+        /* what call to write: */
+        curl_easy_setopt(pCurl, CURLOPT_URL, sUrl.c_str());
+        curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &chunk);
+
+        struct curl_slist * pHeaders = NULL;
+        pHeaders = curl_slist_append(pHeaders, "Accept: application/json");
+        pHeaders = curl_slist_append(pHeaders, "Content-Type: application/json");
+
+        curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);
+        curl_easy_setopt(pCurl, CURLOPT_POSTFIELDS, sJson.c_str());
+
+        res = curl_easy_perform(pCurl);
+        /* Check for errors */
+        if(res != CURLE_OK)
+        {
+            curl_easy_getinfo(pCurl, CURLINFO_RESPONSE_CODE, &nResponseCode);
+            sResponse = curl_easy_strerror(res);
+        }
+        else
+        {
+            sResponse.assign(chunk.pMemory, chunk.nSize);
+            curl_easy_getinfo(pCurl, CURLINFO_RESPONSE_CODE, &nResponseCode);
+        }
+        curl_slist_free_all(pHeaders);
+        curl_easy_cleanup(pCurl);
+    }
+    return nResponseCode;
 }
 
 

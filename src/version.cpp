@@ -5,7 +5,7 @@ ApiVersion::ApiVersion(std::string sVersion)
 {
     if(sVersion.empty() == false)
     {
-        if(sVersion[0] == 'v')
+        if(sVersion[0] == 'v' || sVersion[0]=='V')
         {
             sVersion = sVersion.substr(1);
         }
@@ -41,7 +41,7 @@ unsigned short ApiVersion::GetMinor() const
 std::string ApiVersion::GetVersionAsString() const
 {
     std::stringstream ss;
-    ss << "V" << m_nMajor << "." << m_nMinor;
+    ss << "v" << m_nMajor << "." << m_nMinor;
     return ss.str();
 }
 

@@ -65,7 +65,10 @@ int main()
     NodeApi::Get().Commit();
     getchar();
     std::shared_ptr<ThreadPoster> pPoster = std::make_shared<ThreadPoster>();
+
     NodeApi::Get().StartServices(pPoster);
+
+    int nCount(0);
     while(true)
     {
         if(pPoster->Wait(chrono::milliseconds(100)))
@@ -134,6 +137,18 @@ int main()
                     break;
             }
 
+        }
+        if(nCount < 100)
+        {
+            cout << "CHANGE PACKET TIME IN " << (100-nCount) << endl;
+
+        }
+        nCount++;
+        if(nCount == 100)
+        {
+
+            pFlow->SetPacketTime(FlowAudioRaw::US_250);
+            NodeApi::Get().Commit();
         }
     }
     NodeApi::Get().StopServices();

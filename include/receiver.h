@@ -15,7 +15,7 @@ class NMOS_EXPOSE Receiver : public Resource
     public:
         enum enumTransport {RTP, RPT_UCAST, RTP_MCAST, DASH};
         enum enumType {AUDIO, VIDEO, DATA, MUX};
-        Receiver(std::string sLabel, std::string sDescription, enumTransport eTransport, std::string sDeviceId, enumType eType);
+        Receiver(std::string sLabel, std::string sDescription, enumTransport eTransport, std::string sDeviceId, enumType eType, TransportParamsRTP::flagsTP flagsTransport=TransportParamsRTP::CORE);
         ~Receiver();
         Receiver();
         virtual bool UpdateFromJson(const Json::Value& jsData);

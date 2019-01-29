@@ -12,12 +12,12 @@ class RegistryMemory : public Registry
         virtual ~RegistryMemory(){}
 
 
-        virtual bool DeleteResource(const std::string& sType, const std::string& sId);
-        virtual size_t Heartbeat(const std::string& sId);
-        virtual std::shared_ptr<Resource> FindNmosResource(const std::string& sType, const std::string& sId);
-        virtual bool AddResource(const std::string& sType, std::shared_ptr<Resource> pResource);
-        virtual bool ResourceUpdated(std::shared_ptr<Resource> pResource);
-        virtual bool GarbageCollection();
+        bool DeleteResource(const std::string& sType, const std::string& sId);
+        size_t Heartbeat(const std::string& sId);
+        std::shared_ptr<Resource> FindNmosResource(const std::string& sType, const std::string& sId);
+        bool AddResource(const std::string& sType, std::shared_ptr<Resource> pResource);
+        bool ResourceUpdated(std::shared_ptr<Resource> pResource);
+        bool GarbageCollection();
 
 
     private:

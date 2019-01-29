@@ -1,8 +1,9 @@
 #pragma once
 #include "version.h"
 #include "transportparams.h"
+#include "nmosdlldefine.h"
 
-struct connection
+struct NMOS_EXPOSE connection
 {
     enum enumActivate {ACT_NULL, ACT_NOW, ACT_ABSOLUTE, ACT_RELATIVE};
 
@@ -20,7 +21,7 @@ struct connection
     static const std::string STR_ACTIVATE[4];
 };
 
-struct connectionSender : public connection
+struct NMOS_EXPOSE connectionSender : public connection
 {
 
     connectionSender();
@@ -36,7 +37,7 @@ struct connectionSender : public connection
 };
 
 //Connection API
-struct connectionReceiver : public connection
+struct NMOS_EXPOSE connectionReceiver : public connection
 {
     connectionReceiver();
     connectionReceiver& operator=(const connectionReceiver& other);

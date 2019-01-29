@@ -18,6 +18,7 @@ void NodeThread::Main()
     {
         //browse for an registry server this will now wait until all services have been browsed for,
         NodeApi::Get().BrowseForRegistrationNode();
+        NodeApi::Get().Wait(2000);  //wait for 2 seconds to see whether we've got any
 
         //try to find the registartion node
         if(NodeApi::Get().FindRegistrationNode())

@@ -6,7 +6,8 @@
 struct TransportParamsRTP
 {
     enum enumFecMode {ONED, TWOD};
-
+    enum enumTParams {TP_UNKNOWN = -1, TP_NOT_SUPPORTED=0, TP_SUPPORTED=1};
+    enum flagsTP {CORE=0, FEC=1, RTCP=2, MULTICAST=4};
     TransportParamsRTP();
     virtual bool Patch(const Json::Value& jsData);
 
@@ -30,6 +31,9 @@ struct TransportParamsRTP
     unsigned short nRtcpDestinationPort;
     bool bRtpEnabled;
 
+    enumTParams eFec;
+    enumTParams eRTCP;
+    enumTParams eMulticast;
     static const std::string STR_FEC_MODE[2];
 
 };

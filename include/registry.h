@@ -15,7 +15,7 @@ class NMOS_EXPOSE Registry
 
         virtual bool DeleteResource(const std::string& sType, const std::string& sId)=0;
         virtual size_t Heartbeat(const std::string& sId)=0;
-        virtual std::shared_ptr<Resource> FindResource(const std::string& sType, const std::string& sId)=0;
+        virtual std::shared_ptr<Resource> FindNmosResource(const std::string& sType, const std::string& sId)=0;
         virtual bool AddResource(const std::string& sType, std::shared_ptr<Resource> pResource)=0;
         virtual bool ResourceUpdated(std::shared_ptr<Resource> pResource)=0;
 
