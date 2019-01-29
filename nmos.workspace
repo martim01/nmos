@@ -11,5 +11,6 @@
 		<Project filename="tests/nmos_client_test/nmos_client_test.cbp">
 			<Depends filename="libnmos.cbp" />
 		</Project>
+		<Project filename="tests/nmos_clientnode_test/nmos_clientnode_test.cbp" />
 	</Workspace>
 </CodeBlocks_workspace_file>
