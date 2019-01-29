@@ -116,11 +116,6 @@ void ServiceBrowser::Stop()
         {
             m_pPoster->_Finished();
         }
-//        if(m_pHandler)
-//        {   //only send if we are actually stopping not already stopped and now deleting
-//            wxCommandEvent event(wxEVT_BROWSE_FINISHED);
-//            wxPostEvent(m_pHandler, event);
-//        }
     }
     m_nWaitingOn = 0;
 }
@@ -131,12 +126,35 @@ bool ServiceBrowser::Start(AvahiClient* pClient)
     if(!m_bBrowsing)
     {
         m_pClient = pClient;
-        if(!(m_pTypeBrowser = avahi_service_type_browser_new(pClient, AVAHI_IF_UNSPEC, AVAHI_PROTO_INET, NULL, (AvahiLookupFlags)0, type_callback, reinterpret_cast<void*>(this))))
+
+        m_mutex.lock();
+        for(set<string>::iterator itService = m_setServices.begin(); itService != m_setServices.end(); ++itService)
         {
-            Log::Get(Log::LOG_ERROR) << "Failed to create service type browser" << endl;
-            return false;
+
+            if(m_mServices.insert(make_pair((*itService), make_shared<dnsService>(dnsService((*itService))))).second)
+            {
+                AvahiServiceBrowser* psb = NULL;
+                /* Create the service browser */
+                if (!(psb = avahi_service_browser_new(m_pClient, AVAHI_IF_UNSPEC, AVAHI_PROTO_INET, (*itService).c_str(), NULL, (AvahiLookupFlags)0, browse_callback, reinterpret_cast<void*>(this))))
+                {
+                    Log::Get(Log::LOG_ERROR) << "ServiceBrowser: Failed to create service browser" << endl;
+                }
+                else
+                {
+                    Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: Service '" << (*itService) << "' browse" << endl;
+                    m_setBrowser.insert(psb);
+                    m_nWaitingOn++;
+                }
+            }
         }
-        m_nWaitingOn = 1;
+        m_mutex.unlock();
+
+//        if(!(m_pTypeBrowser = avahi_service_type_browser_new(pClient, AVAHI_IF_UNSPEC, AVAHI_PROTO_INET, NULL, (AvahiLookupFlags)0, type_callback, reinterpret_cast<void*>(this))))
+//        {
+//            Log::Get(Log::LOG_ERROR) << "Failed to create service type browser" << endl;
+//            return false;
+//        }
+//        m_nWaitingOn = 1;
 
     }
     return true;
@@ -413,7 +431,7 @@ void ServiceBrowser::CheckStop()
     --m_nWaitingOn;
     if(m_nWaitingOn == 0)
     {
-        NodeApi::Get().SignalBrowse();
+        //NodeApi::Get().SignalBrowse();
     }
 }
 

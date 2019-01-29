@@ -17,6 +17,7 @@ class ServiceBrowser;
 class EventPoster;
 class dnsInstance;
 class CurlRegister;
+class ClientApiPoster;
 
 class ClientApiPrivate
 {
@@ -26,6 +27,8 @@ class ClientApiPrivate
 
         ClientApiPrivate();
         ~ClientApiPrivate();
+
+        void SetPoster(std::shared_ptr<ClientApiPoster> pPoster);
 
         void Start(int nFlags);
         void Stop();
@@ -39,6 +42,19 @@ class ClientApiPrivate
         void AddFlows(const std::string& sIpAddress, const std::string& sData);
         void AddSenders(const std::string& sIpAddress, const std::string& sData);
         void AddReceivers(const std::string& sIpAddress, const std::string& sData);
+
+        void StoreDevices(const std::string& sIpAddress);
+        void StoreSources(const std::string& sIpAddress);
+        void StoreFlows(const std::string& sIpAddress);
+        void StoreSenders(const std::string& sIpAddress);
+        void StoreReceivers(const std::string& sIpAddress);
+
+        void RemoveStaleDevices();
+        void RemoveStaleSources();
+        void RemoveStaleFlows();
+        void RemoveStaleSenders();
+        void RemoveStaleReceivers();
+
 
         static const std::string STR_RESOURCE[6];
         enum enumResource{NODE, DEVICE, SOURCE, FLOW, SENDER, RECEIVER};
@@ -138,5 +154,6 @@ class ClientApiPrivate
         enumSignal m_eSignal;
         unsigned short m_nCurlThreadCount;
 
+        std::shared_ptr<ClientApiPoster> m_pPoster;
 };
 

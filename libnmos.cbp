@@ -147,6 +147,8 @@
 			<Option target="Windows Release" />
 		</Unit>
 		<Unit filename="include/clientapi.h" />
+		<Unit filename="include/clientapiposter.cpp" />
+		<Unit filename="include/clientapiposter.h" />
 		<Unit filename="include/clientholder.h" />
 		<Unit filename="include/clientposter.h" />
 		<Unit filename="include/clientprivate.h" />

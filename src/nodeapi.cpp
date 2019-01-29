@@ -36,6 +36,8 @@
 #include "microserver.h"
 #include "nmosthread.h"
 #include "sdp.h"
+#include "utils.h"
+
 using namespace std;
 
 const std::string NodeApi::STR_RESOURCE[7] = {"node", "device", "source", "flow", "sender", "receiver", "subscription"};
@@ -227,7 +229,7 @@ bool NodeApi::StartmDNSServer()
     {
         Log::Get() << "Start mDNS Publisher" << endl;
 
-        m_pNodeApiPublisher = new ServicePublisher("nodeapi", "_nmos-node._tcp", itEndpoint->nPort, itEndpoint->sHost);
+        m_pNodeApiPublisher = new ServicePublisher(CreateGuid(), "_nmos-node._tcp", itEndpoint->nPort, itEndpoint->sHost);
         SetmDNSTxt(itEndpoint->bSecure);
         return m_pNodeApiPublisher->Start();
     }
@@ -247,7 +249,7 @@ void NodeApi::StopmDNSServer()
 }
 
 
-bool NodeApi::StartServices(shared_ptr<EventPoster> pPoster)
+bool NodeApi::StartServices(shared_ptr<EventPoster> pPoster, ClientApi::flagResource eClient, shared_ptr<ClientPoster> pClientPoster)
 {
 
     m_pPoster = pPoster;
@@ -374,21 +376,15 @@ void NodeApi::SetmDNSTxt(bool bSecure)
 
 bool NodeApi::BrowseForRegistrationNode()
 {
-    if(m_pRegistrationBrowser != 0)
+    if(m_pRegistrationBrowser == 0)
     {
-        StopRegistrationBrowser();
+        m_pRegistrationBrowser = new ServiceBrowser(m_pPoster, false);
+        set<string> setService;
+        setService.insert("_nmos-registration._tcp");
+        Log::Get() << "Browse for register nodes" << endl;
+        m_pRegistrationBrowser->StartBrowser(setService);
     }
 
-    m_pRegistrationBrowser = new ServiceBrowser(m_pPoster);
-    set<string> setService;
-    setService.insert("_nmos-registration._tcp");
-    //setService.insert("_nmos-query._tcp");
-    Log::Get() << "Browse for register nodes" << endl;
-    if(m_pRegistrationBrowser->StartBrowser(setService))
-    {
-        std::unique_lock<std::mutex> lk(m_mutex);
-        m_cvBrowse.wait(lk);
-    }
     return true;
 }
 

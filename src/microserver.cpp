@@ -580,10 +580,18 @@ int MicroServer::GetJsonNmosConnectionSingleSenders(std::string& sReturn, std::s
                 }
                 else if(m_vPath[C_LAST] == "transportfile")
                 {
-                    // transportfile get
-                    sContentType = "application/sdp";
-                    sReturn = pSender->GetTransportFile();
-                    nCode = 200;
+                    if(pSender->GetActive().bMasterEnable)
+                    {
+                        // transportfile get
+                        sContentType = "application/sdp";
+                        sReturn = pSender->GetTransportFile();
+                        nCode = 200;
+                    }
+                    else
+                    {
+                        nCode = 404;
+                        sReturn = stw.write(GetJsonError(404, "MasterEnable=false"));
+                    }
                 }
                 else
                 {

@@ -63,7 +63,7 @@ class Resource
 
         mutable std::mutex m_mutex;
     private:
-        void CreateGuid();
+
         std::string m_sType;
         std::string m_sId;
         std::string m_sLabel;

@@ -173,3 +173,8 @@ bool ClientApi::PatchReceiverStaged(const std::string& sReceiverId, const connec
 {
     return m_pApi->PatchReceiverStaged(sReceiverId, aConnection);
 }
+
+void ClientApi::SetPoster(std::shared_ptr<ClientApiPoster> pPoster)
+{
+    m_pApi->SetPoster(pPoster);
+}

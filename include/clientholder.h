@@ -5,7 +5,7 @@
 #include <memory>
 #include "version.h"
 #include <string>
-
+#include <set>
 
 
 class Resource;
@@ -20,7 +20,10 @@ template<class T> class NMOS_EXPOSE ClientHolder
         bool AddResource(const std::string& sIpAddres, std::shared_ptr<T> pResource);
         bool RemoveResource(std::shared_ptr<T> pResource);
         bool RemoveResource(const std::string& sUid);
-        size_t RemoveResources(const std::string& sIpAddres);
+        std::set<std::string> RemoveResources(const std::string& sIpAddres);
+
+        void StoreResources(const std::string& sIpAddress);
+        std::set<std::string> RemoveStaleResources();
 
         void RemoveAllResources();
 
@@ -33,7 +36,7 @@ template<class T> class NMOS_EXPOSE ClientHolder
 
         std::string GetResourceIpAddress(const std::string& sUid);
 
-        bool UpdateResource(const Json::Value& jsData);
+        std::shared_ptr<T> UpdateResource(const Json::Value& jsData);
         size_t GetResourceCount() const;
     protected:
 
@@ -41,6 +44,7 @@ template<class T> class NMOS_EXPOSE ClientHolder
         std::multimap<std::string, std::string > m_mmAddressResourceId;
         std::multimap<std::string, std::string > m_mResourceIdAddress;
 
+        std::set<std::string> m_setStored;
 };
 
 

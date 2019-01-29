@@ -21,7 +21,7 @@ const std::string Receiver::STR_TYPE[4] = {"urn:x-nmos:format:audio", "urn:x-nmo
 
 
 
-Receiver::Receiver(std::string sLabel, std::string sDescription, enumTransport eTransport, std::string sDeviceId, enumType eFormat) :
+Receiver::Receiver(std::string sLabel, std::string sDescription, enumTransport eTransport, std::string sDeviceId, enumType eFormat, TransportParamsRTP::flagsTP flagsTransport) :
     Resource("receiver", sLabel, sDescription),
     m_eTransport(eTransport),
     m_sDeviceId(sDeviceId),
@@ -30,7 +30,37 @@ Receiver::Receiver(std::string sLabel, std::string sDescription, enumTransport e
     m_eType(eFormat),
     m_pSender(0)
 {
+    if(flagsTransport & TransportParamsRTP::FEC)
+    {
+        m_Staged.tpReceiver.eFec = TransportParamsRTP::TP_SUPPORTED;
+        m_Active.tpReceiver.eFec = TransportParamsRTP::TP_SUPPORTED;
+    }
+    else
+    {
+        m_Staged.tpReceiver.eFec = TransportParamsRTP::TP_NOT_SUPPORTED;
+        m_Active.tpReceiver.eFec = TransportParamsRTP::TP_NOT_SUPPORTED;
+    }
 
+    if(flagsTransport & TransportParamsRTP::RTCP)
+    {
+        m_Staged.tpReceiver.eRTCP = TransportParamsRTP::TP_SUPPORTED;
+        m_Active.tpReceiver.eRTCP = TransportParamsRTP::TP_SUPPORTED;
+    }
+    else
+    {
+        m_Staged.tpReceiver.eRTCP = TransportParamsRTP::TP_NOT_SUPPORTED;
+        m_Active.tpReceiver.eRTCP = TransportParamsRTP::TP_NOT_SUPPORTED;
+    }
+    if(flagsTransport & TransportParamsRTP::MULTICAST)
+    {
+        m_Staged.tpReceiver.eMulticast = TransportParamsRTP::TP_SUPPORTED;
+        m_Active.tpReceiver.eMulticast = TransportParamsRTP::TP_SUPPORTED;
+    }
+    else
+    {
+        m_Staged.tpReceiver.eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
+        m_Active.tpReceiver.eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
+    }
 }
 
 Receiver::~Receiver()

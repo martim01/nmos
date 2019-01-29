@@ -11,16 +11,18 @@ class Source;
 class Flow;
 class Sender;
 class Receiver;
+class ClientApiPoster;
 class ClientApiPrivate;
 
 class NMOS_EXPOSE ClientApi
 {
     public:
 
-        enum flagResource {NODES=1, DEVICES=2, SOURCES=4, FLOWS=8, SENDERS=16, RECEIVERS=32, ALL=63};
+        enum flagResource {NONE=0, NODES=1, DEVICES=2, SOURCES=4, FLOWS=8, SENDERS=16, RECEIVERS=32, ALL=63};
 
         static ClientApi& Get();
 
+        void SetPoster(std::shared_ptr<ClientApiPoster> pPoster);
         void Start(flagResource eInterested=ALL);
         void Stop();
 

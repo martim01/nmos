@@ -7,12 +7,15 @@
 #include <mutex>
 #include <condition_variable>
 #include "version.h"
+#include "clientapi.h"
+
 class ServiceBrowser;
 class ServicePublisher;
 class ServiceBrowserEvent;
 class CurlRegister;
 class CurlEvent;
 class EventPoster;
+class ClientPoster;
 
 class Device;
 class Source;
@@ -44,10 +47,12 @@ class NMOS_EXPOSE NodeApi
 
         /** @brief Launch the thread that starts the web servers and dns publisher and browser
         *   @param pPoster pointer to an optional EventPoster class that can be used to update the main thread with events.
+        *   @param eClient if not set to ClientAPI::NONE then the application will act as an NMOS client as well as an NMOS node. Set to an or'd set of resources that the application is interested in
+        *   @param pClientPoster set to non-null if the application wishes to receive events from the ClientApi
         *   @note NodeApi takes owenership of the EventPoster and will delete it on destruction
         *   @return <i>bool</i> true on succesfully starting the thread
         **/
-        bool StartServices(std::shared_ptr<EventPoster> pPoster);
+        bool StartServices(std::shared_ptr<EventPoster> pPoster, ClientApi::flagResource eClient=ClientApi::NONE, std::shared_ptr<ClientPoster> pClientPoster=0);
 
         /** @brief Stop the thread that is running the nmos services
         **/

@@ -6,12 +6,16 @@
 #include "clientapi.h"
 #include "self.h"
 #include "receiver.h"
+#include "testposter.h"
+
 using namespace std;
 
 
 
 int main()
 {
+    ClientApi::Get().SetPoster(make_shared<TestPoster>());
+
     ClientApi::Get().Start();
     cout << "Press Key To Target" << endl;
     getchar();
@@ -50,7 +54,13 @@ int main()
         aConnection.eActivate = connection::ACT_NOW;
         aConnection.bMasterEnable = true;
         aConnection.sReceiverId = itReceiver->first;
+        //aConnection.tpSender.sDestinationIp =
         ClientApi::Get().PatchSenderStaged(itSender->first, aConnection);
+
+        cout << "Sender Active" << endl;
+        cout << "-----------------------------------------------" << endl;
+        ClientApi::Get().RequestSenderActive(itSender->first);
+        getchar();
 
 
     }

@@ -2,32 +2,28 @@
 #include <chrono>
 #include <sstream>
 #include <string>
+#include "utils.h"
 
 
-
-#ifdef __GNU__
-#include <uuid/uuid.h>
-#include <sys/time.h>
-#endif // __GNU__
 
 
 Resource::Resource(const std::string& sType, const std::string& sLabel, const std::string& sDescription) :
     m_bIsOk(true),
     m_sType(sType),
+    m_sId(CreateGuid()),
     m_sLabel(sLabel),
     m_sDescription(sDescription),
     m_nHeartbeat(0)
 
 {
-    CreateGuid();
-    UpdateVersionTime();
+     UpdateVersionTime();
 }
 
 Resource::Resource(const std::string& sType) :
     m_bIsOk(true),
-    m_sType(sType)
+    m_sType(sType),
+    m_sId(CreateGuid())
 {
-    CreateGuid();
     UpdateVersionTime();
 }
 
@@ -128,48 +124,6 @@ bool Resource::Commit(const ApiVersion& version)
     return true;
 }
 
-void Resource::CreateGuid()
-{
-
-#ifdef __GNUWIN32__
-    UUID guid;
-	CoCreateGuid(&guid);
-
-    std::stringstream os;
-//	os << std::lowercase;
-    os.width(8);
-    os << std::hex << guid.Data1 << '-';
-
-    os.width(4);
-    os << std::hex << guid.Data2 << '-';
-
-    os.width(4);
-    os << std::hex << guid.Data3 << '-';
-
-    os.width(2);
-    os << std::hex
-        << static_cast<short>(guid.Data4[0])
-        << static_cast<short>(guid.Data4[1])
-        << '-'
-        << static_cast<short>(guid.Data4[2])
-        << static_cast<short>(guid.Data4[3])
-        << static_cast<short>(guid.Data4[4])
-        << static_cast<short>(guid.Data4[5])
-        << static_cast<short>(guid.Data4[6])
-        << static_cast<short>(guid.Data4[7]);
-  //  os << std::nolowercase;
-    m_sId = os.str();
-#endif // __WIN__
-
-#ifdef __GNU__
-    uuid_t guid;
-    uuid_generate(guid);
-
-    char uuid_str[37];      // ex. "1b4e28ba-2fa1-11d2-883f-0016d3cca427" + "\0"
-    uuid_unparse_lower(guid, uuid_str);
-    m_sId = uuid_str;
-#endif // __GNU__
-}
 
 void Resource::UpdateLabel(std::string sLabel)
 {

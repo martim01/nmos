@@ -18,7 +18,7 @@ static void ActivationThreadSender(const std::chrono::time_point<std::chrono::hi
 const std::string Sender::STR_TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash"};
 
 
-Sender::Sender(std::string sLabel, std::string sDescription, std::string sFlowId, enumTransport eTransport, std::string sDeviceId, std::string sInterface) :
+Sender::Sender(std::string sLabel, std::string sDescription, std::string sFlowId, enumTransport eTransport, std::string sDeviceId, std::string sInterface, TransportParamsRTP::flagsTP flagsTransport) :
     Resource("sender", sLabel, sDescription),
     m_sFlowId(sFlowId),
     m_eTransport(eTransport),
@@ -27,8 +27,42 @@ Sender::Sender(std::string sLabel, std::string sDescription, std::string sFlowId
     m_bReceiverActive(false)
 {
     AddInterfaceBinding(sInterface);
+
+    if(flagsTransport & TransportParamsRTP::FEC)
+    {
+        m_Staged.tpSender.eFec = TransportParamsRTP::TP_SUPPORTED;
+        m_Active.tpSender.eFec = TransportParamsRTP::TP_SUPPORTED;
+    }
+    else
+    {
+        m_Staged.tpSender.eFec = TransportParamsRTP::TP_NOT_SUPPORTED;
+        m_Active.tpSender.eFec = TransportParamsRTP::TP_NOT_SUPPORTED;
+    }
+
+    if(flagsTransport & TransportParamsRTP::RTCP)
+    {
+        m_Staged.tpSender.eRTCP = TransportParamsRTP::TP_SUPPORTED;
+        m_Active.tpSender.eRTCP = TransportParamsRTP::TP_SUPPORTED;
+    }
+    else
+    {
+        m_Staged.tpSender.eRTCP = TransportParamsRTP::TP_NOT_SUPPORTED;
+        m_Active.tpSender.eRTCP = TransportParamsRTP::TP_NOT_SUPPORTED;
+    }
+    if(flagsTransport & TransportParamsRTP::MULTICAST)
+    {
+        m_Staged.tpSender.eMulticast = TransportParamsRTP::TP_SUPPORTED;
+        m_Active.tpSender.eMulticast = TransportParamsRTP::TP_SUPPORTED;
+    }
+    else
+    {
+        m_Staged.tpSender.eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
+        m_Active.tpSender.eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
+    }
+
     //activate the
     Activate("","","");
+
 }
 
 Sender::Sender() : Resource("sender")
@@ -339,6 +373,12 @@ connectionSender Sender::GetStaged()
 {
     std::lock_guard<std::mutex> lg(m_mutex);
     return m_Staged;
+}
+
+connectionSender Sender::GetActive()
+{
+    std::lock_guard<std::mutex> lg(m_mutex);
+    return m_Active;
 }
 
 

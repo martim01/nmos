@@ -1,5 +1,7 @@
 #pragma once
 #include "nodeapi.h"
+#include "clientapi.h"
+#include "registryapi.h"
 #include "log.h"
 #include "eventposter.h"
 #include "resource.h"
