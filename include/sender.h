@@ -58,9 +58,10 @@ class NMOS_EXPOSE Sender : public Resource
         void Activate(std::string sSourceIp="", std::string sDestinationIp="", std::string sSDP="");
 
         const std::string& GetTransportFile() const;
+        void CreateSDP();
     private:
 
-        void CreateSDP();
+
 
         std::string m_sFlowId;
         enumTransport m_eTransport;
