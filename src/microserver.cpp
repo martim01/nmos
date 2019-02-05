@@ -952,6 +952,7 @@ int MicroServer::PatchJsonReceiver(const std::string& sJson, std::string& sRespo
                 nCode = 400;
                 sResponse = stw.write(GetJsonError(nCode, "Request does not meet schema."));
                 Log::Get(Log::LOG_DEBUG) << "PatchJsonReceiver: Request does not meet schema." << std::endl;
+                Log::Get(Log::LOG_DEBUG) << sJson << std::endl;
             }
             else if(pReceiver->CheckConstraints(conRequest) == false)
             {//does the patched connection meet the Receiver constraints?

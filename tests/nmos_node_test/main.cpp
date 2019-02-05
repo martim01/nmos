@@ -138,18 +138,18 @@ int main()
             }
 
         }
-        if(nCount < 100)
-        {
-            cout << "CHANGE PACKET TIME IN " << (100-nCount) << endl;
-
-        }
-        nCount++;
-        if(nCount == 100)
-        {
-
-            pFlow->SetPacketTime(FlowAudioRaw::US_250);
-            NodeApi::Get().Commit();
-        }
+//        if(nCount < 100)
+//        {
+//            cout << "CHANGE PACKET TIME IN " << (100-nCount) << endl;
+//
+//        }
+//        nCount++;
+//        if(nCount == 100)
+//        {
+//
+//            pFlow->SetPacketTime(FlowAudioRaw::US_250);
+//            NodeApi::Get().Commit();
+//        }
     }
     NodeApi::Get().StopServices();
     return 0;

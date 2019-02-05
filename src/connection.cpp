@@ -7,7 +7,16 @@ const std::string connection::STR_ACTIVATE[4] = {"", "activate_immediate", "acti
 
 connection::connection() :
     bMasterEnable(true),
-    eActivate(connection::ACT_NULL)
+    eActivate(connection::ACT_NULL),
+    m_nProperties(connection::FP_ALL)
+{
+
+}
+
+connection::connection(int flagProperties) :
+    bMasterEnable(true),
+    eActivate(connection::ACT_NULL),
+    m_nProperties(flagProperties)
 {
 
 }
@@ -22,6 +31,7 @@ bool connection::Patch(const Json::Value& jsData)
     {
         if(jsData["master_enable"].isBool())
         {
+            m_nProperties |= FP_ENABLE;
             bMasterEnable = jsData["master_enable"].asBool();
         }
         else if(jsData["master_enable"].empty() == false)
@@ -32,6 +42,7 @@ bool connection::Patch(const Json::Value& jsData)
 
         if(jsData["activation"].isObject())
         {
+            m_nProperties |= FP_ACTIVATION;
             if(jsData["activation"]["mode"].isString())
             {
                 bool bFound(false);
@@ -69,8 +80,9 @@ bool connection::Patch(const Json::Value& jsData)
                 Log::Get(Log::LOG_DEBUG) << "Patch: activation requested_time incorrect type" << std::endl;
             }
         }
-        else
+        else if(jsData["activation"].empty() == false)
         {
+            Log::Get(Log::LOG_DEBUG) << "Patch: activation must be an object if it exists" << std::endl;
             bIsOk = false;
         }
     }
@@ -89,37 +101,42 @@ Json::Value connection::GetJson(const ApiVersion& version) const
 {
     Json::Value jsConnect;
 
-    jsConnect["activation"] = Json::objectValue;
-    if(eActivate == ACT_NULL)
+    if(FP_ACTIVATION & m_nProperties)
     {
-        jsConnect["activation"]["mode"] = Json::nullValue;
-        jsConnect["activation"]["requested_time"] = Json::nullValue;
-
-    }
-    else
-    {
-        jsConnect["activation"]["mode"] = STR_ACTIVATE[eActivate];
+        jsConnect["activation"] = Json::objectValue;
         if(eActivate == ACT_NULL)
         {
+            jsConnect["activation"]["mode"] = Json::nullValue;
             jsConnect["activation"]["requested_time"] = Json::nullValue;
 
-            if(sActivationTime.empty() == false)
-            {
-                jsConnect["activation"]["activation_time"] = Json::nullValue;
-            }
         }
         else
         {
-            jsConnect["activation"]["requested_time"] = sRequestedTime;
-
-            if(sActivationTime.empty() == false)
+            jsConnect["activation"]["mode"] = STR_ACTIVATE[eActivate];
+            if(eActivate == ACT_NULL)
             {
-                jsConnect["activation"]["activation_time"] = sActivationTime;
+                jsConnect["activation"]["requested_time"] = Json::nullValue;
+
+                if(sActivationTime.empty() == false)
+                {
+                    jsConnect["activation"]["activation_time"] = Json::nullValue;
+                }
+            }
+            else
+            {
+                jsConnect["activation"]["requested_time"] = sRequestedTime;
+
+                if(sActivationTime.empty() == false)
+                {
+                    jsConnect["activation"]["activation_time"] = sActivationTime;
+                }
             }
         }
     }
-
-    jsConnect["master_enable"] = bMasterEnable;
+    if(FP_ENABLE & m_nProperties)
+    {
+        jsConnect["master_enable"] = bMasterEnable;
+    }
 
     return jsConnect;
 }
@@ -127,6 +144,11 @@ Json::Value connection::GetJson(const ApiVersion& version) const
 
 
 connectionSender::connectionSender() : connection()
+{
+
+}
+
+connectionSender::connectionSender(int flagProperties) : connection(flagProperties)
 {
 
 }
@@ -139,10 +161,11 @@ bool connectionSender::Patch(const Json::Value& jsData)
     {
         if(jsData["transport_params"].isArray())
         {
+            m_nProperties |= FP_TRANSPORT_PARAMS;
             bIsOk &= tpSender.Patch(jsData["transport_params"][0]);
             // @todo second tp for SMPTE2022
         }
-        else
+        else if(jsData["transport_params"].empty() == false)
         {
             Log::Get(Log::LOG_DEBUG) << "Patch: transport_params not an array." << std::endl;
             bIsOk = false;
@@ -150,6 +173,7 @@ bool connectionSender::Patch(const Json::Value& jsData)
 
         if(jsData["receiver_id"].isString())
         {
+            m_nProperties |= FP_ID;
             sReceiverId = jsData["receiver_id"].asString();
         }
         else if((jsData["receiver_id"].isNull()  == false && jsData["receiver_id"].empty() == false))
@@ -165,21 +189,32 @@ Json::Value connectionSender::GetJson(const ApiVersion& version) const
 {
     Json::Value jsConnect(connection::GetJson(version));
 
-    if(sReceiverId.empty())
+    if(FP_ID & m_nProperties)
     {
-        jsConnect["receiver_id"] = Json::nullValue;
+        if(sReceiverId.empty())
+        {
+            jsConnect["receiver_id"] = Json::nullValue;
+        }
+        else
+        {
+            jsConnect["receiver_id"] = sReceiverId;
+        }
     }
-    else
+    if(FP_TRANSPORT_PARAMS & m_nProperties)
     {
-        jsConnect["receiver_id"] = sReceiverId;
+        jsConnect["transport_params"] = Json::arrayValue;
+        jsConnect["transport_params"].append(tpSender.GetJson(version));
     }
-    jsConnect["transport_params"] = Json::arrayValue;
-    jsConnect["transport_params"].append(tpSender.GetJson(version));
     return jsConnect;
 }
 
 
 connectionReceiver::connectionReceiver() : connection()
+{
+
+}
+
+connectionReceiver::connectionReceiver(int flagProperties) : connection(flagProperties)
 {
 
 }
@@ -190,6 +225,7 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
     //need to decode the SDP and make the correct transport param changes here so that any connection json will overwrite them
     if(jsData["transport_file"].isObject())
     {
+        m_nProperties |= FP_TRANSPORT_FILE;
         if(jsData["transport_file"]["type"].isString())
         {
             sTransportFileType = jsData["transport_file"]["type"].asString();
@@ -218,12 +254,14 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
     bIsOk &= connection::Patch(jsData);
     if(bIsOk)
     {
+
         if(jsData["transport_params"].isArray())
         {
+            m_nProperties |= FP_TRANSPORT_PARAMS;
             bIsOk &= tpReceiver.Patch(jsData["transport_params"][0]);
             // @todo second tp for SMPTE2022
         }
-        else
+        else if(jsData["transport_params"].empty() == false)
         {
             Log::Get(Log::LOG_DEBUG) << "Patch: transport_params not an array." << std::endl;
             bIsOk = false;
@@ -231,6 +269,7 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
 
         if(jsData["sender_id"].isString())
         {
+            m_nProperties |= FP_ID;
             sSenderId = jsData["sender_id"].asString();
         }
         else
@@ -252,34 +291,39 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
 Json::Value connectionReceiver::GetJson(const ApiVersion& version)  const
 {
     Json::Value jsConnect(connection::GetJson(version));
-    jsConnect["transport_file"] = Json::objectValue;
-    if(sTransportFileType.empty() || sTransportFileData.empty())
+    if(FP_TRANSPORT_FILE & m_nProperties)
     {
-        jsConnect["transport_file"]["type"] = Json::nullValue;
-        jsConnect["transport_file"]["data"] = Json::nullValue;
-    }
-    else
-    {
-        jsConnect["transport_file"]["type"] = sTransportFileType;
-        jsConnect["transport_file"]["data"] = sTransportFileData;
-    }
+        jsConnect["transport_file"] = Json::objectValue;
+        if(sTransportFileType.empty() || sTransportFileData.empty())
+        {
+            jsConnect["transport_file"]["type"] = Json::nullValue;
+            jsConnect["transport_file"]["data"] = Json::nullValue;
+        }
+        else
+        {
+            jsConnect["transport_file"]["type"] = sTransportFileType;
+            jsConnect["transport_file"]["data"] = sTransportFileData;
+        }
 
-
-
-
-    if(sSenderId.empty())
-    {
-        jsConnect["sender_id"] = Json::nullValue;
-    }
-    else
-    {
-        jsConnect["sender_id"] = sSenderId;
     }
 
+    if(FP_ID & m_nProperties)
+    {
+        if(sSenderId.empty())
+        {
+            jsConnect["sender_id"] = Json::nullValue;
+        }
+        else
+        {
+            jsConnect["sender_id"] = sSenderId;
+        }
+    }
 
-
-    jsConnect["transport_params"] = Json::arrayValue;
-    jsConnect["transport_params"].append(tpReceiver.GetJson(version));
+    if(FP_TRANSPORT_PARAMS & m_nProperties)
+    {
+        jsConnect["transport_params"] = Json::arrayValue;
+        jsConnect["transport_params"].append(tpReceiver.GetJson(version));
+    }
     return jsConnect;
 }
 

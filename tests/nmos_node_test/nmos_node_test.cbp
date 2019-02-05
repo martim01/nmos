@@ -84,7 +84,7 @@
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-std=c++14" />
-					<Add option="--pthread" />
+					<Add option="-pthread" />
 					<Add option="-D__GNU__" />
 					<Add directory="$(#microhttp.include)" />
 				</Compiler>
@@ -93,13 +93,9 @@
 					<Add option="`pkg-config --libs avahi-client`" />
 					<Add option="`pkg-config --libs uuid`" />
 					<Add option="`pkg-config --libs libcurl`" />
-<<<<<<< HEAD
-					<Add library="pthread" />
 					<Add library="libnmos" />
-=======
 					<Add library="nmos" />
 					<Add library="pthread" />
->>>>>>> 2d5fb0b9ec8e392ac1d8bd22c512d2e8e00eaf1c
 					<Add directory="$(#microhttp.lib)" />
 					<Add directory="../../lib" />
 				</Linker>
