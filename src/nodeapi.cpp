@@ -56,7 +56,6 @@ m_senders("sender"),
 m_receivers("receiver"),
 m_sources("source"),
 m_flows("flow"),
-m_query("query"),
 m_pNodeApiPublisher(0),
 m_pRegistrationBrowser(0),
 m_pRegisterCurl(0),
@@ -64,7 +63,8 @@ m_nRegistrationStatus(REG_START),
 m_bRun(true),
 m_pPoster(0),
 m_nConnectionPort(0),
-m_nDiscoveryPort(0)
+m_nDiscoveryPort(0),
+m_nHeartbeatTime(5000)
 {
 }
 
@@ -276,27 +276,27 @@ Self& NodeApi::GetSelf()
     return m_self;
 }
 
-const ResourceHolder& NodeApi::GetSources()
+const ResourceHolder<Source>& NodeApi::GetSources()
 {
     return m_sources;
 }
 
-const ResourceHolder& NodeApi::GetDevices()
+const ResourceHolder<Device>& NodeApi::GetDevices()
 {
     return m_devices;
 }
 
-const ResourceHolder& NodeApi::GetFlows()
+const ResourceHolder<Flow>& NodeApi::GetFlows()
 {
     return m_flows;
 }
 
-const ResourceHolder& NodeApi::GetReceivers()
+const ResourceHolder<Receiver>& NodeApi::GetReceivers()
 {
     return m_receivers;
 }
 
-const ResourceHolder& NodeApi::GetSenders()
+const ResourceHolder<Sender>& NodeApi::GetSenders()
 {
     return m_senders;
 }
@@ -543,9 +543,9 @@ bool NodeApi::FindRegistrationNode()
 }
 
 
-long NodeApi::RegisterResources(ResourceHolder& holder, const ApiVersion& version)
+template<class T> long NodeApi::RegisterResources(ResourceHolder<T>& holder, const ApiVersion& version)
 {
-    for(map<string, shared_ptr<Resource> >::const_iterator itResource = holder.GetResourceBegin(); itResource != holder.GetResourceEnd(); ++itResource)
+    for(typename map<string, shared_ptr<T> >::const_iterator itResource = holder.GetResourceBegin(); itResource != holder.GetResourceEnd(); ++itResource)
     {
         Log::Get(Log::LOG_INFO) << "NodeApi: Register. " << holder.GetType() << " : " << itResource->first << endl;
         long nResult = RegisterResource(holder.GetType(), itResource->second->GetJson(version));
@@ -557,9 +557,9 @@ long NodeApi::RegisterResources(ResourceHolder& holder, const ApiVersion& versio
     return 201;
 }
 
-long NodeApi::ReregisterResources(ResourceHolder& holder, const ApiVersion& version)
+template<class T> long NodeApi::ReregisterResources(ResourceHolder<T>& holder, const ApiVersion& version)
 {
-    for(map<string, shared_ptr<Resource> >::const_iterator itResource = holder.GetChangedResourceBegin(); itResource != holder.GetChangedResourceEnd(); ++itResource)
+    for(typename map<string, shared_ptr<T> >::const_iterator itResource = holder.GetChangedResourceBegin(); itResource != holder.GetChangedResourceEnd(); ++itResource)
     {
         Log::Get(Log::LOG_INFO) << "NodeApi: Register. " << holder.GetType() << " : " << itResource->first << endl;
         long nResult = RegisterResource(holder.GetType(), itResource->second->GetJson(version));
@@ -623,9 +623,9 @@ int NodeApi::UnregisterSimple()
 }
 
 
-void NodeApi::UnregisterResources(ResourceHolder& holder)
+template<class T> void NodeApi::UnregisterResources(ResourceHolder<T>& holder)
 {
-    for(map<string, shared_ptr<Resource> >::const_iterator itResource = holder.GetResourceBegin(); itResource != holder.GetResourceEnd(); ++itResource)
+    for(typename map<string, shared_ptr<T> >::const_iterator itResource = holder.GetResourceBegin(); itResource != holder.GetResourceEnd(); ++itResource)
     {
         Log::Get(Log::LOG_INFO) << "NodeApi: Unregister. " << holder.GetType() << " : " << itResource->first << endl;
         UnregisterResource(holder.GetType()+"s", itResource->first);
@@ -646,70 +646,70 @@ bool NodeApi::UnregisterResource(const string& sType, const std::string& sId)
 }
 
 
-bool NodeApi::FindQueryNode()
-{
-    if(m_sQueryNode.empty())
-    {
-        map<string, std::shared_ptr<dnsService> >::const_iterator itService = m_pRegistrationBrowser->FindService("_nmos-query._tcp");
-        if(itService != m_pRegistrationBrowser->GetServiceEnd())
-        {
-            Log::Get(Log::LOG_INFO) << "NodeApi: Query. Found nmos query service." << endl;
-            shared_ptr<dnsInstance>  pInstance(0);
-            string sApiVersion;
-            for(map<string, shared_ptr<dnsInstance> >::const_iterator itInstance = itService->second->mInstances.begin(); itInstance != itService->second->mInstances.end(); ++itInstance)
-            {   //get the registration node with smallest priority number
+//bool NodeApi::FindQueryNode()
+//{
+//    if(m_sQueryNode.empty())
+//    {
+//        map<string, std::shared_ptr<dnsService> >::const_iterator itService = m_pRegistrationBrowser->FindService("_nmos-query._tcp");
+//        if(itService != m_pRegistrationBrowser->GetServiceEnd())
+//        {
+//            Log::Get(Log::LOG_INFO) << "NodeApi: Query. Found nmos query service." << endl;
+//            shared_ptr<dnsInstance>  pInstance(0);
+//            string sApiVersion;
+//            for(map<string, shared_ptr<dnsInstance> >::const_iterator itInstance = itService->second->mInstances.begin(); itInstance != itService->second->mInstances.end(); ++itInstance)
+//            {   //get the registration node with smallest priority number
+//
+//                Log::Get(Log::LOG_INFO) << "NodeApi: Query. Found nmos query node: " << itInstance->second->sName << endl;
+//                //get top priority
+//                unsigned long nPriority(200);
+//                map<string, string>::const_iterator itPriority = itInstance->second->mTxt.find("pri");
+//                map<string, string>::const_iterator itVersion = itInstance->second->mTxt.find("api_ver");
+//                if(itPriority != itInstance->second->mTxt.end() && itVersion != itInstance->second->mTxt.end())
+//                {
+//                    if(stoul(itPriority->second) < nPriority && itVersion->second.find("v1.2") != string::npos)
+//                    {//for now only doing v1.2
+//                        // @todo maybe support other versions?
+//                        pInstance = itInstance->second;
+//                        nPriority = stoi(itPriority->second);
+//
+//                        Log::Get(Log::LOG_INFO) << "NodeApi: Query. Found nmos query node with v1.2 and low priority: " << itInstance->second->sName << " " << nPriority << endl;
+//
+//                    }
+//                }
+//            }
+//
+//            if(pInstance)
+//            {
+//                //build the registration url
+//                stringstream ssUrl;
+//                ssUrl <<  pInstance->sHostIP << ":" << pInstance->nPort << "/x-nmos/query/v1.2";
+//                m_sQueryNode = ssUrl.str();
+//                return true;
+//            }
+//            return false;
+//        }
+//    }
+//    return true;
+//}
 
-                Log::Get(Log::LOG_INFO) << "NodeApi: Query. Found nmos query node: " << itInstance->second->sName << endl;
-                //get top priority
-                unsigned long nPriority(200);
-                map<string, string>::const_iterator itPriority = itInstance->second->mTxt.find("pri");
-                map<string, string>::const_iterator itVersion = itInstance->second->mTxt.find("api_ver");
-                if(itPriority != itInstance->second->mTxt.end() && itVersion != itInstance->second->mTxt.end())
-                {
-                    if(stoul(itPriority->second) < nPriority && itVersion->second.find("v1.2") != string::npos)
-                    {//for now only doing v1.2
-                        // @todo maybe support other versions?
-                        pInstance = itInstance->second;
-                        nPriority = stoi(itPriority->second);
+//const ResourceHolder& NodeApi::GetQueryResults()
+//{
+//    Log::Get() << "GetQueryResults: " << m_query.GetResourceCount() << " " << (int)&m_query << std::endl;
+//    return m_query;
+//}
 
-                        Log::Get(Log::LOG_INFO) << "NodeApi: Query. Found nmos query node with v1.2 and low priority: " << itInstance->second->sName << " " << nPriority << endl;
-
-                    }
-                }
-            }
-
-            if(pInstance)
-            {
-                //build the registration url
-                stringstream ssUrl;
-                ssUrl <<  pInstance->sHostIP << ":" << pInstance->nPort << "/x-nmos/query/v1.2";
-                m_sQueryNode = ssUrl.str();
-                return true;
-            }
-            return false;
-        }
-    }
-    return true;
-}
-
-const ResourceHolder& NodeApi::GetQueryResults()
-{
-    Log::Get() << "GetQueryResults: " << m_query.GetResourceCount() << " " << (int)&m_query << std::endl;
-    return m_query;
-}
-
-bool NodeApi::Query(NodeApi::enumResource eResource, const std::string& sQuery)
-{
-    m_query.RemoveAllResources();
-    m_query.SetType(STR_RESOURCE[eResource]);
-
-    if(m_pRegisterCurl && FindQueryNode())
-    {
-        m_pRegisterCurl->Query(m_sQueryNode, eResource, sQuery, &m_query, CURL_QUERY);
-        return true;
-    }
-    return false;
-}
+//bool NodeApi::Query(NodeApi::enumResource eResource, const std::string& sQuery)
+//{
+//    m_query.RemoveAllResources();
+//    m_query.SetType(STR_RESOURCE[eResource]);
+//
+//    if(m_pRegisterCurl && FindQueryNode())
+//    {
+//        m_pRegisterCurl->Query(m_sQueryNode, eResource, sQuery, &m_query, CURL_QUERY);
+//        return true;
+//    }
+//    return false;
+//}
 
 
 bool NodeApi::IsRunning()
@@ -806,20 +806,20 @@ unsigned short NodeApi::GetConnectionPort() const
 
 shared_ptr<Receiver> NodeApi::GetReceiver(const std::string& sId)
 {
-    map<string, shared_ptr<Resource> >::iterator itResource = m_receivers.GetResource(sId);
+    map<string, shared_ptr<Receiver> >::iterator itResource = m_receivers.GetResource(sId);
     if(itResource != m_receivers.GetResourceEnd())
     {
-        return dynamic_pointer_cast<Receiver>(itResource->second);
+        return itResource->second;
     }
     return NULL;
 }
 
 shared_ptr<Sender> NodeApi::GetSender(const std::string& sId)
 {
-    map<string, shared_ptr<Resource> >::iterator itResource = m_senders.GetResource(sId);
+    map<string, shared_ptr<Sender> >::iterator itResource = m_senders.GetResource(sId);
     if(itResource != m_senders.GetResourceEnd())
     {
-        return dynamic_pointer_cast<Sender>(itResource->second);
+        return itResource->second;
     }
     return NULL;
 }
@@ -853,4 +853,17 @@ bool NodeApi::ActivateReceiver(const std::string& sId, const std::string& sInter
         return true;
     }
     return false;
+}
+
+
+void NodeApi::SetHeartbeatTime(unsigned long nMilliseconds)
+{
+    lock_guard<mutex> lg(m_mutex);
+    m_nHeartbeatTime = nMilliseconds;
+}
+
+unsigned long NodeApi::GetHeartbeatTime()
+{
+    lock_guard<mutex> lg(m_mutex);
+    return m_nHeartbeatTime;
 }

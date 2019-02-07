@@ -1,9 +1,9 @@
 #include "eventposter.h"
 
-void EventPoster::_CurlDone(unsigned long nResult, const std::string& sResponse, long nType)
+void EventPoster::_CurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
-    CurlDone(nResult, sResponse, nType);
+    CurlDone(nResult, sResponse, nType, sResourceId);
 }
 
 

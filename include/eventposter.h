@@ -15,7 +15,7 @@ class NMOS_EXPOSE EventPoster
         //EventPoster()=0;
         //virtual ~EventPoster()=0;
 
-        void _CurlDone(unsigned long nResult, const std::string& sResponse, long nType);
+        void _CurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId=std::string());
         void _InstanceResolved(std::shared_ptr<dnsInstance> pInstance);
         void _AllForNow(const std::string& sService);
         void _Finished();
@@ -33,9 +33,10 @@ class NMOS_EXPOSE EventPoster
         *   @param nResult the result of the request. 0 = means no connection, otherwise an HTTP header response code
         *   @param sResonse contains the response from the server
         *   @param nType the type of request made to the server
+        *   @param sResourceId is the id of the resource the request was made against if any
         *   @note this is a non-blocking event
         **/
-        virtual void CurlDone(unsigned long nResult, const std::string& sResponse, long nType)=0;
+        virtual void CurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId)=0;
 
         /** @brief Called by AvahiBrowser when a dns service instance has been resolved
         *   @param pInstance a pointer to the resolved instance.

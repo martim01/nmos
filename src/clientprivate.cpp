@@ -55,6 +55,10 @@ void ClientThread(ClientApiPrivate* pApi)
                     break;
                 case ClientApiPrivate::CLIENT_SIG_NODE_BROWSED:
                     pApi->NodeDetailsDone();
+                    break;
+                case ClientApiPrivate::CLIENT_SIG_CURL_DONE:
+                    pApi->HandleCurlDone();
+                    break;
                 default:
                     break;
             }
@@ -218,6 +222,17 @@ ClientApiPrivate::enumSignal ClientApiPrivate::GetSignal()
 }
 
 
+void ClientApiPrivate::SetCurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId)
+{
+    m_mutex.lock();
+    m_nCurlResult = nResult;
+    m_sCurlResponse = sResponse;
+    m_nCurlType = nType;
+    m_eSignal = CLIENT_SIG_CURL_DONE;
+    m_sCurlResourceId = sResourceId;
+    m_mutex.unlock();
+    m_cvBrowse.notify_one();
+}
 
 void ClientApiPrivate::SetInstanceResolved(shared_ptr<dnsInstance> pInstance)
 {
@@ -225,7 +240,6 @@ void ClientApiPrivate::SetInstanceResolved(shared_ptr<dnsInstance> pInstance)
     m_pInstance = pInstance;
     m_eSignal = CLIENT_SIG_INSTANCE_RESOLVED;
     m_mutex.unlock();
-
     m_cvBrowse.notify_one();
 }
 
@@ -297,6 +311,42 @@ void ClientApiPrivate::HandleInstanceRemoved()
         }
         m_pInstance = 0;
     }
+}
+
+
+void ClientApiPrivate::HandleCurlDone()
+{
+    lock_guard<mutex> lg(m_mutex);
+    if(m_pPoster)
+    {
+        switch(m_nCurlType)
+        {
+            case ClientPoster::CURLTYPE_TARGET:
+                m_pPoster->_RequestTargetResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+                break;
+            case ClientPoster::CURLTYPE_SENDER_STAGED:
+                // @todo
+                break;
+            case ClientPoster::CURLTYPE_SENDER_ACTIVE:
+                // @todo
+                break;
+            case ClientPoster::CURLTYPE_SENDER_TRANSPORTFILE:
+                // @todo
+                break;
+            case ClientPoster::CURLTYPE_RECEIVER_STAGED:
+                // @todo
+                break;
+            case ClientPoster::CURLTYPE_RECEIVER_ACTIVE:
+                // @todo
+                break;
+            case ClientPoster::CURLTYPE_SENDER_PATCH:
+                m_pPoster->_RequestPatchSenderResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+                break;
+            case ClientPoster::CURLTYPE_RECEIVER_PATCH:
+                m_pPoster->_RequestPatchReceiverResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+                break;
+         }
+}
 }
 
 
@@ -957,7 +1007,7 @@ bool ClientApiPrivate::Subscribe(const string& sSenderId, const string& sReceive
         //do a PUT to the correct place on the URL
         Json::StyledWriter sw;
         string sJson(sw.write(pSender->GetJson(version)));
-        m_pCurl->PutPatch(sUrl, sJson, ClientPoster::CURLTYPE_TARGET, true);
+        m_pCurl->PutPatch(sUrl, sJson, ClientPoster::CURLTYPE_TARGET, true, pReceiver->GetId());
         Log::Get(Log::LOG_DEBUG) << "TARGET: " << sUrl << endl;
         return true;
     }
@@ -980,7 +1030,7 @@ bool ClientApiPrivate::Unsubscribe(const string& sReceiverId)
     {
         Log::Get(Log::LOG_DEBUG) << "TARGET: " << sUrl << endl;
         //do a PUT to the correct place on the URL
-        m_pCurl->PutPatch(sUrl, "{}", ClientPoster::CURLTYPE_TARGET, true);
+        m_pCurl->PutPatch(sUrl, "{}", ClientPoster::CURLTYPE_TARGET, true, pReceiver->GetId());
 
         return true;
     }
@@ -1157,7 +1207,7 @@ bool ClientApiPrivate::PatchSenderStaged(const string& sSenderId, const connecti
     Json::StyledWriter sw;
     string sJson = sw.write(aConnection.GetJson(version));
     Log::Get(Log::LOG_DEBUG) << sJson << endl;
-    m_pCurl->PutPatch(sConnectionUrl, sJson, ClientPoster::CURLTYPE_SENDER_PATCH, false);
+    m_pCurl->PutPatch(sConnectionUrl, sJson, ClientPoster::CURLTYPE_SENDER_PATCH, false, sSenderId);
 
     return true;
 }
@@ -1180,7 +1230,7 @@ bool ClientApiPrivate::PatchReceiverStaged(const string& sReceiverId, const conn
 
     Json::StyledWriter sw;
     string sJson = sw.write(aConnection.GetJson(version));
-    m_pCurl->PutPatch(sConnectionUrl, sJson, ClientPoster::CURLTYPE_RECEIVER_PATCH, false);
+    m_pCurl->PutPatch(sConnectionUrl, sJson, ClientPoster::CURLTYPE_RECEIVER_PATCH, false, sReceiverId);
 
     return true;
 }

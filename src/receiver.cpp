@@ -27,8 +27,7 @@ Receiver::Receiver(std::string sLabel, std::string sDescription, enumTransport e
     m_sDeviceId(sDeviceId),
     m_sSenderId(""),
     m_bSenderActive(false),
-    m_eType(eFormat),
-    m_pSender(0)
+    m_eType(eFormat)
 {
     if(flagsTransport & TransportParamsRTP::FEC)
     {
@@ -346,14 +345,14 @@ bool Receiver::Commit(const ApiVersion& version)
 
         m_json["subscription"] = Json::Value(Json::objectValue);
 
-        if(m_pSender == NULL)
+        if(m_sSenderId.empty())
         {
              m_json["subscription"]["sender_id"] = Json::nullValue;
              m_json["subscription"]["active"] = false;
         }
         else
         {
-            m_json["subscription"]["sender_id"] = m_pSender->GetId();
+            m_json["subscription"]["sender_id"] = m_sSenderId;
             m_json["subscription"]["active"] = true;    //@todo we need to get this subscription information from somewhere sensible
         }
 
@@ -378,23 +377,23 @@ Json::Value Receiver::GetConnectionActiveJson(const ApiVersion& version) const
 
 
 
-std::shared_ptr<Sender> Receiver::GetSender() const
+const std::string& Receiver::GetSender() const
 {
-    return m_pSender;
+    return m_sSenderId;
 }
 
-void Receiver::SetSender(std::shared_ptr<Sender> pSender)
+void Receiver::SetSender(const std::string& sSenderId)
 {
 
-    if(pSender->IsOk() && pSender->GetId().empty() == false)
+    if(sSenderId.empty() == false)
     {
-        Log::Get(Log::LOG_INFO) << "Receiver subscribe to sender " << pSender->GetId() << std::endl;
-        m_pSender = pSender;
+        Log::Get(Log::LOG_INFO) << "Receiver subscribe to sender " << sSenderId << std::endl;
+        m_sSenderId = sSenderId;
     }
     else
     {   //this means unsubscribe
         Log::Get(Log::LOG_INFO) << "Receiver unssubscribe " << std::endl;
-        m_pSender = 0;
+        m_sSenderId.clear();
     }
     UpdateVersionTime();
 

@@ -9,7 +9,7 @@ class ClientPoster : public EventPoster
         static const std::string STR_TYPE[5];
     protected:
 
-        virtual void CurlDone(unsigned long nResult, const std::string& sResponse, long nType);
+        virtual void CurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId);
         virtual void InstanceResolved(std::shared_ptr<dnsInstance> pInstance);
         virtual void AllForNow(const std::string& sService);
         virtual void Finished();

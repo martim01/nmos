@@ -12,6 +12,7 @@ class NMOS_EXPOSE Flow : public Resource
         virtual bool UpdateFromJson(const Json::Value& jsData);
         void AddParentId(std::string sId);
         void RemoveParentId(std::string sId);
+        const std::string& GetFormat() const;
 
         virtual bool Commit(const ApiVersion& version);
 

@@ -14,6 +14,7 @@ void NodeThread::Main()
     //start the DNS-SD publisher server
     NodeApi::Get().StartmDNSServer();
 
+    unsigned long nBackOff(10);
     do
     {
         //browse for an registry server this will now wait until all services have been browsed for,
@@ -23,6 +24,7 @@ void NodeThread::Main()
         //try to find the registartion node
         if(NodeApi::Get().FindRegistrationNode())
         {
+            nBackOff = 10;
             //remove the ver_ txt from our publisher
             NodeApi::Get().ModifyTxtRecords();
 
@@ -34,11 +36,12 @@ void NodeThread::Main()
         }
         else
         {
-            Log::Get() << "Try again in 30s..." << std::endl;   // @todo backoff each time by a certain amount
-            for(int i = 30; i > 0 && NodeApi::Get().IsRunning(); i--)
+            Log::Get() << "Try again in " << nBackOff << "s..." << std::endl;
+            for(int i = nBackOff; i > 0 && NodeApi::Get().IsRunning(); i--)
             {   //loop so we wake up to check if the thread should close...
                 this_thread::sleep_for(chrono::seconds(1));
             }
+            nBackOff = min(nBackOff+5, (unsigned long)30);
         }
     }while(NodeApi::Get().IsRunning());
 
@@ -50,7 +53,7 @@ bool NodeThread::RegisteredOperation(const ApiVersion& version)
     {
         while(NodeApi::Get().IsRunning())
         {
-            if(NodeApi::Get().Wait(5000))    //@todo we should be able to set heartbeat time
+            if(NodeApi::Get().Wait(NodeApi::Get().GetHeartbeatTime()))    //@todo we should be able to set heartbeat time
             {
                 switch(NodeApi::Get().GetSignal())
                 {

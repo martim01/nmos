@@ -4,6 +4,7 @@
 #include "sdp.h"
 #include "nodeapi.h"
 #include "flow.h"
+#include "device.h"
 
 static void ActivationThreadSender(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sSenderId, std::shared_ptr<EventPoster> pPoster)
 {
@@ -462,7 +463,7 @@ void Sender::CreateSDP()
     ssSDP << m_Active.tpSender.sSourceIp << "\r\n";    // @todo should check here if
     ssSDP << "t=0 0 \r\n";
 
-    std::map<std::string, std::shared_ptr<Resource> >::const_iterator itDevice = NodeApi::Get().GetDevices().FindNmosResource(m_sDeviceId);
+    std::map<std::string, std::shared_ptr<Device> >::const_iterator itDevice = NodeApi::Get().GetDevices().FindNmosResource(m_sDeviceId);
     if(itDevice != NodeApi::Get().GetDevices().GetResourceEnd())
     {
         ssSDP << "s=" << itDevice->second->GetLabel() << ":";
@@ -501,7 +502,7 @@ void Sender::CreateSDP()
 
 
     //now put in the flow media information
-    std::map<std::string, std::shared_ptr<Resource> >::const_iterator itFlow = NodeApi::Get().GetFlows().FindNmosResource(m_sFlowId);
+    std::map<std::string, std::shared_ptr<Flow> >::const_iterator itFlow = NodeApi::Get().GetFlows().FindNmosResource(m_sFlowId);
     if(itFlow != NodeApi::Get().GetFlows().GetResourceEnd())
     {
         std::shared_ptr<Flow> pFlow = std::dynamic_pointer_cast<Flow>(itFlow->second);

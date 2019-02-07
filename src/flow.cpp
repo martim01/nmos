@@ -91,3 +91,9 @@ void Flow::SetMediaClkOffset(unsigned long nOffset)
 {
     m_nMediaClkOffset = nOffset;
 }
+
+
+const std::string& Flow::GetFormat() const
+{
+    return m_sFormat;
+}

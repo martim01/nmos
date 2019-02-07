@@ -68,13 +68,13 @@ class CurlRegister
         void Delete(const std::string& sBaseUrl, const std::string& sType, const std::string& sId, long nUserType);
         long Delete(const std::string& sBaseUrl, const std::string& sType, const std::string& sId, std::string& sResponse);
 
-        void Query(const std::string& sBaseUrl, NodeApi::enumResource eResource, const std::string& sQuery, ResourceHolder* pResults, long nUserType);
-        long Query(const std::string& sBaseUrl, NodeApi::enumResource eResource, const std::string& sQuery, ResourceHolder* pResults);
+        //void Query(const std::string& sBaseUrl, NodeApi::enumResource eResource, const std::string& sQuery, ResourceHolder* pResults, long nUserType);
+        //long Query(const std::string& sBaseUrl, NodeApi::enumResource eResource, const std::string& sQuery, ResourceHolder* pResults);
 
         //threaded version
-        void PutPatch(const std::string& sBaseUrl, const std::string& sJson, long nUserType, bool bPut);
+        void PutPatch(const std::string& sBaseUrl, const std::string& sJson, long nUserType, bool bPut, const std::string& sResourceId);
         //simple versions
-        long PutPatch(const std::string& sBaseUrl, const std::string& sJson, std::string& sResponse, bool bPut);
+        long PutPatch(const std::string& sBaseUrl, const std::string& sJson, std::string& sResponse, bool bPut, const std::string& sResourceId);
 
 
         void Get(const std::string& sUrl, long nUserType);
@@ -84,7 +84,7 @@ class CurlRegister
     private:
 
         //void PostStatic(const std::string& sUrl, const std::string& sJson, EventPoster* pPoster);
-        void ParseResults(NodeApi::enumResource eResource, const std::string& sResponse, ResourceHolder* pResults);
+//        void ParseResults(NodeApi::enumResource eResource, const std::string& sResponse, ResourceHolder* pResults);
         std::shared_ptr<EventPoster> m_pPoster;
 
         static const std::string STR_RESOURCE[7];

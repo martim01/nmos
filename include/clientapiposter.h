@@ -34,6 +34,11 @@ class NMOS_EXPOSE ClientApiPoster
         void _SendersRemoved(const std::set<std::string>& setRemoved);
         void _ReceiversRemoved(const std::set<std::string>& setRemoved);
 
+        void _RequestTargetResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
+        void _RequestPatchSenderResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
+        void _RequestPatchReceiverResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
+
+
     protected:
         virtual void NodeChanged(std::shared_ptr<Self> pNode, enumChange eChange)=0;
         virtual void DeviceChanged(std::shared_ptr<Device> pDevice, enumChange eChange)=0;
@@ -48,6 +53,10 @@ class NMOS_EXPOSE ClientApiPoster
         virtual void FlowsRemoved(const std::set<std::string>& setRemoved)=0;
         virtual void SendersRemoved(const std::set<std::string>& setRemoved)=0;
         virtual void ReceiversRemoved(const std::set<std::string>& setRemoved)=0;
+
+        virtual void RequestTargetResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)=0;
+        virtual void RequestPatchSenderResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)=0;
+        virtual void RequestPatchReceiverResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)=0;
 
     private:
 

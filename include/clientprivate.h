@@ -23,7 +23,7 @@ class ClientApiPrivate
 {
     public:
         enum enumMode {MODE_P2P, MODE_REGISTRY};
-        enum enumSignal {CLIENT_SIG_NONE=0, CLIENT_SIG_INSTANCE_RESOLVED, CLIENT_SIG_INSTANCE_REMOVED, CLIENT_SIG_NODE_BROWSED};
+        enum enumSignal {CLIENT_SIG_NONE=0, CLIENT_SIG_INSTANCE_RESOLVED, CLIENT_SIG_INSTANCE_REMOVED, CLIENT_SIG_NODE_BROWSED, CLIENT_SIG_CURL_DONE};
 
         ClientApiPrivate();
         ~ClientApiPrivate();
@@ -69,9 +69,11 @@ class ClientApiPrivate
         void StopRun();
         void SetInstanceResolved(std::shared_ptr<dnsInstance> pInstance);
         void SetInstanceRemoved(std::shared_ptr<dnsInstance> pInstance);
+        void SetCurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId);
         enumSignal GetSignal();
         void HandleInstanceResolved();
         void HandleInstanceRemoved();
+        void HandleCurlDone();
         void NodeDetailsDone();
         void GetNodeDetails();
         int GetInterestFlags();
@@ -155,5 +157,10 @@ class ClientApiPrivate
         unsigned short m_nCurlThreadCount;
 
         std::shared_ptr<ClientApiPoster> m_pPoster;
+
+        unsigned long m_nCurlResult;
+        std::string m_sCurlResponse;
+        long m_nCurlType;
+        std::string m_sCurlResourceId;
 };
 

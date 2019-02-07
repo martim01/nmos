@@ -388,7 +388,7 @@ Json::Value MicroServer::GetJsonSources(const ApiVersion& version)
     }
     else
     {
-        map<string, std::shared_ptr<Resource> >::const_iterator itSource = NodeApi::Get().GetSources().FindNmosResource(m_vPath[RESOURCE]);
+        map<string, std::shared_ptr<Source> >::const_iterator itSource = NodeApi::Get().GetSources().FindNmosResource(m_vPath[RESOURCE]);
         if(itSource != NodeApi::Get().GetSources().GetResourceEnd())
         {
             return itSource->second->GetJson(version);
@@ -405,7 +405,7 @@ Json::Value MicroServer::GetJsonDevices(const ApiVersion& version)
     }
     else
     {
-        map<string, shared_ptr<Resource> >::const_iterator itDevice = NodeApi::Get().GetDevices().FindNmosResource(m_vPath[RESOURCE]);
+        map<string, shared_ptr<Device> >::const_iterator itDevice = NodeApi::Get().GetDevices().FindNmosResource(m_vPath[RESOURCE]);
         if(itDevice != NodeApi::Get().GetDevices().GetResourceEnd())
         {
             return itDevice->second->GetJson(version);
@@ -422,7 +422,7 @@ Json::Value MicroServer::GetJsonFlows(const ApiVersion& version)
     }
     else
     {
-        map<string, shared_ptr<Resource> >::const_iterator itFlow = NodeApi::Get().GetFlows().FindNmosResource(m_vPath[RESOURCE]);
+        map<string, shared_ptr<Flow> >::const_iterator itFlow = NodeApi::Get().GetFlows().FindNmosResource(m_vPath[RESOURCE]);
         if(itFlow != NodeApi::Get().GetFlows().GetResourceEnd())
         {
             return itFlow->second->GetJson(version);
@@ -439,7 +439,7 @@ Json::Value MicroServer::GetJsonReceivers(const ApiVersion& version)
     }
     else
     {
-        map<string, shared_ptr<Resource> >::const_iterator itReceiver = NodeApi::Get().GetReceivers().FindNmosResource(m_vPath[RESOURCE]);
+        map<string, shared_ptr<Receiver> >::const_iterator itReceiver = NodeApi::Get().GetReceivers().FindNmosResource(m_vPath[RESOURCE]);
         if(itReceiver != NodeApi::Get().GetReceivers().GetResourceEnd())
         {
             return itReceiver->second->GetJson(version);
@@ -456,7 +456,7 @@ Json::Value MicroServer::GetJsonSenders(const ApiVersion& version)
     }
     else
     {
-        map<string, shared_ptr<Resource> >::const_iterator itSender = NodeApi::Get().GetSenders().FindNmosResource(m_vPath[RESOURCE]);
+        map<string, shared_ptr<Sender> >::const_iterator itSender = NodeApi::Get().GetSenders().FindNmosResource(m_vPath[RESOURCE]);
         if(itSender != NodeApi::Get().GetSenders().GetResourceEnd())
         {
             return itSender->second->GetJson(version);
@@ -551,7 +551,7 @@ int MicroServer::GetJsonNmosConnectionSingleSenders(std::string& sReturn, std::s
     }
     else
     {
-        map<string, shared_ptr<Resource> >::const_iterator itResource = NodeApi::Get().GetSenders().FindNmosResource(m_vPath[SZC_DIRECTION]);
+        map<string, shared_ptr<Sender> >::const_iterator itResource = NodeApi::Get().GetSenders().FindNmosResource(m_vPath[SZC_DIRECTION]);
         if(itResource != NodeApi::Get().GetSenders().GetResourceEnd())
         {
             if(m_vPath.size() == SZC_ID)
@@ -619,7 +619,7 @@ int MicroServer::GetJsonNmosConnectionSingleReceivers(std::string& sReturn, cons
     }
     else
     {
-        map<string, shared_ptr<Resource> >::const_iterator itResource = NodeApi::Get().GetReceivers().FindNmosResource(m_vPath[SZC_DIRECTION]);
+        map<string, shared_ptr<Receiver> >::const_iterator itResource = NodeApi::Get().GetReceivers().FindNmosResource(m_vPath[SZC_DIRECTION]);
         if(itResource != NodeApi::Get().GetReceivers().GetResourceEnd())
         {
             if(m_vPath.size() == SZC_ID)
@@ -763,7 +763,7 @@ int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
                         if(IsOk())
                         {   //this means the main thread has connected the receiver to the sender
                             nCode = 202;
-                            pReceiver->SetSender(pRemoteSender);
+                            pReceiver->SetSender(pRemoteSender->GetId());
                             NodeApi::Get().Commit();   //updates the registration node or txt records
 
                             sResponse = stw.write(pRemoteSender->GetJson(version));

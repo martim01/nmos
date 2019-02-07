@@ -60,3 +60,19 @@ void ClientApiPoster::_ReceiversRemoved(const std::set<std::string>& setRemoved)
 {
     ReceiversRemoved(setRemoved);
 }
+
+
+void ClientApiPoster::_RequestTargetResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+{
+    RequestTargetResult(nResult, sResponse, sResourceId);
+}
+
+void ClientApiPoster::_RequestPatchSenderResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+{
+    RequestPatchSenderResult(nResult, sResponse, sResourceId);
+}
+
+void ClientApiPoster::_RequestPatchReceiverResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+{
+    RequestPatchReceiverResult(nResult, sResponse, sResourceId);
+}

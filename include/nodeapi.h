@@ -26,6 +26,7 @@ class NodeThread;
 class MicroServer;
 
 
+
 class NMOS_EXPOSE NodeApi
 {
     public:
@@ -113,27 +114,27 @@ class NMOS_EXPOSE NodeApi
         /** @brief Returns a const reference to the ResourceHolder that contains all the sources
         *   @return </i>const ResourceHolder&</i>
         **/
-        const ResourceHolder& GetSources();
+        const ResourceHolder<Source>& GetSources();
 
         /** @brief Returns a const reference to the ResourceHolder that contains all the devices
         *   @return </i>const ResourceHolder&</i>
         **/
-        const ResourceHolder& GetDevices();
+        const ResourceHolder<Device>& GetDevices();
 
         /** @brief Returns a const reference to the ResourceHolder that contains all the flows
         *   @return </i>const ResourceHolder&</i>
         **/
-        const ResourceHolder& GetFlows();
+        const ResourceHolder<Flow>& GetFlows();
 
         /** @brief Returns a const reference to the ResourceHolder that contains all the receivers
         *   @return </i>const ResourceHolder&</i>
         **/
-        const ResourceHolder& GetReceivers();
+        const ResourceHolder<Receiver>& GetReceivers();
 
         /** @brief Returns a const reference to the ResourceHolder that contains all the senders
         *   @return </i>const ResourceHolder&</i>
         **/
-        const ResourceHolder& GetSenders();
+        const ResourceHolder<Sender>& GetSenders();
 
 
         /** @brief Returns a pointer to the receiver with the given id if one exists or null.
@@ -174,7 +175,7 @@ class NMOS_EXPOSE NodeApi
         /** @brief Returns a const reference to the ResourceHolder that contains all the resources returned from a query
         *   @return </i>const ResourceHolder&</i>
         **/
-        const ResourceHolder& GetQueryResults();
+        //const ResourceHolder& GetQueryResults();
 
 
         /** @brief Attempts to query a query server. The query is performed in a separate thread and EventPoster::CurlDone is called when the query returns
@@ -182,7 +183,7 @@ class NMOS_EXPOSE NodeApi
         *   @param sQuery the query to perform
         *   @return <i>bool</i> Returns true if a query server has been found
         **/
-        bool Query(enumResource eResource, const std::string& sQuery);
+        //bool Query(enumResource eResource, const std::string& sQuery);
 
 
         /** @brief returns the port number used for the connection api
@@ -210,6 +211,16 @@ class NMOS_EXPOSE NodeApi
         bool ActivateReceiver(const std::string& sId, const std::string& sInterfaceIp);
 
 
+        /** @brief Sets the regularity that heartbeat messages are sent to a registry
+        *   @param nMilliseconds the time between heartbeats in milliseconds
+        **/
+        void SetHeartbeatTime(unsigned long nMilliseconds);
+
+        /** @brief Gets the regularity that heartbeat messages are sent to a registry
+        *   @return <i>unsigned long</i> the time between heartbeats in milliseconds
+        **/
+        unsigned long GetHeartbeatTime();
+
     protected:
         friend class NodeThread;
         friend class ServiceBrowser;
@@ -221,6 +232,7 @@ class NMOS_EXPOSE NodeApi
         bool BrowseForRegistrationNode();
         void SignalBrowse();
 
+        long RegisterResource(const std::string& sType, const Json::Value& json);
 
         void SignalServer(unsigned short nPort, bool bOk);
 
@@ -259,32 +271,32 @@ class NMOS_EXPOSE NodeApi
         void StopRegistrationBrowser();
 
 
+        template<class T> long RegisterResources(ResourceHolder<T>& holder, const ApiVersion& version);
+        template<class T> long ReregisterResources(ResourceHolder<T>& holder, const ApiVersion& version);
+        template<class T> void UnregisterResources(ResourceHolder<T>& holder);
 
 
 
 
 
-        long RegisterResources(ResourceHolder& holder, const ApiVersion& version);
-        long ReregisterResources(ResourceHolder& holder, const ApiVersion& version);
-        long RegisterResource(const std::string& sType, const Json::Value& json);
 
         bool StartUnregistration();
-        void UnregisterResources(ResourceHolder& holder);
+
         bool UnregisterResource(const std::string& sType, const std::string& sId);
 
-        bool FindQueryNode();
+        //bool FindQueryNode();
 
         bool CheckNodeApiPath();
 
 
         Self m_self;
-        ResourceHolder m_devices;
-        ResourceHolder m_senders;
-        ResourceHolder m_receivers;
-        ResourceHolder m_sources;
-        ResourceHolder m_flows;
+        ResourceHolder<Device> m_devices;
+        ResourceHolder<Sender> m_senders;
+        ResourceHolder<Receiver> m_receivers;
+        ResourceHolder<Source> m_sources;
+        ResourceHolder<Flow> m_flows;
 
-        ResourceHolder m_query;
+        //ResourceHolder m_query;
 
 
 
@@ -292,7 +304,7 @@ class NMOS_EXPOSE NodeApi
 
 
         std::string m_sRegistrationNode;
-        std::string m_sQueryNode;
+        //std::string m_sQueryNode;
 
         ServicePublisher* m_pNodeApiPublisher;
         ServiceBrowser* m_pRegistrationBrowser;
@@ -312,6 +324,7 @@ class NMOS_EXPOSE NodeApi
 
         std::map<unsigned short, MicroServer*> m_mServers;
 
+        unsigned long m_nHeartbeatTime;
 
         enumSignal m_eSignal;
         static const std::string STR_RESOURCE[7];
