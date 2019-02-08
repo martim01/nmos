@@ -227,7 +227,7 @@ void MicroServer::Wait()
     }
 }
 
-void MicroServer::Signal(bool bOk)
+void MicroServer::Signal(bool bOk, const std::string& sData)
 {
     lock_guard<mutex> lock(m_mutex);
     Log::Get(Log::LOG_DEBUG) << "Microserver: " << m_nPort << " Signal " << this_thread::get_id() << endl;
@@ -239,6 +239,7 @@ void MicroServer::Signal(bool bOk)
     {
         m_eOk = FAIL;
     }
+    m_sSignalData = sData;
     m_cvSync.notify_one();
 }
 
@@ -763,7 +764,7 @@ int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
                         if(IsOk())
                         {   //this means the main thread has connected the receiver to the sender
                             nCode = 202;
-                            pReceiver->SetSender(pRemoteSender->GetId());
+                            pReceiver->SetSender(pRemoteSender->GetId(), sSdp, m_sSignalData);
                             NodeApi::Get().Commit();   //updates the registration node or txt records
 
                             sResponse = stw.write(pRemoteSender->GetJson(version));

@@ -151,10 +151,11 @@ class NMOS_EXPOSE NodeApi
 
 
         /** @brief To be called by the main thread when an IS-04 connection is made. The server tread will have called Target
+        *   @param sInterfaceIp the ip address of the interface that is being used by the receiver to receive the flow
         *   @param nPort the port of the MicroServer that is being used for IS-04
         *   @param bOk true if the receiver has succesfully connected to the sender. False otherwise
         **/
-        void TargetTaken(unsigned short nPort, bool bOk);
+        void TargetTaken(const std::string& sInterfaceIp, unsigned short nPort, bool bOk);
 
         /** @brief To be called by the main thread when an IS-05 Sender Patch is being maded
         *   @param nPort the port of the MicroServer that is being used for IS-04
@@ -234,7 +235,7 @@ class NMOS_EXPOSE NodeApi
 
         long RegisterResource(const std::string& sType, const Json::Value& json);
 
-        void SignalServer(unsigned short nPort, bool bOk);
+        void SignalServer(unsigned short nPort, bool bOk, const std::string& sExtra);
 
         enum enumSignal{SIG_NONE=0, SIG_COMMIT=1};
 

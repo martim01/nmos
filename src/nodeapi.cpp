@@ -412,27 +412,27 @@ void NodeApi::Signal(enumSignal eSignal)
     m_cvCommit.notify_one();
 }
 
-void NodeApi::TargetTaken(unsigned short nPort, bool bOk)
+void NodeApi::TargetTaken(const std::string& sInterfaceIp, unsigned short nPort, bool bOk)
 {
-    SignalServer(nPort, bOk);
+    SignalServer(nPort, bOk, sInterfaceIp);
 }
 
 void NodeApi::SenderPatchAllowed(unsigned short nPort, bool bOk)
 {
-    SignalServer(nPort, bOk);
+    SignalServer(nPort, bOk, "");
 }
 
 void NodeApi::ReceiverPatchAllowed(unsigned short nPort, bool bOk)
 {
-    SignalServer(nPort, bOk);
+    SignalServer(nPort, bOk, "");
 }
 
-void NodeApi::SignalServer(unsigned short nPort, bool bOk)
+void NodeApi::SignalServer(unsigned short nPort, bool bOk, const std::string& sExtra)
 {
     map<unsigned short, MicroServer*>::iterator itServer = m_mServers.find(nPort);
     if(itServer != m_mServers.end())
     {
-        itServer->second->Signal(bOk);
+        itServer->second->Signal(bOk, sExtra);
     }
     else
     {

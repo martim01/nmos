@@ -134,6 +134,10 @@ class ClientApiPrivate
         bool RequestSender(const std::string& sSenderId, ClientPoster::enumCurlType eType);
         bool RequestReceiver(const std::string& sReceiverId, ClientPoster::enumCurlType eType);
 
+        void HandleCurlDoneTarget();
+        void HandleCurlDonePatchSender();
+        void HandleCurlDonePatchReceiver();
+
         enumMode m_eMode;
 
         ClientHolder<Self> m_nodes;

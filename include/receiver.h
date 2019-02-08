@@ -42,7 +42,7 @@ class NMOS_EXPOSE Receiver : public Resource
         Json::Value GetConnectionConstraintsJson(const ApiVersion& version) const;
 
         const std::string& GetSender() const;
-        void SetSender(const std::string& sSenderId);  //this is the IS-04 way of connecting
+        void SetSender(const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp);  //this is the IS-04 way of connecting
 
         bool CheckConstraints(const connectionReceiver& conRequest);
         bool IsLocked() const;

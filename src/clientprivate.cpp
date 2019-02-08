@@ -322,7 +322,7 @@ void ClientApiPrivate::HandleCurlDone()
         switch(m_nCurlType)
         {
             case ClientPoster::CURLTYPE_TARGET:
-                m_pPoster->_RequestTargetResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+                HandleCurlDoneTarget();
                 break;
             case ClientPoster::CURLTYPE_SENDER_STAGED:
                 // @todo
@@ -340,15 +340,50 @@ void ClientApiPrivate::HandleCurlDone()
                 // @todo
                 break;
             case ClientPoster::CURLTYPE_SENDER_PATCH:
-                m_pPoster->_RequestPatchSenderResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+                HandleCurlDonePatchSender();
                 break;
             case ClientPoster::CURLTYPE_RECEIVER_PATCH:
-                m_pPoster->_RequestPatchReceiverResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+                HandleCurlDonePatchReceiver();
+
                 break;
          }
 }
 }
 
+void ClientApiPrivate::HandleCurlDoneTarget()
+{
+    Json::Value jsData;
+    Json::Reader jsReader;
+    if(jsReader.parse(m_sCurlResponse, jsData))
+    {
+        if(202 == m_nCurlResult && jsData["id"].isString())
+        {
+            Log::Get(Log::LOG_DEBUG) << m_nCurlResult << ": " << jsData["id"].asString() << endl;
+            m_pPoster->_RequestTargetResult(202, jsData["id"].asString(), m_sCurlResourceId);
+            return;
+        }
+
+        if(jsData["error"].isString())
+        {
+            Log::Get(Log::LOG_DEBUG) << m_nCurlResult << ": " << jsData["error"].asString() << endl;
+            m_pPoster->_RequestTargetResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
+            return;
+        }
+    }
+    Log::Get(Log::LOG_DEBUG) << m_nCurlResult << ": " << m_sCurlResponse << endl;
+    m_pPoster->_RequestTargetResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+}
+
+void ClientApiPrivate::HandleCurlDonePatchSender()
+{
+    m_pPoster->_RequestPatchSenderResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+
+}
+
+void ClientApiPrivate::HandleCurlDonePatchReceiver()
+{
+    m_pPoster->_RequestPatchReceiverResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+}
 
 void ClientApiPrivate::ConnectToQueryServer()
 {

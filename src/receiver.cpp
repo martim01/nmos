@@ -382,22 +382,37 @@ const std::string& Receiver::GetSender() const
     return m_sSenderId;
 }
 
-void Receiver::SetSender(const std::string& sSenderId)
+void Receiver::SetSender(const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp)
 {
-
     if(sSenderId.empty() == false)
     {
         Log::Get(Log::LOG_INFO) << "Receiver subscribe to sender " << sSenderId << std::endl;
         m_sSenderId = sSenderId;
+
+        // need to update the IS-05 stage and active connection settings to match
+        m_Staged.sSenderId = sSenderId;
+        m_Staged.bMasterEnable = true;
+        m_Staged.sTransportFileData = sSdp;
+        m_Staged.sTransportFileType = "application/sdp";
+        m_Staged.sActivationTime = GetCurrentTime();
+        Activate(sInterfaceIp);
     }
     else
     {   //this means unsubscribe
         Log::Get(Log::LOG_INFO) << "Receiver unssubscribe " << std::endl;
         m_sSenderId.clear();
+
+        // need to update the IS-05 stage and active connection settings to match
+        m_Staged.sSenderId.clear();
+        m_Staged.sTransportFileData.clear();
+        m_Staged.sTransportFileType.clear();
+        m_Staged.sActivationTime = GetCurrentTime();
+        Activate(sInterfaceIp);
     }
     UpdateVersionTime();
 
-    // @todo need to update the IS-05 stage and active connection settings to match
+
+
 }
 
 

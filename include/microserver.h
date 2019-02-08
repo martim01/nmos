@@ -83,7 +83,7 @@ class MicroServer
 
         void Wait();
         void PrimeWait();
-        void Signal(bool bOk);
+        void Signal(bool bOk, const std::string& sData);
 
 
     private:
@@ -125,6 +125,7 @@ class MicroServer
 
         enumSignal m_eOk;
 
+        std::string m_sSignalData;
 
         enum {BASE=0, NMOS=1, API_TYPE=2,VERSION=3,ENDPOINT=4, RESOURCE=5, TARGET=6};
         enum {SZ_BASE=1, SZ_NMOS=2, SZ_API_TYPE=3,SZ_VERSION=4,SZ_ENDPOINT=5, SZ_RESOURCE=6, SZ_TARGET=7};
