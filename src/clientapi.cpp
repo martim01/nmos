@@ -178,3 +178,9 @@ void ClientApi::SetPoster(std::shared_ptr<ClientApiPoster> pPoster)
 {
     m_pApi->SetPoster(pPoster);
 }
+
+
+bool ClientApi::Connect(const std::string& sSenderId, const std::string& sReceiverId)
+{
+    m_pApi->Connect(sSenderId, sReceiverId);
+}

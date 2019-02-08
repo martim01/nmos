@@ -76,3 +76,8 @@ void ClientApiPoster::_RequestPatchReceiverResult(unsigned long nResult, const s
 {
     RequestPatchReceiverResult(nResult, sResponse, sResourceId);
 }
+
+void ClientApiPoster::_RequestConnectResult(const std::string& sSenderId, const std::string& sReceiverId, bool bSuccess, const std::string& sResponse)
+{
+    RequestConnectResult(sSenderId, sReceiverId, bSuccess, sResponse);
+}

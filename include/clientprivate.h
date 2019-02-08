@@ -92,6 +92,7 @@ class ClientApiPrivate
         bool PatchSenderStaged(const std::string& sSenderId, const connectionSender& aConnection);
         bool PatchReceiverStaged(const std::string& sReceiverId, const connectionReceiver& aConnection);
 
+        bool Connect(const std::string& sSenderId, const std::string& sReceiverId);
 
         std::map<std::string, std::shared_ptr<Self> >::const_iterator GetNodeBegin();
         std::map<std::string, std::shared_ptr<Self> >::const_iterator GetNodeEnd();
@@ -118,6 +119,7 @@ class ClientApiPrivate
         std::map<std::string, std::shared_ptr<Receiver> >::const_iterator FindReceiver(const std::string& sUid);
 
 
+        void HandleConnect(const std::string& sSenderId, const std::string& sReceiverId, bool bSuccess, const std::string& sResponse);
 
     private:
         friend class ClientPoster;

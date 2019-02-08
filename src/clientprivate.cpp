@@ -150,6 +150,51 @@ static void NodeBrowser(ClientApiPrivate* pApi, shared_ptr<dnsInstance> pInstanc
 }
 
 
+void ConnectThread(ClientApiPrivate* pApi, const string& sSenderId, const string& sReceiverId, const string& sSenderStage, const string& sSenderTransport, const string& sReceiverStage)
+{
+    Json::StyledWriter stw;
+    string sResponse;
+    connectionSender aCon(connection::FP_ACTIVATION | connection::FP_ENABLE | connection::FP_TRANSPORT_PARAMS);
+    aCon.eActivate = connection::ACT_NOW;
+    aCon.bMasterEnable = true;
+    aCon.tpSender.bRtpEnabled = true;
+
+    int nResult = CurlRegister::PutPatch(sSenderStage, stw.write(aCon.GetJson(ApiVersion(1,0))), sResponse, false, "");
+    if(nResult != 200)
+    {
+        pApi->HandleConnect(sSenderId, sReceiverId, false, sResponse);
+    }
+    else
+    {
+        connectionReceiver aConR(connection::FP_TRANSPORT_FILE | connection::FP_ACTIVATION | connection::FP_ENABLE);
+        aConR.eActivate = connection::ACT_NOW;
+        aConR.bMasterEnable = true;
+        aConR.sTransportFileType = "application/sdp";
+
+        nResult = CurlRegister::Get(sSenderTransport, aConR.sTransportFileData, false);
+        if(nResult != 200)
+        {
+            pApi->HandleConnect(sSenderId, sReceiverId, false, aConR.sTransportFileData);
+        }
+        else
+        {
+            nResult = CurlRegister::PutPatch(sReceiverStage, stw.write(aConR.GetJson(ApiVersion(1,0))), sResponse, false, "");
+            if(nResult != 200)
+            {
+                pApi->HandleConnect(sSenderId, sReceiverId, false, sResponse);
+            }
+            else
+            {
+                pApi->HandleConnect(sSenderId, sReceiverId, true, sResponse);
+            }
+        }
+    }
+}
+
+
+/************************************************
+Class Start
+************************************************/
 
 void ClientApiPrivate::Start(int nFlags)
 {
@@ -310,6 +355,16 @@ void ClientApiPrivate::HandleInstanceRemoved()
             RemoveResources(m_pInstance->sHostIP);
         }
         m_pInstance = 0;
+    }
+}
+
+
+void ClientApiPrivate::HandleConnect(const string& sSenderId, const string& sReceiverId, bool bSuccess, const std::string& sResponse)
+{
+    lock_guard<mutex> lg(m_mutex);
+    if(m_pPoster)
+    {
+        m_pPoster->_RequestConnectResult(sSenderId, sReceiverId, bSuccess, sResponse);
     }
 }
 
@@ -1363,4 +1418,31 @@ void ClientApiPrivate::RemoveStaleReceivers()
         m_pPoster->_ReceiversRemoved(setRemoved);
     }
 }
+
+bool ClientApiPrivate::Connect(const std::string& sSenderId, const std::string& sReceiverId)
+{
+    lock_guard<mutex> lg(m_mutex);
+    shared_ptr<Sender> pSender = GetSender(sSenderId);
+    shared_ptr<Receiver> pReceiver = GetReceiver(sReceiverId);
+    if(!pSender || !pReceiver)
+    {
+        return false;
+    }
+
+    ApiVersion version(0,0);
+    string sSenderStageUrl(GetConnectionUrlSingle(pSender, "senders", ClientPoster::STR_TYPE[ClientPoster::CURLTYPE_SENDER_STAGED], version));
+    string sSenderTransportUrl(GetConnectionUrlSingle(pSender, "senders", ClientPoster::STR_TYPE[ClientPoster::CURLTYPE_SENDER_TRANSPORTFILE], version));
+    string sReceiverStageUrl(GetConnectionUrlSingle(pReceiver, "receivers", ClientPoster::STR_TYPE[ClientPoster::CURLTYPE_RECEIVER_STAGED], version));
+
+
+    if(sSenderStageUrl.empty() || sSenderTransportUrl.empty() || sReceiverStageUrl.empty())
+    {
+        return false;
+    }
+
+    thread th(ConnectThread, this, sSenderId, sReceiverId, sSenderStageUrl, sSenderTransportUrl, sReceiverStageUrl);
+    th.detach();
+    return true;
+}
+
 

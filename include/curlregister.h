@@ -63,10 +63,10 @@ class CurlRegister
         //threaded version
         void Post(const std::string& sBaseUrl, const std::string& sJson, long nUserType);
         //simple versions
-        long Post(const std::string& sBaseUrl, const std::string& sJson, std::string& sResponse);
+        static long Post(const std::string& sBaseUrl, const std::string& sJson, std::string& sResponse);
 
         void Delete(const std::string& sBaseUrl, const std::string& sType, const std::string& sId, long nUserType);
-        long Delete(const std::string& sBaseUrl, const std::string& sType, const std::string& sId, std::string& sResponse);
+        static long Delete(const std::string& sBaseUrl, const std::string& sType, const std::string& sId, std::string& sResponse);
 
         //void Query(const std::string& sBaseUrl, NodeApi::enumResource eResource, const std::string& sQuery, ResourceHolder* pResults, long nUserType);
         //long Query(const std::string& sBaseUrl, NodeApi::enumResource eResource, const std::string& sQuery, ResourceHolder* pResults);
@@ -74,7 +74,7 @@ class CurlRegister
         //threaded version
         void PutPatch(const std::string& sBaseUrl, const std::string& sJson, long nUserType, bool bPut, const std::string& sResourceId);
         //simple versions
-        long PutPatch(const std::string& sBaseUrl, const std::string& sJson, std::string& sResponse, bool bPut, const std::string& sResourceId);
+        static long PutPatch(const std::string& sBaseUrl, const std::string& sJson, std::string& sResponse, bool bPut, const std::string& sResourceId);
 
 
         void Get(const std::string& sUrl, long nUserType);
