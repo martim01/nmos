@@ -124,7 +124,14 @@ Json::Value connection::GetJson(const ApiVersion& version) const
             }
             else
             {
-                jsConnect["activation"]["requested_time"] = sRequestedTime;
+                if(sRequestedTime.empty() == false)
+                {
+                    jsConnect["activation"]["requested_time"] = sRequestedTime;
+                }
+                else
+                {
+                    jsConnect["activation"]["requested_time"] = Json::nullValue;
+                }
 
                 if(sActivationTime.empty() == false)
                 {
@@ -176,7 +183,12 @@ bool connectionSender::Patch(const Json::Value& jsData)
             m_nProperties |= FP_ID;
             sReceiverId = jsData["receiver_id"].asString();
         }
-        else if((jsData["receiver_id"].isNull()  == false && jsData["receiver_id"].empty() == false))
+        else if(jsData["receiver_id"].isNull())
+        {
+            m_nProperties |= FP_ID;
+            sReceiverId.clear();
+        }
+        else if(jsData["receiver_id"].empty() == false)
         {
             bIsOk = false;
             Log::Get(Log::LOG_DEBUG) << "Patch: receiver_id incorrect type" << std::endl;
@@ -247,6 +259,7 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
 
         if(sTransportFileType == "application/sdp" && sTransportFileData.empty() == false)
         {
+            Log::Get(Log::LOG_DEBUG) << "Patch: transport_file data correct" << std::endl;
             SdpManager::SdpToTransportParams(sTransportFileData, tpReceiver);
         }
     }
@@ -272,17 +285,18 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
             m_nProperties |= FP_ID;
             sSenderId = jsData["sender_id"].asString();
         }
-        else
+        else if(jsData["sender_id"].isNull())
         {
-            if(jsData["sender_id"].isNull() == false && jsData["sender_id"].empty() == false)
-            {
-                bIsOk = false;
-                Log::Get(Log::LOG_DEBUG) << "Patch: sender_id incorrect type" << std::endl;
-            }
+            sSenderId.clear();
         }
-
-
+        else if(jsData["sender_id"].empty() == false)
+        {
+            bIsOk = false;
+            Log::Get(Log::LOG_DEBUG) << "Patch: sender_id incorrect type" << std::endl;
+        }
     }
+
+
     return bIsOk;
 }
 
@@ -294,7 +308,7 @@ Json::Value connectionReceiver::GetJson(const ApiVersion& version)  const
     if(FP_TRANSPORT_FILE & m_nProperties)
     {
         jsConnect["transport_file"] = Json::objectValue;
-        if(sTransportFileType.empty() || sTransportFileData.empty())
+        if(sTransportFileType.empty())
         {
             jsConnect["transport_file"]["type"] = Json::nullValue;
             jsConnect["transport_file"]["data"] = Json::nullValue;

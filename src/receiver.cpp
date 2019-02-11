@@ -537,16 +537,32 @@ void Receiver::Activate(const std::string& sInterfaceIp)
     //move the staged parameters to active parameters
     m_Active = m_Staged;
 
+
     //Change auto settings to what they actually are
     m_Active.tpReceiver.Actualize(sInterfaceIp);
 
     //activeate - set subscription, receiverId and active on master_enable. Commit afterwards
-    m_sSenderId = m_Staged.sSenderId;
-    m_bSenderActive = m_Staged.bMasterEnable;
+    if(m_Active.bMasterEnable)
+    {
+        m_sSenderId = m_Staged.sSenderId;
+        m_bSenderActive = m_Staged.bMasterEnable;
+    }
+    else
+    {
+        m_sSenderId.clear();
+        m_bSenderActive = false;
+    }
 
     //reset the staged activation
     m_Staged.eActivate = connection::ACT_NULL;
     m_Staged.sActivationTime.clear();
     m_Staged.sRequestedTime.clear();
 
+    UpdateVersionTime();
+}
+
+
+bool Receiver::IsMasterEnabled() const
+{
+    return m_Active.bMasterEnable;
 }

@@ -51,6 +51,8 @@ class NMOS_EXPOSE Receiver : public Resource
 
         void Activate(const std::string& sInterfaceIp);
 
+        bool IsMasterEnabled() const;
+
     private:
         enumTransport m_eTransport;
         std::string m_sDeviceId;

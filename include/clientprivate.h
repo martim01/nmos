@@ -93,6 +93,7 @@ class ClientApiPrivate
         bool PatchReceiverStaged(const std::string& sReceiverId, const connectionReceiver& aConnection);
 
         bool Connect(const std::string& sSenderId, const std::string& sReceiverId);
+        bool Disconnect(const std::string& sReceiverId);
 
         std::map<std::string, std::shared_ptr<Self> >::const_iterator GetNodeBegin();
         std::map<std::string, std::shared_ptr<Self> >::const_iterator GetNodeEnd();

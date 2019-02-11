@@ -116,6 +116,13 @@ class NMOS_EXPOSE ClientApi
         **/
         bool Connect(const std::string& sSenderId, const std::string& sReceiverId);
 
+        /** @brief Attempts to disconnect a receiver from a sender using IS-05 connection. This function will stage and activate the sender should it be a unicast stream and then stage and activate the receiver to remove any connection
+        *   @param sReceiverId the uuId of the receiver
+        *   @return <i>bool</i> true if a Receiver with the given uuId is found and if the url of is-05 connection api for the Receiver can be found, otherwise false
+        *   @note the request is performed asynchronoulsy and the user should handle ClientApiPoster::RequestPatchReceiverResult for the response
+        **/
+        bool Disconnect(const std::string& sReceiverId);
+
         ///< @brief Gets a const_iterator to the beginning of the map containing all discovered nodes
         std::map<std::string, std::shared_ptr<Self> >::const_iterator GetNodeBegin();
 

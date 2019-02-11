@@ -161,7 +161,15 @@ Json::Value TransportParamsRTP::GetJson(const ApiVersion& version) const
 {
     Json::Value jsTp;
 
-    jsTp["source_ip"] = sSourceIp;
+    if(sSourceIp.empty() == false)
+    {
+        jsTp["source_ip"] = sSourceIp;
+    }
+    else
+    {
+        jsTp["source_ip"] = Json::nullValue;
+    }
+
     SetPort(jsTp, "destination_port",nDestinationPort);
     if(TP_SUPPORTED == eFec)
     {
@@ -508,8 +516,16 @@ Json::Value TransportParamsRTPReceiver::GetJson(const ApiVersion& version) const
     Json::Value jsTp(TransportParamsRTP::GetJson(version));
     if(TP_SUPPORTED == eMulticast)
     {
-        jsTp["multicast_ip"] = sMulticastIp;
+        if(sMulticastIp.empty() == false)
+        {
+            jsTp["multicast_ip"] = sMulticastIp;
+        }
+        else
+        {
+            jsTp["multicast_ip"] = Json::nullValue;
+        }
     }
+
     jsTp["interface_ip"] = sInterfaceIp;
     return jsTp;
 }

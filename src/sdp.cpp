@@ -1,6 +1,7 @@
 #include "sdp.h"
 #include "transportparams.h"
 #include "utils.h"
+#include "log.h"
 
 using namespace std;
 
@@ -41,10 +42,11 @@ bool SdpManager::SdpToTransportParams(string sSdp, TransportParamsRTPReceiver& t
 
 bool SdpManager::ParseConnectionLine(string sLine, TransportParamsRTPReceiver& tpReceiver)
 {
+    Log::Get(Log::LOG_DEBUG) << "SdpManager::ParseConnectionLine: " << sLine << endl;
     //format is 'type addtypr address'
     vector<string> vSplit;
     SplitString(vSplit, sLine, ' ');
-    if(vSplit.size() == 3 && vSplit[0] == "IN")
+    if(vSplit.size() == 3 && vSplit[0] == "c=IN")
     {
         if(vSplit[1] == "IP4")
         {
@@ -55,6 +57,7 @@ bool SdpManager::ParseConnectionLine(string sLine, TransportParamsRTPReceiver& t
             return ParseConnectionIp6(vSplit[2], tpReceiver);
         }
     }
+    Log::Get(Log::LOG_DEBUG) << "SdpManager::ParseConnectionLine: " << vSplit.size() << " " << vSplit[0] << endl;
     return false;
 }
 
@@ -65,14 +68,18 @@ bool SdpManager::ParseConnectionIp4(string sAddress, TransportParamsRTPReceiver&
     {
         case IP4_MULTI:
             tpReceiver.sMulticastIp = sAddress.substr(0, nTTL);
+            tpReceiver.sSourceIp.clear();
+            Log::Get(Log::LOG_DEBUG) << "SdpManager::ParseConnectionIp4: " << sAddress << " multicast" << endl;
             //@todo do we care about TTL and possible address grouping??
             return true;
         case IP4_UNI:
             tpReceiver.sMulticastIp.clear();
             tpReceiver.sSourceIp = sAddress.substr(0, nTTL);
+            Log::Get(Log::LOG_DEBUG) << "SdpManager::ParseConnectionIp4: " << sAddress << " unicast" << endl;
             //@todo do we care about TTL and possible address grouping??
             return true;
         default:
+            Log::Get(Log::LOG_DEBUG) << "SdpManager::ParseConnectionIp4: " << sAddress << " invalid" << endl;
             return false;
     }
     return false;
@@ -159,6 +166,7 @@ SdpManager::enumIPType SdpManager::ValidateIp6Address(std::string sAddress)
 
 bool SdpManager::ParseAttributeLine(string sLine, TransportParamsRTPReceiver& tpReceiver)
 {
+    Log::Get(Log::LOG_DEBUG) << "SdpManager::ParseAttributeLine: " << sLine << endl;
     //find source filter line for ssmc destination address
     size_t nStart = sLine.find(STR_FILTER);
     if(nStart != string::npos)
@@ -182,6 +190,7 @@ bool SdpManager::ParseSourceFilter(std::string sLine, TransportParamsRTPReceiver
     SplitString(vSplit, sLine, ' ');
     if(vSplit.size() > 4)
     {
+        Log::Get(Log::LOG_DEBUG) << "SdpManager::ParseSourceFilter " << vSplit[0] << " " << vSplit[1] << " " << vSplit[2] << endl;
         if(vSplit[0] == "IN" && vSplit[1] == "incl")
         {
             if(vSplit[2] == "IP4" && ValidateIp4Address(vSplit[3]) == IP4_MULTI && ValidateIp4Address(vSplit[4]) == IP4_UNI)
@@ -196,6 +205,7 @@ bool SdpManager::ParseSourceFilter(std::string sLine, TransportParamsRTPReceiver
             }
         }
     }
+    Log::Get(Log::LOG_DEBUG) << "SdpManager::ParseSourceFilter " << vSplit.size() << endl;
     return false;
 }
 
@@ -246,6 +256,7 @@ bool SdpManager::ParseRTCP(std::string sLine, TransportParamsRTPReceiver& tpRece
 
 bool SdpManager::ParseMediaLine(string sLine, TransportParamsRTPReceiver& tpReceiver)
 {
+    Log::Get(Log::LOG_DEBUG) << "SdpManager::ParseMediaLine: " << sLine << endl;
     //format is media port proto etc. We want the port
     vector<string> vSplit;
     SplitString(vSplit, sLine, ' ');

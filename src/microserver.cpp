@@ -261,7 +261,7 @@ int MicroServer::GetJson(string sPath, string& sReturn, std::string& sContentTyp
     SplitString(m_vPath, sPath, '/');
 
 
-    if(m_vPath.size() <= SZ_BASE)
+    if(m_vPath.empty())
     {
         Json::StyledWriter stw;
         Json::Value jsNode;
@@ -741,16 +741,22 @@ int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
                 }
                 else
                 {
-                    //Have we been sent a sender??
-                    std::shared_ptr<Sender> pRemoteSender = std::make_shared<Sender>();
-                    pRemoteSender->UpdateFromJson(jsRequest);
-
                     //does the sender have a manifest??
-                    std::string sSdp;
-                    if(pRemoteSender->GetManifestHref().empty() == false)
+                    std::string sSdp("");
+                    std::string sSenderId("");
+                    std::shared_ptr<Sender> pRemoteSender(0);
+                    //Have we been sent a sender??
+                    if(jsRequest.isObject() && jsRequest["id"].isString())
                     {
-                        CurlRegister::Get(pRemoteSender->GetManifestHref(), sSdp);
-                        Log::Get(Log::LOG_INFO) << " SDP: " << sSdp << std::endl;
+                        pRemoteSender = std::make_shared<Sender>();
+                        pRemoteSender->UpdateFromJson(jsRequest);
+
+                        sSenderId = pRemoteSender->GetId();
+                        if(pRemoteSender->GetManifestHref().empty() == false)
+                        {
+                            CurlRegister::Get(pRemoteSender->GetManifestHref(), sSdp);
+                            Log::Get(Log::LOG_INFO) << " SDP: " << sSdp << std::endl;
+                        }
                     }
                     if(m_pPoster)
                     {
@@ -764,10 +770,17 @@ int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
                         if(IsOk())
                         {   //this means the main thread has connected the receiver to the sender
                             nCode = 202;
-                            pReceiver->SetSender(pRemoteSender->GetId(), sSdp, m_sSignalData);
+                            pReceiver->SetSender(sSenderId, sSdp, m_sSignalData);
                             NodeApi::Get().Commit();   //updates the registration node or txt records
 
-                            sResponse = stw.write(pRemoteSender->GetJson(version));
+                            if(pRemoteSender)
+                            {
+                                sResponse = stw.write(pRemoteSender->GetJson(version));
+                            }
+                            else
+                            {
+                                sResponse = "{}";
+                            }
                         }
                         else
                         {

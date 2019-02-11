@@ -152,6 +152,7 @@ static void NodeBrowser(ClientApiPrivate* pApi, shared_ptr<dnsInstance> pInstanc
 
 void ConnectThread(ClientApiPrivate* pApi, const string& sSenderId, const string& sReceiverId, const string& sSenderStage, const string& sSenderTransport, const string& sReceiverStage)
 {
+    // @todo ConnectThread - if a unicast stream then tell the sender where it should be sending stuff
     Json::StyledWriter stw;
     string sResponse;
     connectionSender aCon(connection::FP_ACTIVATION | connection::FP_ENABLE | connection::FP_TRANSPORT_PARAMS);
@@ -159,19 +160,24 @@ void ConnectThread(ClientApiPrivate* pApi, const string& sSenderId, const string
     aCon.bMasterEnable = true;
     aCon.tpSender.bRtpEnabled = true;
 
+
     int nResult = CurlRegister::PutPatch(sSenderStage, stw.write(aCon.GetJson(ApiVersion(1,0))), sResponse, false, "");
+    cout << "Patch Sender: " << nResult << endl;
     if(nResult != 200)
     {
         pApi->HandleConnect(sSenderId, sReceiverId, false, sResponse);
     }
     else
     {
-        connectionReceiver aConR(connection::FP_TRANSPORT_FILE | connection::FP_ACTIVATION | connection::FP_ENABLE);
+        connectionReceiver aConR(connection::FP_TRANSPORT_FILE | connection::FP_ACTIVATION | connection::FP_ENABLE | connection::FP_ID | connection::FP_TRANSPORT_PARAMS);
         aConR.eActivate = connection::ACT_NOW;
         aConR.bMasterEnable = true;
+        aConR.tpReceiver.bRtpEnabled = true;
         aConR.sTransportFileType = "application/sdp";
+        aConR.sSenderId = sSenderId;
 
         nResult = CurlRegister::Get(sSenderTransport, aConR.sTransportFileData, false);
+        cout << "Get SDP: " << nResult << endl;
         if(nResult != 200)
         {
             pApi->HandleConnect(sSenderId, sReceiverId, false, aConR.sTransportFileData);
@@ -179,6 +185,7 @@ void ConnectThread(ClientApiPrivate* pApi, const string& sSenderId, const string
         else
         {
             nResult = CurlRegister::PutPatch(sReceiverStage, stw.write(aConR.GetJson(ApiVersion(1,0))), sResponse, false, "");
+            cout << "Patch Receiver: " << nResult << endl;
             if(nResult != 200)
             {
                 pApi->HandleConnect(sSenderId, sReceiverId, false, sResponse);
@@ -188,6 +195,48 @@ void ConnectThread(ClientApiPrivate* pApi, const string& sSenderId, const string
                 pApi->HandleConnect(sSenderId, sReceiverId, true, sResponse);
             }
         }
+    }
+}
+
+
+void DisconnectThread(ClientApiPrivate* pApi, const string& sSenderId, const string& sReceiverId, const string& sSenderStage, const string& sSenderTransport, const string& sReceiverStage)
+{
+    Json::StyledWriter stw;
+    string sResponse;
+    int nResult(200);
+    if(false)
+    {// @todo ConnectThread - if a unicast stream then tell the sender to stop sending stuff
+        connectionSender aCon(connection::FP_ACTIVATION | connection::FP_ENABLE | connection::FP_TRANSPORT_PARAMS);
+        aCon.eActivate = connection::ACT_NOW;
+        aCon.bMasterEnable = true;
+        aCon.tpSender.bRtpEnabled = true;
+
+        nResult = CurlRegister::PutPatch(sSenderStage, stw.write(aCon.GetJson(ApiVersion(1,0))), sResponse, false, "");
+        cout << "Patch Sender: " << nResult << endl;
+        if(nResult != 200)
+        {
+            pApi->HandleConnect(sSenderId, sReceiverId, false, sResponse);
+            return;
+        }
+    }
+
+    connectionReceiver aConR(connection::FP_TRANSPORT_FILE | connection::FP_ACTIVATION | connection::FP_ENABLE | connection::FP_ID | connection::FP_TRANSPORT_PARAMS);
+    aConR.eActivate = connection::ACT_NOW;
+    aConR.bMasterEnable = false;
+    aConR.tpReceiver.bRtpEnabled = false;
+    aConR.sTransportFileType = "application/sdp";
+    aConR.sTransportFileData = "";
+    aConR.sSenderId = "";
+
+    nResult = CurlRegister::PutPatch(sReceiverStage, stw.write(aConR.GetJson(ApiVersion(1,0))), sResponse, false, "");
+    cout << "DISCONNECT THREAD Receiver: " << nResult << endl;
+    if(nResult != 200)
+    {
+        pApi->HandleConnect("", sReceiverId, false, sResponse);
+    }
+    else
+    {
+        pApi->HandleConnect(sSenderId, sReceiverId, true, sResponse);
     }
 }
 
@@ -1446,3 +1495,37 @@ bool ClientApiPrivate::Connect(const std::string& sSenderId, const std::string& 
 }
 
 
+
+bool ClientApiPrivate::Disconnect( const std::string& sReceiverId)
+{
+    lock_guard<mutex> lg(m_mutex);
+    Log::Get(Log::LOG_DEBUG) << "ClientApiPrivate::Disconnect " << sReceiverId << endl;
+    shared_ptr<Receiver> pReceiver = GetReceiver(sReceiverId);
+    if(!pReceiver)
+    {
+        Log::Get(Log::LOG_DEBUG) << "ClientApiPrivate::Disconnect No Receiver" << endl;
+        return false;
+    }
+    shared_ptr<Sender> pSender = GetSender(pReceiver->GetSender());
+    if(!pSender)
+    {
+        Log::Get(Log::LOG_DEBUG) << "ClientApiPrivate::Disconnect No Sender" << endl;
+        return false;
+    }
+
+    ApiVersion version(0,0);
+    string sSenderStageUrl(GetConnectionUrlSingle(pSender, "senders", ClientPoster::STR_TYPE[ClientPoster::CURLTYPE_SENDER_STAGED], version));
+    string sSenderTransportUrl(GetConnectionUrlSingle(pSender, "senders", ClientPoster::STR_TYPE[ClientPoster::CURLTYPE_SENDER_TRANSPORTFILE], version));
+    string sReceiverStageUrl(GetConnectionUrlSingle(pReceiver, "receivers", ClientPoster::STR_TYPE[ClientPoster::CURLTYPE_RECEIVER_STAGED], version));
+
+
+    if(sSenderStageUrl.empty() || sSenderTransportUrl.empty() || sReceiverStageUrl.empty())
+    {
+        Log::Get(Log::LOG_DEBUG) << "ClientApiPrivate::Disconnect No URLS" << endl;
+        return false;
+    }
+
+    thread th(DisconnectThread, this, pSender->GetId(), sReceiverId, sSenderStageUrl, sSenderTransportUrl, sReceiverStageUrl);
+    th.detach();
+    return true;
+}

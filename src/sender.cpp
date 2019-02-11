@@ -484,7 +484,7 @@ void Sender::CreateSDP()
             break;
         case SdpManager::IP4_MULTI:
             ssSDP << "c=IN IP4 " << m_Active.tpSender.sDestinationIp << "/32\r\n";
-            ssSDP << "a=source-filter: incl IN IP4 " << m_Active.tpSender.sDestinationIp << " " << m_Active.tpSender.sSourceIp << "\r\n";
+            ssSDP << "a=source-filter:incl IN IP4 " << m_Active.tpSender.sDestinationIp << " " << m_Active.tpSender.sSourceIp << "\r\n";
             ssSDP << "a=type:multicast\r\n";
             break;
         case SdpManager::IP6_UNI:
@@ -493,7 +493,7 @@ void Sender::CreateSDP()
             break;
         case SdpManager::IP6_MULTI:
             ssSDP << "c=IN IP6 " << m_Active.tpSender.sDestinationIp << "\r\n";
-            ssSDP << "a=source-filter: incl IN IP6 " << m_Active.tpSender.sDestinationIp << " " << m_Active.tpSender.sSourceIp << "\r\n";
+            ssSDP << "a=source-filter:incl IN IP6 " << m_Active.tpSender.sDestinationIp << " " << m_Active.tpSender.sSourceIp << "\r\n";
             ssSDP << "a=type:multicast\r\n";
             break;
         case SdpManager::SdpManager::IP_INVALID:
