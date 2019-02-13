@@ -44,7 +44,6 @@
 					<Add option="-s" />
 					<Add option="`pkg-config --libs libmicrohttpd`" />
 					<Add option="`pkg-config --libs avahi-client`" />
-					<Add option="`pkg-config --libs uuid`" />
 					<Add option="`pkg-config --libs libcurl`" />
 				</Linker>
 			</Target>
@@ -113,6 +112,10 @@
 			<Add directory="external/uuid" />
 		</Compiler>
 		<Unit filename="../jsoncpp-master/dist/jsoncpp.cpp" />
+		<Unit filename="external/uuid/guid.cpp" />
+		<Unit filename="external/uuid/guid.h" />
+		<Unit filename="external/uuid/md5.cpp" />
+		<Unit filename="external/uuid/md5.h" />
 		<Unit filename="include/avahibrowser.h">
 			<Option target="Linux Debug" />
 			<Option target="Linux Release" />
