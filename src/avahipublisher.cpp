@@ -229,6 +229,7 @@ ServicePublisher::ServicePublisher(string sName, string sService, unsigned short
     m_psName(0)
 {
     Log::Get(Log::LOG_DEBUG) << m_sHostname;
+
 }
 
 ServicePublisher::~ServicePublisher()

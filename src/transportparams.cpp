@@ -49,7 +49,10 @@ bool TransportParamsRTP::Patch(const Json::Value& jsData)
 
         if(jsData["source_ip"].isString())
         {
-            sSourceIp = jsData["source_ip"].asString();
+            if(jsData["source_ip"].asString() != "auto")
+            {
+                sSourceIp = jsData["source_ip"].asString();
+            }
         }
         else if(jsData["source_ip"].isNull())
         {
@@ -470,8 +473,9 @@ void TransportParamsRTPSender::Actualize(const std::string& sSource, const std::
 TransportParamsRTPReceiver::TransportParamsRTPReceiver() : TransportParamsRTP(),
     sMulticastIp("auto"),
     sInterfaceIp("auto")
-{
 
+{
+    eMulticast = TP_SUPPORTED;
 }
 
 
@@ -485,10 +489,15 @@ bool TransportParamsRTPReceiver::Patch(const Json::Value& jsData)
             if(jsData["multicast_ip"].isString())
             {
                 eMulticast = TP_SUPPORTED;
-                sMulticastIp = jsData["multicast_ip"].asString();
+                if(jsData["multicast_ip"].asString() != "auto")
+                {
+                    Log::Get(Log::LOG_DEBUG) << "TransportParamsRTPReceiver::Patch: Multicast=" << jsData["multicast_ip"].asString() << std::endl;
+                    sMulticastIp = jsData["multicast_ip"].asString();
+                }
             }
             else if(jsData["multicast_ip"].isNull())
             {
+                Log::Get(Log::LOG_DEBUG) << "TransportParamsRTPReceiver::Patch: Multicast=null" << std::endl;
                 eMulticast = TP_SUPPORTED;
                 sMulticastIp.clear();
             }
@@ -500,7 +509,10 @@ bool TransportParamsRTPReceiver::Patch(const Json::Value& jsData)
         }
         if(jsData["interface_ip"].isString())
         {
-            sInterfaceIp = jsData["interface_ip"].asString();
+            if(jsData["interface_ip"].asString() != "auto")
+            {
+                sInterfaceIp = jsData["interface_ip"].asString();
+            }
         }
         else if(jsData["interface_ip"].empty() == false)
         {

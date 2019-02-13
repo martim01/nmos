@@ -92,14 +92,14 @@ class NMOS_EXPOSE EventPoster
         **/
         virtual void PatchReceiver(const std::string& sReceiverId, const connectionReceiver& conPatch, unsigned short nPort)=0;
 
-        /** @brief Called by ActivateThread telling the main thread to activate the staged paramaters
+        /** @brief Called by ActivateThread telling the main thread to activate the staged paramaters - this is called at the point of the act of activation
         *   @param sSenderId the Id of the sender to activate
         *   @note The main thread should call the Sender's Activate function to update the connection API
         **/
         virtual void ActivateSender(const std::string& sSenderId)=0;
 
-        /** @brief Called by ActivateThread telling the main thread to activate the staged paramaters
-        *   @param sSenderId the Id of the receiver to activate
+        /** @brief Called by ActivateThread telling the main thread to activate the staged paramaters - this is called at the point of the act of activation
+        *   @param sReceiverId the Id of the receiver to activate
         *   @note The main thread should call the Receivers's Activate function to update the connection API
         **/
         virtual void ActivateReceiver(const std::string& sReceiverId)=0;

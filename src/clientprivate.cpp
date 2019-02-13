@@ -176,6 +176,7 @@ void ConnectThread(ClientApiPrivate* pApi, const string& sSenderId, const string
         aConR.sTransportFileType = "application/sdp";
         aConR.sSenderId = sSenderId;
 
+
         nResult = CurlRegister::Get(sSenderTransport, aConR.sTransportFileData, false);
         cout << "Get SDP: " << nResult << endl;
         if(nResult != 200)
@@ -184,8 +185,10 @@ void ConnectThread(ClientApiPrivate* pApi, const string& sSenderId, const string
         }
         else
         {
-            nResult = CurlRegister::PutPatch(sReceiverStage, stw.write(aConR.GetJson(ApiVersion(1,0))), sResponse, false, "");
-            cout << "Patch Receiver: " << nResult << endl;
+            string sData(stw.write(aConR.GetJson(ApiVersion(1,0))));
+
+            nResult = CurlRegister::PutPatch(sReceiverStage, sData, sResponse, false, "");
+            cout << "Patch Receiver: " << sData << endl;
             if(nResult != 200)
             {
                 pApi->HandleConnect(sSenderId, sReceiverId, false, sResponse);

@@ -40,7 +40,6 @@
 				<Option projectCompilerOptionsRelation="-1" />
 				<Option projectLinkerOptionsRelation="-1" />
 				<Option projectIncludeDirsRelation="-1" />
-				<Option projectResourceIncludeDirsRelation="-1" />
 				<Option projectLibDirsRelation="-1" />
 				<MakeCommands>
 					<Build command="" />
@@ -67,7 +66,6 @@
 				<Linker>
 					<Add option="`pkg-config --libs libmicrohttpd`" />
 					<Add option="`pkg-config --libs avahi-client`" />
-					<Add option="`pkg-config --libs uuid`" />
 					<Add option="`pkg-config --libs libcurl`" />
 					<Add library="nmosd" />
 					<Add library="pthread" />
@@ -91,9 +89,8 @@
 				<Linker>
 					<Add option="`pkg-config --libs libmicrohttpd`" />
 					<Add option="`pkg-config --libs avahi-client`" />
-					<Add option="`pkg-config --libs uuid`" />
 					<Add option="`pkg-config --libs libcurl`" />
-					<Add library="libnmos" />
+					<Add option="`pkg-config --libs uuid`" />
 					<Add library="nmos" />
 					<Add library="pthread" />
 					<Add directory="$(#microhttp.lib)" />

@@ -9,11 +9,20 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <uuid/uuid.h>
+//#include <uuid/uuid.h>
 #include <sys/time.h>
 #endif // __GNU__
+
+#include "guid.h"
+
 using namespace std;
 
+static uuid_t NameSpace_OID = { /* 6ba7b812-9dad-11d1-80b4-00c04fd430c8 */
+       0x6ba7b812,
+       0x9dad,
+       0x11d1,
+       0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8
+   };
 
 void SplitString(vector<string>& vSplit, string str, char cSplit)
 {
@@ -48,45 +57,33 @@ string GetIpAddress(const string& sInterface)
 }
 
 
-std::string CreateGuid()
+std::string CreateGuid(std::string sName)
 {
+    uuid_t guid;
+    uuid_create_md5_from_name(&guid, NameSpace_OID, sName.c_str(), sName.length());
 
-#ifdef __GNUWIN32__
-    UUID guid;
-	CoCreateGuid(&guid);
 
     std::stringstream os;
-//	os << std::lowercase;
     os.width(8);
-    os << std::hex << guid.Data1 << '-';
+    os << std::hex << guid.time_low << '-';
 
     os.width(4);
-    os << std::hex << guid.Data2 << '-';
+    os << std::hex << guid.time_mid << '-';
 
     os.width(4);
-    os << std::hex << guid.Data3 << '-';
+    os << std::hex << guid.time_hi_and_version << '-';
 
     os.width(2);
     os << std::hex
-        << static_cast<short>(guid.Data4[0])
-        << static_cast<short>(guid.Data4[1])
+        << static_cast<short>(guid.clock_seq_hi_and_reserved)
+        << static_cast<short>(guid.clock_seq_low)
         << '-'
-        << static_cast<short>(guid.Data4[2])
-        << static_cast<short>(guid.Data4[3])
-        << static_cast<short>(guid.Data4[4])
-        << static_cast<short>(guid.Data4[5])
-        << static_cast<short>(guid.Data4[6])
-        << static_cast<short>(guid.Data4[7]);
-  //  os << std::nolowercase;
+        << static_cast<short>(guid.node[0])
+        << static_cast<short>(guid.node[1])
+        << static_cast<short>(guid.node[2])
+        << static_cast<short>(guid.node[3])
+        << static_cast<short>(guid.node[4])
+        << static_cast<short>(guid.node[5]);
+
     return  os.str();
-#endif // __WIN__
-
-#ifdef __GNU__
-    uuid_t guid;
-    uuid_generate(guid);
-
-    char uuid_str[37];      // ex. "1b4e28ba-2fa1-11d2-883f-0016d3cca427" + "\0"
-    uuid_unparse_lower(guid, uuid_str);
-    return uuid_str;
-#endif // __GNU__
 }

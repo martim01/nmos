@@ -110,7 +110,7 @@ int main()
                     cout << "NMOS Target: " << pPoster->GetString() << " [" << pPoster->GetSDP() << "]" << endl;
                     cout << "----------------------------------------" << endl;
                     //getchar();
-                    NodeApi::Get().TargetTaken(pPoster->GetPort(), true);
+                    NodeApi::Get().TargetTaken("", pPoster->GetPort(), true);
                     break;
                 case ThreadPoster::PATCH_SENDER:
                     cout << "----------------------------------------" << endl;
@@ -153,5 +153,5 @@ int main()
     }
     NodeApi::Get().StopServices();
     return 0;
-
+    return 0;
 }

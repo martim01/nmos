@@ -43,7 +43,7 @@ struct endpoint
 
 struct nodeinterface
 {
-    nodeinterface(std::string sC, std::string sI) : sChassisMac(sC), sPortMac(sI){}
+    nodeinterface(std::string sC="", std::string sI="") : sChassisMac(sC), sPortMac(sI){}
     std::string sChassisMac;
     std::string sPortMac;
     std::string sMainIpAddress;
@@ -97,7 +97,7 @@ class NMOS_EXPOSE Self : public Resource
         std::set<ApiVersion>::const_iterator GetApiVersionBegin() const;
         std::set<ApiVersion>::const_iterator GetApiVersionEnd() const;
 
-
+        static void GetAddresses(const std::string& sInterface, nodeinterface& anInterface);
 
     protected:
         friend class NodeApi;
@@ -117,7 +117,7 @@ class NMOS_EXPOSE Self : public Resource
 
 
 
-        void GetAddresses(const std::string& sInterface, nodeinterface& anInterface);
+
 
         struct clock
         {

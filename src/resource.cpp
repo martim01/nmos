@@ -4,13 +4,13 @@
 #include <string>
 #include "utils.h"
 
-
+std::string Resource::s_sBase("");
 
 
 Resource::Resource(const std::string& sType, const std::string& sLabel, const std::string& sDescription) :
     m_bIsOk(true),
     m_sType(sType),
-    m_sId(CreateGuid()),
+    m_sId(CreateGuid(s_sBase+sType+sLabel)),
     m_sLabel(sLabel),
     m_sDescription(sDescription),
     m_nHeartbeat(0)
@@ -22,9 +22,10 @@ Resource::Resource(const std::string& sType, const std::string& sLabel, const st
 Resource::Resource(const std::string& sType) :
     m_bIsOk(true),
     m_sType(sType),
-    m_sId(CreateGuid())
+    m_sId(CreateGuid(s_sBase+sType))
 {
     UpdateVersionTime();
+
 }
 
 bool Resource::UpdateFromJson(const Json::Value& jsValue)

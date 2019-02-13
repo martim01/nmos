@@ -25,7 +25,7 @@ class ThreadPoster : public EventPoster
 
     protected:
 
-        void CurlDone(unsigned long nResult, const std::string& sResponse, long nType);
+        void CurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId);
         void InstanceResolved(std::shared_ptr<dnsInstance> pInstance);
         void AllForNow(const std::string& sService);
         void Finished();

@@ -432,6 +432,7 @@ void ServiceBrowser::CheckStop()
     if(m_nWaitingOn == 0)
     {
         //NodeApi::Get().SignalBrowse();
+
     }
 }
 

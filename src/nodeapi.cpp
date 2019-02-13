@@ -101,11 +101,19 @@ void NodeApi::Init(unsigned short nDiscoveryPort, unsigned short nConnectionPort
             if(temp_addr->ifa_addr->sa_family == AF_INET)
             {
                 Log::Get(Log::LOG_DEBUG) << "Interface: " << temp_addr->ifa_name << endl;
+                string sInterface(temp_addr->ifa_name);
                 string sAddress(inet_ntoa(((sockaddr_in*)temp_addr->ifa_addr)->sin_addr));
                 if(sAddress != "127.0.0.1")
                 {
                     setEndpoints.insert(sAddress);
                     m_self.AddEndpoint(sAddress, nDiscoveryPort, false);
+                }
+                if(sInterface == "eth0" && Resource::s_sBase.empty())
+                {
+                    nodeinterface anInterface;
+                    Self::GetAddresses(sInterface, anInterface);
+                    Resource::s_sBase = anInterface.sPortMac;
+                    Log::Get(Log::LOG_DEBUG) << "Base: " << Resource::s_sBase << endl;
                 }
             }
             temp_addr = temp_addr->ifa_next;
@@ -181,6 +189,7 @@ void NodeApi::Init(unsigned short nDiscoveryPort, unsigned short nConnectionPort
         stringstream sstr;
         sstr << "http://" << *setEndpoints.begin() << ":" << nDiscoveryPort;
 
+
         m_self.Init(sHost, sstr.str(), sLabel, sDescription);
     }
     m_nDiscoveryPort = nDiscoveryPort;
@@ -229,7 +238,7 @@ bool NodeApi::StartmDNSServer()
     {
         Log::Get() << "Start mDNS Publisher" << endl;
 
-        m_pNodeApiPublisher = new ServicePublisher(CreateGuid(), "_nmos-node._tcp", itEndpoint->nPort, itEndpoint->sHost);
+        m_pNodeApiPublisher = new ServicePublisher(CreateGuid(itEndpoint->sHost), "_nmos-node._tcp", itEndpoint->nPort, itEndpoint->sHost);
         SetmDNSTxt(itEndpoint->bSecure);
         return m_pNodeApiPublisher->Start();
     }

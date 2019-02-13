@@ -92,6 +92,7 @@
 				<Option projectCompilerOptionsRelation="-1" />
 				<Option projectLinkerOptionsRelation="-1" />
 				<Option projectIncludeDirsRelation="-1" />
+				<Option projectResourceIncludeDirsRelation="-1" />
 				<Option projectLibDirsRelation="-1" />
 				<MakeCommands>
 					<Build command="" />
@@ -109,6 +110,7 @@
 			<Add option="-DNMOS_EXPORT" />
 			<Add directory="$(#json.include)" />
 			<Add directory="include" />
+			<Add directory="external/uuid" />
 		</Compiler>
 		<Unit filename="../jsoncpp-master/dist/jsoncpp.cpp" />
 		<Unit filename="include/avahibrowser.h">

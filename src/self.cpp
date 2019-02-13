@@ -338,7 +338,7 @@ void Self::GetAddresses(const std::string& sInterface, nodeinterface& anInterfac
     }
     anInterface.sMainIpAddress = inet_ntoa((((sockaddr_in*)&ifr.ifr_addr)->sin_addr));
     #else
-
+    // @todo windows get mac address
     #endif
 }
 

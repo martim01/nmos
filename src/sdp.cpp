@@ -69,7 +69,7 @@ bool SdpManager::ParseConnectionIp4(string sAddress, TransportParamsRTPReceiver&
         case IP4_MULTI:
             tpReceiver.sMulticastIp = sAddress.substr(0, nTTL);
             tpReceiver.sSourceIp.clear();
-            Log::Get(Log::LOG_DEBUG) << "SdpManager::ParseConnectionIp4: " << sAddress << " multicast" << endl;
+            Log::Get(Log::LOG_DEBUG) << "SdpManager::ParseConnectionIp4: " << sAddress.substr(0, nTTL) << " multicast" << endl;
             //@todo do we care about TTL and possible address grouping??
             return true;
         case IP4_UNI:

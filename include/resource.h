@@ -49,6 +49,7 @@ class Resource
 
         std::string GetJsonParseError();
 
+        static std::string s_sBase;
 
     protected:
         void UpdateVersionTime();

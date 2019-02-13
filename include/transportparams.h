@@ -40,6 +40,7 @@ struct TransportParamsRTP
 
 struct TransportParamsRTPReceiver : public TransportParamsRTP
 {
+
     std::string sMulticastIp;
     std::string sInterfaceIp;
 
