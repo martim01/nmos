@@ -315,8 +315,6 @@ void Self::GetAddresses(const std::string& sInterface, nodeinterface& anInterfac
     ifr.ifr_addr.sa_family = AF_INET;
     strncpy((char*)ifr.ifr_ifrn.ifrn_name, sInterface.c_str(), IFNAMSIZ-1);
     ioctl(fd, SIOCGIFHWADDR, &ifr);
-    ioctl(fd, SIOCGIFADDR, &ifr);
-    close(fd);
 
 
     std::stringstream ss;
@@ -336,7 +334,11 @@ void Self::GetAddresses(const std::string& sInterface, nodeinterface& anInterfac
     {
         anInterface.sPortMac = ss.str();
     }
+    ioctl(fd, SIOCGIFADDR, &ifr);
+    close(fd);
+
     anInterface.sMainIpAddress = inet_ntoa((((sockaddr_in*)&ifr.ifr_addr)->sin_addr));
+    cout << sInterface << ": " << anInterface.sMainIpAddress << "  " << anInterface.sPortMac << endl;
     #else
     // @todo windows get mac address
     #endif
