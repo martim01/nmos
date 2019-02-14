@@ -170,7 +170,9 @@ bool connectionSender::Patch(const Json::Value& jsData)
         {
             m_nProperties |= FP_TRANSPORT_PARAMS;
             bIsOk &= tpSender.Patch(jsData["transport_params"][0]);
+
             // @todo second tp for SMPTE2022
+            tpSender.bRtpEnabled = bMasterEnable;   //this should be settable if 2 or more transportparams
         }
         else if(jsData["transport_params"].empty() == false)
         {
@@ -273,6 +275,7 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
             m_nProperties |= FP_TRANSPORT_PARAMS;
             bIsOk &= tpReceiver.Patch(jsData["transport_params"][0]);
             // @todo second tp for SMPTE2022
+            tpReceiver.bRtpEnabled = bMasterEnable;   //this should be settable if 2 or more transportparams
         }
         else if(jsData["transport_params"].empty() == false)
         {

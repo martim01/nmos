@@ -27,7 +27,8 @@ Receiver::Receiver(std::string sLabel, std::string sDescription, enumTransport e
     m_sDeviceId(sDeviceId),
     m_sSenderId(""),
     m_bSenderActive(false),
-    m_eType(eFormat)
+    m_eType(eFormat),
+    m_bActivateAllowed(false)
 {
     if(flagsTransport & TransportParamsRTP::FEC)
     {
@@ -411,8 +412,6 @@ void Receiver::SetSender(const std::string& sSenderId, const std::string& sSdp, 
     }
     UpdateVersionTime();
 
-
-
 }
 
 
@@ -451,11 +450,7 @@ bool Receiver::Stage(const connectionReceiver& conRequest, std::shared_ptr<Event
     bool bOk(true);
     m_mutex.lock();
 
-
-
     m_Staged = conRequest;
-
-
 
     m_mutex.unlock();
 
@@ -463,19 +458,22 @@ bool Receiver::Stage(const connectionReceiver& conRequest, std::shared_ptr<Event
     {
         case connection::ACT_NULL:
             m_Staged.sActivationTime = GetCurrentTime();
-            // @todo Cancel any activations that were going to happen
+            m_bActivateAllowed = false;
             break;
         case connection::ACT_NOW:
             m_Staged.sActivationTime = GetCurrentTime();
             // Tell the main thread to do it's stuff
             if(pPoster)
             {
+                m_bActivateAllowed = true;
                 pPoster->_ActivateReceiver(GetId());
+
             }
             else
             {
                 // @todo no poster so do the activation bits ourself
             }
+
             break;
         case connection::ACT_ABSOLUTE:
             if(pPoster)
@@ -483,6 +481,7 @@ bool Receiver::Stage(const connectionReceiver& conRequest, std::shared_ptr<Event
                 std::chrono::time_point<std::chrono::high_resolution_clock> tp;
                 if(ConvertTaiStringToTimePoint(m_Staged.sRequestedTime, tp))
                 {
+                    m_bActivateAllowed = true;
                     std::thread thActive(ActivationThreadReceiver, tp, GetId(), pPoster);
                     thActive.detach();
                 }
@@ -506,11 +505,13 @@ bool Receiver::Stage(const connectionReceiver& conRequest, std::shared_ptr<Event
                 try
                 {
                     std::chrono::nanoseconds nano(stoul(m_Staged.sActivationTime));
+                    m_bActivateAllowed = true;
                     std::thread thActive(ActivationThreadReceiver, (tp+nano), GetId(), pPoster);
                     thActive.detach();
                 }
                 catch(std::invalid_argument& ia)
                 {
+                    m_bActivateAllowed = false;
                     bOk = false;
                 }
             }
@@ -534,6 +535,7 @@ connectionReceiver Receiver::GetStaged() const
 
 void Receiver::Activate(const std::string& sInterfaceIp)
 {
+    m_bActivateAllowed = false;
     //move the staged parameters to active parameters
     m_Active = m_Staged;
 
@@ -565,4 +567,11 @@ void Receiver::Activate(const std::string& sInterfaceIp)
 bool Receiver::IsMasterEnabled() const
 {
     return m_Active.bMasterEnable;
+}
+
+
+bool Receiver::IsActivateAllowed() const
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_bActivateAllowed;
 }

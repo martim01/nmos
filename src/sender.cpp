@@ -25,7 +25,8 @@ Sender::Sender(std::string sLabel, std::string sDescription, std::string sFlowId
     m_eTransport(eTransport),
     m_sDeviceId(sDeviceId),
     m_sReceiverId(""),
-    m_bReceiverActive(false)
+    m_bReceiverActive(false),
+    m_bActivateAllowed(false)
 {
     AddInterfaceBinding(sInterface);
 
@@ -309,19 +310,21 @@ bool Sender::Stage(const connectionSender& conRequest, std::shared_ptr<EventPost
     {
         case connection::ACT_NULL:
             m_Staged.sActivationTime = GetCurrentTime();
-            // @todo Cancel any activations that were going to happen
+            m_bActivateAllowed = false;
             break;
         case connection::ACT_NOW:
             m_Staged.sActivationTime = GetCurrentTime();
             // Tell the main thread to do it's stuff
             if(pPoster)
             {
+                m_bActivateAllowed = true;
                 pPoster->_ActivateSender(GetId());
             }
             else
             {
                 // @todo no poster so do the activation bits ourself
             }
+
             break;
         case connection::ACT_ABSOLUTE:
             if(pPoster)
@@ -329,6 +332,7 @@ bool Sender::Stage(const connectionSender& conRequest, std::shared_ptr<EventPost
                 std::chrono::time_point<std::chrono::high_resolution_clock> tp;
                 if(ConvertTaiStringToTimePoint(m_Staged.sRequestedTime, tp))
                 {
+                    m_bActivateAllowed = true;
                     std::thread thActive(ActivationThreadSender, tp, GetId(), pPoster);
                     thActive.detach();
                 }
@@ -352,6 +356,7 @@ bool Sender::Stage(const connectionSender& conRequest, std::shared_ptr<EventPost
                 try
                 {
                     std::chrono::nanoseconds nano(stoul(m_Staged.sActivationTime));
+                    m_bActivateAllowed = true;
                     std::thread thActive(ActivationThreadSender, (tp+nano), GetId(), pPoster);
                     thActive.detach();
                 }
@@ -383,8 +388,10 @@ connectionSender Sender::GetActive()
 }
 
 
+
 void Sender::Activate(std::string sSourceIp, std::string sDestinationIp, std::string sSDP)
 {
+    m_bActivateAllowed = false;
     //move the staged parameters to active parameters
     m_Active = m_Staged;
 
@@ -432,13 +439,27 @@ void Sender::Activate(std::string sSourceIp, std::string sDestinationIp, std::st
     m_Staged.eActivate = connection::ACT_NULL;
     m_Staged.sActivationTime.clear();
     m_Staged.sRequestedTime.clear();
+
+    UpdateVersionTime();
 }
 
 void Sender::SetDestinationDetails(const std::string& sDestinationIp, unsigned short nDestinationPort)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
     m_Active.tpSender.sDestinationIp = sDestinationIp;
     m_Active.tpSender.nDestinationPort = nDestinationPort;
     CreateSDP();
+    UpdateVersionTime();
+}
+
+void Sender::MasterEnable(bool bEnable)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_Active.bMasterEnable = bEnable;
+    m_Active.tpSender.bRtpEnabled = bEnable;
+    m_Staged.bMasterEnable = bEnable;
+    m_Staged.tpSender.bRtpEnabled = bEnable;
+    UpdateVersionTime();
 }
 
 void Sender::CreateSDP()
@@ -563,4 +584,11 @@ void Sender::SetManifestHref(std::string sHref)
 const std::string& Sender::GetManifestHref() const
 {
     return m_sManifest;
+}
+
+
+bool Sender::IsActivateAllowed() const
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_bActivateAllowed;
 }

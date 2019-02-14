@@ -14,6 +14,8 @@
 #endif // __GNU__
 
 #include "guid.h"
+#include <array>
+
 
 using namespace std;
 
@@ -63,27 +65,31 @@ std::string CreateGuid(std::string sName)
     uuid_create_md5_from_name(&guid, NameSpace_OID, sName.c_str(), sName.length());
 
 
-    std::stringstream os;
-    os.width(8);
-    os << std::hex << guid.time_low << '-';
+    std::array<char,40> output;
+    snprintf(output.data(), output.size(), "%08x-%04hx-%04hx-%02x%02x-%02x%02x%02x%02x%02x%02x",
+             guid.time_low, guid.time_mid, guid.time_hi_and_version, guid.clock_seq_hi_and_reserved, guid.clock_seq_low,
+             guid.node[0], guid.node[1], guid.node[2], guid.node[3], guid.node[4], guid.node[5]);
+    return std::string(output.data());
 
-    os.width(4);
-    os << std::hex << guid.time_mid << '-';
 
-    os.width(4);
-    os << std::hex << guid.time_hi_and_version << '-';
-
-    os.width(2);
-    os << std::hex
-        << static_cast<short>(guid.clock_seq_hi_and_reserved)
-        << static_cast<short>(guid.clock_seq_low)
-        << '-'
-        << static_cast<short>(guid.node[0])
-        << static_cast<short>(guid.node[1])
-        << static_cast<short>(guid.node[2])
-        << static_cast<short>(guid.node[3])
-        << static_cast<short>(guid.node[4])
-        << static_cast<short>(guid.node[5]);
-
-    return  os.str();
+//    std::stringstream os;
+//    os.width(8);
+//    os << std::hex << guid.time_low << '-';
+//    os.width(4);
+//    os << std::hex << guid.time_mid << '-';
+//    os.width(4);
+//    os << std::hex << guid.time_hi_and_version << '-';
+//    os.width(2);
+//    os << std::hex
+//        << static_cast<short>(guid.clock_seq_hi_and_reserved)
+//        << static_cast<short>(guid.clock_seq_low)
+//        << '-'
+//        << static_cast<short>(guid.node[0])
+//        << static_cast<short>(guid.node[1])
+//        << static_cast<short>(guid.node[2])
+//        << static_cast<short>(guid.node[3])
+//        << static_cast<short>(guid.node[4])
+//        << static_cast<short>(guid.node[5]);
+//
+//    return  os.str();
 }

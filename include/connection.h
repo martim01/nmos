@@ -34,6 +34,7 @@ struct NMOS_EXPOSE connectionSender : public connection
 
     virtual Json::Value GetJson(const ApiVersion& version) const;
 
+    // @todo we should have an array of senders for SMPTE2022
     TransportParamsRTPSender tpSender;
     std::string sReceiverId;
 
@@ -50,6 +51,7 @@ struct NMOS_EXPOSE connectionReceiver : public connection
 
     virtual Json::Value GetJson(const ApiVersion& version) const;
 
+    // @todo we should have an array of TransportParamsRTPReceiver for SMPTE2022
     TransportParamsRTPReceiver tpReceiver;
     std::string sSenderId;
     std::string sTransportFileType;

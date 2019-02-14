@@ -53,6 +53,8 @@ class NMOS_EXPOSE Receiver : public Resource
 
         bool IsMasterEnabled() const;
 
+        bool IsActivateAllowed() const;
+
     private:
         enumTransport m_eTransport;
         std::string m_sDeviceId;
@@ -68,7 +70,7 @@ class NMOS_EXPOSE Receiver : public Resource
         connectionReceiver m_Active;
         constraintsReceiver m_constraints;
 
-
+        bool m_bActivateAllowed;
         //std::string m_sSenderId;
 
         static const std::string STR_TRANSPORT[4];

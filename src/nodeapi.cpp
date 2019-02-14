@@ -60,11 +60,11 @@ m_pNodeApiPublisher(0),
 m_pRegisterCurl(0),
 m_nRegistrationStatus(REG_START),
 m_bRun(true),
+m_bBrowsing(false),
 m_pPoster(0),
 m_nConnectionPort(0),
 m_nDiscoveryPort(0),
-m_nHeartbeatTime(5000),
-m_bBrowsing(false)
+m_nHeartbeatTime(5000)
 {
 }
 
