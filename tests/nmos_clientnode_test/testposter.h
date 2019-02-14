@@ -24,6 +24,15 @@ class TestPoster : public ClientApiPoster
         virtual void SendersRemoved(const std::set<std::string>& setRemoved);
         virtual void ReceiversRemoved(const std::set<std::string>& setRemoved);
 
+        virtual void RequestTargetResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId){}
+
+
+        virtual void RequestPatchSenderResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId){}
+        virtual void RequestPatchReceiverResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId){};
+
+        virtual void RequestConnectResult(const std::string& sSenderId, const std::string& sReceiverId, bool bSuccess, const std::string& sResponse){};
+
+
     private:
 
 };

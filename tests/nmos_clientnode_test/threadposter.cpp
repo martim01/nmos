@@ -27,7 +27,7 @@ void ThreadPoster::SetReason(unsigned int nReason)
     m_nReason = nReason;
 }
 
-void ThreadPoster::CurlDone(unsigned long nResult, const std::string& sResponse, long nType)
+void ThreadPoster::CurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId)
 {
     SetReason(CURL_DONE);
 

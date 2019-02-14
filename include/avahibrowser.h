@@ -27,6 +27,7 @@ class ServiceBrowser
 {
 // Construction
     public:
+
         ServiceBrowser(std::shared_ptr<EventPoster> pPoster, bool bFree=false);
         virtual ~ServiceBrowser();
 

@@ -50,7 +50,7 @@ int main()
 
         cout << "Sender Patch Staged" << endl;
         cout << "-----------------------------------------------" << endl;
-        connectionSender aConnection
+        connectionSender aConnection;
         aConnection.eActivate = connection::ACT_NOW;
         aConnection.bMasterEnable = true;
         aConnection.sReceiverId = itReceiver->first;
