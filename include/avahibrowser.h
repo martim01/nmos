@@ -28,11 +28,13 @@ class ServiceBrowser
 // Construction
     public:
 
-        ServiceBrowser(std::shared_ptr<EventPoster> pPoster, bool bFree=false);
-        virtual ~ServiceBrowser();
+        static ServiceBrowser& Get();
 
+        void AddService(const std::string& sService, std::shared_ptr<EventPoster> pPoster);
+        void RemoveService(const std::string& sService);
 
-        bool StartBrowser(const std::set<std::string>& setServices);
+        bool StartBrowser();
+
 
 
 
@@ -49,22 +51,30 @@ class ServiceBrowser
 
 
     protected:
+        ServiceBrowser();
+        virtual ~ServiceBrowser();
 
+        void Browse();
         void DeleteAllServices();
         bool Start(AvahiClient* pClient);
         void Stop();
         void CheckStop();
+
+        std::shared_ptr<EventPoster> GetPoster(const std::string& sService);
+
         bool m_bFree;
 
         std::mutex m_mutex;
 //        void OnStop(wxCommandEvent& event);
-        std::shared_ptr<EventPoster> m_pPoster;
+
 
         AvahiThreadedPoll* m_pThreadedPoll;
         AvahiClient * m_pClient;
         AvahiServiceTypeBrowser* m_pTypeBrowser;
 
-        std::set<std::string> m_setServices;
+        std::map<std::string, std::shared_ptr<EventPoster> > m_mServiceBrowse;
+
+        bool m_bStarted;
         bool m_bBrowsing;
         unsigned long m_nWaitingOn;
         std::set<AvahiServiceBrowser*> m_setBrowser;

@@ -308,7 +308,6 @@ class NMOS_EXPOSE NodeApi
         //std::string m_sQueryNode;
 
         ServicePublisher* m_pNodeApiPublisher;
-        ServiceBrowser* m_pRegistrationBrowser;
 
         CurlRegister* m_pRegisterCurl;
         unsigned int m_nRegistrationStatus;
@@ -319,6 +318,7 @@ class NMOS_EXPOSE NodeApi
 
 
         bool m_bRun;
+        bool m_bBrowsing;
         std::shared_ptr<EventPoster> m_pPoster;
         unsigned short m_nConnectionPort;
         unsigned short m_nDiscoveryPort;

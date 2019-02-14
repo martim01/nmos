@@ -61,7 +61,7 @@ class ClientApiPrivate
 
         void Signal(enumSignal eSignal);
 
-        ServiceBrowser* GetBrowser();
+
         void DeleteServiceBrowser();
 
         bool Wait(unsigned long nMilliseconds);
@@ -122,6 +122,8 @@ class ClientApiPrivate
 
         void HandleConnect(const std::string& sSenderId, const std::string& sReceiverId, bool bSuccess, const std::string& sResponse);
 
+        std::shared_ptr<EventPoster> GetClientPoster();
+
     private:
         friend class ClientPoster;
         void ConnectToQueryServer();
@@ -150,7 +152,6 @@ class ClientApiPrivate
         ClientHolder<Sender> m_senders;
         ClientHolder<Receiver> m_receivers;
 
-        ServiceBrowser* m_pBrowser;
         CurlRegister* m_pCurl;
         bool m_bRun;
         int m_nFlags;
@@ -169,5 +170,7 @@ class ClientApiPrivate
         std::string m_sCurlResponse;
         long m_nCurlType;
         std::string m_sCurlResourceId;
+
+        std::shared_ptr<ClientPoster> m_pClientPoster;
 };
 

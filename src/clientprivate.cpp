@@ -36,10 +36,9 @@ const string ClientApiPrivate::STR_RESOURCE[6] = {"node", "device", "source", "f
 void ClientThread(ClientApiPrivate* pApi)
 {
     //start the browser
-    set<string> setServices;
-    setServices.insert("_nmos-node._tcp");
-    setServices.insert("_nmos-query._tcp");
-    pApi->GetBrowser()->StartBrowser(setServices);
+    ServiceBrowser::Get().AddService("_nmos-node._tcp", pApi->GetClientPoster());
+    ServiceBrowser::Get().AddService("_nmos-query._tcp", pApi->GetClientPoster());
+    ServiceBrowser::Get().StartBrowser();
 
     while(pApi->IsRunning())
     {
@@ -251,11 +250,9 @@ Class Start
 void ClientApiPrivate::Start(int nFlags)
 {
     m_nFlags = nFlags;
-    if(!m_pBrowser)
+    if(!m_pCurl)
     {
-        shared_ptr<ClientPoster> pPoster(make_shared<ClientPoster>());
-        m_pBrowser = new ServiceBrowser(pPoster, false);
-        m_pCurl = new CurlRegister(pPoster);
+        m_pCurl = new CurlRegister(m_pClientPoster);
         thread th(ClientThread, this);
         th.detach();
     }
@@ -268,11 +265,11 @@ void ClientApiPrivate::Stop()
 
 ClientApiPrivate::ClientApiPrivate() :
     m_eMode(MODE_P2P),
-    m_pBrowser(0),
     m_bRun(true),
     m_pInstance(0),
     m_nCurlThreadCount(0),
-    m_pPoster(0)
+    m_pPoster(0),
+    m_pClientPoster(make_shared<ClientPoster>())
 {
 
 }
@@ -311,6 +308,10 @@ void ClientApiPrivate::StopRun()
 
 }
 
+shared_ptr<EventPoster> ClientApiPrivate::GetClientPoster()
+{
+    return m_pClientPoster;
+}
 
 ClientApiPrivate::enumSignal ClientApiPrivate::GetSignal()
 {
@@ -1007,15 +1008,10 @@ void ClientApiPrivate::NodeDetailsDone()
     m_nCurlThreadCount--;
 }
 
-ServiceBrowser* ClientApiPrivate::GetBrowser()
-{
-    return m_pBrowser;
-}
 
 void ClientApiPrivate::DeleteServiceBrowser()
 {
-    delete m_pBrowser;
-    m_pBrowser = 0;
+
     delete m_pCurl;
     m_pCurl = 0;
 }

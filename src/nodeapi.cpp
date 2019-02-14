@@ -57,14 +57,14 @@ m_receivers("receiver"),
 m_sources("source"),
 m_flows("flow"),
 m_pNodeApiPublisher(0),
-m_pRegistrationBrowser(0),
 m_pRegisterCurl(0),
 m_nRegistrationStatus(REG_START),
 m_bRun(true),
 m_pPoster(0),
 m_nConnectionPort(0),
 m_nDiscoveryPort(0),
-m_nHeartbeatTime(5000)
+m_nHeartbeatTime(5000),
+m_bBrowsing(false)
 {
 }
 
@@ -385,13 +385,12 @@ void NodeApi::SetmDNSTxt(bool bSecure)
 
 bool NodeApi::BrowseForRegistrationNode()
 {
-    if(m_pRegistrationBrowser == 0)
+    if(m_bBrowsing == false)
     {
-        m_pRegistrationBrowser = new ServiceBrowser(m_pPoster, false);
-        set<string> setService;
-        setService.insert("_nmos-registration._tcp");
+        ServiceBrowser::Get().AddService("_nmos-registration._tcp", m_pPoster);
         Log::Get() << "Browse for register nodes" << endl;
-        m_pRegistrationBrowser->StartBrowser(setService);
+        ServiceBrowser::Get().StartBrowser();
+        m_bBrowsing = true;
     }
 
     return true;
@@ -451,11 +450,7 @@ void NodeApi::SignalServer(unsigned short nPort, bool bOk, const std::string& sE
 
 void NodeApi::StopRegistrationBrowser()
 {
-    if(m_pRegistrationBrowser)
-    {
-        delete m_pRegistrationBrowser;
-        m_pRegistrationBrowser = 0;
-    }
+    ServiceBrowser::Get().RemoveService("_nmos-registration._tcp");
 }
 
 int NodeApi::RegisterSimple(const ApiVersion& version)
@@ -503,8 +498,8 @@ int NodeApi::UpdateRegisterSimple(const ApiVersion& version)
 bool NodeApi::FindRegistrationNode()
 {
     Log::Get(Log::LOG_INFO) << "NodeApi: Find best registration node" << endl;
-    map<string, std::shared_ptr<dnsService> >::const_iterator itService = m_pRegistrationBrowser->FindService("_nmos-registration._tcp");
-    if(itService != m_pRegistrationBrowser->GetServiceEnd())
+    map<string, std::shared_ptr<dnsService> >::const_iterator itService = ServiceBrowser::Get().FindService("_nmos-registration._tcp");
+    if(itService != ServiceBrowser::Get().GetServiceEnd())
     {
         Log::Get(Log::LOG_INFO) << "NodeApi: Register. Found nmos registration service." << endl;
         shared_ptr<dnsInstance>  pInstance(0);
