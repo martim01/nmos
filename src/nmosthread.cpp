@@ -53,7 +53,7 @@ bool NodeThread::RegisteredOperation(const ApiVersion& version)
     {
         while(NodeApi::Get().IsRunning())
         {
-            if(NodeApi::Get().Wait(NodeApi::Get().GetHeartbeatTime()))    //@todo we should be able to set heartbeat time
+            if(NodeApi::Get().Wait(NodeApi::Get().GetHeartbeatTime()))
             {
                 switch(NodeApi::Get().GetSignal())
                 {

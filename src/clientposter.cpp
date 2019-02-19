@@ -9,40 +9,7 @@ void ClientPoster::CurlDone(unsigned long nResult, const std::string& sResponse,
 {
     ClientApi::Get().m_pApi->SetCurlDone(nResult, sResponse, nType, sResourceId);
 
-    switch(nType)
-    {
-        case CURLTYPE_TARGET:
-            Log::Get() << "TARGET: " << nResult << "  " << sResponse << std::endl;
-            // @todo
-            break;
-        case CURLTYPE_SENDER_STAGED:
-            Log::Get() << "GetSenderStaged: " << nResult << "  " << sResponse << std::endl;
-            // @todo
-            break;
-        case CURLTYPE_SENDER_ACTIVE:
-            Log::Get() << "GetSenderActive: " << nResult << "  " << sResponse << std::endl;
-            // @todo
-            break;
-        case CURLTYPE_SENDER_TRANSPORTFILE:
-            Log::Get() << "GetSenderTransporfile: " << nResult << "  " << sResponse << std::endl;
-            // @todo
-            break;
-        case CURLTYPE_RECEIVER_STAGED:
-            Log::Get() << "GetReceiverStaged: " << nResult << "  " << sResponse << std::endl;
-            // @todo
-            break;
-        case CURLTYPE_RECEIVER_ACTIVE:
-            Log::Get() << "GetReceiverActive: " << nResult << "  " << sResponse << std::endl;
-            // @todo
 
-            break;
-        case CURLTYPE_SENDER_PATCH:
-            // @todo
-            break;
-        case CURLTYPE_RECEIVER_PATCH:
-            // @todo
-            break;
-     }
 }
 
 void ClientPoster::InstanceResolved(std::shared_ptr<dnsInstance> pInstance)

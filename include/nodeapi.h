@@ -47,13 +47,10 @@ class NMOS_EXPOSE NodeApi
         void Init(unsigned short nDiscoveryPort, unsigned short nConnectionPort, const std::string& sLabel, const std::string& sDescription);
 
         /** @brief Launch the thread that starts the web servers and dns publisher and browser
-        *   @param pPoster pointer to an optional EventPoster class that can be used to update the main thread with events.
-        *   @param eClient if not set to ClientAPI::NONE then the application will act as an NMOS client as well as an NMOS node. Set to an or'd set of resources that the application is interested in
-        *   @param pClientPoster set to non-null if the application wishes to receive events from the ClientApi
-        *   @note NodeApi takes owenership of the EventPoster and will delete it on destruction
+        *   @param pPoster pointer to an optional EventPoster class that can be used to update the main thread with events
         *   @return <i>bool</i> true on succesfully starting the thread
         **/
-        bool StartServices(std::shared_ptr<EventPoster> pPoster, ClientApi::flagResource eClient=ClientApi::NONE, std::shared_ptr<ClientPoster> pClientPoster=0);
+        bool StartServices(std::shared_ptr<EventPoster> pPoster);
 
         /** @brief Stop the thread that is running the nmos services
         **/

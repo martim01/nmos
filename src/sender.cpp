@@ -481,7 +481,7 @@ void Sender::CreateSDP()
             ssSDP << " ";
             break;
     }
-    ssSDP << m_Active.tpSender.sSourceIp << "\r\n";    // @todo should check here if
+    ssSDP << m_Active.tpSender.sSourceIp << "\r\n";    // @todo should check here if sSourceIp is not set to auto
     ssSDP << "t=0 0 \r\n";
 
     std::map<std::string, std::shared_ptr<Device> >::const_iterator itDevice = NodeApi::Get().GetDevices().FindNmosResource(m_sDeviceId);

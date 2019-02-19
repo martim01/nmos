@@ -81,3 +81,29 @@ void ClientApiPoster::_RequestConnectResult(const std::string& sSenderId, const 
 {
     RequestConnectResult(sSenderId, sReceiverId, bSuccess, sResponse);
 }
+
+
+void ClientApiPoster::_RequestGetSenderStagedResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+{
+    RequestGetSenderStagedResult(nResult, sResponse, sResourceId);
+}
+
+void ClientApiPoster::_RequestGetSenderActiveResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+{
+    RequestGetSenderActiveResult(nResult, sResponse, sResourceId);
+}
+
+void ClientApiPoster::_RequestGetSenderTransportFileResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+{
+    RequestGetSenderTransportFileResult(nResult, sResponse, sResourceId);
+}
+
+void ClientApiPoster::_RequestGetReceiverStagedResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+{
+    RequestGetReceiverStagedResult(nResult, sResponse, sResourceId);
+}
+
+void ClientApiPoster::_RequestGetReceiverActiveResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+{
+    RequestGetReceiverActiveResult(nResult, sResponse, sResourceId);
+}

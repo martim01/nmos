@@ -433,26 +433,25 @@ void ClientApiPrivate::HandleCurlDone()
                 HandleCurlDoneTarget();
                 break;
             case ClientPoster::CURLTYPE_SENDER_STAGED:
-                // @todo
+                HandleCurlDoneGetSenderStaged();
                 break;
             case ClientPoster::CURLTYPE_SENDER_ACTIVE:
-                // @todo
+                HandleCurlDoneGetSenderActive();
                 break;
             case ClientPoster::CURLTYPE_SENDER_TRANSPORTFILE:
-                // @todo
+                HandlCurlDoneGetSenderTransportFile();
                 break;
             case ClientPoster::CURLTYPE_RECEIVER_STAGED:
-                // @todo
+                HandleCurlDoneGetReceiverStaged();
                 break;
             case ClientPoster::CURLTYPE_RECEIVER_ACTIVE:
-                // @todo
+                void HandleCurlDoneGetReceiverActive();
                 break;
             case ClientPoster::CURLTYPE_SENDER_PATCH:
                 HandleCurlDonePatchSender();
                 break;
             case ClientPoster::CURLTYPE_RECEIVER_PATCH:
                 HandleCurlDonePatchReceiver();
-
                 break;
          }
 }
@@ -460,6 +459,7 @@ void ClientApiPrivate::HandleCurlDone()
 
 void ClientApiPrivate::HandleCurlDoneTarget()
 {
+    //don't need to check for m_pPoster as check in HandleCurlDon
     Json::Value jsData;
     Json::Reader jsReader;
     if(jsReader.parse(m_sCurlResponse, jsData))
@@ -484,13 +484,128 @@ void ClientApiPrivate::HandleCurlDoneTarget()
 
 void ClientApiPrivate::HandleCurlDonePatchSender()
 {
-    m_pPoster->_RequestPatchSenderResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
-
+    Json::Value jsData;
+    Json::Reader jsReader;
+    if(jsReader.parse(m_sCurlResponse, jsData))
+    {
+        //don't need to check for m_pPoster as check in HandleCurlDon
+        if(m_nCurlResult != 200 && m_nCurlResult != 202 && jsData["error"].isString())
+        {
+            m_pPoster->_RequestPatchSenderResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
+        }
+        else
+        {
+            m_pPoster->_RequestPatchSenderResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+        }
+    }
 }
 
 void ClientApiPrivate::HandleCurlDonePatchReceiver()
 {
-    m_pPoster->_RequestPatchReceiverResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+    //don't need to check for m_pPoster as check in HandleCurlDon
+    Json::Value jsData;
+    Json::Reader jsReader;
+    if(jsReader.parse(m_sCurlResponse, jsData))
+    {
+        if(m_nCurlResult != 200 && m_nCurlResult != 202 && jsData["error"].isString())
+        {
+            m_pPoster->_RequestPatchReceiverResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
+        }
+        else
+        {
+            m_pPoster->_RequestPatchReceiverResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+        }
+    }
+}
+
+void ClientApiPrivate::HandleCurlDoneGetSenderStaged()
+{
+    //don't need to check for m_pPoster as check in HandleCurlDon
+    Json::Value jsData;
+    Json::Reader jsReader;
+    if(jsReader.parse(m_sCurlResponse, jsData))
+    {
+        if(m_nCurlResult != 200 && jsData["error"].isString())
+        {
+            m_pPoster->_RequestGetSenderStagedResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
+        }
+        else
+        {
+            m_pPoster->_RequestGetSenderStagedResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+        }
+    }
+}
+
+void ClientApiPrivate::HandleCurlDoneGetSenderActive()
+{
+    //don't need to check for m_pPoster as check in HandleCurlDon
+    Json::Value jsData;
+    Json::Reader jsReader;
+    if(jsReader.parse(m_sCurlResponse, jsData))
+    {
+        if(m_nCurlResult != 200 && jsData["error"].isString())
+        {
+            m_pPoster->_RequestGetSenderActiveResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
+        }
+        else
+        {
+            m_pPoster->_RequestGetSenderActiveResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+        }
+    }
+}
+
+void ClientApiPrivate::HandlCurlDoneGetSenderTransportFile()
+{
+    //don't need to check for m_pPoster as check in HandleCurlDon
+    Json::Value jsData;
+    Json::Reader jsReader;
+    if(jsReader.parse(m_sCurlResponse, jsData))
+    {
+        if(m_nCurlResult != 200 && jsData["error"].isString())
+        {
+            m_pPoster->_RequestGetSenderTransportFileResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
+        }
+        else
+        {
+            m_pPoster->_RequestGetSenderTransportFileResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+        }
+    }
+}
+
+void ClientApiPrivate::HandleCurlDoneGetReceiverStaged()
+{
+    //don't need to check for m_pPoster as check in HandleCurlDon
+    Json::Value jsData;
+    Json::Reader jsReader;
+    if(jsReader.parse(m_sCurlResponse, jsData))
+    {
+        if(m_nCurlResult != 200 && jsData["error"].isString())
+        {
+            m_pPoster->_RequestGetReceiverStagedResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
+        }
+        else
+        {
+            m_pPoster->_RequestGetReceiverStagedResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+        }
+    }
+}
+
+void ClientApiPrivate::HandleCurlDoneGetReceiverActive()
+{
+    //don't need to check for m_pPoster as check in HandleCurlDon
+    Json::Value jsData;
+    Json::Reader jsReader;
+    if(jsReader.parse(m_sCurlResponse, jsData))
+    {
+        if(m_nCurlResult != 200 && jsData["error"].isString())
+        {
+            m_pPoster->_RequestGetReceiverActiveResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
+        }
+        else
+        {
+            m_pPoster->_RequestGetReceiverActiveResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+        }
+    }
 }
 
 void ClientApiPrivate::ConnectToQueryServer()

@@ -142,6 +142,11 @@ class ClientApiPrivate
         void HandleCurlDoneTarget();
         void HandleCurlDonePatchSender();
         void HandleCurlDonePatchReceiver();
+        void HandleCurlDoneGetSenderStaged();
+        void HandleCurlDoneGetSenderActive();
+        void HandlCurlDoneGetSenderTransportFile();
+        void HandleCurlDoneGetReceiverStaged();
+        void HandleCurlDoneGetReceiverActive();
 
         enumMode m_eMode;
 

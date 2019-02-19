@@ -258,7 +258,7 @@ void NodeApi::StopmDNSServer()
 }
 
 
-bool NodeApi::StartServices(shared_ptr<EventPoster> pPoster, ClientApi::flagResource eClient, shared_ptr<ClientPoster> pClientPoster)
+bool NodeApi::StartServices(shared_ptr<EventPoster> pPoster)
 {
 
     m_pPoster = pPoster;
