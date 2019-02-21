@@ -33,7 +33,8 @@
 #include "flow.h"
 #include "receiver.h"
 #include "sender.h"
-#include "microserver.h"
+#include "is04server.h"
+#include "is05server.h"
 #include "nmosthread.h"
 #include "sdp.h"
 #include "utils.h"
@@ -63,7 +64,6 @@ m_bRun(true),
 m_bBrowsing(false),
 m_pPoster(0),
 m_nConnectionPort(0),
-m_nDiscoveryPort(0),
 m_nHeartbeatTime(5000)
 {
 }
@@ -192,32 +192,31 @@ void NodeApi::Init(unsigned short nDiscoveryPort, unsigned short nConnectionPort
 
         m_self.Init(sHost, sstr.str(), sLabel, sDescription);
     }
-    m_nDiscoveryPort = nDiscoveryPort;
+
+    IS04Server* pServer = new IS04Server(m_pPoster);
+    m_mServers.insert(make_pair(nDiscoveryPort, pServer));
+
+    //start the connection servers
+    IS05Server* p05Server = new IS05Server(m_pPoster);
+    m_mServers.insert(make_pair(nConnectionPort, p05Server));
     m_nConnectionPort = nConnectionPort;
+
 }
 
 bool NodeApi::StartHttpServers()
 {
     Log::Get(Log::LOG_DEBUG) << "Start Http Servers" << endl;
 
-    if(m_nConnectionPort != 0 && m_nDiscoveryPort != 0)
+    for(map<unsigned short, MicroServer*>::iterator itServer = m_mServers.begin(); itServer != m_mServers.end(); ++itServer)
     {
-        //start the discovery servers
-        MicroServer* pServer = new MicroServer(m_pPoster);
-        pServer->Init(m_nDiscoveryPort);
-        m_mServers.insert(make_pair(m_nDiscoveryPort, pServer));
+        itServer->second->Init(itServer->first);
 
-        //start the connection servers
-        pServer = new MicroServer(m_pPoster);
-        pServer->Init(m_nConnectionPort);
-        m_mServers.insert(make_pair(m_nConnectionPort, pServer));
-
-
-        Log::Get(Log::LOG_DEBUG) << "Start Http Servers: Done" << endl;
-        return true;
     }
-    Log::Get(Log::LOG_ERROR) << "Start Http Servers: Failed" << endl;
-    return false;
+
+
+    Log::Get(Log::LOG_DEBUG) << "Start Http Servers: Done" << endl;
+    return true;
+
 }
 
 void NodeApi::StopHttpServers()
@@ -730,6 +729,32 @@ void NodeApi::StopRun()
 }
 
 
+bool NodeApi::AddControl(const std::string& sDeviceId, const std::string& sEndpointUrl, unsigned short nPort, const std::string& sUrn, MicroServer* pServer)
+{
+    map<string, shared_ptr<Device> >::iterator itDevice = m_devices.GetResource(sDeviceId, false);
+    if(itDevice != m_devices.GetStagedResourceEnd())
+    {
+        map<unsigned short, MicroServer*>::iterator itServer = m_mServers.find(nPort);
+        if(itServer == m_mServers.end())
+        {
+            if(pServer == NULL)
+            {
+                return false;
+            }
+            m_mServers.insert(make_pair(nPort, pServer));
+        }
+
+        //add the control endpoints for the urn
+        for(set<endpoint>::const_iterator itEndpoint = m_self.GetEndpointsBegin(); itEndpoint != m_self.GetEndpointsEnd(); ++itEndpoint)
+        {
+            stringstream sstr;
+            sstr << "http://" << itEndpoint->sHost << ":" << nPort << "/x-nmos/" << sEndpointUrl;
+            itDevice->second->AddControl(sUrn, sstr.str());
+        }
+        return true;
+    }
+    return false;
+}
 
 
 bool NodeApi::AddDevice(shared_ptr<Device> pResource)

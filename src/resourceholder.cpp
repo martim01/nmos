@@ -125,9 +125,13 @@ template<class T> typename map<string, shared_ptr<T> >::const_iterator ResourceH
     return m_mResource.find(sUuid);
 }
 
-template<class T> typename map<string, shared_ptr<T> >::iterator ResourceHolder<T>::GetResource(string sUuid)
+template<class T> typename map<string, shared_ptr<T> >::iterator ResourceHolder<T>::GetResource(string sUuid, bool bCommited)
 {
-    return m_mResource.find(sUuid);
+    if(bCommited)
+    {
+        return m_mResource.find(sUuid);
+    }
+    return m_mResourceStaging.find(sUuid);
 }
 
 template<class T> typename map<string, shared_ptr<T> >::const_iterator ResourceHolder<T>::GetStagedResourceBegin() const

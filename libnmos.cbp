@@ -91,7 +91,6 @@
 				<Option projectCompilerOptionsRelation="-1" />
 				<Option projectLinkerOptionsRelation="-1" />
 				<Option projectIncludeDirsRelation="-1" />
-				<Option projectResourceIncludeDirsRelation="-1" />
 				<Option projectLibDirsRelation="-1" />
 				<MakeCommands>
 					<Build command="" />
@@ -155,6 +154,8 @@
 		<Unit filename="include/flowvideo.h" />
 		<Unit filename="include/flowvideocoded.h" />
 		<Unit filename="include/flowvideoraw.h" />
+		<Unit filename="include/is04server.h" />
+		<Unit filename="include/is05server.h" />
 		<Unit filename="include/libnmos.h" />
 		<Unit filename="include/log.h" />
 		<Unit filename="include/mdns.h" />
@@ -211,6 +212,8 @@
 		<Unit filename="src/flowvideo.cpp" />
 		<Unit filename="src/flowvideocoded.cpp" />
 		<Unit filename="src/flowvideoraw.cpp" />
+		<Unit filename="src/is04server.cpp" />
+		<Unit filename="src/is05server.cpp" />
 		<Unit filename="src/log.cpp" />
 		<Unit filename="src/microserver.cpp" />
 		<Unit filename="src/nmosthread.cpp" />

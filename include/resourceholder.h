@@ -39,7 +39,7 @@ template<class T> class NMOS_EXPOSE ResourceHolder
         typename std::map<std::string, std::shared_ptr<T> >::const_iterator GetResourceBegin() const;
         typename std::map<std::string, std::shared_ptr<T> >::const_iterator GetResourceEnd() const;
         typename std::map<std::string, std::shared_ptr<T> >::const_iterator FindNmosResource(std::string sUuid) const;
-        typename std::map<std::string, std::shared_ptr<T> >::iterator GetResource(std::string sUuid);
+        typename std::map<std::string, std::shared_ptr<T> >::iterator GetResource(std::string sUuid,bool bCommited=true);
 
         typename std::map<std::string, std::shared_ptr<T> >::const_iterator GetChangedResourceBegin() const;
         typename std::map<std::string, std::shared_ptr<T> >::const_iterator GetChangedResourceEnd() const;

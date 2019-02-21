@@ -30,7 +30,7 @@ class MicroServer
         MicroServer(std::shared_ptr<EventPoster> pPoster);
 
         ///< @brief Destructor
-        ~MicroServer();
+        virtual ~MicroServer();
 
         /** @brief Starts the web server
         *   @param nPort the port to listed for connections on
@@ -73,9 +73,10 @@ class MicroServer
 
 
 
+        void Signal(bool bOk, const std::string& sData);
+
 
     protected:
-        friend class NodeApi;
 
         int GetJson(std::string sPath, std::string& sResponse, std::string& sContentType);
         int PutJson(std::string sPath, const std::string& sJson, std::string& sRepsonse);
@@ -83,29 +84,15 @@ class MicroServer
 
         void Wait();
         void PrimeWait();
-        void Signal(bool bOk, const std::string& sData);
 
-
-    private:
 
 
         bool IsOk();
-        int GetJsonNmos(std::string& sReturn, std::string& sContentType);
-        int GetJsonNmosNodeApi(std::string& sReturn);
-        Json::Value GetJsonSources(const ApiVersion& version);
-        Json::Value GetJsonDevices(const ApiVersion& version);
-        Json::Value GetJsonFlows(const ApiVersion& version);
-        Json::Value GetJsonReceivers(const ApiVersion& version);
-        Json::Value GetJsonSenders(const ApiVersion& version);
-        int GetJsonNmosConnectionApi(std::string& sReturn, std::string& sContentType);
-        int GetJsonNmosConnectionSingleApi(std::string& sReturn, std::string& sContentType, const ApiVersion& version);
-        int GetJsonNmosConnectionBulkApi(std::string& sReturn);
 
-        int GetJsonNmosConnectionSingleSenders(std::string& sReturn, std::string& sContentType, const ApiVersion& version);
-        int GetJsonNmosConnectionSingleReceivers(std::string& sReturn, const ApiVersion& version);
+        virtual int GetJsonNmos(std::string& sReturn, std::string& sContentType);
+        virtual int PutJsonNmos(const std::string& sJson, std::string& sResponse);
+        virtual int PatchJsonNmos(const std::string& sJson, std::string& sResponse);
 
-        int PatchJsonSender(const std::string& sJson, std::string& sResponse, const ApiVersion& version);
-        int PatchJsonReceiver(const std::string& sJson, std::string& sResponse, const ApiVersion& version);
 
         Json::Value GetJsonError(unsigned long nCode = 404, std::string sError="Resource not found");
 
@@ -127,9 +114,6 @@ class MicroServer
 
         std::string m_sSignalData;
 
-        enum {NMOS=0, API_TYPE=1,VERSION=2,ENDPOINT=3, RESOURCE=4, TARGET=5};
-        enum {SZ_BASE=0, SZ_NMOS=1, SZ_API_TYPE=2,SZ_VERSION=3,SZ_ENDPOINT=4, SZ_RESOURCE=5, SZ_TARGET=6};
-        enum {SZC_TYPE=4, SZC_DIRECTION=5, SZC_ID=6, SZC_LAST=7};
-        enum {C_TYPE = 3, C_DIRECTION=4, C_ID=5, C_LAST=6};
+
 };
 

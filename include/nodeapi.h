@@ -46,6 +46,17 @@ class NMOS_EXPOSE NodeApi
         **/
         void Init(unsigned short nDiscoveryPort, unsigned short nConnectionPort, const std::string& sLabel, const std::string& sDescription);
 
+        /** @brief adds a device control (other than IS05)
+        *   @param sDeviceId the id of the device to add the control to
+        *   @param sEndpointUrl the url of the control after the x-nmos part
+        *   @param nPort the tcp/ip port to use
+        *   @param sUrn the urn of the control
+        *   @param pServer a pointer to the derived MicroServer object that will handle the control
+        *   @return <i>bool</i> true if the device is found
+        *   @note To add the same server to more than one device pass the same port number and NULL for the MicroServer
+        **/
+        bool AddControl(const std::string& sDeviceId, const std::string& sEndpointUrl, unsigned short nPort, const std::string& sUrn, MicroServer* pServer);
+
         /** @brief Launch the thread that starts the web servers and dns publisher and browser
         *   @param pPoster pointer to an optional EventPoster class that can be used to update the main thread with events
         *   @return <i>bool</i> true on succesfully starting the thread
@@ -318,7 +329,7 @@ class NMOS_EXPOSE NodeApi
         bool m_bBrowsing;
         std::shared_ptr<EventPoster> m_pPoster;
         unsigned short m_nConnectionPort;
-        unsigned short m_nDiscoveryPort;
+
 
         std::map<unsigned short, MicroServer*> m_mServers;
 
