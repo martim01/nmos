@@ -19,6 +19,7 @@ struct ConnectionInfo
     MHD_PostProcessor *pPost;
 };
 
+class NmosServer;
 
 class MicroServer
 {
@@ -36,6 +37,12 @@ class MicroServer
         *   @param nPort the port to listed for connections on
         **/
         bool Init(unsigned int nPort=80);
+
+        /** Add ann NMOS server
+        *   @param sControl the first part of the url (after the x-nmos/)
+        *   @param pServer the server
+        **/
+        bool AddNmosControl(const std::string& sControl, std::shared_ptr<NmosServer> pServer);
 
         /** @brief Stope the web server
         **/
@@ -72,8 +79,11 @@ class MicroServer
         static int AnswerToConnection(void *cls, MHD_Connection* pConnection, const char * url, const char * method, const char * sVersion, const char * upload_data, size_t * upload_data_size, void **ptr);
 
 
-
+        void Wait();
+        void PrimeWait();
+        bool IsOk();
         void Signal(bool bOk, const std::string& sData);
+        const std::string& GetSignalData();
 
 
     protected:
@@ -82,17 +92,7 @@ class MicroServer
         int PutJson(std::string sPath, const std::string& sJson, std::string& sRepsonse);
         int PatchJson(std::string sPath, const std::string& sJson, std::string& sRepsonse);
 
-        void Wait();
-        void PrimeWait();
-
-
-
-        bool IsOk();
-
-        virtual int GetJsonNmos(std::string& sReturn, std::string& sContentType);
-        virtual int PutJsonNmos(const std::string& sJson, std::string& sResponse);
-        virtual int PatchJsonNmos(const std::string& sJson, std::string& sResponse);
-
+        int GetApis(std::string& sReturn);
 
         Json::Value GetJsonError(unsigned long nCode = 404, std::string sError="Resource not found");
 
@@ -114,6 +114,7 @@ class MicroServer
 
         std::string m_sSignalData;
 
+        std::map<std::string, std::shared_ptr<NmosServer> > m_mServer;
 
 };
 

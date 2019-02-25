@@ -21,7 +21,7 @@
 #include <iphlpapi.h>
 #include <iptypes.h>
 #endif
-
+#include "microserver.h"
 #include "log.h"
 #include "curlregister.h"
 #include "eventposter.h"
@@ -193,15 +193,20 @@ void NodeApi::Init(unsigned short nDiscoveryPort, unsigned short nConnectionPort
         m_self.Init(sHost, sstr.str(), sLabel, sDescription);
     }
 
-    IS04Server* pServer = new IS04Server(m_pPoster);
+    MicroServer* pServer = new MicroServer(m_pPoster);
+    pServer->AddNmosControl("node", make_shared<IS04Server>());
     m_mServers.insert(make_pair(nDiscoveryPort, pServer));
 
-    //start the connection servers
-    IS05Server* p05Server = new IS05Server(m_pPoster);
-    m_mServers.insert(make_pair(nConnectionPort, p05Server));
-    m_nConnectionPort = nConnectionPort;
+    if(nConnectionPort != nDiscoveryPort)
+    {
+        pServer = new MicroServer(m_pPoster);
+        m_mServers.insert(make_pair(nConnectionPort, pServer));
+    }
+    pServer->AddNmosControl("connection", make_shared<IS05Server>());
 
+    m_nConnectionPort = nConnectionPort;
 }
+
 
 bool NodeApi::StartHttpServers()
 {
@@ -729,26 +734,30 @@ void NodeApi::StopRun()
 }
 
 
-bool NodeApi::AddControl(const std::string& sDeviceId, const std::string& sEndpointUrl, unsigned short nPort, const std::string& sUrn, MicroServer* pServer)
+bool NodeApi::AddControl(const std::string& sDeviceId, const std::string& sApi, const ApiVersion& version, unsigned short nPort, const std::string& sUrn, shared_ptr<NmosServer> pNmosServer)
 {
     map<string, shared_ptr<Device> >::iterator itDevice = m_devices.GetResource(sDeviceId, false);
     if(itDevice != m_devices.GetStagedResourceEnd())
     {
+        MicroServer* pServer;
         map<unsigned short, MicroServer*>::iterator itServer = m_mServers.find(nPort);
         if(itServer == m_mServers.end())
         {
-            if(pServer == NULL)
-            {
-                return false;
-            }
+            pServer = new MicroServer(m_pPoster);
             m_mServers.insert(make_pair(nPort, pServer));
         }
+        else
+        {
+            pServer = itServer->second;
+        }
+
+        pServer->AddNmosControl(sApi, pNmosServer);
 
         //add the control endpoints for the urn
         for(set<endpoint>::const_iterator itEndpoint = m_self.GetEndpointsBegin(); itEndpoint != m_self.GetEndpointsEnd(); ++itEndpoint)
         {
             stringstream sstr;
-            sstr << "http://" << itEndpoint->sHost << ":" << nPort << "/x-nmos/" << sEndpointUrl;
+            sstr << "http://" << itEndpoint->sHost << ":" << nPort << "/x-nmos/" << sApi << "/" << version.GetVersionAsString();
             itDevice->second->AddControl(sUrn, sstr.str());
         }
         return true;

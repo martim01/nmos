@@ -3,7 +3,9 @@
 	<Workspace title="Workspace">
 		<Project filename="libnmos.cbp" />
 		<Project filename="tests/nmos_registry_test/nmos_registry_test.cbp" />
-		<Project filename="tests/nmos_node_test/nmos_node_test.cbp" />
+		<Project filename="tests/nmos_node_test/nmos_node_test.cbp">
+			<Depends filename="libnmos.cbp" />
+		</Project>
 		<Project filename="tests/nmos_client_test/nmos_client_test.cbp">
 			<Depends filename="libnmos.cbp" />
 		</Project>

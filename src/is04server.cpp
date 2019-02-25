@@ -13,36 +13,24 @@
 #include "eventposter.h"
 #include "utils.h"
 #include "curlregister.h"
+#include "microserver.h"
 
 
 using namespace std;
 
 
 
-IS04Server::IS04Server(shared_ptr<EventPoster> pPoster) : MicroServer(pPoster)
+IS04Server::IS04Server() : NmosServer()
 {
 
 }
 
 
 
-int IS04Server::GetJsonNmos(string& sReturn, std::string& sContentType)
+int IS04Server::GetJsonNmos(MicroServer* pServer, string& sReturn, std::string& sContentType)
 {
-    Json::StyledWriter stw;
-    if(m_vPath.size() == SZ_NMOS)
-    {
-        Json::Value jsNode;
-        jsNode.append("node/");
-        sReturn = stw.write(jsNode);
-        return 200;
-    }
-    else if(m_vPath[API_TYPE] == "node" && m_nPort != NodeApi::Get().GetConnectionPort())
-    {
-        return GetJsonNmosNodeApi(sReturn);
+    return GetJsonNmosNodeApi(sReturn);
 
-    }
-    sReturn = stw.write(GetJsonError(404, "API not found"));
-    return 404;
 }
 
 int IS04Server::GetJsonNmosNodeApi(string& sReturn)
@@ -199,7 +187,7 @@ Json::Value IS04Server::GetJsonSenders(const ApiVersion& version)
 
 
 
-int IS04Server::PutJsonNmos(const string& sJson, string& sResponse)
+int IS04Server::PutJsonNmos(MicroServer* pServer, const string& sJson, string& sResponse)
 {
     Json::StyledWriter stw;
     int nCode = 500;
@@ -251,17 +239,17 @@ int IS04Server::PutJsonNmos(const string& sJson, string& sResponse)
                     }
                     if(m_pPoster)
                     {
-                        PrimeWait();
+                        pServer->PrimeWait();
                         //Tell the main thread to connect
                         m_pPoster->_Target(m_vPath[RESOURCE], sSdp, m_nPort);
                         //Pause the HTTP thread
                         Log::Get(Log::LOG_DEBUG) << "IS04Server: Wait" << std::endl;
-                        Wait();
+                        pServer->Wait();
 
-                        if(IsOk())
+                        if(pServer->IsOk())
                         {   //this means the main thread has connected the receiver to the sender
                             nCode = 202;
-                            pReceiver->SetSender(sSenderId, sSdp, m_sSignalData);
+                            pReceiver->SetSender(sSenderId, sSdp, pServer->GetSignalData());
                             NodeApi::Get().Commit();   //updates the registration node or txt records
 
                             if(pRemoteSender)

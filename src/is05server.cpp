@@ -14,20 +14,20 @@
 #include "eventposter.h"
 #include "utils.h"
 #include "curlregister.h"
-
+#include "microserver.h"
 
 using namespace std;
 
 
 
-IS05Server::IS05Server(shared_ptr<EventPoster> pPoster) : MicroServer(pPoster)
+IS05Server::IS05Server() : NmosServer()
 {
 
 }
 
 
 
-int IS05Server::GetJsonNmos(string& sReturn, std::string& sContentType)
+int IS05Server::GetJsonNmos(MicroServer* pServer, string& sReturn, std::string& sContentType)
 {
     Json::StyledWriter stw;
     if(m_vPath.size() == SZ_NMOS)
@@ -270,7 +270,7 @@ int IS05Server::GetJsonNmosConnectionBulkApi(std::string& sReturn)
 
 
 
-int IS05Server::PatchJsonNmos(const string& sJson, string& sResponse)
+int IS05Server::PatchJsonNmos(MicroServer* pServer, const string& sJson, string& sResponse)
 {
 
     Json::StyledWriter stw;
@@ -288,17 +288,17 @@ int IS05Server::PatchJsonNmos(const string& sJson, string& sResponse)
 
         if(m_vPath[C_DIRECTION] == "senders")
         {
-            return PatchJsonSender(sJson, sResponse, version);
+            return PatchJsonSender(pServer, sJson, sResponse, version);
         }
         else
         {
-            return PatchJsonReceiver(sJson, sResponse, version);
+            return PatchJsonReceiver(pServer, sJson, sResponse, version);
         }
     }
     return nCode;
 }
 
-int IS05Server::PatchJsonSender(const std::string& sJson, std::string& sResponse, const ApiVersion& version)
+int IS05Server::PatchJsonSender(MicroServer* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version)
 {
     Log::Get(Log::LOG_DEBUG) << "PatchJsonSender" << std::endl;
     int nCode(200);
@@ -351,13 +351,13 @@ int IS05Server::PatchJsonSender(const std::string& sJson, std::string& sResponse
             else if(m_pPoster)
             {   //tell the main thread and wait to see what happens
                 //the main thread should check that it can definitely do what the patch says and simply signal true or false
-                PrimeWait();
+                pServer->PrimeWait();
                 m_pPoster->_PatchSender(m_vPath[C_ID], conRequest, m_nPort);
                 //Pause the HTTP thread
-                Wait();
+                pServer->Wait();
 
 
-                if(IsOk() && pSender->Stage(conRequest, m_pPoster)) //PATCH the sender
+                if(pServer->IsOk() && pSender->Stage(conRequest, m_pPoster)) //PATCH the sender
                 {
                     nCode = 202;
                     if(conRequest.eActivate == connection::ACT_NULL || conRequest.eActivate == connection::ACT_NOW)
@@ -393,7 +393,7 @@ int IS05Server::PatchJsonSender(const std::string& sJson, std::string& sResponse
     return nCode;
 }
 
-int IS05Server::PatchJsonReceiver(const std::string& sJson, std::string& sResponse, const ApiVersion& version)
+int IS05Server::PatchJsonReceiver(MicroServer* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version)
 {
     int nCode(200);
     Json::StyledWriter stw;
@@ -441,13 +441,13 @@ int IS05Server::PatchJsonReceiver(const std::string& sJson, std::string& sRespon
             }
             else if(m_pPoster)
             {   //tell the main thread and wait to see what happens
-                PrimeWait();
+                pServer->PrimeWait();
                 //the main thread should check that it can definitely do what the patch says and simply signal true or false
                 m_pPoster->_PatchReceiver(m_vPath[C_ID], conRequest, m_nPort);
                 //Pause the HTTP thread
-                Wait();
+                pServer->Wait();
 
-                if(IsOk() && pReceiver->Stage(conRequest, m_pPoster)) //PATCH the Receiver
+                if(pServer->IsOk() && pReceiver->Stage(conRequest, m_pPoster)) //PATCH the Receiver
                 {
                     nCode = 202;
                     if(conRequest.eActivate == connection::ACT_NULL || conRequest.eActivate == connection::ACT_NOW)

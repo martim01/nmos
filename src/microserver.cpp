@@ -13,6 +13,7 @@
 #include "eventposter.h"
 #include "utils.h"
 #include "curlregister.h"
+#include "nmosserver.h"
 
 
 using namespace std;
@@ -196,6 +197,13 @@ MicroServer::MicroServer(shared_ptr<EventPoster> pPoster) : m_pPoster(pPoster), 
 MicroServer::~MicroServer()
 {
     Stop();
+
+}
+
+bool MicroServer::AddNmosControl(const string& sControl, shared_ptr<NmosServer> pServer)
+{
+    pServer->SetPoster(m_pPoster, m_nPort);
+    return m_mServer.insert(make_pair(sControl, pServer)).second;
 }
 
 void MicroServer::AddPutData(string sData)
@@ -272,8 +280,25 @@ int MicroServer::GetJson(string sPath, string& sReturn, std::string& sContentTyp
     {
         if(m_vPath[0] == "x-nmos")
         {   //check on nmos
-
-            nCode = GetJsonNmos(sReturn, sContentType);
+            if(m_vPath.size() == 1)
+            {
+                nCode = GetApis(sReturn);
+            }
+            else
+            {
+                map<string, shared_ptr<NmosServer> >::iterator itServer = m_mServer.find(m_vPath[1]);
+                if(itServer != m_mServer.end())
+                {
+                    itServer->second->SetPath(m_vPath);
+                    nCode = itServer->second->GetJsonNmos(this, sReturn, sContentType);
+                }
+                else
+                {
+                    Json::StyledWriter stw;
+                    sReturn = stw.write(GetJsonError(404, "Page not found"));
+                    nCode = 404;
+                }
+            }
         }
         else
         {
@@ -286,14 +311,7 @@ int MicroServer::GetJson(string sPath, string& sReturn, std::string& sContentTyp
 }
 
 
-Json::Value MicroServer::GetJsonError(unsigned long nCode, string sError)
-{
-    Json::Value jsError(Json::objectValue);
-    jsError["code"] = (int)nCode;
-    jsError["error"] = sError;
-    jsError["debug"] = "null";
-    return jsError;
-}
+
 
 
 int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
@@ -305,9 +323,20 @@ int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
 
     int nCode = 202;
     SplitString(m_vPath, sPath, '/');
-    if(m_vPath.empty() == false && m_vPath[0] == "x-nmos")
+    if(m_vPath.size() > 1 && m_vPath[0] == "x-nmos")
     {
-        nCode = PutJsonNmos(sJson, sResponse);
+        map<string, shared_ptr<NmosServer> >::iterator itServer = m_mServer.find(m_vPath[1]);
+        if(itServer != m_mServer.end())
+        {
+            itServer->second->SetPath(m_vPath);
+            nCode = itServer->second->PutJsonNmos(this, sJson, sResponse);
+        }
+        else
+        {
+            Json::StyledWriter stw;
+            sResponse = stw.write(GetJsonError(404, "Page not found"));
+            nCode = 404;
+        }
     }
     else
     {
@@ -329,9 +358,20 @@ int MicroServer::PatchJson(string sPath, const string& sJson, string& sResponse)
 
     int nCode = 202;
     SplitString(m_vPath, sPath, '/');
-    if(m_vPath.empty() == false && m_vPath[0] == "x-nmos")
+    if(m_vPath.size() > 1 && m_vPath[0] == "x-nmos")
     {
-        nCode =  PatchJsonNmos(sJson, sResponse);
+        map<string, shared_ptr<NmosServer> >::iterator itServer = m_mServer.find(m_vPath[1]);
+        if(itServer != m_mServer.end())
+        {
+            itServer->second->SetPath(m_vPath);
+            nCode = itServer->second->PatchJsonNmos(this, sJson, sResponse);
+        }
+        else
+        {
+            Json::StyledWriter stw;
+            sResponse = stw.write(GetJsonError(404, "Page not found"));
+            nCode = 404;
+        }
     }
     else
     {
@@ -341,23 +381,31 @@ int MicroServer::PatchJson(string sPath, const string& sJson, string& sResponse)
     return nCode;
 }
 
-int MicroServer::GetJsonNmos(std::string& sReturn, std::string& sContentType)
+
+const std::string& MicroServer::GetSignalData()
 {
-    Json::StyledWriter stw;
-    sReturn = stw.write(GetJsonError(405, "Method not allowed here."));
-    return 405;
+    return m_sSignalData;
 }
 
-int MicroServer::PutJsonNmos(const std::string& sJson, std::string& sResponse)
+
+int MicroServer::GetApis(std::string& sReturn)
 {
+    Json::Value jsNode;
+    for(map<string, shared_ptr<NmosServer> >::iterator itServer = m_mServer.begin(); itServer != m_mServer.end(); ++itServer)
+    {
+        jsNode.append(itServer->first+"/");
+    }
     Json::StyledWriter stw;
-    sResponse = stw.write(GetJsonError(405, "Method not allowed here."));
-    return 405;
+    sReturn = stw.write(jsNode);
+    return 200;
 }
 
-int MicroServer::PatchJsonNmos(const std::string& sJson, std::string& sResponse)
+
+Json::Value MicroServer::GetJsonError(unsigned long nCode, std::string sError)
 {
-    Json::StyledWriter stw;
-    sResponse = stw.write(GetJsonError(405, "Method not allowed here."));
-    return 405;
+    Json::Value jsError(Json::objectValue);
+    jsError["code"] = (int)nCode;
+    jsError["error"] = sError;
+    jsError["debug"] = "null";
+    return jsError;
 }

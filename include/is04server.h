@@ -6,17 +6,17 @@
 #include <vector>
 #include "json/json.h"
 #include "version.h"
-#include "microserver.h"
+#include "nmosserver.h"
 
 
-class IS04Server : public MicroServer
+class IS04Server : public NmosServer
 {
     public:
 
         /** @brief Constructor - this is called in NodeApi::StartService
         *   @param pPoster a sheared_ptr to an object of a class derived from EventPoster.
         **/
-        IS04Server(std::shared_ptr<EventPoster> pPoster);
+        IS04Server();
 
 
 
@@ -28,8 +28,8 @@ class IS04Server : public MicroServer
 
 
 
-        int GetJsonNmos(std::string& sReturn, std::string& sContentType);
-        int PutJsonNmos(const std::string& sJson, std::string& sResponse);
+        int GetJsonNmos(MicroServer* pServer, std::string& sReturn, std::string& sContentType);
+        int PutJsonNmos(MicroServer* pServer, const std::string& sJson, std::string& sResponse);
 
         int GetJsonNmosNodeApi(std::string& sReturn);
         Json::Value GetJsonSources(const ApiVersion& version);

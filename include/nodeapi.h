@@ -9,6 +9,8 @@
 #include "version.h"
 #include "clientapi.h"
 
+class NmosServer;
+
 class ServiceBrowser;
 class ServicePublisher;
 class ServiceBrowserEvent;
@@ -48,14 +50,15 @@ class NMOS_EXPOSE NodeApi
 
         /** @brief adds a device control (other than IS05)
         *   @param sDeviceId the id of the device to add the control to
-        *   @param sEndpointUrl the url of the control after the x-nmos part
+        *   @param sApi the api that this control is for.This is the part of the url after x-nmos and before the version (e.g node for is04, connection for is05, channelmapping for is08)
+        *   @param version the ApiVersion this control is for
         *   @param nPort the tcp/ip port to use
         *   @param sUrn the urn of the control
-        *   @param pServer a pointer to the derived MicroServer object that will handle the control
+        *   @param pNmosServer a pointer to the derived NmosServer object that will handle the control
         *   @return <i>bool</i> true if the device is found
         *   @note To add the same server to more than one device pass the same port number and NULL for the MicroServer
         **/
-        bool AddControl(const std::string& sDeviceId, const std::string& sEndpointUrl, unsigned short nPort, const std::string& sUrn, MicroServer* pServer);
+        bool AddControl(const std::string& sDeviceId, const std::string& sApi, const ApiVersion& version, unsigned short nPort, const std::string& sUrn, std::shared_ptr<NmosServer> pNmosServer);
 
         /** @brief Launch the thread that starts the web servers and dns publisher and browser
         *   @param pPoster pointer to an optional EventPoster class that can be used to update the main thread with events

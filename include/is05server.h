@@ -6,17 +6,17 @@
 #include <vector>
 #include "json/json.h"
 #include "version.h"
-#include "microserver.h"
+#include "nmosserver.h"
 
 
-class IS05Server : public MicroServer
+class IS05Server : public NmosServer
 {
     public:
 
         /** @brief Constructor - this is called in NodeApi::StartService
         *   @param pPoster a sheared_ptr to an object of a class derived from EventPoster.
         **/
-        IS05Server(std::shared_ptr<EventPoster> pPoster);
+        IS05Server();
 
 
 
@@ -28,9 +28,9 @@ class IS05Server : public MicroServer
 
 
 
-        int GetJsonNmos(std::string& sReturn, std::string& sContentType);
+        int GetJsonNmos(MicroServer* pServer, std::string& sReturn, std::string& sContentType);
 
-        int PatchJsonNmos(const std::string& sJson, std::string& sResponse);
+        int PatchJsonNmos(MicroServer* pServer, const std::string& sJson, std::string& sResponse);
         int GetJsonNmosConnectionApi(std::string& sReturn, std::string& sContentType);
         int GetJsonNmosConnectionSingleApi(std::string& sReturn, std::string& sContentType, const ApiVersion& version);
         int GetJsonNmosConnectionBulkApi(std::string& sReturn);
@@ -38,8 +38,8 @@ class IS05Server : public MicroServer
         int GetJsonNmosConnectionSingleSenders(std::string& sReturn, std::string& sContentType, const ApiVersion& version);
         int GetJsonNmosConnectionSingleReceivers(std::string& sReturn, const ApiVersion& version);
 
-        int PatchJsonSender(const std::string& sJson, std::string& sResponse, const ApiVersion& version);
-        int PatchJsonReceiver(const std::string& sJson, std::string& sResponse, const ApiVersion& version);
+        int PatchJsonSender(MicroServer* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version);
+        int PatchJsonReceiver(MicroServer* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version);
 
 
         enum {NMOS=0, API_TYPE=1,VERSION=2,ENDPOINT=3, RESOURCE=4, TARGET=5};

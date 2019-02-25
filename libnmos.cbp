@@ -161,6 +161,7 @@
 		<Unit filename="include/mdns.h" />
 		<Unit filename="include/microserver.h" />
 		<Unit filename="include/nmosdlldefine.h" />
+		<Unit filename="include/nmosserver.h" />
 		<Unit filename="include/nmosthread.h" />
 		<Unit filename="include/nodeapi.h" />
 		<Unit filename="include/receiver.h" />
@@ -216,6 +217,7 @@
 		<Unit filename="src/is05server.cpp" />
 		<Unit filename="src/log.cpp" />
 		<Unit filename="src/microserver.cpp" />
+		<Unit filename="src/nmosserver.cpp" />
 		<Unit filename="src/nmosthread.cpp" />
 		<Unit filename="src/nodeapi.cpp" />
 		<Unit filename="src/receiver.cpp" />
