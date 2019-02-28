@@ -22,13 +22,16 @@ class ClientApiPoster;
 class ClientApiPrivate
 {
     public:
-        enum enumMode {MODE_P2P, MODE_REGISTRY};
+        enum enumMode {MODE_P2P=0, MODE_REGISTRY};
         enum enumSignal {CLIENT_SIG_NONE=0, CLIENT_SIG_INSTANCE_RESOLVED, CLIENT_SIG_INSTANCE_REMOVED, CLIENT_SIG_NODE_BROWSED, CLIENT_SIG_CURL_DONE};
+        enum flagResource {NONE=0, NODES=1, DEVICES=2, SOURCES=4, FLOWS=8, SENDERS=16, RECEIVERS=32, ALL=63};
+
 
         ClientApiPrivate();
         ~ClientApiPrivate();
 
         void SetPoster(std::shared_ptr<ClientApiPoster> pPoster);
+        std::shared_ptr<ClientApiPoster> GetPoster();
 
         void Start(int nFlags);
         void Stop();
@@ -36,12 +39,12 @@ class ClientApiPrivate
 
         enumMode GetMode();
 
-        void AddNode(const std::string& sIpAddress, const std::string& sData);
-        void AddDevices(const std::string& sIpAddress, const std::string& sData);
-        void AddSources(const std::string& sIpAddress, const std::string& sData);
-        void AddFlows(const std::string& sIpAddress, const std::string& sData);
-        void AddSenders(const std::string& sIpAddress, const std::string& sData);
-        void AddReceivers(const std::string& sIpAddress, const std::string& sData);
+        void AddNode(std::list<std::shared_ptr<Self> >& lstAdded, std::list<std::shared_ptr<Self> >& lstUpdated, const std::string& sIpAddress, const std::string& sData);
+        void AddDevices(std::list<std::shared_ptr<Device> >& lstAdded, std::list<std::shared_ptr<Device> >& lstUpdated, const std::string& sIpAddress, const std::string& sData);
+        void AddSources(std::list<std::shared_ptr<Source> >& lstAdded, std::list<std::shared_ptr<Source> >& lstUpdated, const std::string& sIpAddress, const std::string& sData);
+        void AddFlows(std::list<std::shared_ptr<Flow> >& lstAdded, std::list<std::shared_ptr<Flow> >& lstUpdated, const std::string& sIpAddress, const std::string& sData);
+        void AddSenders(std::list<std::shared_ptr<Sender> >& lstAdded, std::list<std::shared_ptr<Sender> >& lstUpdated, const std::string& sIpAddress, const std::string& sData);
+        void AddReceivers(std::list<std::shared_ptr<Receiver> >& lstAdded, std::list<std::shared_ptr<Receiver> >& lstUpdated, const std::string& sIpAddress, const std::string& sData);
 
         void StoreDevices(const std::string& sIpAddress);
         void StoreSources(const std::string& sIpAddress);
@@ -49,11 +52,13 @@ class ClientApiPrivate
         void StoreSenders(const std::string& sIpAddress);
         void StoreReceivers(const std::string& sIpAddress);
 
-        void RemoveStaleDevices();
-        void RemoveStaleSources();
-        void RemoveStaleFlows();
-        void RemoveStaleSenders();
-        void RemoveStaleReceivers();
+        void RemoveStaleDevices(std::list<std::shared_ptr<Device> >& lstRemoved);
+        void RemoveStaleSources(std::list<std::shared_ptr<Source> >& lstRemoved);
+        void RemoveStaleFlows(std::list<std::shared_ptr<Flow> >& lstRemoved);
+        void RemoveStaleSenders(std::list<std::shared_ptr<Sender> >& lstRemoved);
+        void RemoveStaleReceivers(std::list<std::shared_ptr<Receiver> >& lstRemoved);
+
+        template<class T> bool RunQuery(std::list<std::shared_ptr<T> >& lstAdded, std::list<std::shared_ptr<T> >& lstUpdated, std::list<std::shared_ptr<T> >& lstRemoved, int nResourceType);
 
 
         static const std::string STR_RESOURCE[6];
@@ -124,8 +129,13 @@ class ClientApiPrivate
 
         std::shared_ptr<EventPoster> GetClientPoster();
 
+        bool AddQuerySubscription(int nResource, const std::string& sQuery, unsigned long nUpdateRate);
+        bool RemoveQuerySubscription(const std::string& sSubscriptionId);
+
     private:
         friend class ClientPoster;
+
+
         void ConnectToQueryServer();
         void RemoveResources(const std::string& sIpAddress);
         void StoreNodeVersion(const std::string& sIpAddress, std::shared_ptr<dnsInstance> pInstance);
@@ -147,6 +157,16 @@ class ClientApiPrivate
         void HandlCurlDoneGetSenderTransportFile();
         void HandleCurlDoneGetReceiverStaged();
         void HandleCurlDoneGetReceiverActive();
+
+        bool AddQuerySubscriptionRegistry(int nResource, const std::string& sQuery, unsigned long nUpdateRate);
+        bool RemoveQuerySubscriptionRegistry(const std::string& sSubscriptionId);
+
+        bool AddQuerySubscriptionP2P(int nResource, const std::string& sQuery);
+        bool RemoveQuerySubscriptionP2P(const std::string& sSubscriptionId);
+
+
+        template<class T> long RunQuery(std::list<std::shared_ptr<T> >& lstCheck, int nResource);
+        bool MeetsQuery(const std::string& sQuery, std::shared_ptr<Resource> pResource);
 
         enumMode m_eMode;
 
@@ -177,5 +197,23 @@ class ClientApiPrivate
         std::string m_sCurlResourceId;
 
         std::shared_ptr<ClientPoster> m_pClientPoster;
+
+        std::multimap<unsigned short, std::shared_ptr<dnsInstance> > m_mQueryNodes;
+
+
+
+
+
+        struct query
+        {
+            std::string sId;
+            std::string sHref;
+
+            int nResource;
+            std::string sQuery;
+            unsigned long nRefreshRate;
+        };
+
+        std::multimap<int, query> m_mmQuery;
 };
 

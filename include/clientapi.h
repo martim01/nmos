@@ -28,17 +28,27 @@ class NMOS_EXPOSE ClientApi
         void SetPoster(std::shared_ptr<ClientApiPoster> pPoster);
 
         /** @brief Start the ClientApi services
-        *   @param eInterested bitmask of the resource types the user is interested in
         **/
-        void Start(flagResource eInterested=ALL);
+        void Start();
 
         ///< @brief Stop the ClientApi services
         void Stop();
 
-        /** @brief Changes the resource types the user is interested in
-        *   @param eInterested bitmask of the resource types the user is interested in
+
+        /** @brief Adds a query subscription. That is tells the ClientApi what resources to notify us about
+        *   @param eResource the resource type
+        *   @param sQuery the query string
+        *   @param nUpdateRate the update rate in ms for messages. Ignored in P2P mode
+        *   @return <i>bool</i>
         **/
-        void ChangeInterest(flagResource eInterest);
+        bool AddQuerySubscription(flagResource eResource, const std::string& sQuery, unsigned long nUpdateRate);
+
+        /** @brief Removes a query subscription
+        *   @param sSubscriptionId the id of the subscription
+        *   @return <i>bool</i>
+        **/
+        bool RemoveQuerySubscription(const std::string& sSubscriptionId);
+
 
         /** @brief Performs an IS-04 receiver subscription request
         *   @param sSenderId the uuId of the sender we want the receiver to subscribe to

@@ -12,6 +12,8 @@
 //#include <uuid/uuid.h>
 #include <sys/time.h>
 #endif // __GNU__
+#include <chrono>
+#include <sstream>
 
 #include "guid.h"
 #include <array>
@@ -59,6 +61,19 @@ string GetIpAddress(const string& sInterface)
 }
 
 
+std::string GetCurrentTime(bool bIncludeNano)
+{
+    auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+    std::stringstream sstr;
+
+    sstr << (nanos/1000000000);
+    if(bIncludeNano)
+    {
+        sstr << ":" << (nanos%1000000000);
+    }
+    return sstr.str();
+}
+
 std::string CreateGuid(std::string sName)
 {
     uuid_t guid;
@@ -70,26 +85,10 @@ std::string CreateGuid(std::string sName)
              guid.time_low, guid.time_mid, guid.time_hi_and_version, guid.clock_seq_hi_and_reserved, guid.clock_seq_low,
              guid.node[0], guid.node[1], guid.node[2], guid.node[3], guid.node[4], guid.node[5]);
     return std::string(output.data());
+}
 
 
-//    std::stringstream os;
-//    os.width(8);
-//    os << std::hex << guid.time_low << '-';
-//    os.width(4);
-//    os << std::hex << guid.time_mid << '-';
-//    os.width(4);
-//    os << std::hex << guid.time_hi_and_version << '-';
-//    os.width(2);
-//    os << std::hex
-//        << static_cast<short>(guid.clock_seq_hi_and_reserved)
-//        << static_cast<short>(guid.clock_seq_low)
-//        << '-'
-//        << static_cast<short>(guid.node[0])
-//        << static_cast<short>(guid.node[1])
-//        << static_cast<short>(guid.node[2])
-//        << static_cast<short>(guid.node[3])
-//        << static_cast<short>(guid.node[4])
-//        << static_cast<short>(guid.node[5]);
-//
-//    return  os.str();
+std::string CreateGuid()
+{
+    return CreateGuid(GetCurrentTime(true));
 }

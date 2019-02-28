@@ -26,6 +26,8 @@
 #include "receiver.h"
 #include "receiver.h"
 #include "clientapiposter.h"
+#include "utils.h"
+
 
 using namespace std;
 
@@ -101,46 +103,101 @@ static void NodeBrowser(ClientApiPrivate* pApi, shared_ptr<dnsInstance> pInstanc
             if(VersionChanged(pInstance, "ver_slf") && (nFlags&ClientApi::NODES))
             {
                 CurlRegister::Get(string(ss.str()+"self"), sResponse, true);
-                pApi->AddNode(pInstance->sHostIP, sResponse);
+                list<shared_ptr<Self> > lstAdded;
+                list<shared_ptr<Self> > lstUpdated;
+                list<shared_ptr<Self> > lstRemoved;
+                pApi->AddNode(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
+
+                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiPrivate::NODES))
+                {
+                    pApi->GetPoster()->_NodeChanged(lstAdded, lstUpdated, lstRemoved);
+                }
             }
             if(VersionChanged(pInstance, "ver_dvc") && (nFlags&ClientApi::DEVICES))
             {
                 CurlRegister::Get(string(ss.str()+"devices"), sResponse, true);
 
+                list<shared_ptr<Device> > lstAdded;
+                list<shared_ptr<Device> > lstUpdated;
+                list<shared_ptr<Device> > lstRemoved;
                 //store the devices this ip address currently provides
                 pApi->StoreDevices(pInstance->sHostIP);
                 //add or update all devices on this ip address
-                pApi->AddDevices(pInstance->sHostIP, sResponse);
+                pApi->AddDevices(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
                 //remove any devices that we previously stored but didn;t update. i.e. ones that no longer exist
-                pApi->RemoveStaleDevices();
+                pApi->RemoveStaleDevices(lstRemoved);
+
+                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiPrivate::DEVICES))
+                {
+                    pApi->GetPoster()->_DeviceChanged(lstAdded, lstUpdated, lstRemoved);
+                }
             }
             if(VersionChanged(pInstance, "ver_src") && (nFlags&ClientApi::SOURCES))
             {
                 CurlRegister::Get(string(ss.str()+"sources"), sResponse, true);
+
+                list<shared_ptr<Source> > lstAdded;
+                list<shared_ptr<Source> > lstUpdated;
+                list<shared_ptr<Source> > lstRemoved;
+
                 pApi->StoreSources(pInstance->sHostIP);
-                pApi->AddSources(pInstance->sHostIP, sResponse);
-                pApi->RemoveStaleSources();
+                pApi->AddSources(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
+                pApi->RemoveStaleSources(lstRemoved);
+
+                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiPrivate::SOURCES))
+                {
+                    pApi->GetPoster()->_SourceChanged(lstAdded, lstUpdated, lstRemoved);
+                }
             }
             if(VersionChanged(pInstance, "ver_flw") && (nFlags&ClientApi::FLOWS))
             {
                 CurlRegister::Get(string(ss.str()+"flows"), sResponse, true);
+
+                list<shared_ptr<Flow> > lstAdded;
+                list<shared_ptr<Flow> > lstUpdated;
+                list<shared_ptr<Flow> > lstRemoved;
+
                 pApi->StoreFlows(pInstance->sHostIP);
-                pApi->AddFlows(pInstance->sHostIP, sResponse);
-                pApi->RemoveStaleFlows();
+                pApi->AddFlows(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
+                pApi->RemoveStaleFlows(lstRemoved);
+
+                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiPrivate::FLOWS))
+                {
+                    pApi->GetPoster()->_FlowChanged(lstAdded, lstUpdated, lstRemoved);
+                }
             }
             if(VersionChanged(pInstance, "ver_snd") && (nFlags&ClientApi::SENDERS))
             {
                 CurlRegister::Get(string(ss.str()+"senders"), sResponse, true);
+
+                list<shared_ptr<Sender> > lstAdded;
+                list<shared_ptr<Sender> > lstUpdated;
+                list<shared_ptr<Sender> > lstRemoved;
+
                 pApi->StoreSenders(pInstance->sHostIP);
-                pApi->AddSenders(pInstance->sHostIP, sResponse);
-                pApi->RemoveStaleSenders();
+                pApi->AddSenders(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
+                pApi->RemoveStaleSenders(lstRemoved);
+
+                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiPrivate::SENDERS))
+                {
+                    pApi->GetPoster()->_SenderChanged(lstAdded, lstUpdated, lstRemoved);
+                }
             }
             if(VersionChanged(pInstance, "ver_rcv") && (nFlags&ClientApi::RECEIVERS))
             {
                 CurlRegister::Get(string(ss.str()+"receivers"), sResponse, true);
+
+                list<shared_ptr<Receiver> > lstAdded;
+                list<shared_ptr<Receiver> > lstUpdated;
+                list<shared_ptr<Receiver> > lstRemoved;
                 pApi->StoreReceivers(pInstance->sHostIP);
-                pApi->AddReceivers(pInstance->sHostIP, sResponse);
-                pApi->RemoveStaleReceivers();
+                pApi->AddReceivers(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
+                pApi->RemoveStaleReceivers(lstRemoved);
+
+                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiPrivate::RECEIVERS))
+                {
+                    pApi->GetPoster()->_ReceiverChanged(lstAdded, lstUpdated, lstRemoved);
+                }
             }
 
         }
@@ -284,6 +341,11 @@ void ClientApiPrivate::SetPoster(shared_ptr<ClientApiPoster> pPoster)
     m_pPoster = pPoster;
 }
 
+std::shared_ptr<ClientApiPoster> ClientApiPrivate::GetPoster()
+{
+    return m_pPoster;
+}
+
 
 bool ClientApiPrivate::Wait(unsigned long nMilliseconds)
 {
@@ -367,7 +429,30 @@ void ClientApiPrivate::HandleInstanceResolved()
     {
         if(m_pInstance->sService == "_nmos-query._tcp")
         {
-            Log::Get(Log::LOG_INFO) << "Query node found" << endl;
+            Log::Get(Log::LOG_INFO) << "Query node found: " << m_pInstance->sName << endl;
+            m_lstResolve.clear();
+
+            //add the node to our priority sorted list of query servers
+            map<string, string>::iterator itTxt = m_pInstance->mTxt.find("pri");
+            if(itTxt != m_pInstance->mTxt.end())
+            {
+                try
+                {
+                    m_mQueryNodes.insert(make_pair(stoi(itTxt->second), m_pInstance));
+                    if(m_eMode == MODE_P2P)
+                    {   //change the mode away from peer to peer
+                        m_eMode = MODE_REGISTRY;
+                        if(m_pPoster)
+                        {
+                            m_pPoster->_ModeChanged(true);
+                        }
+                    }
+                }
+                catch(invalid_argument& ia)
+                {
+                    Log::Get(Log::LOG_ERROR) << "Priority '" << itTxt->second << "' invalid" << endl;
+                }
+            }
         }
         else if(m_pInstance->sService == "_nmos-node._tcp" && m_eMode == MODE_P2P)
         {
@@ -393,6 +478,14 @@ void ClientApiPrivate::HandleInstanceRemoved()
         if(m_pInstance->sService == "_nmos_query._tcp")
         {
             Log::Get(Log::LOG_INFO) << "Query node: " << m_pInstance->sName << "removed" << endl;
+            if(m_eMode == MODE_REGISTRY)
+            {   //@todo should we check here if we have another node??
+                m_eMode = MODE_P2P;
+                if(m_pPoster)
+                {
+                    m_pPoster->_ModeChanged(false);
+                }
+            }
         }
         else if(m_pInstance->sService == "_nmos-node._tcp")
         {
@@ -635,7 +728,7 @@ ClientApiPrivate::enumMode ClientApiPrivate::GetMode()
 
 
 
-void ClientApiPrivate::AddNode(const string& sIpAddress, const string& sData)
+void ClientApiPrivate::AddNode(std::list<std::shared_ptr<Self> >& lstAdded, std::list<std::shared_ptr<Self> >& lstUpdated,const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
 
@@ -652,10 +745,7 @@ void ClientApiPrivate::AddNode(const string& sIpAddress, const string& sData)
                 if(pSelf->UpdateFromJson(jsData))
                 {
                     m_nodes.AddResource(sIpAddress, pSelf);
-                    if(m_pPoster)
-                    {
-                        m_pPoster->_NodeChanged(pSelf, ClientApiPoster::RESOURCE_ADDED);
-                    }
+                    lstAdded.push_back(pSelf);
 
                     Log::Get() << "Node: " << pSelf->GetId() << " found at " << sIpAddress << endl;
                 }
@@ -664,9 +754,9 @@ void ClientApiPrivate::AddNode(const string& sIpAddress, const string& sData)
                     Log::Get() << "Found node but json data incorrect: " << pSelf->GetJsonParseError() << endl;
                 }
             }
-            else if(m_pPoster)
+            else
             {
-                m_pPoster->_NodeChanged(pSelf, ClientApiPoster::RESOURCE_UPDATED);
+                lstUpdated.push_back(pSelf);
             }
         }
         else
@@ -680,10 +770,9 @@ void ClientApiPrivate::AddNode(const string& sIpAddress, const string& sData)
     }
 }
 
-void ClientApiPrivate::AddDevices(const string& sIpAddress, const string& sData)
+void ClientApiPrivate::AddDevices(list<shared_ptr<Device> >& lstAdded, list<shared_ptr<Device> >& lstUpdated, const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
-
 
     Json::Value jsData;
     Json::Reader jsReader;
@@ -702,10 +791,7 @@ void ClientApiPrivate::AddDevices(const string& sIpAddress, const string& sData)
                         if(pResource->UpdateFromJson(jsData[ai]))
                         {
                             m_devices.AddResource(sIpAddress, pResource);
-                            if(m_pPoster)
-                            {
-                                m_pPoster->_DeviceChanged(pResource, ClientApiPoster::RESOURCE_ADDED);
-                            }
+                            lstAdded.push_back(pResource);
                             Log::Get() << "Device: " << pResource->GetId() << " found at " << sIpAddress << endl;
                         }
                         else
@@ -713,9 +799,9 @@ void ClientApiPrivate::AddDevices(const string& sIpAddress, const string& sData)
                             Log::Get() << "Found device but json data incorrect: " << pResource->GetJsonParseError() << endl;
                         }
                     }
-                    else if(m_pPoster)
+                    else
                     {
-                        m_pPoster->_DeviceChanged(pResource, ClientApiPoster::RESOURCE_UPDATED);
+                        lstUpdated.push_back(pResource);
                     }
                 }
                 else
@@ -735,7 +821,7 @@ void ClientApiPrivate::AddDevices(const string& sIpAddress, const string& sData)
     }
 }
 
-void ClientApiPrivate::AddSources(const string& sIpAddress, const string& sData)
+void ClientApiPrivate::AddSources(list<shared_ptr<Source> >& lstAdded, list<shared_ptr<Source> >& lstUpdated, const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
     Json::Value jsData;
@@ -757,10 +843,7 @@ void ClientApiPrivate::AddSources(const string& sIpAddress, const string& sData)
                             if(pResource->UpdateFromJson(jsData[ai]))
                             {
                                 m_sources.AddResource(sIpAddress, pResource);
-                                if(m_pPoster)
-                                {
-                                    m_pPoster->_SourceChanged(pResource, ClientApiPoster::RESOURCE_ADDED);
-                                }
+                                lstAdded.push_back(pResource);
                                 Log::Get() << "SourceAudio: " << pResource->GetId() << " found at " << sIpAddress << endl;
                             }
                             else
@@ -774,10 +857,8 @@ void ClientApiPrivate::AddSources(const string& sIpAddress, const string& sData)
                             if(pResource->UpdateFromJson(jsData[ai]))
                             {
                                 m_sources.AddResource(sIpAddress, pResource);
-                                if(m_pPoster)
-                                {
-                                    m_pPoster->_SourceChanged(pResource, ClientApiPoster::RESOURCE_ADDED);
-                                }
+
+                                lstAdded.push_back(pResource);
                                 Log::Get() << "SourceGeneric: " << pResource->GetId() << " found at " << sIpAddress << endl;
                             }
                             else
@@ -786,9 +867,9 @@ void ClientApiPrivate::AddSources(const string& sIpAddress, const string& sData)
                             }
                         }
                     }
-                    else if(m_pPoster)
+                    else
                     {
-                        m_pPoster->_SourceChanged(pSourceCore, ClientApiPoster::RESOURCE_UPDATED);
+                        lstUpdated.push_back(pSourceCore);
                     }
                 }
                 else
@@ -808,7 +889,7 @@ void ClientApiPrivate::AddSources(const string& sIpAddress, const string& sData)
     }
 }
 
-void ClientApiPrivate::AddFlows(const string& sIpAddress, const string& sData)
+void ClientApiPrivate::AddFlows(list<shared_ptr<Flow> >& lstAdded, list<shared_ptr<Flow> >& lstUpdated, const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
     Json::Value jsData;
@@ -834,10 +915,7 @@ void ClientApiPrivate::AddFlows(const string& sIpAddress, const string& sData)
                                     if(pResource->UpdateFromJson(jsData[ai]))
                                     {
                                         m_flows.AddResource(sIpAddress, pResource);
-                                        if(m_pPoster)
-                                        {
-                                            m_pPoster->_FlowChanged(pResource, ClientApiPoster::RESOURCE_ADDED);
-                                        }
+                                        lstAdded.push_back(pResource);
                                         Log::Get() << "FlowAudioRaw: " << pResource->GetId() << " found at " << sIpAddress << endl;
                                     }
                                     else
@@ -851,10 +929,7 @@ void ClientApiPrivate::AddFlows(const string& sIpAddress, const string& sData)
                                     if(pResource->UpdateFromJson(jsData[ai]))
                                     {
                                         m_flows.AddResource(sIpAddress, pResource);
-                                        if(m_pPoster)
-                                        {
-                                            m_pPoster->_FlowChanged(pResource, ClientApiPoster::RESOURCE_ADDED);
-                                        }
+                                        lstAdded.push_back(pResource);
                                         Log::Get() << "FlowAudioCoded: " << pResource->GetId() << " found at " << sIpAddress << endl;
                                     }
                                     else
@@ -874,10 +949,7 @@ void ClientApiPrivate::AddFlows(const string& sIpAddress, const string& sData)
                                     if(pResource->UpdateFromJson(jsData[ai]))
                                     {
                                         m_flows.AddResource(sIpAddress, pResource);
-                                        if(m_pPoster)
-                                        {
-                                            m_pPoster->_FlowChanged(pResource, ClientApiPoster::RESOURCE_ADDED);
-                                        }
+                                        lstAdded.push_back(pResource);
                                         Log::Get() << "FlowVideoRaw: " << pResource->GetId() << " found at " << sIpAddress << endl;
                                     }
                                     else
@@ -891,10 +963,7 @@ void ClientApiPrivate::AddFlows(const string& sIpAddress, const string& sData)
                                     if(pResource->UpdateFromJson(jsData[ai]))
                                     {
                                         m_flows.AddResource(sIpAddress, pResource);
-                                        if(m_pPoster)
-                                        {
-                                            m_pPoster->_FlowChanged(pResource, ClientApiPoster::RESOURCE_ADDED);
-                                        }
+                                        lstAdded.push_back(pResource);
                                         Log::Get() << "FlowVideoCoded: " << pResource->GetId() << " found at " << sIpAddress << endl;
                                     }
                                     else
@@ -912,10 +981,7 @@ void ClientApiPrivate::AddFlows(const string& sIpAddress, const string& sData)
                                 if(pResource->UpdateFromJson(jsData[ai]))
                                 {
                                     m_flows.AddResource(sIpAddress, pResource);
-                                    if(m_pPoster)
-                                    {
-                                        m_pPoster->_FlowChanged(pResource, ClientApiPoster::RESOURCE_ADDED);
-                                    }
+                                    lstAdded.push_back(pResource);
                                     Log::Get() << "FlowDataSdiAnc: " << pResource->GetId() << " found at " << sIpAddress << endl;
                                 }
                                 else
@@ -932,10 +998,7 @@ void ClientApiPrivate::AddFlows(const string& sIpAddress, const string& sData)
                             if(pResource->UpdateFromJson(jsData[ai]))
                             {
                                 m_flows.AddResource(sIpAddress, pResource);
-                                if(m_pPoster)
-                                {
-                                    m_pPoster->_FlowChanged(pResource, ClientApiPoster::RESOURCE_ADDED);
-                                }
+                                lstAdded.push_back(pResource);
                                 Log::Get() << "FlowMux: " << pResource->GetId() << " found at " << sIpAddress << endl;
                             }
                             else
@@ -944,9 +1007,9 @@ void ClientApiPrivate::AddFlows(const string& sIpAddress, const string& sData)
                             }
                         }
                     }
-                    else if(m_pPoster)
+                    else
                     {
-                        m_pPoster->_FlowChanged(pFlowCore, ClientApiPoster::RESOURCE_UPDATED);
+                        lstUpdated.push_back(pFlowCore);
                     }
                 }
                 else
@@ -966,7 +1029,7 @@ void ClientApiPrivate::AddFlows(const string& sIpAddress, const string& sData)
     }
 }
 
-void ClientApiPrivate::AddSenders(const string& sIpAddress, const string& sData)
+void ClientApiPrivate::AddSenders(list<shared_ptr<Sender> >& lstAdded, list<shared_ptr<Sender> >& lstUpdated, const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
     Json::Value jsData;
@@ -986,10 +1049,7 @@ void ClientApiPrivate::AddSenders(const string& sIpAddress, const string& sData)
                         if(pResource->UpdateFromJson(jsData[ai]))
                         {
                             m_senders.AddResource(sIpAddress, pResource);
-                            if(m_pPoster)
-                            {
-                                m_pPoster->_SenderChanged(pResource, ClientApiPoster::RESOURCE_ADDED);
-                            }
+                            lstAdded.push_back(pResource);
                             Log::Get() << "Sender: " << pResource->GetId() << " found at " << sIpAddress << endl;
                         }
                         else
@@ -997,9 +1057,9 @@ void ClientApiPrivate::AddSenders(const string& sIpAddress, const string& sData)
                             Log::Get() << "Found Sender but json data incorrect: " << pResource->GetJsonParseError() << endl;
                         }
                     }
-                    else if(m_pPoster)
+                    else
                     {
-                        m_pPoster->_SenderChanged(pResource, ClientApiPoster::RESOURCE_UPDATED);
+                        lstUpdated.push_back(pResource);
                     }
                 }
                 else
@@ -1019,7 +1079,7 @@ void ClientApiPrivate::AddSenders(const string& sIpAddress, const string& sData)
     }
 }
 
-void ClientApiPrivate::AddReceivers(const string& sIpAddress, const string& sData)
+void ClientApiPrivate::AddReceivers(list<shared_ptr<Receiver> >& lstAdded, list<shared_ptr<Receiver> >& lstUpdated, const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
     Json::Value jsData;
@@ -1039,10 +1099,7 @@ void ClientApiPrivate::AddReceivers(const string& sIpAddress, const string& sDat
                         if(pResource->UpdateFromJson(jsData[ai]))
                         {
                             m_receivers.AddResource(sIpAddress, pResource);
-                            if(m_pPoster)
-                            {
-                                m_pPoster->_ReceiverChanged(pResource, ClientApiPoster::RESOURCE_ADDED);
-                            }
+                            lstAdded.push_back(pResource);
                             Log::Get() << "Receiver: " << pResource->GetId() << " found at " << sIpAddress << endl;
                         }
                         else
@@ -1050,9 +1107,9 @@ void ClientApiPrivate::AddReceivers(const string& sIpAddress, const string& sDat
                             Log::Get() << "Found Receiver but json data incorrect: " << pResource->GetJsonParseError() << endl;
                         }
                     }
-                    else if(m_pPoster)
+                    else
                     {
-                        m_pPoster->_ReceiverChanged(pResource, ClientApiPoster::RESOURCE_UPDATED);
+                        lstUpdated.push_back(pResource);
                     }
                 }
                 else
@@ -1075,47 +1132,22 @@ void ClientApiPrivate::AddReceivers(const string& sIpAddress, const string& sDat
 
 void ClientApiPrivate::RemoveResources(const string& sIpAddress)
 {
-    set<string> setRemoved = m_nodes.RemoveResources(sIpAddress);
-    Log::Get() << setRemoved.size() << " node(s) removed" << endl;
-    if(setRemoved.empty() == false && m_pPoster)
-    {
-        m_pPoster->_NodesRemoved(setRemoved);
-    }
+    list<shared_ptr<Self> > lstSelf;
+    list<shared_ptr<Device> > lstDevice;
+    list<shared_ptr<Source> > lstSource;
+    list<shared_ptr<Flow> > lstFlow;
+    list<shared_ptr<Sender> > lstSender;
+    list<shared_ptr<Receiver> > lstReceiver;
 
-    setRemoved = m_devices.RemoveResources(sIpAddress);
-    Log::Get() << setRemoved.size() << " device(s) removed" << endl;
-    if(setRemoved.empty() == false && m_pPoster)
-    {
-        m_pPoster->_DevicesRemoved(setRemoved);
-    }
+    m_nodes.RemoveResources(sIpAddress, lstSelf);
+    m_devices.RemoveResources(sIpAddress, lstDevice);
+    m_sources.RemoveResources(sIpAddress, lstSource);
+    m_flows.RemoveResources(sIpAddress, lstFlow);
+    m_senders.RemoveResources(sIpAddress, lstSender);
+    m_receivers.RemoveResources(sIpAddress, lstReceiver);
 
-    setRemoved = m_sources.RemoveResources(sIpAddress);
-    Log::Get() << setRemoved.size() << " source(s) removed" << endl;
-    if(setRemoved.empty() == false && m_pPoster)
-    {
-        m_pPoster->_SourcesRemoved(setRemoved);
-    }
+    //@todo run past query subscriptions and tell the client
 
-    setRemoved = m_flows.RemoveResources(sIpAddress);
-    Log::Get() << setRemoved.size() << " flow(s) removed" << endl;
-    if(setRemoved.empty() == false && m_pPoster)
-    {
-        m_pPoster->_FlowsRemoved(setRemoved);
-    }
-
-    setRemoved = m_senders.RemoveResources(sIpAddress);
-    Log::Get() << setRemoved.size() << " sender(s) removed" << endl;
-    if(setRemoved.empty() == false && m_pPoster)
-    {
-        m_pPoster->_SendersRemoved(setRemoved);
-    }
-
-    setRemoved = m_receivers.RemoveResources(sIpAddress);
-    Log::Get() << setRemoved.size() << " receiver(s) removed" << endl;
-    if(setRemoved.empty() == false && m_pPoster)
-    {
-        m_pPoster->_ReceiversRemoved(setRemoved);
-    }
 }
 
 void ClientApiPrivate::NodeDetailsDone()
@@ -1537,49 +1569,30 @@ void ClientApiPrivate::StoreReceivers(const string& sIpAddress)
     m_receivers.StoreResources(sIpAddress);
 }
 
-void ClientApiPrivate::RemoveStaleDevices()
+void ClientApiPrivate::RemoveStaleDevices(std::list<std::shared_ptr<Device> >& lstRemoved)
 {
-    set<string> setRemoved(m_devices.RemoveStaleResources());
-    if(m_pPoster && setRemoved.empty() == false)
-    {
-        m_pPoster->_DevicesRemoved(setRemoved);
-    }
+    m_devices.RemoveStaleResources(lstRemoved);
+
 }
 
-void ClientApiPrivate::RemoveStaleSources()
+void ClientApiPrivate::RemoveStaleSources(std::list<std::shared_ptr<Source> >& lstRemoved)
 {
-    set<string> setRemoved(m_sources.RemoveStaleResources());
-    if(m_pPoster && setRemoved.empty() == false)
-    {
-        m_pPoster->_SourcesRemoved(setRemoved);
-    }
+    m_sources.RemoveStaleResources(lstRemoved);
 }
 
-void ClientApiPrivate::RemoveStaleFlows()
+void ClientApiPrivate::RemoveStaleFlows(std::list<std::shared_ptr<Flow> >& lstRemoved)
 {
-    set<string> setRemoved(m_flows.RemoveStaleResources());
-    if(m_pPoster && setRemoved.empty() == false)
-    {
-        m_pPoster->_FlowsRemoved(setRemoved);
-    }
+    m_flows.RemoveStaleResources(lstRemoved);
 }
 
-void ClientApiPrivate::RemoveStaleSenders()
+void ClientApiPrivate::RemoveStaleSenders(std::list<std::shared_ptr<Sender> >& lstRemoved)
 {
-    set<string> setRemoved(m_senders.RemoveStaleResources());
-    if(m_pPoster && setRemoved.empty() == false)
-    {
-        m_pPoster->_SendersRemoved(setRemoved);
-    }
+    m_senders.RemoveStaleResources(lstRemoved);
 }
 
-void ClientApiPrivate::RemoveStaleReceivers()
+void ClientApiPrivate::RemoveStaleReceivers(std::list<std::shared_ptr<Receiver> >& lstRemoved)
 {
-    set<string> setRemoved(m_receivers.RemoveStaleResources());
-    if(m_pPoster && setRemoved.empty() == false)
-    {
-        m_pPoster->_ReceiversRemoved(setRemoved);
-    }
+    m_receivers.RemoveStaleResources(lstRemoved);
 }
 
 bool ClientApiPrivate::Connect(const std::string& sSenderId, const std::string& sReceiverId)
@@ -1642,4 +1655,105 @@ bool ClientApiPrivate::Disconnect( const std::string& sReceiverId)
     thread th(DisconnectThread, this, pSender->GetId(), sReceiverId, sSenderStageUrl, sSenderTransportUrl, sReceiverStageUrl);
     th.detach();
     return true;
+}
+
+
+bool ClientApiPrivate::AddQuerySubscription(int nResource, const std::string& sQuery, unsigned long nUpdateRate)
+{
+    bool bSuccess(false);
+    switch(m_eMode)
+    {
+        case MODE_P2P:
+            bSuccess = AddQuerySubscriptionP2P(nResource, sQuery);
+            break;
+        case MODE_REGISTRY:
+            bSuccess = AddQuerySubscription(nResource, sQuery, nUpdateRate);
+            break;
+
+    }
+    return bSuccess;
+}
+
+bool ClientApiPrivate::RemoveQuerySubscription(const std::string& sSubscriptionId)
+{
+
+}
+
+
+bool ClientApiPrivate::AddQuerySubscriptionRegistry(int nResource, const std::string& sQuery, unsigned long nUpdateRate)
+{
+
+}
+
+bool ClientApiPrivate::RemoveQuerySubscriptionRegistry(const std::string& sSubscriptionId)
+{
+
+}
+
+bool ClientApiPrivate::AddQuerySubscriptionP2P(int nResource, const std::string& sQuery)
+{
+    //store the query
+    query aQuery;
+    aQuery.sId = CreateGuid();
+    aQuery.sQuery = sQuery;
+    aQuery.nResource = nResource;
+    m_mmQuery.insert(make_pair(nResource, aQuery));
+
+    //@todo call the poster to let the client know the id
+    //run the query on our stored nodes and call the poster for each found query
+
+}
+
+bool ClientApiPrivate::RemoveQuerySubscriptionP2P(const std::string& sSubscriptionId)
+{
+
+}
+
+template<class T> long ClientApiPrivate::RunQuery(std::list<shared_ptr<T> >& lstCheck, int nResource)
+{
+    for(typename list<shared_ptr<T> >::iterator itResource = lstCheck.begin(); itResource != lstCheck.end(); )
+    {
+        bool bKeep(false);
+        for(multimap<int, query>::iterator itQuery = m_mmQuery.lower_bound(nResource); itQuery != m_mmQuery.upper_bound(nResource); ++itQuery)
+        {
+            if(MeetsQuery(itQuery->second.sQuery, (*itResource)))
+            {
+                bKeep = true;
+                break;
+            }
+        }
+
+        if(bKeep)
+        {
+            ++itResource;
+        }
+        else
+        {
+            itResource = lstCheck.erase(itResource);
+        }
+    }
+}
+
+template<class T> bool ClientApiPrivate::RunQuery(list<shared_ptr<T> >& lstAdded, list<shared_ptr<T> >& lstUpdated, list<shared_ptr<T> >& lstRemoved, int nResourceType)
+{
+    if(m_pPoster)
+    {
+        RunQuery(lstAdded, nResourceType);
+        RunQuery(lstUpdated, nResourceType);
+        RunQuery(lstRemoved, nResourceType);
+        if(lstAdded.empty() == false || lstUpdated.empty() == false || lstRemoved.empty() == false)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool ClientApiPrivate::MeetsQuery(const std::string& sQuery, shared_ptr<Resource> pResource)
+{
+    if(sQuery.empty())
+    {
+        return true;
+    }
+    // @todo run the query properly
 }

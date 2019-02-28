@@ -5,6 +5,8 @@
 #include "nodeapi.h"
 #include "flow.h"
 #include "device.h"
+#include "utils.h"
+
 
 static void ActivationThreadSender(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sSenderId, std::shared_ptr<EventPoster> pPoster)
 {

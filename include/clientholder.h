@@ -6,6 +6,7 @@
 #include "version.h"
 #include <string>
 #include <set>
+#include <list>
 
 
 class Resource;
@@ -18,12 +19,11 @@ template<class T> class NMOS_EXPOSE ClientHolder
 
 
         bool AddResource(const std::string& sIpAddres, std::shared_ptr<T> pResource);
-        bool RemoveResource(std::shared_ptr<T> pResource);
-        bool RemoveResource(const std::string& sUid);
-        std::set<std::string> RemoveResources(const std::string& sIpAddres);
+
+        void RemoveResources(const std::string& sIpAddres, typename std::list<std::shared_ptr<T> >& lstRemoved);
 
         void StoreResources(const std::string& sIpAddress);
-        std::set<std::string> RemoveStaleResources();
+        void RemoveStaleResources(typename std::list<std::shared_ptr<T> >& lstRemoved);
 
         void RemoveAllResources();
 
@@ -39,6 +39,9 @@ template<class T> class NMOS_EXPOSE ClientHolder
         std::shared_ptr<T> UpdateResource(const Json::Value& jsData);
         size_t GetResourceCount() const;
     protected:
+
+        bool RemoveResource(std::shared_ptr<T> pResource);
+        std::shared_ptr<T> RemoveResource(const std::string& sUid);
 
         std::map<std::string, std::shared_ptr<T> > m_mResource;
         std::multimap<std::string, std::string > m_mmAddressResourceId;

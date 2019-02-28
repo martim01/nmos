@@ -7,9 +7,9 @@ ClientApi& ClientApi::Get()
     return api;
 }
 
-void ClientApi::Start(flagResource eInterested)
+void ClientApi::Start()
 {
-    m_pApi->Start(eInterested);
+    m_pApi->Start(ALL);
 }
 
 
@@ -18,11 +18,6 @@ void ClientApi::Stop()
     m_pApi->Stop();
 }
 
-
-void ClientApi::ChangeInterest(flagResource eInterest)
-{
-    m_pApi->ChangeInterest(eInterest);
-}
 
 
 ClientApi::ClientApi() :
@@ -188,4 +183,15 @@ bool ClientApi::Connect(const std::string& sSenderId, const std::string& sReceiv
 bool ClientApi::Disconnect(const std::string& sReceiverId)
 {
     return m_pApi->Disconnect(sReceiverId);
+}
+
+
+bool ClientApi::AddQuerySubscription(flagResource eResource, const std::string& sQuery, unsigned long nUpdateRate)
+{
+    return m_pApi->AddQuerySubscription(eResource, sQuery, nUpdateRate);
+}
+
+bool ClientApi::RemoveQuerySubscription(const std::string& sSubscriptionId)
+{
+    return m_pApi->RemoveQuerySubscription(sSubscriptionId);
 }

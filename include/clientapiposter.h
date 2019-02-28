@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 #include <set>
+#include <list>
 
 
 class Self;
@@ -20,19 +21,14 @@ class NMOS_EXPOSE ClientApiPoster
 
         enum enumChange{RESOURCE_ADDED=1, RESOURCE_UPDATED};
 
-        void _NodeChanged(std::shared_ptr<Self> pNode, enumChange eChange);
-        void _DeviceChanged(std::shared_ptr<Device> pDevice, enumChange eChange);
-        void _SourceChanged(std::shared_ptr<Source> pSource, enumChange eChange);
-        void _FlowChanged(std::shared_ptr<Flow> pFlow, enumChange eChange);
-        void _SenderChanged(std::shared_ptr<Sender> pSender, enumChange eChange);
-        void _ReceiverChanged(std::shared_ptr<Receiver> pReceiver, enumChange eChange);
+        void _ModeChanged(bool bQueryApi);
+        void _NodeChanged(const std::list<std::shared_ptr<Self> >& lstNodesAdded, const std::list<std::shared_ptr<Self> >& lstNodesUpdated, const std::list<std::shared_ptr<Self> >& lstNodesRemoved);
+        void _DeviceChanged(const std::list<std::shared_ptr<Device> >& lstDevicesAdded, const std::list<std::shared_ptr<Device> >& lstDevicesUpdated, const std::list<std::shared_ptr<Device> >& lstDevicesRemoved);
+        void _SourceChanged(const std::list<std::shared_ptr<Source> >& lstSourcesAdded, const std::list<std::shared_ptr<Source> >& lstSourcesUpdated, const std::list<std::shared_ptr<Source> >& lstSourcesRemoved);
+        void _FlowChanged(const std::list<std::shared_ptr<Flow> >& lstFlowsAdded, const std::list<std::shared_ptr<Flow> >& lstFlowsUpdated, const std::list<std::shared_ptr<Flow> >& lstFlowsRemoved);
+        void _SenderChanged(const std::list<std::shared_ptr<Sender> >& lstSendersAdded, const std::list<std::shared_ptr<Sender> >& lstSendersUpdated, const std::list<std::shared_ptr<Sender> >& lstSendersRemoved);
+        void _ReceiverChanged(const std::list<std::shared_ptr<Receiver> >& lstReceiversAdded, const std::list<std::shared_ptr<Receiver> >& lstReceiversUpdated, const std::list<std::shared_ptr<Receiver> >& lstReceiversRemoved);
 
-        void _NodesRemoved(const std::set<std::string>& setRemoved);
-        void _DevicesRemoved(const std::set<std::string>& setRemoved);
-        void _SourcesRemoved(const std::set<std::string>& setRemoved);
-        void _FlowsRemoved(const std::set<std::string>& setRemoved);
-        void _SendersRemoved(const std::set<std::string>& setRemoved);
-        void _ReceiversRemoved(const std::set<std::string>& setRemoved);
 
         void _RequestTargetResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
         void _RequestPatchSenderResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
@@ -47,71 +43,54 @@ class NMOS_EXPOSE ClientApiPoster
 
     protected:
 
-        /** @brief Called when a Self is either added or changed
-        *   @param pNode a shared_ptr to the added or updated f
-        *   @param eChange an enumChanged reflecting whether the Self was added or updated
+        /** @brief Called when the API changes from P2P to Query and vice versa
+        *   @param bQueryApi if true then a query node has been found
         **/
-        virtual void NodeChanged(std::shared_ptr<Self> pNode, enumChange eChange)=0;
+        virtual void ModeChanged(bool bQueryApi)=0;
 
-        /** @brief Called when a Device is either added or changed
-        *   @param pDevice a shared_ptr to the added or updated Device
-        *   @param eChange an enumChanged reflecting whether the Device was added or updated
+        /** @brief called when one or more Self resources that match a subscribed query are added, updated or removed
+        *   @param lstNodesAdded a list of Selfs that have been added
+        *   @param lstNodesUpdated a list of Selfs that have been updated
+        *   @param lstNodesRemoved a list of Selfs that have been removed
         **/
-        virtual void DeviceChanged(std::shared_ptr<Device> pDevice, enumChange eChange)=0;
+        virtual void NodeChanged(const std::list<std::shared_ptr<Self> >& lstNodesAdded, const std::list<std::shared_ptr<Self> >& lstNodesUpdated, const std::list<std::shared_ptr<Self> >& lstNodesRemoved)=0;
 
-        /** @brief Called when a Source is either added or changed
-        *   @param pSource a shared_ptr to the added or updated Source
-        *   @param eChange an enumChanged reflecting whether the Source was added or updated
+        /** @brief called when one or more Device resources that match a subscribed query are added, updated or removed
+        *   @param lstNodesAdded a list of Devices that have been added
+        *   @param lstNodesUpdated a list of Devices that have been updated
+        *   @param lstNodesRemoved a list of Devices that have been removed
         **/
-        virtual void SourceChanged(std::shared_ptr<Source> pSource, enumChange eChange)=0;
+        virtual void DeviceChanged(const std::list<std::shared_ptr<Device> >& lstDevicesAdded, const std::list<std::shared_ptr<Device> >& lstDevicesUpdated, const std::list<std::shared_ptr<Device> >& lstDevicesRemoved)=0;
 
-        /** @brief Called when a Flow is either added or changed
-        *   @param pFlow a shared_ptr to the added or updated Flow
-        *   @param eChange an enumChanged reflecting whether the Flow was added or updated
+        /** @brief called when one or more Source resources that match a subscribed query are added, updated or removed
+        *   @param lstNodesAdded a list of Sources that have been added
+        *   @param lstNodesUpdated a list of Sources that have been updated
+        *   @param lstNodesRemoved a list of Sources that have been removed
         **/
-        virtual void FlowChanged(std::shared_ptr<Flow> pFlow, enumChange eChange)=0;
+        virtual void SourceChanged(const std::list<std::shared_ptr<Source> >& lstSourcesAdded, const std::list<std::shared_ptr<Source> >& lstSourcesUpdated, const std::list<std::shared_ptr<Source> >& lstSourcesRemoved)=0;
 
-        /** @brief Called when a Sender is either added or changed
-        *   @param pSender a shared_ptr to the added or updated Sender
-        *   @param eChange an enumChanged reflecting whether the Sender was added or updated
+        /** @brief called when one or more Flow resources that match a subscribed query are added, updated or removed
+        *   @param lstNodesAdded a list of Flows that have been added
+        *   @param lstNodesUpdated a list of Flows that have been updated
+        *   @param lstNodesRemoved a list of Flows that have been removed
         **/
-        virtual void SenderChanged(std::shared_ptr<Sender> pSender, enumChange eChange)=0;
+        virtual void FlowChanged(const std::list<std::shared_ptr<Flow> >& lstFlowsAdded, const std::list<std::shared_ptr<Flow> >& lstFlowsUpdated, const std::list<std::shared_ptr<Flow> >& lstFlowsRemoved)=0;
 
-        /** @brief Called when a Receiver is either added or changed
-        *   @param pReceiver a shared_ptr to the added or updated Receiver
-        *   @param eChange an enumChanged reflecting whether the Receiver was added or updated
+        /** @brief called when one or more Sender resources that match a subscribed query are added, updated or removed
+        *   @param lstNodesAdded a list of Senders that have been added
+        *   @param lstNodesUpdated a list of Senders that have been updated
+        *   @param lstNodesRemoved a list of Senders that have been removed
         **/
-        virtual void ReceiverChanged(std::shared_ptr<Receiver> pReceiver, enumChange eChange)=0;
+        virtual void SenderChanged(const std::list<std::shared_ptr<Sender> >& lstSendersAdded, const std::list<std::shared_ptr<Sender> >& lstSendersUpdated, const std::list<std::shared_ptr<Sender> >& lstSendersRemoved)=0;
 
-        /** @brief Called when one or more Self are removed
-        *   @param setRemoved set of Self uuIds
+        /** @brief called when one or more Receiver resources that match a subscribed query are added, updated or removed
+        *   @param lstNodesAdded a list of Receivers that have been added
+        *   @param lstNodesUpdated a list of Receivers that have been updated
+        *   @param lstNodesRemoved a list of Receivers that have been removed
         **/
-        virtual void NodesRemoved(const std::set<std::string>& setRemoved)=0;
+        virtual void ReceiverChanged(const std::list<std::shared_ptr<Receiver> >& lstReceiversAdded, const std::list<std::shared_ptr<Receiver> >& lstReceiversUpdated, const std::list<std::shared_ptr<Receiver> >& lstReceiversRemoved)=0;
 
-        /** @brief Called when one or more Devices are removed
-        *   @param setRemoved set of Device uuIds
-        **/
-        virtual void DevicesRemoved(const std::set<std::string>& setRemoved)=0;
 
-        /** @brief Called when one or more Sources are removed
-        *   @param setRemoved set of Source uuIds
-        **/
-        virtual void SourcesRemoved(const std::set<std::string>& setRemoved)=0;
-
-        /** @brief Called when one or more Flows are removed
-        *   @param setRemoved set of Flows uuIds
-        **/
-        virtual void FlowsRemoved(const std::set<std::string>& setRemoved)=0;
-
-        /** @brief Called when one or more Senders are removed
-        *   @param setRemoved set of Sender uuIds
-        **/
-        virtual void SendersRemoved(const std::set<std::string>& setRemoved)=0;
-
-        /** @brief Called when one or more Receivers are removed
-        *   @param setRemoved set of Receiver uuIds
-        **/
-        virtual void ReceiversRemoved(const std::set<std::string>& setRemoved)=0;
 
         /** @brief Called when a ClientApi::Subscribe or ClientApi::Unsubscribe gets an answer from the target webserver
         *   @param nResult the http result code

@@ -1,64 +1,39 @@
 #include "clientapiposter.h"
 
-void ClientApiPoster::_NodeChanged(std::shared_ptr<Self> pNode, enumChange eChange)
+
+void ClientApiPoster::_ModeChanged(bool bQueryApi)
 {
-    NodeChanged(pNode, eChange);
+    ModeChanged(bQueryApi);
 }
 
-void ClientApiPoster::_DeviceChanged(std::shared_ptr<Device> pDevice, enumChange eChange)
+void ClientApiPoster::_NodeChanged(const std::list<std::shared_ptr<Self> >& lstNodesAdded, const std::list<std::shared_ptr<Self> >& lstNodesUpdated, const std::list<std::shared_ptr<Self> >& lstNodesRemoved)
 {
-    DeviceChanged(pDevice, eChange);
+    NodeChanged(lstNodesAdded, lstNodesUpdated, lstNodesRemoved);
 }
 
-void ClientApiPoster::_SourceChanged(std::shared_ptr<Source> pSource, enumChange eChange)
+void ClientApiPoster::_DeviceChanged(const std::list<std::shared_ptr<Device> >& lstDevicesAdded, const std::list<std::shared_ptr<Device> >& lstDevicesUpdated, const std::list<std::shared_ptr<Device> >& lstDevicesRemoved)
 {
-    SourceChanged(pSource, eChange);
+    DeviceChanged(lstDevicesAdded, lstDevicesUpdated, lstDevicesRemoved);
 }
 
-void ClientApiPoster::_FlowChanged(std::shared_ptr<Flow> pFlow, enumChange eChange)
+void ClientApiPoster::_SourceChanged(const std::list<std::shared_ptr<Source> >& lstSourcesAdded, const std::list<std::shared_ptr<Source> >& lstSourcesUpdated, const std::list<std::shared_ptr<Source> >& lstSourcesRemoved)
 {
-    FlowChanged(pFlow, eChange);
+    SourceChanged(lstSourcesAdded, lstSourcesUpdated, lstSourcesRemoved);
 }
 
-void ClientApiPoster::_SenderChanged(std::shared_ptr<Sender> pSender, enumChange eChange)
+void ClientApiPoster::_FlowChanged(const std::list<std::shared_ptr<Flow> >& lstFlowsAdded, const std::list<std::shared_ptr<Flow> >& lstFlowsUpdated, const std::list<std::shared_ptr<Flow> >& lstFlowsRemoved)
 {
-    SenderChanged(pSender, eChange);
+    FlowChanged(lstFlowsAdded, lstFlowsUpdated, lstFlowsRemoved);
 }
 
-void ClientApiPoster::_ReceiverChanged(std::shared_ptr<Receiver> pReceiver, enumChange eChange)
+void ClientApiPoster::_SenderChanged(const std::list<std::shared_ptr<Sender> >& lstSendersAdded, const std::list<std::shared_ptr<Sender> >& lstSendersUpdated, const std::list<std::shared_ptr<Sender> >& lstSendersRemoved)
 {
-    ReceiverChanged(pReceiver, eChange);
+    SenderChanged(lstSendersAdded, lstSendersUpdated, lstSendersRemoved);
 }
 
-
-void ClientApiPoster::_NodesRemoved(const std::set<std::string>& setRemoved)
+void ClientApiPoster::_ReceiverChanged(const std::list<std::shared_ptr<Receiver> >& lstReceiversAdded, const std::list<std::shared_ptr<Receiver> >& lstReceiversUpdated, const std::list<std::shared_ptr<Receiver> >& lstReceiversRemoved)
 {
-    NodesRemoved(setRemoved);
-}
-
-void ClientApiPoster::_DevicesRemoved(const std::set<std::string>& setRemoved)
-{
-    DevicesRemoved(setRemoved);
-}
-
-void ClientApiPoster::_SourcesRemoved(const std::set<std::string>& setRemoved)
-{
-    SourcesRemoved(setRemoved);
-}
-
-void ClientApiPoster::_FlowsRemoved(const std::set<std::string>& setRemoved)
-{
-    FlowsRemoved(setRemoved);
-}
-
-void ClientApiPoster::_SendersRemoved(const std::set<std::string>& setRemoved)
-{
-    SendersRemoved(setRemoved);
-}
-
-void ClientApiPoster::_ReceiversRemoved(const std::set<std::string>& setRemoved)
-{
-    ReceiversRemoved(setRemoved);
+    ReceiverChanged(lstReceiversAdded, lstReceiversUpdated, lstReceiversRemoved);
 }
 
 

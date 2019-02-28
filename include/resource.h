@@ -54,7 +54,7 @@ class Resource
     protected:
         void UpdateVersionTime();
 
-        std::string GetCurrentTime(bool bIncludeNano=true);
+
         bool ConvertTaiStringToTimePoint(const std::string& sTai,  std::chrono::time_point<std::chrono::high_resolution_clock>& tp);
 
         Json::Value m_json;

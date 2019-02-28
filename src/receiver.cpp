@@ -5,6 +5,8 @@
 #include "connection.h"
 #include "activationthread.h"
 #include "log.h"
+#include "utils.h"
+
 
 static void ActivationThreadReceiver(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sReceiverId, std::shared_ptr<EventPoster> pPoster)
 {
