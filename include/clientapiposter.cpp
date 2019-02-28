@@ -82,3 +82,14 @@ void ClientApiPoster::_RequestGetReceiverActiveResult(unsigned long nResult, con
 {
     RequestGetReceiverActiveResult(nResult, sResponse, sResourceId);
 }
+
+
+void ClientApiPoster::_QuerySubscription(const std::string& sSubscriptionId)
+{
+    //@todo ClientApiPoster::_QuerySubscription
+}
+
+void ClientApiPoster::_QuerySubscriptionRemoved(const std::string& sSubscriptionId)
+{
+    //@todo ClientApiPoster::_QuerySubscriptionRemoved
+}

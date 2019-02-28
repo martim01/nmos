@@ -38,6 +38,8 @@ template<class T> class NMOS_EXPOSE ClientHolder
 
         std::shared_ptr<T> UpdateResource(const Json::Value& jsData);
         size_t GetResourceCount() const;
+
+        void GetResourcesAsList(typename std::list<std::shared_ptr<T> >& lstResources);
     protected:
 
         bool RemoveResource(std::shared_ptr<T> pResource);

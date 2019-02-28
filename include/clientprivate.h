@@ -165,7 +165,9 @@ class ClientApiPrivate
         bool RemoveQuerySubscriptionP2P(const std::string& sSubscriptionId);
 
 
-        template<class T> long RunQuery(std::list<std::shared_ptr<T> >& lstCheck, int nResource);
+        template<class T> void RunQuery(std::list<std::shared_ptr<T> >& lstCheck, int nResource);
+        template<class T> bool RunQuery(std::list<std::shared_ptr<T> >& lstCheck, const std::string& sQuery);
+
         bool MeetsQuery(const std::string& sQuery, std::shared_ptr<Resource> pResource);
 
         enumMode m_eMode;

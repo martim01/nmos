@@ -166,7 +166,13 @@ template<class T> void ClientHolder<T>::RemoveStaleResources(typename std::list<
 
 }
 
-
+template<class T> void ClientHolder<T>::GetResourcesAsList(typename std::list<std::shared_ptr<T> >& lstResources)
+{
+    for(typename std::map<std::string, std::shared_ptr<T> >::iterator itResource = m_mResource.begin(); itResource != m_mResource.end(); ++itResource)
+    {
+        lstResources.push_back(itResource->second);
+    }
+}
 
 
 

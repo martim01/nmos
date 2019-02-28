@@ -1667,7 +1667,7 @@ bool ClientApiPrivate::AddQuerySubscription(int nResource, const std::string& sQ
             bSuccess = AddQuerySubscriptionP2P(nResource, sQuery);
             break;
         case MODE_REGISTRY:
-            bSuccess = AddQuerySubscription(nResource, sQuery, nUpdateRate);
+            bSuccess = AddQuerySubscriptionRegistry(nResource, sQuery, nUpdateRate);
             break;
 
     }
@@ -1676,18 +1676,29 @@ bool ClientApiPrivate::AddQuerySubscription(int nResource, const std::string& sQ
 
 bool ClientApiPrivate::RemoveQuerySubscription(const std::string& sSubscriptionId)
 {
+    bool bSuccess(false);
+    switch(m_eMode)
+    {
+        case MODE_P2P:
+            bSuccess = RemoveQuerySubscriptionP2P(sSubscriptionId);
+            break;
+        case MODE_REGISTRY:
+            bSuccess = RemoveQuerySubscriptionRegistry(sSubscriptionId);
+            break;
 
+    }
+    return bSuccess;
 }
 
 
 bool ClientApiPrivate::AddQuerySubscriptionRegistry(int nResource, const std::string& sQuery, unsigned long nUpdateRate)
 {
-
+    // @todo ClientApiPrivate::AddQuerySubscriptionRegistry
 }
 
 bool ClientApiPrivate::RemoveQuerySubscriptionRegistry(const std::string& sSubscriptionId)
 {
-
+    // @todo ClientApiPrivate::RemoveQuerySubscriptionRegistry
 }
 
 bool ClientApiPrivate::AddQuerySubscriptionP2P(int nResource, const std::string& sQuery)
@@ -1700,16 +1711,116 @@ bool ClientApiPrivate::AddQuerySubscriptionP2P(int nResource, const std::string&
     m_mmQuery.insert(make_pair(nResource, aQuery));
 
     //@todo call the poster to let the client know the id
+    if(m_pPoster)
+    {
+        m_pPoster->_QuerySubscription(aQuery.sId, nResource, sQuery);
+    }
+
     //run the query on our stored nodes and call the poster for each found query
+    switch(nResource)
+    {
+    case NODES:
+        {
+            list<shared_ptr<Self> > lstResources;
+            m_nodes.GetResourcesAsList(lstResources);
+            if(RunQuery(lstResources, sQuery))
+            {
+                m_pPoster->_NodeChanged(lstResources, list<shared_ptr<Self> >(), list<shared_ptr<Self> >());
+            }
+        }
+        break;
+    case DEVICES:
+        {
+            list<shared_ptr<Device> > lstResources;
+            m_devices.GetResourcesAsList(lstResources);
+            if(RunQuery(lstResources, sQuery))
+            {
+                m_pPoster->_DeviceChanged(lstResources, list<shared_ptr<Device> >(), list<shared_ptr<Device> >());
+            }
+        }
+        break;
+    case SOURCES:
+        {
+            list<shared_ptr<Source> > lstResources;
+            m_sources.GetResourcesAsList(lstResources);
+            if(RunQuery(lstResources, sQuery))
+            {
+                m_pPoster->_SourceChanged(lstResources, list<shared_ptr<Source> >(), list<shared_ptr<Source> >());
+            }
+        }
+        break;
+    case FLOWS:
+        {
+            list<shared_ptr<Flow> > lstResources;
+            m_flows.GetResourcesAsList(lstResources);
+            if(RunQuery(lstResources, sQuery))
+            {
+                m_pPoster->_FlowChanged(lstResources, list<shared_ptr<Flow> >(), list<shared_ptr<Flow> >());
+            }
+        }
+        break;
+    case SENDERS:
+        {
+            list<shared_ptr<Sender> > lstResources;
+            m_senders.GetResourcesAsList(lstResources);
+            if(RunQuery(lstResources, sQuery))
+            {
+                m_pPoster->_SenderChanged(lstResources, list<shared_ptr<Sender> >(), list<shared_ptr<Sender> >());
+            }
+        }
+        break;
+    case RECEIVERS:
+        {
+            list<shared_ptr<Receiver> > lstResources;
+            m_receivers.GetResourcesAsList(lstResources);
+            if(RunQuery(lstResources, sQuery))
+            {
+                m_pPoster->_ReceiverChanged(lstResources, list<shared_ptr<Receiver> >(), list<shared_ptr<Receiver> >());
+            }
+        }
+        break;
+    }
 
 }
 
 bool ClientApiPrivate::RemoveQuerySubscriptionP2P(const std::string& sSubscriptionId)
 {
-
+    for(multimap<int, query>::iterator itQuery = m_mmQuery.begin(); itQuery != m_mmQuery.end(); ++itQuery)
+    {
+        if(itQuery->second.sId == sSubscriptionId)
+        {
+            if(m_pPoster)
+            {
+                m_pPoster->_QuerySubscriptionRemoved(sSubscriptionId);
+                m_mmQuery.erase(itQuery);
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
-template<class T> long ClientApiPrivate::RunQuery(std::list<shared_ptr<T> >& lstCheck, int nResource)
+template<class T> bool ClientApiPrivate::RunQuery(std::list<std::shared_ptr<T> >& lstCheck, const std::string& sQuery)
+{
+    if(m_pPoster)
+    {
+        for(typename list<shared_ptr<T> >::iterator itResource = lstCheck.begin(); itResource != lstCheck.end(); )
+        {
+            if(MeetsQuery(sQuery, (*itResource)))
+            {
+                ++itResource;
+            }
+            else
+            {
+                itResource = lstCheck.erase(itResource);
+            }
+        }
+        return (lstCheck.empty() == false);
+    }
+    return false;
+}
+
+template<class T> void ClientApiPrivate::RunQuery(std::list<shared_ptr<T> >& lstCheck, int nResource)
 {
     for(typename list<shared_ptr<T> >::iterator itResource = lstCheck.begin(); itResource != lstCheck.end(); )
     {

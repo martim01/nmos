@@ -41,6 +41,9 @@ class NMOS_EXPOSE ClientApiPoster
 
         void _RequestConnectResult(const std::string& sSenderId, const std::string& sReceiverId, bool bSuccess, const std::string& sResponse);
 
+        void _QuerySubscription(const std::string& sSubscriptionId, int nResource, const std::string& sQuery);
+        void _QuerySubscriptionRemoved(const std::string& sSubscriptionId);
+
     protected:
 
         /** @brief Called when the API changes from P2P to Query and vice versa
@@ -90,6 +93,17 @@ class NMOS_EXPOSE ClientApiPoster
         **/
         virtual void ReceiverChanged(const std::list<std::shared_ptr<Receiver> >& lstReceiversAdded, const std::list<std::shared_ptr<Receiver> >& lstReceiversUpdated, const std::list<std::shared_ptr<Receiver> >& lstReceiversRemoved)=0;
 
+        /** @brief Called when when a query is subscibed (either with the query node or in p2p mode)
+        *   @param sSubscriptionId the return id of the subscription. On failure this will be an empty string
+        *   @param nResource the nmos resource type we are querying
+        *   @param sQuery the query string if any
+        **/
+        virtual void QuerySubscription(const std::string& sSubscriptionId, int nResource, const std::string& sQuery)=0;
+
+        /** @brief Called when a query subscritption is removed
+        *   @param sSubscriptionId the id of the remove subscription
+        **/
+        virtual void QuerySubscriptionRemoved(const std::string& sSubscriptionId)=0;
 
 
         /** @brief Called when a ClientApi::Subscribe or ClientApi::Unsubscribe gets an answer from the target webserver
