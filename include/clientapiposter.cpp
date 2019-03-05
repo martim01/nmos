@@ -84,12 +84,12 @@ void ClientApiPoster::_RequestGetReceiverActiveResult(unsigned long nResult, con
 }
 
 
-void ClientApiPoster::_QuerySubscription(const std::string& sSubscriptionId)
+void ClientApiPoster::_QuerySubscription(const std::string& sSubscriptionId, int nResource, const std::string& sQuery)
 {
-    //@todo ClientApiPoster::_QuerySubscription
+    QuerySubscription(sSubscriptionId,nResource,sQuery);
 }
 
 void ClientApiPoster::_QuerySubscriptionRemoved(const std::string& sSubscriptionId)
 {
-    //@todo ClientApiPoster::_QuerySubscriptionRemoved
+    QuerySubscriptionRemoved(sSubscriptionId);
 }
