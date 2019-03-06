@@ -12,7 +12,7 @@ class Flow;
 class Sender;
 class Receiver;
 class ClientApiPoster;
-class ClientApiPrivate;
+class ClientApiImpl;
 
 class NMOS_EXPOSE ClientApi
 {
@@ -196,5 +196,5 @@ class NMOS_EXPOSE ClientApi
         ClientApi();
         ~ClientApi();
 
-        ClientApiPrivate* m_pApi;
+        std::unique_ptr<ClientApiImpl> m_pApi;
 };

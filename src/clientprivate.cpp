@@ -31,11 +31,11 @@
 
 using namespace std;
 
-const string ClientApiPrivate::STR_RESOURCE[6] = {"node", "device", "source", "flow", "sender", "receiver"};
+const string ClientApiImpl::STR_RESOURCE[6] = {"node", "device", "source", "flow", "sender", "receiver"};
 
 
 
-void ClientThread(ClientApiPrivate* pApi)
+void ClientThread(ClientApiImpl* pApi)
 {
     //start the browser
     ServiceBrowser::Get().AddService("_nmos-node._tcp", pApi->GetClientPoster());
@@ -48,16 +48,16 @@ void ClientThread(ClientApiPrivate* pApi)
         {
             switch(pApi->GetSignal())
             {
-                case ClientApiPrivate::CLIENT_SIG_INSTANCE_RESOLVED:
+                case ClientApiImpl::CLIENT_SIG_INSTANCE_RESOLVED:
                     pApi->HandleInstanceResolved();
                     break;
-                case ClientApiPrivate::CLIENT_SIG_INSTANCE_REMOVED:
+                case ClientApiImpl::CLIENT_SIG_INSTANCE_REMOVED:
                     pApi->HandleInstanceRemoved();
                     break;
-                case ClientApiPrivate::CLIENT_SIG_NODE_BROWSED:
+                case ClientApiImpl::CLIENT_SIG_NODE_BROWSED:
                     pApi->NodeDetailsDone();
                     break;
-                case ClientApiPrivate::CLIENT_SIG_CURL_DONE:
+                case ClientApiImpl::CLIENT_SIG_CURL_DONE:
                     pApi->HandleCurlDone();
                     break;
                 default:
@@ -88,7 +88,7 @@ bool VersionChanged(shared_ptr<dnsInstance> pInstance, const string& sVersion)
     return true;
 }
 
-static void NodeBrowser(ClientApiPrivate* pApi, shared_ptr<dnsInstance> pInstance)
+static void NodeBrowser(ClientApiImpl* pApi, shared_ptr<dnsInstance> pInstance)
 {
     map<string, string>::iterator itVersion = pInstance->mTxt.find("api_ver");
     if(itVersion != pInstance->mTxt.end())
@@ -108,7 +108,7 @@ static void NodeBrowser(ClientApiPrivate* pApi, shared_ptr<dnsInstance> pInstanc
                 list<shared_ptr<Self> > lstRemoved;
                 pApi->AddNode(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
 
-                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiPrivate::NODES))
+                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::NODES))
                 {
                     pApi->GetPoster()->_NodeChanged(lstAdded, lstUpdated, lstRemoved);
                 }
@@ -127,7 +127,7 @@ static void NodeBrowser(ClientApiPrivate* pApi, shared_ptr<dnsInstance> pInstanc
                 //remove any devices that we previously stored but didn;t update. i.e. ones that no longer exist
                 pApi->RemoveStaleDevices(lstRemoved);
 
-                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiPrivate::DEVICES))
+                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::DEVICES))
                 {
                     pApi->GetPoster()->_DeviceChanged(lstAdded, lstUpdated, lstRemoved);
                 }
@@ -144,7 +144,7 @@ static void NodeBrowser(ClientApiPrivate* pApi, shared_ptr<dnsInstance> pInstanc
                 pApi->AddSources(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
                 pApi->RemoveStaleSources(lstRemoved);
 
-                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiPrivate::SOURCES))
+                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::SOURCES))
                 {
                     pApi->GetPoster()->_SourceChanged(lstAdded, lstUpdated, lstRemoved);
                 }
@@ -161,7 +161,7 @@ static void NodeBrowser(ClientApiPrivate* pApi, shared_ptr<dnsInstance> pInstanc
                 pApi->AddFlows(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
                 pApi->RemoveStaleFlows(lstRemoved);
 
-                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiPrivate::FLOWS))
+                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::FLOWS))
                 {
                     pApi->GetPoster()->_FlowChanged(lstAdded, lstUpdated, lstRemoved);
                 }
@@ -178,7 +178,7 @@ static void NodeBrowser(ClientApiPrivate* pApi, shared_ptr<dnsInstance> pInstanc
                 pApi->AddSenders(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
                 pApi->RemoveStaleSenders(lstRemoved);
 
-                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiPrivate::SENDERS))
+                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::SENDERS))
                 {
                     pApi->GetPoster()->_SenderChanged(lstAdded, lstUpdated, lstRemoved);
                 }
@@ -194,7 +194,7 @@ static void NodeBrowser(ClientApiPrivate* pApi, shared_ptr<dnsInstance> pInstanc
                 pApi->AddReceivers(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
                 pApi->RemoveStaleReceivers(lstRemoved);
 
-                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiPrivate::RECEIVERS))
+                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::RECEIVERS))
                 {
                     pApi->GetPoster()->_ReceiverChanged(lstAdded, lstUpdated, lstRemoved);
                 }
@@ -202,11 +202,11 @@ static void NodeBrowser(ClientApiPrivate* pApi, shared_ptr<dnsInstance> pInstanc
 
         }
     }
-    pApi->Signal(ClientApiPrivate::CLIENT_SIG_NODE_BROWSED);
+    pApi->Signal(ClientApiImpl::CLIENT_SIG_NODE_BROWSED);
 }
 
 
-void ConnectThread(ClientApiPrivate* pApi, const string& sSenderId, const string& sReceiverId, const string& sSenderStage, const string& sSenderTransport, const string& sReceiverStage)
+void ConnectThread(ClientApiImpl* pApi, const string& sSenderId, const string& sReceiverId, const string& sSenderStage, const string& sSenderTransport, const string& sReceiverStage)
 {
     // @todo ConnectThread - if a unicast stream then tell the sender where it should be sending stuff
     Json::StyledWriter stw;
@@ -258,7 +258,7 @@ void ConnectThread(ClientApiPrivate* pApi, const string& sSenderId, const string
 }
 
 
-void DisconnectThread(ClientApiPrivate* pApi, const string& sSenderId, const string& sReceiverId, const string& sSenderStage, const string& sSenderTransport, const string& sReceiverStage)
+void DisconnectThread(ClientApiImpl* pApi, const string& sSenderId, const string& sReceiverId, const string& sSenderStage, const string& sSenderTransport, const string& sReceiverStage)
 {
     Json::StyledWriter stw;
     string sResponse;
@@ -304,50 +304,52 @@ void DisconnectThread(ClientApiPrivate* pApi, const string& sSenderId, const str
 Class Start
 ************************************************/
 
-void ClientApiPrivate::Start(int nFlags)
+void ClientApiImpl::Start(int nFlags)
 {
-    m_nFlags = nFlags;
-    if(!m_pCurl)
+    if(m_bStarted == false)
     {
-        m_pCurl = new CurlRegister(m_pClientPoster);
+        m_bStarted = true;
+        m_nFlags = nFlags;
         thread th(ClientThread, this);
         th.detach();
     }
 }
 
-void ClientApiPrivate::Stop()
+void ClientApiImpl::Stop()
 {
     StopRun();
 }
 
-ClientApiPrivate::ClientApiPrivate() :
+ClientApiImpl::ClientApiImpl() :
     m_eMode(MODE_P2P),
     m_bRun(true),
     m_pInstance(0),
     m_nCurlThreadCount(0),
     m_pPoster(0),
-    m_pClientPoster(make_shared<ClientPoster>())
+    m_pClientPoster(make_shared<ClientPoster>()),
+    m_pCurl(new CurlRegister(m_pClientPoster)),
+    m_bStarted(false)
 {
 
 }
 
-ClientApiPrivate::~ClientApiPrivate()
+ClientApiImpl::~ClientApiImpl()
 {
     Stop();
 }
 
-void ClientApiPrivate::SetPoster(shared_ptr<ClientApiPoster> pPoster)
+void ClientApiImpl::SetPoster(shared_ptr<ClientApiPoster> pPoster)
 {
     m_pPoster = pPoster;
 }
 
-std::shared_ptr<ClientApiPoster> ClientApiPrivate::GetPoster()
+std::shared_ptr<ClientApiPoster> ClientApiImpl::GetPoster()
 {
     return m_pPoster;
 }
 
 
-bool ClientApiPrivate::Wait(unsigned long nMilliseconds)
+bool ClientApiImpl::Wait(unsigned long nMilliseconds)
 {
     m_mutex.lock();
     m_eSignal = CLIENT_SIG_NONE;
@@ -357,32 +359,32 @@ bool ClientApiPrivate::Wait(unsigned long nMilliseconds)
     return (m_cvBrowse.wait_for(ul, chrono::milliseconds(nMilliseconds)) == cv_status::no_timeout);
 }
 
-bool ClientApiPrivate::IsRunning()
+bool ClientApiImpl::IsRunning()
 {
     lock_guard<mutex> lg(m_mutex);
     return m_bRun;
 }
 
-void ClientApiPrivate::StopRun()
+void ClientApiImpl::StopRun()
 {
     lock_guard<mutex> lg(m_mutex);
     m_bRun = false;
 
 }
 
-shared_ptr<EventPoster> ClientApiPrivate::GetClientPoster()
+shared_ptr<EventPoster> ClientApiImpl::GetClientPoster()
 {
     return m_pClientPoster;
 }
 
-ClientApiPrivate::enumSignal ClientApiPrivate::GetSignal()
+ClientApiImpl::enumSignal ClientApiImpl::GetSignal()
 {
     lock_guard<mutex> lg(m_mutex);
     return m_eSignal;
 }
 
 
-void ClientApiPrivate::SetCurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId)
+void ClientApiImpl::SetCurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId)
 {
     m_mutex.lock();
     m_nCurlResult = nResult;
@@ -394,7 +396,7 @@ void ClientApiPrivate::SetCurlDone(unsigned long nResult, const std::string& sRe
     m_cvBrowse.notify_one();
 }
 
-void ClientApiPrivate::SetInstanceResolved(shared_ptr<dnsInstance> pInstance)
+void ClientApiImpl::SetInstanceResolved(shared_ptr<dnsInstance> pInstance)
 {
     m_mutex.lock();
     m_pInstance = pInstance;
@@ -403,7 +405,7 @@ void ClientApiPrivate::SetInstanceResolved(shared_ptr<dnsInstance> pInstance)
     m_cvBrowse.notify_one();
 }
 
-void ClientApiPrivate::SetInstanceRemoved(shared_ptr<dnsInstance> pInstance)
+void ClientApiImpl::SetInstanceRemoved(shared_ptr<dnsInstance> pInstance)
 {
     m_mutex.lock();
     m_pInstance = pInstance;
@@ -413,7 +415,7 @@ void ClientApiPrivate::SetInstanceRemoved(shared_ptr<dnsInstance> pInstance)
     m_cvBrowse.notify_one();
 }
 
-void ClientApiPrivate::Signal(enumSignal eSignal)
+void ClientApiImpl::Signal(enumSignal eSignal)
 {
     m_mutex.lock();
     m_eSignal = eSignal;
@@ -422,7 +424,7 @@ void ClientApiPrivate::Signal(enumSignal eSignal)
     m_cvBrowse.notify_one();
 }
 
-void ClientApiPrivate::HandleInstanceResolved()
+void ClientApiImpl::HandleInstanceResolved()
 {
     lock_guard<mutex> lg(m_mutex);
     if(m_pInstance)
@@ -471,7 +473,7 @@ void ClientApiPrivate::HandleInstanceResolved()
     }
 }
 
-void ClientApiPrivate::HandleInstanceRemoved()
+void ClientApiImpl::HandleInstanceRemoved()
 {
     if(m_pInstance)
     {
@@ -505,7 +507,7 @@ void ClientApiPrivate::HandleInstanceRemoved()
 }
 
 
-void ClientApiPrivate::HandleConnect(const string& sSenderId, const string& sReceiverId, bool bSuccess, const std::string& sResponse)
+void ClientApiImpl::HandleConnect(const string& sSenderId, const string& sReceiverId, bool bSuccess, const std::string& sResponse)
 {
     lock_guard<mutex> lg(m_mutex);
     if(m_pPoster)
@@ -515,7 +517,7 @@ void ClientApiPrivate::HandleConnect(const string& sSenderId, const string& sRec
 }
 
 
-void ClientApiPrivate::HandleCurlDone()
+void ClientApiImpl::HandleCurlDone()
 {
     lock_guard<mutex> lg(m_mutex);
     if(m_pPoster)
@@ -550,7 +552,7 @@ void ClientApiPrivate::HandleCurlDone()
 }
 }
 
-void ClientApiPrivate::HandleCurlDoneTarget()
+void ClientApiImpl::HandleCurlDoneTarget()
 {
     //don't need to check for m_pPoster as check in HandleCurlDon
     Json::Value jsData;
@@ -575,7 +577,7 @@ void ClientApiPrivate::HandleCurlDoneTarget()
     m_pPoster->_RequestTargetResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
 }
 
-void ClientApiPrivate::HandleCurlDonePatchSender()
+void ClientApiImpl::HandleCurlDonePatchSender()
 {
     Json::Value jsData;
     Json::Reader jsReader;
@@ -593,7 +595,7 @@ void ClientApiPrivate::HandleCurlDonePatchSender()
     }
 }
 
-void ClientApiPrivate::HandleCurlDonePatchReceiver()
+void ClientApiImpl::HandleCurlDonePatchReceiver()
 {
     //don't need to check for m_pPoster as check in HandleCurlDon
     Json::Value jsData;
@@ -611,7 +613,7 @@ void ClientApiPrivate::HandleCurlDonePatchReceiver()
     }
 }
 
-void ClientApiPrivate::HandleCurlDoneGetSenderStaged()
+void ClientApiImpl::HandleCurlDoneGetSenderStaged()
 {
     //don't need to check for m_pPoster as check in HandleCurlDon
     Json::Value jsData;
@@ -629,7 +631,7 @@ void ClientApiPrivate::HandleCurlDoneGetSenderStaged()
     }
 }
 
-void ClientApiPrivate::HandleCurlDoneGetSenderActive()
+void ClientApiImpl::HandleCurlDoneGetSenderActive()
 {
     //don't need to check for m_pPoster as check in HandleCurlDon
     Json::Value jsData;
@@ -647,7 +649,7 @@ void ClientApiPrivate::HandleCurlDoneGetSenderActive()
     }
 }
 
-void ClientApiPrivate::HandlCurlDoneGetSenderTransportFile()
+void ClientApiImpl::HandlCurlDoneGetSenderTransportFile()
 {
     //don't need to check for m_pPoster as check in HandleCurlDon
     Json::Value jsData;
@@ -665,7 +667,7 @@ void ClientApiPrivate::HandlCurlDoneGetSenderTransportFile()
     }
 }
 
-void ClientApiPrivate::HandleCurlDoneGetReceiverStaged()
+void ClientApiImpl::HandleCurlDoneGetReceiverStaged()
 {
     //don't need to check for m_pPoster as check in HandleCurlDon
     Json::Value jsData;
@@ -683,7 +685,7 @@ void ClientApiPrivate::HandleCurlDoneGetReceiverStaged()
     }
 }
 
-void ClientApiPrivate::HandleCurlDoneGetReceiverActive()
+void ClientApiImpl::HandleCurlDoneGetReceiverActive()
 {
     //don't need to check for m_pPoster as check in HandleCurlDon
     Json::Value jsData;
@@ -701,12 +703,12 @@ void ClientApiPrivate::HandleCurlDoneGetReceiverActive()
     }
 }
 
-void ClientApiPrivate::ConnectToQueryServer()
+void ClientApiImpl::ConnectToQueryServer()
 {
     // @todo ConnectToQueryServer
 }
 
-void ClientApiPrivate::GetNodeDetails()
+void ClientApiImpl::GetNodeDetails()
 {
 
     if(m_lstResolve.empty() == false && m_nCurlThreadCount < 4)
@@ -720,7 +722,7 @@ void ClientApiPrivate::GetNodeDetails()
     }
 }
 
-ClientApiPrivate::enumMode ClientApiPrivate::GetMode()
+ClientApiImpl::enumMode ClientApiImpl::GetMode()
 {
     lock_guard<mutex> lg(m_mutex);
     return m_eMode;
@@ -728,7 +730,7 @@ ClientApiPrivate::enumMode ClientApiPrivate::GetMode()
 
 
 
-void ClientApiPrivate::AddNode(std::list<std::shared_ptr<Self> >& lstAdded, std::list<std::shared_ptr<Self> >& lstUpdated,const string& sIpAddress, const string& sData)
+void ClientApiImpl::AddNode(std::list<std::shared_ptr<Self> >& lstAdded, std::list<std::shared_ptr<Self> >& lstUpdated,const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
 
@@ -770,7 +772,7 @@ void ClientApiPrivate::AddNode(std::list<std::shared_ptr<Self> >& lstAdded, std:
     }
 }
 
-void ClientApiPrivate::AddDevices(list<shared_ptr<Device> >& lstAdded, list<shared_ptr<Device> >& lstUpdated, const string& sIpAddress, const string& sData)
+void ClientApiImpl::AddDevices(list<shared_ptr<Device> >& lstAdded, list<shared_ptr<Device> >& lstUpdated, const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
 
@@ -821,7 +823,7 @@ void ClientApiPrivate::AddDevices(list<shared_ptr<Device> >& lstAdded, list<shar
     }
 }
 
-void ClientApiPrivate::AddSources(list<shared_ptr<Source> >& lstAdded, list<shared_ptr<Source> >& lstUpdated, const string& sIpAddress, const string& sData)
+void ClientApiImpl::AddSources(list<shared_ptr<Source> >& lstAdded, list<shared_ptr<Source> >& lstUpdated, const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
     Json::Value jsData;
@@ -889,7 +891,7 @@ void ClientApiPrivate::AddSources(list<shared_ptr<Source> >& lstAdded, list<shar
     }
 }
 
-void ClientApiPrivate::AddFlows(list<shared_ptr<Flow> >& lstAdded, list<shared_ptr<Flow> >& lstUpdated, const string& sIpAddress, const string& sData)
+void ClientApiImpl::AddFlows(list<shared_ptr<Flow> >& lstAdded, list<shared_ptr<Flow> >& lstUpdated, const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
     Json::Value jsData;
@@ -1029,7 +1031,7 @@ void ClientApiPrivate::AddFlows(list<shared_ptr<Flow> >& lstAdded, list<shared_p
     }
 }
 
-void ClientApiPrivate::AddSenders(list<shared_ptr<Sender> >& lstAdded, list<shared_ptr<Sender> >& lstUpdated, const string& sIpAddress, const string& sData)
+void ClientApiImpl::AddSenders(list<shared_ptr<Sender> >& lstAdded, list<shared_ptr<Sender> >& lstUpdated, const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
     Json::Value jsData;
@@ -1079,7 +1081,7 @@ void ClientApiPrivate::AddSenders(list<shared_ptr<Sender> >& lstAdded, list<shar
     }
 }
 
-void ClientApiPrivate::AddReceivers(list<shared_ptr<Receiver> >& lstAdded, list<shared_ptr<Receiver> >& lstUpdated, const string& sIpAddress, const string& sData)
+void ClientApiImpl::AddReceivers(list<shared_ptr<Receiver> >& lstAdded, list<shared_ptr<Receiver> >& lstUpdated, const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
     Json::Value jsData;
@@ -1130,7 +1132,7 @@ void ClientApiPrivate::AddReceivers(list<shared_ptr<Receiver> >& lstAdded, list<
 }
 
 
-void ClientApiPrivate::RemoveResources(const string& sIpAddress)
+void ClientApiImpl::RemoveResources(const string& sIpAddress)
 {
     list<shared_ptr<Self> > lstSelf;
     list<shared_ptr<Device> > lstDevice;
@@ -1150,131 +1152,129 @@ void ClientApiPrivate::RemoveResources(const string& sIpAddress)
 
 }
 
-void ClientApiPrivate::NodeDetailsDone()
+void ClientApiImpl::NodeDetailsDone()
 {
     m_nCurlThreadCount--;
 }
 
 
-void ClientApiPrivate::DeleteServiceBrowser()
+void ClientApiImpl::DeleteServiceBrowser()
 {
 
-    delete m_pCurl;
-    m_pCurl = 0;
 }
 
 
-void ClientApiPrivate::ChangeInterest(int nFlags)
+void ClientApiImpl::ChangeInterest(int nFlags)
 {
     lock_guard<mutex> lg(m_mutex);
     m_nFlags = nFlags;
 }
 
-int ClientApiPrivate::GetInterestFlags()
+int ClientApiImpl::GetInterestFlags()
 {
     lock_guard<mutex> lg(m_mutex);
     return m_nFlags;
 }
 
 
-map<string, shared_ptr<Self> >::const_iterator ClientApiPrivate::GetNodeBegin()
+map<string, shared_ptr<Self> >::const_iterator ClientApiImpl::GetNodeBegin()
 {
     return m_nodes.GetResourceBegin();
 }
 
-map<string, shared_ptr<Self> >::const_iterator ClientApiPrivate::GetNodeEnd()
+map<string, shared_ptr<Self> >::const_iterator ClientApiImpl::GetNodeEnd()
 {
     return m_nodes.GetResourceEnd();
 }
 
-map<string, shared_ptr<Self> >::const_iterator ClientApiPrivate::FindNode(const string& sUid)
+map<string, shared_ptr<Self> >::const_iterator ClientApiImpl::FindNode(const string& sUid)
 {
     return m_nodes.FindNmosResource(sUid);
 }
 
-map<string, shared_ptr<Device> >::const_iterator ClientApiPrivate::GetDeviceBegin()
+map<string, shared_ptr<Device> >::const_iterator ClientApiImpl::GetDeviceBegin()
 {
     return m_devices.GetResourceBegin();
 }
 
-map<string, shared_ptr<Device> >::const_iterator ClientApiPrivate::GetDeviceEnd()
+map<string, shared_ptr<Device> >::const_iterator ClientApiImpl::GetDeviceEnd()
 {
     return m_devices.GetResourceEnd();
 }
 
-map<string, shared_ptr<Device> >::const_iterator ClientApiPrivate::FindDevice(const string& sUid)
+map<string, shared_ptr<Device> >::const_iterator ClientApiImpl::FindDevice(const string& sUid)
 {
     return m_devices.FindNmosResource(sUid);
 }
 
 
-map<string, shared_ptr<Source> >::const_iterator ClientApiPrivate::GetSourceBegin()
+map<string, shared_ptr<Source> >::const_iterator ClientApiImpl::GetSourceBegin()
 {
     return m_sources.GetResourceBegin();
 }
 
-map<string, shared_ptr<Source> >::const_iterator ClientApiPrivate::GetSourceEnd()
+map<string, shared_ptr<Source> >::const_iterator ClientApiImpl::GetSourceEnd()
 {
     return m_sources.GetResourceEnd();
 }
 
-map<string, shared_ptr<Source> >::const_iterator ClientApiPrivate::FindSource(const string& sUid)
+map<string, shared_ptr<Source> >::const_iterator ClientApiImpl::FindSource(const string& sUid)
 {
     return m_sources.FindNmosResource(sUid);
 }
 
 
-map<string, shared_ptr<Flow> >::const_iterator ClientApiPrivate::GetFlowBegin()
+map<string, shared_ptr<Flow> >::const_iterator ClientApiImpl::GetFlowBegin()
 {
     return m_flows.GetResourceBegin();
 }
 
-map<string, shared_ptr<Flow> >::const_iterator ClientApiPrivate::GetFlowEnd()
+map<string, shared_ptr<Flow> >::const_iterator ClientApiImpl::GetFlowEnd()
 {
     return m_flows.GetResourceEnd();
 }
 
-map<string, shared_ptr<Flow> >::const_iterator ClientApiPrivate::FindFlow(const string& sUid)
+map<string, shared_ptr<Flow> >::const_iterator ClientApiImpl::FindFlow(const string& sUid)
 {
     return m_flows.FindNmosResource(sUid);
 }
 
 
 
-map<string, shared_ptr<Sender> >::const_iterator ClientApiPrivate::GetSenderBegin()
+map<string, shared_ptr<Sender> >::const_iterator ClientApiImpl::GetSenderBegin()
 {
     return m_senders.GetResourceBegin();
 }
 
-map<string, shared_ptr<Sender> >::const_iterator ClientApiPrivate::GetSenderEnd()
+map<string, shared_ptr<Sender> >::const_iterator ClientApiImpl::GetSenderEnd()
 {
     return m_senders.GetResourceEnd();
 }
 
-map<string, shared_ptr<Sender> >::const_iterator ClientApiPrivate::FindSender(const string& sUid)
+map<string, shared_ptr<Sender> >::const_iterator ClientApiImpl::FindSender(const string& sUid)
 {
     return m_senders.FindNmosResource(sUid);
 }
 
 
 
-map<string, shared_ptr<Receiver> >::const_iterator ClientApiPrivate::GetReceiverBegin()
+map<string, shared_ptr<Receiver> >::const_iterator ClientApiImpl::GetReceiverBegin()
 {
     return m_receivers.GetResourceBegin();
 }
 
-map<string, shared_ptr<Receiver> >::const_iterator ClientApiPrivate::GetReceiverEnd()
+map<string, shared_ptr<Receiver> >::const_iterator ClientApiImpl::GetReceiverEnd()
 {
     return m_receivers.GetResourceEnd();
 }
 
-map<string, shared_ptr<Receiver> >::const_iterator ClientApiPrivate::FindReceiver(const string& sUid)
+map<string, shared_ptr<Receiver> >::const_iterator ClientApiImpl::FindReceiver(const string& sUid)
 {
     return m_receivers.FindNmosResource(sUid);
 }
 
 
-bool ClientApiPrivate::Subscribe(const string& sSenderId, const string& sReceiverId)
+bool ClientApiImpl::Subscribe(const string& sSenderId, const string& sReceiverId)
 {
     lock_guard<mutex> lg(m_mutex);
 
@@ -1300,7 +1300,7 @@ bool ClientApiPrivate::Subscribe(const string& sSenderId, const string& sReceive
     return false;
 }
 
-bool ClientApiPrivate::Unsubscribe(const string& sReceiverId)
+bool ClientApiImpl::Unsubscribe(const string& sReceiverId)
 {
     lock_guard<mutex> lg(m_mutex);
     shared_ptr<Receiver> pReceiver = GetReceiver(sReceiverId);
@@ -1322,7 +1322,7 @@ bool ClientApiPrivate::Unsubscribe(const string& sReceiverId)
     return false;
 }
 
-string ClientApiPrivate::GetTargetUrl(shared_ptr<Receiver> pReceiver, ApiVersion& version)
+string ClientApiImpl::GetTargetUrl(shared_ptr<Receiver> pReceiver, ApiVersion& version)
 {
     //get the device id
     map<string, shared_ptr<Device> >::const_iterator itDevice =  m_devices.FindNmosResource(pReceiver->GetParentResourceId());
@@ -1384,7 +1384,7 @@ string ClientApiPrivate::GetTargetUrl(shared_ptr<Receiver> pReceiver, ApiVersion
 
 
 
-string ClientApiPrivate::GetConnectionUrlSingle(shared_ptr<Resource> pResource, const string& sDirection, const string& sEndpoint, ApiVersion& version)
+string ClientApiImpl::GetConnectionUrlSingle(shared_ptr<Resource> pResource, const string& sDirection, const string& sEndpoint, ApiVersion& version)
 {
     map<string, shared_ptr<Device> >::const_iterator itDevice =  m_devices.FindNmosResource(pResource->GetParentResourceId());
     if(itDevice == m_devices.GetResourceEnd())
@@ -1407,7 +1407,7 @@ string ClientApiPrivate::GetConnectionUrlSingle(shared_ptr<Resource> pResource, 
     return string();
 }
 
-bool ClientApiPrivate::RequestSender(const string& sSenderId, ClientPoster::enumCurlType eType)
+bool ClientApiImpl::RequestSender(const string& sSenderId, ClientPoster::enumCurlType eType)
 {
     lock_guard<mutex> lg(m_mutex);
     shared_ptr<Sender> pSender = GetSender(sSenderId);
@@ -1427,7 +1427,7 @@ bool ClientApiPrivate::RequestSender(const string& sSenderId, ClientPoster::enum
     return true;
 }
 
-bool ClientApiPrivate::RequestReceiver(const string& sReceiverId, ClientPoster::enumCurlType eType)
+bool ClientApiImpl::RequestReceiver(const string& sReceiverId, ClientPoster::enumCurlType eType)
 {
     lock_guard<mutex> lg(m_mutex);
     shared_ptr<Receiver> pReceiver = GetReceiver(sReceiverId);
@@ -1447,33 +1447,33 @@ bool ClientApiPrivate::RequestReceiver(const string& sReceiverId, ClientPoster::
     return true;
 }
 
-bool ClientApiPrivate::RequestSenderStaged(const string& sSenderId)
+bool ClientApiImpl::RequestSenderStaged(const string& sSenderId)
 {
     return RequestSender(sSenderId, ClientPoster::CURLTYPE_SENDER_STAGED);
 }
 
-bool ClientApiPrivate::RequestSenderActive(const string& sSenderId)
+bool ClientApiImpl::RequestSenderActive(const string& sSenderId)
 {
     return RequestSender(sSenderId, ClientPoster::CURLTYPE_SENDER_ACTIVE);
 }
 
-bool ClientApiPrivate::RequestSenderTransportFile(const string& sSenderId)
+bool ClientApiImpl::RequestSenderTransportFile(const string& sSenderId)
 {
     return RequestSender(sSenderId, ClientPoster::CURLTYPE_SENDER_TRANSPORTFILE);
 }
 
-bool ClientApiPrivate::RequestReceiverStaged(const string& sReceiverId)
+bool ClientApiImpl::RequestReceiverStaged(const string& sReceiverId)
 {
     return RequestReceiver(sReceiverId, ClientPoster::CURLTYPE_RECEIVER_STAGED);
 }
 
-bool ClientApiPrivate::RequestReceiverActive(const string& sReceiverId)
+bool ClientApiImpl::RequestReceiverActive(const string& sReceiverId)
 {
     return RequestReceiver(sReceiverId, ClientPoster::CURLTYPE_RECEIVER_ACTIVE);
 }
 
 
-bool ClientApiPrivate::PatchSenderStaged(const string& sSenderId, const connectionSender& aConnection)
+bool ClientApiImpl::PatchSenderStaged(const string& sSenderId, const connectionSender& aConnection)
 {
     lock_guard<mutex> lg(m_mutex);
     shared_ptr<Sender> pSender = GetSender(sSenderId);
@@ -1497,7 +1497,7 @@ bool ClientApiPrivate::PatchSenderStaged(const string& sSenderId, const connecti
     return true;
 }
 
-bool ClientApiPrivate::PatchReceiverStaged(const string& sReceiverId, const connectionReceiver& aConnection)
+bool ClientApiImpl::PatchReceiverStaged(const string& sReceiverId, const connectionReceiver& aConnection)
 {
     lock_guard<mutex> lg(m_mutex);
     shared_ptr<Receiver> pReceiver = GetReceiver(sReceiverId);
@@ -1521,7 +1521,7 @@ bool ClientApiPrivate::PatchReceiverStaged(const string& sReceiverId, const conn
 }
 
 
-shared_ptr<Sender> ClientApiPrivate::GetSender(const string& sSenderId)
+shared_ptr<Sender> ClientApiImpl::GetSender(const string& sSenderId)
 {
     map<string, shared_ptr<Sender> >::const_iterator itSender = m_senders.FindNmosResource(sSenderId);
     if(itSender == m_senders.GetResourceEnd())
@@ -1532,7 +1532,7 @@ shared_ptr<Sender> ClientApiPrivate::GetSender(const string& sSenderId)
     return itSender->second;
 }
 
-shared_ptr<Receiver> ClientApiPrivate::GetReceiver(const string& sReceiverId)
+shared_ptr<Receiver> ClientApiImpl::GetReceiver(const string& sReceiverId)
 {
     map<string, shared_ptr<Receiver> >::const_iterator itReceiver = m_receivers.FindNmosResource(sReceiverId);
     if(itReceiver == m_receivers.GetResourceEnd())
@@ -1544,58 +1544,58 @@ shared_ptr<Receiver> ClientApiPrivate::GetReceiver(const string& sReceiverId)
 }
 
 
-void ClientApiPrivate::StoreDevices(const string& sIpAddress)
+void ClientApiImpl::StoreDevices(const string& sIpAddress)
 {
     m_devices.StoreResources(sIpAddress);
 }
 
-void ClientApiPrivate::StoreSources(const string& sIpAddress)
+void ClientApiImpl::StoreSources(const string& sIpAddress)
 {
     m_sources.StoreResources(sIpAddress);
 }
 
-void ClientApiPrivate::StoreFlows(const string& sIpAddress)
+void ClientApiImpl::StoreFlows(const string& sIpAddress)
 {
     m_flows.StoreResources(sIpAddress);
 }
 
-void ClientApiPrivate::StoreSenders(const string& sIpAddress)
+void ClientApiImpl::StoreSenders(const string& sIpAddress)
 {
     m_senders.StoreResources(sIpAddress);
 }
 
-void ClientApiPrivate::StoreReceivers(const string& sIpAddress)
+void ClientApiImpl::StoreReceivers(const string& sIpAddress)
 {
     m_receivers.StoreResources(sIpAddress);
 }
 
-void ClientApiPrivate::RemoveStaleDevices(std::list<std::shared_ptr<Device> >& lstRemoved)
+void ClientApiImpl::RemoveStaleDevices(std::list<std::shared_ptr<Device> >& lstRemoved)
 {
     m_devices.RemoveStaleResources(lstRemoved);
 
 }
 
-void ClientApiPrivate::RemoveStaleSources(std::list<std::shared_ptr<Source> >& lstRemoved)
+void ClientApiImpl::RemoveStaleSources(std::list<std::shared_ptr<Source> >& lstRemoved)
 {
     m_sources.RemoveStaleResources(lstRemoved);
 }
 
-void ClientApiPrivate::RemoveStaleFlows(std::list<std::shared_ptr<Flow> >& lstRemoved)
+void ClientApiImpl::RemoveStaleFlows(std::list<std::shared_ptr<Flow> >& lstRemoved)
 {
     m_flows.RemoveStaleResources(lstRemoved);
 }
 
-void ClientApiPrivate::RemoveStaleSenders(std::list<std::shared_ptr<Sender> >& lstRemoved)
+void ClientApiImpl::RemoveStaleSenders(std::list<std::shared_ptr<Sender> >& lstRemoved)
 {
     m_senders.RemoveStaleResources(lstRemoved);
 }
 
-void ClientApiPrivate::RemoveStaleReceivers(std::list<std::shared_ptr<Receiver> >& lstRemoved)
+void ClientApiImpl::RemoveStaleReceivers(std::list<std::shared_ptr<Receiver> >& lstRemoved)
 {
     m_receivers.RemoveStaleResources(lstRemoved);
 }
 
-bool ClientApiPrivate::Connect(const std::string& sSenderId, const std::string& sReceiverId)
+bool ClientApiImpl::Connect(const std::string& sSenderId, const std::string& sReceiverId)
 {
     lock_guard<mutex> lg(m_mutex);
     shared_ptr<Sender> pSender = GetSender(sSenderId);
@@ -1623,20 +1623,20 @@ bool ClientApiPrivate::Connect(const std::string& sSenderId, const std::string& 
 
 
 
-bool ClientApiPrivate::Disconnect( const std::string& sReceiverId)
+bool ClientApiImpl::Disconnect( const std::string& sReceiverId)
 {
     lock_guard<mutex> lg(m_mutex);
-    Log::Get(Log::LOG_DEBUG) << "ClientApiPrivate::Disconnect " << sReceiverId << endl;
+    Log::Get(Log::LOG_DEBUG) << "ClientApiImpl::Disconnect " << sReceiverId << endl;
     shared_ptr<Receiver> pReceiver = GetReceiver(sReceiverId);
     if(!pReceiver)
     {
-        Log::Get(Log::LOG_DEBUG) << "ClientApiPrivate::Disconnect No Receiver" << endl;
+        Log::Get(Log::LOG_DEBUG) << "ClientApiImpl::Disconnect No Receiver" << endl;
         return false;
     }
     shared_ptr<Sender> pSender = GetSender(pReceiver->GetSender());
     if(!pSender)
     {
-        Log::Get(Log::LOG_DEBUG) << "ClientApiPrivate::Disconnect No Sender" << endl;
+        Log::Get(Log::LOG_DEBUG) << "ClientApiImpl::Disconnect No Sender" << endl;
         return false;
     }
 
@@ -1648,7 +1648,7 @@ bool ClientApiPrivate::Disconnect( const std::string& sReceiverId)
 
     if(sSenderStageUrl.empty() || sSenderTransportUrl.empty() || sReceiverStageUrl.empty())
     {
-        Log::Get(Log::LOG_DEBUG) << "ClientApiPrivate::Disconnect No URLS" << endl;
+        Log::Get(Log::LOG_DEBUG) << "ClientApiImpl::Disconnect No URLS" << endl;
         return false;
     }
 
@@ -1658,7 +1658,7 @@ bool ClientApiPrivate::Disconnect( const std::string& sReceiverId)
 }
 
 
-bool ClientApiPrivate::AddQuerySubscription(int nResource, const std::string& sQuery, unsigned long nUpdateRate)
+bool ClientApiImpl::AddQuerySubscription(int nResource, const std::string& sQuery, unsigned long nUpdateRate)
 {
     bool bSuccess(false);
     switch(m_eMode)
@@ -1674,7 +1674,7 @@ bool ClientApiPrivate::AddQuerySubscription(int nResource, const std::string& sQ
     return bSuccess;
 }
 
-bool ClientApiPrivate::RemoveQuerySubscription(const std::string& sSubscriptionId)
+bool ClientApiImpl::RemoveQuerySubscription(const std::string& sSubscriptionId)
 {
     bool bSuccess(false);
     switch(m_eMode)
@@ -1691,17 +1691,17 @@ bool ClientApiPrivate::RemoveQuerySubscription(const std::string& sSubscriptionI
 }
 
 
-bool ClientApiPrivate::AddQuerySubscriptionRegistry(int nResource, const std::string& sQuery, unsigned long nUpdateRate)
+bool ClientApiImpl::AddQuerySubscriptionRegistry(int nResource, const std::string& sQuery, unsigned long nUpdateRate)
 {
-    // @todo ClientApiPrivate::AddQuerySubscriptionRegistry
+    // @todo ClientApiImpl::AddQuerySubscriptionRegistry
 }
 
-bool ClientApiPrivate::RemoveQuerySubscriptionRegistry(const std::string& sSubscriptionId)
+bool ClientApiImpl::RemoveQuerySubscriptionRegistry(const std::string& sSubscriptionId)
 {
-    // @todo ClientApiPrivate::RemoveQuerySubscriptionRegistry
+    // @todo ClientApiImpl::RemoveQuerySubscriptionRegistry
 }
 
-bool ClientApiPrivate::AddQuerySubscriptionP2P(int nResource, const std::string& sQuery)
+bool ClientApiImpl::AddQuerySubscriptionP2P(int nResource, const std::string& sQuery)
 {
     //store the query
     query aQuery;
@@ -1783,7 +1783,7 @@ bool ClientApiPrivate::AddQuerySubscriptionP2P(int nResource, const std::string&
 
 }
 
-bool ClientApiPrivate::RemoveQuerySubscriptionP2P(const std::string& sSubscriptionId)
+bool ClientApiImpl::RemoveQuerySubscriptionP2P(const std::string& sSubscriptionId)
 {
     for(multimap<int, query>::iterator itQuery = m_mmQuery.begin(); itQuery != m_mmQuery.end(); ++itQuery)
     {
@@ -1800,7 +1800,7 @@ bool ClientApiPrivate::RemoveQuerySubscriptionP2P(const std::string& sSubscripti
     return false;
 }
 
-template<class T> bool ClientApiPrivate::RunQuery(std::list<std::shared_ptr<T> >& lstCheck, const std::string& sQuery)
+template<class T> bool ClientApiImpl::RunQuery(std::list<std::shared_ptr<T> >& lstCheck, const std::string& sQuery)
 {
     if(m_pPoster)
     {
@@ -1820,7 +1820,7 @@ template<class T> bool ClientApiPrivate::RunQuery(std::list<std::shared_ptr<T> >
     return false;
 }
 
-template<class T> void ClientApiPrivate::RunQuery(std::list<shared_ptr<T> >& lstCheck, int nResource)
+template<class T> void ClientApiImpl::RunQuery(std::list<shared_ptr<T> >& lstCheck, int nResource)
 {
     for(typename list<shared_ptr<T> >::iterator itResource = lstCheck.begin(); itResource != lstCheck.end(); )
     {
@@ -1845,7 +1845,7 @@ template<class T> void ClientApiPrivate::RunQuery(std::list<shared_ptr<T> >& lst
     }
 }
 
-template<class T> bool ClientApiPrivate::RunQuery(list<shared_ptr<T> >& lstAdded, list<shared_ptr<T> >& lstUpdated, list<shared_ptr<T> >& lstRemoved, int nResourceType)
+template<class T> bool ClientApiImpl::RunQuery(list<shared_ptr<T> >& lstAdded, list<shared_ptr<T> >& lstUpdated, list<shared_ptr<T> >& lstRemoved, int nResourceType)
 {
     if(m_pPoster)
     {
@@ -1860,7 +1860,7 @@ template<class T> bool ClientApiPrivate::RunQuery(list<shared_ptr<T> >& lstAdded
     return false;
 }
 
-bool ClientApiPrivate::MeetsQuery(const std::string& sQuery, shared_ptr<Resource> pResource)
+bool ClientApiImpl::MeetsQuery(const std::string& sQuery, shared_ptr<Resource> pResource)
 {
     if(sQuery.empty())
     {

@@ -3,7 +3,7 @@
 #include <sstream>
 #include <string>
 #include "nmosdlldefine.h"
-
+#include <memory>
 
 class NMOS_EXPOSE LogOutput
 {
@@ -26,13 +26,9 @@ public:
 
     static Log& Get(enumLevel eLevel=LOG_INFO);
 
-    void SetOutput(LogOutput* pLogout)
+    void SetOutput(std::unique_ptr<LogOutput> pLogout)
     {
-        if(m_pOutput)
-        {
-            delete m_pOutput;
-        }
-        m_pOutput = pLogout;
+        m_pOutput = move(pLogout);
     }
 
     template<class T>  // int, double, strings, etc
@@ -85,16 +81,11 @@ public:
 private:
     Log() : m_logLevel(LOG_INFO) , m_pOutput(new LogOutput()){}
     ~Log()
-    {
-        if(m_pOutput)
-        {
-            delete m_pOutput;
-        }
-    }
+    {}
 
     std::stringstream  m_stream;
     int                m_logLevel;
-    LogOutput* m_pOutput;
+    std::unique_ptr<LogOutput> m_pOutput;
 
 
 };

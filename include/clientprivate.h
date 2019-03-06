@@ -19,7 +19,7 @@ class dnsInstance;
 class CurlRegister;
 class ClientApiPoster;
 
-class ClientApiPrivate
+class ClientApiImpl
 {
     public:
         enum enumMode {MODE_P2P=0, MODE_REGISTRY};
@@ -27,8 +27,8 @@ class ClientApiPrivate
         enum flagResource {NONE=0, NODES=1, DEVICES=2, SOURCES=4, FLOWS=8, SENDERS=16, RECEIVERS=32, ALL=63};
 
 
-        ClientApiPrivate();
-        ~ClientApiPrivate();
+        ClientApiImpl();
+        ~ClientApiImpl();
 
         void SetPoster(std::shared_ptr<ClientApiPoster> pPoster);
         std::shared_ptr<ClientApiPoster> GetPoster();
@@ -179,7 +179,7 @@ class ClientApiPrivate
         ClientHolder<Sender> m_senders;
         ClientHolder<Receiver> m_receivers;
 
-        CurlRegister* m_pCurl;
+
         bool m_bRun;
         int m_nFlags;
         std::shared_ptr<dnsInstance> m_pInstance;
@@ -199,12 +199,10 @@ class ClientApiPrivate
         std::string m_sCurlResourceId;
 
         std::shared_ptr<ClientPoster> m_pClientPoster;
-
+        std::unique_ptr<CurlRegister> m_pCurl;
         std::multimap<unsigned short, std::shared_ptr<dnsInstance> > m_mQueryNodes;
 
-
-
-
+        bool m_bStarted;
 
         struct query
         {

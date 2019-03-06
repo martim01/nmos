@@ -21,14 +21,14 @@ void ClientApi::Stop()
 
 
 ClientApi::ClientApi() :
-    m_pApi(new ClientApiPrivate())
+    m_pApi(new ClientApiImpl())
 {
 
 }
 
 ClientApi::~ClientApi()
 {
-    delete m_pApi;
+
 }
 
 std::map<std::string, std::shared_ptr<Self> >::const_iterator ClientApi::GetNodeBegin()

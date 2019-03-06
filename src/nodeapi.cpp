@@ -57,8 +57,6 @@ m_senders("sender"),
 m_receivers("receiver"),
 m_sources("source"),
 m_flows("flow"),
-m_pNodeApiPublisher(0),
-m_pRegisterCurl(0),
 m_nRegistrationStatus(REG_START),
 m_bRun(true),
 m_bBrowsing(false),
@@ -73,11 +71,6 @@ NodeApi::~NodeApi()
     StopHttpServers();
     StopmDNSServer();
     StopRegistrationBrowser();
-    if(m_pRegisterCurl)
-    {
-        delete m_pRegisterCurl;
-    }
-
 }
 
 
@@ -193,16 +186,16 @@ void NodeApi::Init(unsigned short nDiscoveryPort, unsigned short nConnectionPort
         m_self.Init(sHost, sstr.str(), sLabel, sDescription);
     }
 
-    MicroServer* pServer = new MicroServer(m_pPoster);
-    pServer->AddNmosControl("node", make_shared<IS04Server>());
-    m_mServers.insert(make_pair(nDiscoveryPort, pServer));
+
+
+    map<unsigned short, std::unique_ptr<MicroServer> >::iterator itServer = m_mServers.insert(make_pair(nDiscoveryPort, new MicroServer(m_pPoster))).first;
+    itServer->second->AddNmosControl("node", make_shared<IS04Server>());
 
     if(nConnectionPort != nDiscoveryPort)
     {
-        pServer = new MicroServer(m_pPoster);
-        m_mServers.insert(make_pair(nConnectionPort, pServer));
+        itServer = m_mServers.insert(make_pair(nConnectionPort, new MicroServer(m_pPoster))).first;
     }
-    pServer->AddNmosControl("connection", make_shared<IS05Server>());
+    itServer->second->AddNmosControl("connection", make_shared<IS05Server>());
 
     m_nConnectionPort = nConnectionPort;
 }
@@ -212,7 +205,7 @@ bool NodeApi::StartHttpServers()
 {
     Log::Get(Log::LOG_DEBUG) << "Start Http Servers" << endl;
 
-    for(map<unsigned short, MicroServer*>::iterator itServer = m_mServers.begin(); itServer != m_mServers.end(); ++itServer)
+    for(map<unsigned short, unique_ptr<MicroServer> >::iterator itServer = m_mServers.begin(); itServer != m_mServers.end(); ++itServer)
     {
         itServer->second->Init(itServer->first);
 
@@ -226,10 +219,9 @@ bool NodeApi::StartHttpServers()
 
 void NodeApi::StopHttpServers()
 {
-    for(map<unsigned short, MicroServer*>::iterator itServer = m_mServers.begin(); itServer != m_mServers.end(); ++itServer)
+    for(map<unsigned short, unique_ptr<MicroServer> >::iterator itServer = m_mServers.begin(); itServer != m_mServers.end(); ++itServer)
     {
         itServer->second->Stop();
-        delete itServer->second;
     }
     m_mServers.clear();
 }
@@ -241,8 +233,7 @@ bool NodeApi::StartmDNSServer()
     if(itEndpoint != m_self.GetEndpointsEnd())
     {
         Log::Get() << "Start mDNS Publisher" << endl;
-
-        m_pNodeApiPublisher = new ServicePublisher(CreateGuid(itEndpoint->sHost), "_nmos-node._tcp", itEndpoint->nPort, itEndpoint->sHost);
+        m_pNodeApiPublisher.reset(new ServicePublisher(CreateGuid(itEndpoint->sHost), "_nmos-node._tcp", itEndpoint->nPort, itEndpoint->sHost));
         SetmDNSTxt(itEndpoint->bSecure);
         return m_pNodeApiPublisher->Start();
     }
@@ -256,8 +247,6 @@ void NodeApi::StopmDNSServer()
     {
         Log::Get() << "Stop mDNS Publisher" << endl;
         m_pNodeApiPublisher->Stop();
-        delete m_pNodeApiPublisher;
-        m_pNodeApiPublisher = 0;
     }
 }
 
@@ -266,7 +255,7 @@ bool NodeApi::StartServices(shared_ptr<EventPoster> pPoster)
 {
 
     m_pPoster = pPoster;
-    m_pRegisterCurl = new CurlRegister(m_pPoster);
+    m_pRegisterCurl.reset(new CurlRegister(m_pPoster));
 
     thread thMain(NodeThread::Main);
     thMain.detach();
@@ -441,7 +430,7 @@ void NodeApi::ReceiverPatchAllowed(unsigned short nPort, bool bOk)
 
 void NodeApi::SignalServer(unsigned short nPort, bool bOk, const std::string& sExtra)
 {
-    map<unsigned short, MicroServer*>::iterator itServer = m_mServers.find(nPort);
+    map<unsigned short, std::unique_ptr<MicroServer> >::iterator itServer = m_mServers.find(nPort);
     if(itServer != m_mServers.end())
     {
         itServer->second->Signal(bOk, sExtra);
@@ -739,19 +728,13 @@ bool NodeApi::AddControl(const std::string& sDeviceId, const std::string& sApi, 
     map<string, shared_ptr<Device> >::iterator itDevice = m_devices.GetResource(sDeviceId, false);
     if(itDevice != m_devices.GetStagedResourceEnd())
     {
-        MicroServer* pServer;
-        map<unsigned short, MicroServer*>::iterator itServer = m_mServers.find(nPort);
+        map<unsigned short, std::unique_ptr<MicroServer> >::iterator itServer = m_mServers.find(nPort);
         if(itServer == m_mServers.end())
         {
-            pServer = new MicroServer(m_pPoster);
-            m_mServers.insert(make_pair(nPort, pServer));
-        }
-        else
-        {
-            pServer = itServer->second;
+            itServer = m_mServers.insert(make_pair(nPort, new MicroServer(m_pPoster))).first;
         }
 
-        pServer->AddNmosControl(sApi, pNmosServer);
+        itServer->second->AddNmosControl(sApi, pNmosServer);
 
         //add the control endpoints for the urn
         for(set<endpoint>::const_iterator itEndpoint = m_self.GetEndpointsBegin(); itEndpoint != m_self.GetEndpointsEnd(); ++itEndpoint)

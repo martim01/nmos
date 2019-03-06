@@ -318,9 +318,9 @@ class NMOS_EXPOSE NodeApi
         std::string m_sRegistrationNode;
         //std::string m_sQueryNode;
 
-        ServicePublisher* m_pNodeApiPublisher;
+        std::unique_ptr<ServicePublisher> m_pNodeApiPublisher;
 
-        CurlRegister* m_pRegisterCurl;
+        std::unique_ptr<CurlRegister> m_pRegisterCurl;
         unsigned int m_nRegistrationStatus;
 
         std::mutex m_mutex;
@@ -334,7 +334,7 @@ class NMOS_EXPOSE NodeApi
         unsigned short m_nConnectionPort;
 
 
-        std::map<unsigned short, MicroServer*> m_mServers;
+        std::map<unsigned short, std::unique_ptr<MicroServer> > m_mServers;
 
         unsigned long m_nHeartbeatTime;
 
