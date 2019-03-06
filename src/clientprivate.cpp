@@ -60,6 +60,8 @@ void ClientThread(ClientApiImpl* pApi)
                 case ClientApiImpl::CLIENT_SIG_CURL_DONE:
                     pApi->HandleCurlDone();
                     break;
+                case ClientApiImpl::CLIENT_SIG_BROWSE_DONE:
+                    pApi->HandleBrowseDone();
                 default:
                     break;
             }
@@ -412,7 +414,15 @@ void ClientApiImpl::SetInstanceRemoved(shared_ptr<dnsInstance> pInstance)
     m_pInstance = pInstance;
     m_eSignal = CLIENT_SIG_INSTANCE_REMOVED;
     m_mutex.unlock();
+    m_cvBrowse.notify_one();
+}
 
+void ClientApiImpl::SetAllForNow(const std::string& sService)
+{
+    m_mutex.lock();
+    m_sService = sService;
+    m_eSignal = CLIENT_SIG_BROWSE_DONE;
+    m_mutex.unlock();
     m_cvBrowse.notify_one();
 }
 
@@ -423,6 +433,17 @@ void ClientApiImpl::Signal(enumSignal eSignal)
     m_mutex.unlock();
 
     m_cvBrowse.notify_one();
+}
+
+void ClientApiImpl::HandleBrowseDone()
+{
+    lock_guard<mutex> lg(m_mutex);
+    Log::Get(Log::LOG_INFO) << "Browsing for '" << m_sService << "' done for now." << endl;
+    if(m_sService == "_nmos-query._tcp")
+    {
+        //first entry in our multimap of servers will have joint highest priority so lets use it
+        SubscribeToQueryServer();
+    }
 }
 
 void ClientApiImpl::HandleInstanceResolved()
@@ -441,7 +462,7 @@ void ClientApiImpl::HandleInstanceResolved()
             {
                 try
                 {
-                    m_mQueryNodes.insert(make_pair(stoi(itTxt->second), m_pInstance));
+                    m_mmQueryNodes.insert(make_pair(stoi(itTxt->second), m_pInstance));
                     if(m_eMode == MODE_P2P)
                     {   //change the mode away from peer to peer
                         m_eMode = MODE_REGISTRY;
@@ -1710,7 +1731,7 @@ bool ClientApiImpl::RemoveQuerySubscription(const std::string& sSubscriptionId)
 
 bool ClientApiImpl::AddQuerySubscriptionRegistry(int nResource, const std::string& sQuery, unsigned long nUpdateRate)
 {
-    // @todo ClientApiImpl::AddQuerySubscriptionRegistry
+
 }
 
 bool ClientApiImpl::RemoveQuerySubscriptionRegistry(const std::string& sSubscriptionId)
@@ -1727,7 +1748,7 @@ bool ClientApiImpl::AddQuerySubscriptionP2P(int nResource, const std::string& sQ
     aQuery.nResource = nResource;
     m_mmQuery.insert(make_pair(nResource, aQuery));
 
-    //@todo call the poster to let the client know the id
+    //call the poster to let the client know the id
     if(m_pPoster)
     {
         m_pPoster->_QuerySubscription(aQuery.sId, nResource, sQuery);
@@ -1879,4 +1900,14 @@ bool ClientApiImpl::MeetsQuery(const std::string& sQuery, shared_ptr<Resource> p
         return true;
     }
     // @todo run the query properly
+    return false;
+}
+
+void ClientApiImpl::SubscribeToQueryServer()
+{
+    //we run through all our queries and post them to the query server asking for the websocket
+    for(multimap<int, query>::const_iterator itQuery = m_mmQuery.begin(); itQuery != m_mmQuery.end(); ++itQuery)
+    {
+
+    }
 }

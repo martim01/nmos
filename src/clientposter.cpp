@@ -19,7 +19,7 @@ void ClientPoster::InstanceResolved(std::shared_ptr<dnsInstance> pInstance)
 
 void ClientPoster::AllForNow(const std::string& sService)
 {
-
+    ClientApi::Get().m_pApi->SetAllForNow(sService);
 }
 
 void ClientPoster::Finished()

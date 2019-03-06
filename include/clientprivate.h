@@ -23,7 +23,7 @@ class ClientApiImpl
 {
     public:
         enum enumMode {MODE_P2P=0, MODE_REGISTRY};
-        enum enumSignal {CLIENT_SIG_NONE=0, CLIENT_SIG_INSTANCE_RESOLVED, CLIENT_SIG_INSTANCE_REMOVED, CLIENT_SIG_NODE_BROWSED, CLIENT_SIG_CURL_DONE};
+        enum enumSignal {CLIENT_SIG_NONE=0, CLIENT_SIG_INSTANCE_RESOLVED, CLIENT_SIG_INSTANCE_REMOVED, CLIENT_SIG_NODE_BROWSED, CLIENT_SIG_CURL_DONE, CLIENT_SIG_BROWSE_DONE};
         enum flagResource {NONE=0, NODES=1, DEVICES=2, SOURCES=4, FLOWS=8, SENDERS=16, RECEIVERS=32, ALL=63};
 
 
@@ -73,11 +73,13 @@ class ClientApiImpl
         void StopRun();
         void SetInstanceResolved(std::shared_ptr<dnsInstance> pInstance);
         void SetInstanceRemoved(std::shared_ptr<dnsInstance> pInstance);
+        void SetAllForNow(const std::string& sService);
         void SetCurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId);
         enumSignal GetSignal();
         void HandleInstanceResolved();
         void HandleInstanceRemoved();
         void HandleCurlDone();
+        void HandleBrowseDone();
         void NodeDetailsDone();
         void GetNodeDetails();
 
@@ -168,6 +170,8 @@ class ClientApiImpl
 
         bool MeetsQuery(const std::string& sQuery, std::shared_ptr<Resource> pResource);
 
+        void SubscribeToQueryServer();
+
         enumMode m_eMode;
 
         ClientHolder<Self> m_nodes;
@@ -181,7 +185,7 @@ class ClientApiImpl
         bool m_bRun;
 
         std::shared_ptr<dnsInstance> m_pInstance;
-
+        std::string m_sService;
         std::list<std::shared_ptr<dnsInstance> > m_lstResolve;
 
         std::mutex m_mutex;
@@ -198,7 +202,7 @@ class ClientApiImpl
 
         std::shared_ptr<ClientPoster> m_pClientPoster;
         std::unique_ptr<CurlRegister> m_pCurl;
-        std::multimap<unsigned short, std::shared_ptr<dnsInstance> > m_mQueryNodes;
+        std::multimap<unsigned short, std::shared_ptr<dnsInstance> > m_mmQueryNodes;
 
         bool m_bStarted;
 
