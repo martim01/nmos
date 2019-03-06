@@ -318,17 +318,17 @@ void Self::GetAddresses(const std::string& sInterface, nodeinterface& anInterfac
 
 
     std::stringstream ss;
-    ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (((int)ifr.ifr_hwaddr.sa_data[0])&0xFF);
+    ss << std::setfill('0') << std::setw(2) << std::hex << (((int)ifr.ifr_hwaddr.sa_data[0])&0xFF);
     ss << "-";
-    ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (((int)ifr.ifr_hwaddr.sa_data[1])&0xFF);
+    ss << std::setfill('0') << std::setw(2) << std::hex << (((int)ifr.ifr_hwaddr.sa_data[1])&0xFF);
     ss << "-";
-    ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (((int)ifr.ifr_hwaddr.sa_data[2])&0xFF);
+    ss << std::setfill('0') << std::setw(2) << std::hex << (((int)ifr.ifr_hwaddr.sa_data[2])&0xFF);
     ss << "-";
-    ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (((int)ifr.ifr_hwaddr.sa_data[3])&0xFF);
+    ss << std::setfill('0') << std::setw(2) << std::hex << (((int)ifr.ifr_hwaddr.sa_data[3])&0xFF);
     ss << "-";
-    ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (((int)ifr.ifr_hwaddr.sa_data[4])&0xFF);
+    ss << std::setfill('0') << std::setw(2) << std::hex << (((int)ifr.ifr_hwaddr.sa_data[4])&0xFF);
     ss << "-";
-    ss << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (((int)ifr.ifr_hwaddr.sa_data[5])&0xFF);
+    ss << std::setfill('0') << std::setw(2) << std::hex << (((int)ifr.ifr_hwaddr.sa_data[5])&0xFF);
 
     if(anInterface.sPortMac.empty())
     {
