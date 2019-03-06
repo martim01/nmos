@@ -1148,8 +1148,35 @@ void ClientApiImpl::RemoveResources(const string& sIpAddress)
     m_senders.RemoveResources(sIpAddress, lstSender);
     m_receivers.RemoveResources(sIpAddress, lstReceiver);
 
-    //@todo run past query subscriptions and tell the client
+    if(RunQuery(lstSelf, ClientApiImpl::NODES))
+    {
+        m_pPoster->_NodeChanged(list<shared_ptr<Self> >(), list<shared_ptr<Self> >(), lstSelf);
+    }
 
+    if(RunQuery(lstDevice, ClientApiImpl::DEVICES))
+    {
+        m_pPoster->_DeviceChanged(list<shared_ptr<Device> >(), list<shared_ptr<Device> >(), lstDevice);
+    }
+
+    if(RunQuery(lstSource, ClientApiImpl::SOURCES))
+    {
+        m_pPoster->_SourceChanged(list<shared_ptr<Source> >(), list<shared_ptr<Source> >(), lstSource);
+    }
+
+    if(RunQuery(lstFlow, ClientApiImpl::FLOWS))
+    {
+        m_pPoster->_FlowChanged(list<shared_ptr<Flow> >(), list<shared_ptr<Flow> >(), lstFlow);
+    }
+
+    if(RunQuery(lstSender, ClientApiImpl::SENDERS))
+    {
+        m_pPoster->_SenderChanged(list<shared_ptr<Sender> >(), list<shared_ptr<Sender> >(), lstSender);
+    }
+
+    if(RunQuery(lstReceiver, ClientApiImpl::RECEIVERS))
+    {
+        m_pPoster->_ReceiverChanged(list<shared_ptr<Receiver> >(), list<shared_ptr<Receiver> >(), lstReceiver);
+    }
 }
 
 void ClientApiImpl::NodeDetailsDone()
@@ -1820,7 +1847,7 @@ template<class T> bool ClientApiImpl::RunQuery(std::list<std::shared_ptr<T> >& l
     return false;
 }
 
-template<class T> void ClientApiImpl::RunQuery(std::list<shared_ptr<T> >& lstCheck, int nResource)
+template<class T> bool ClientApiImpl::RunQuery(std::list<shared_ptr<T> >& lstCheck, int nResource)
 {
     for(typename list<shared_ptr<T> >::iterator itResource = lstCheck.begin(); itResource != lstCheck.end(); )
     {
@@ -1843,19 +1870,14 @@ template<class T> void ClientApiImpl::RunQuery(std::list<shared_ptr<T> >& lstChe
             itResource = lstCheck.erase(itResource);
         }
     }
+    return (lstCheck.empty() == false);
 }
 
 template<class T> bool ClientApiImpl::RunQuery(list<shared_ptr<T> >& lstAdded, list<shared_ptr<T> >& lstUpdated, list<shared_ptr<T> >& lstRemoved, int nResourceType)
 {
     if(m_pPoster)
     {
-        RunQuery(lstAdded, nResourceType);
-        RunQuery(lstUpdated, nResourceType);
-        RunQuery(lstRemoved, nResourceType);
-        if(lstAdded.empty() == false || lstUpdated.empty() == false || lstRemoved.empty() == false)
-        {
-            return true;
-        }
+        return (RunQuery(lstAdded, nResourceType) || RunQuery(lstUpdated, nResourceType) || RunQuery(lstRemoved, nResourceType));
     }
     return false;
 }

@@ -165,7 +165,7 @@ class ClientApiImpl
         bool RemoveQuerySubscriptionP2P(const std::string& sSubscriptionId);
 
 
-        template<class T> void RunQuery(std::list<std::shared_ptr<T> >& lstCheck, int nResource);
+        template<class T> bool RunQuery(std::list<std::shared_ptr<T> >& lstCheck, int nResource);
         template<class T> bool RunQuery(std::list<std::shared_ptr<T> >& lstCheck, const std::string& sQuery);
 
         bool MeetsQuery(const std::string& sQuery, std::shared_ptr<Resource> pResource);

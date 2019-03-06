@@ -15,7 +15,12 @@ using namespace std;
 int main()
 {
     ClientApi::Get().SetPoster(make_shared<TestPoster>());
-
+    ClientApi::Get().AddQuerySubscription(ClientApi::NODES);
+    ClientApi::Get().AddQuerySubscription(ClientApi::DEVICES);
+    ClientApi::Get().AddQuerySubscription(ClientApi::FLOWS);
+    ClientApi::Get().AddQuerySubscription(ClientApi::SOURCES);
+    ClientApi::Get().AddQuerySubscription(ClientApi::SENDERS);
+    ClientApi::Get().AddQuerySubscription(ClientApi::RECEIVERS);
     ClientApi::Get().Start();
     cout << "Press Key To Target" << endl;
     getchar();

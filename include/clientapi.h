@@ -37,11 +37,11 @@ class NMOS_EXPOSE ClientApi
 
         /** @brief Adds a query subscription. That is tells the ClientApi what resources to notify us about
         *   @param eResource the resource type
-        *   @param sQuery the query string
+        *   @param sQuery the query string. If empty then any resource of the given type cause a notification
         *   @param nUpdateRate the update rate in ms for messages. Ignored in P2P mode
         *   @return <i>bool</i>
         **/
-        bool AddQuerySubscription(flagResource eResource, const std::string& sQuery, unsigned long nUpdateRate);
+        bool AddQuerySubscription(flagResource eResource, const std::string& sQuery="", unsigned long nUpdateRate=0);
 
         /** @brief Removes a query subscription
         *   @param sSubscriptionId the id of the subscription
