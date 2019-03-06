@@ -510,7 +510,7 @@ bool NodeApi::FindRegistrationNode()
                 if(stoul(itPriority->second) < nPriority && itVersion->second.find("v1.2") != string::npos)
                 {//for now only doing v1.2
 
-
+                    //@todo nodeapi find register server, allow other versions than 1.2
                     pInstance = itInstance->second;
                     nPriority = stoi(itPriority->second);
 

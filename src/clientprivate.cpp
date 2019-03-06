@@ -511,7 +511,7 @@ void ClientApiImpl::HandleInstanceRemoved()
                 }
             }
         }
-        else if(m_pInstance->sService == "_nmos-node._tcp")
+        else if(m_pInstance->sService == "_nmos-node._tcp" && m_eMode == MODE_P2P)
         {
             Log::Get(Log::LOG_INFO) << "Nmos node Removed: " << m_pInstance->sName << endl;
             for(list<shared_ptr<dnsInstance> >::iterator itInstance = m_lstResolve.begin(); itInstance != m_lstResolve.end(); ++itInstance)
@@ -1905,9 +1905,15 @@ bool ClientApiImpl::MeetsQuery(const std::string& sQuery, shared_ptr<Resource> p
 
 void ClientApiImpl::SubscribeToQueryServer()
 {
+    //@todo ClientApiImpl::SubscribeToQueryServer Allow other versions than 1.2
+    stringstream ssUrl;
+    ssUrl <<  m_mmQueryNodes.begin()->second->sHostIP << ":" << m_mmQueryNodes.begin()->second->nPort << "/x-nmos/query/v1.2";
+
+    Log::Get(Log::LOG_DEBUG) << "QUERY URL: " << ssUrl.str() << endl;
     //we run through all our queries and post them to the query server asking for the websocket
     for(multimap<int, query>::const_iterator itQuery = m_mmQuery.begin(); itQuery != m_mmQuery.end(); ++itQuery)
     {
+
 
     }
 }
