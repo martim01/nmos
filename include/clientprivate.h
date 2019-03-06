@@ -33,9 +33,8 @@ class ClientApiImpl
         void SetPoster(std::shared_ptr<ClientApiPoster> pPoster);
         std::shared_ptr<ClientApiPoster> GetPoster();
 
-        void Start(int nFlags);
+        void Start();
         void Stop();
-        void ChangeInterest(int nFlags);
 
         enumMode GetMode();
 
@@ -81,7 +80,6 @@ class ClientApiImpl
         void HandleCurlDone();
         void NodeDetailsDone();
         void GetNodeDetails();
-        int GetInterestFlags();
 
 
         bool Subscribe(const std::string& sSenderId, const std::string& sReceiverId);
@@ -181,7 +179,7 @@ class ClientApiImpl
 
 
         bool m_bRun;
-        int m_nFlags;
+
         std::shared_ptr<dnsInstance> m_pInstance;
 
         std::list<std::shared_ptr<dnsInstance> > m_lstResolve;

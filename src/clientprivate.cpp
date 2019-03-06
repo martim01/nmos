@@ -90,119 +90,121 @@ bool VersionChanged(shared_ptr<dnsInstance> pInstance, const string& sVersion)
 
 static void NodeBrowser(ClientApiImpl* pApi, shared_ptr<dnsInstance> pInstance)
 {
-    map<string, string>::iterator itVersion = pInstance->mTxt.find("api_ver");
-    if(itVersion != pInstance->mTxt.end())
+    if(pApi->GetMode() == ClientApiImpl::MODE_P2P)
     {
-        if(itVersion->second.find("v1.2") != string::npos)
-        {   //@todo allow choosing of version I guess
-            stringstream ss;
-            ss << pInstance->sHostIP << ":" << pInstance->nPort << "/x-nmos/node/v1.2/";
-            string sResponse;
-            int nFlags = pApi->GetInterestFlags();
+        map<string, string>::iterator itVersion = pInstance->mTxt.find("api_ver");
+        if(itVersion != pInstance->mTxt.end())
+        {
+            if(itVersion->second.find("v1.2") != string::npos)
+            {   //@todo allow choosing of version I guess
+                stringstream ss;
+                ss << pInstance->sHostIP << ":" << pInstance->nPort << "/x-nmos/node/v1.2/";
+                string sResponse;
 
-            if(VersionChanged(pInstance, "ver_slf") && (nFlags&ClientApi::NODES))
-            {
-                CurlRegister::Get(string(ss.str()+"self"), sResponse, true);
-                list<shared_ptr<Self> > lstAdded;
-                list<shared_ptr<Self> > lstUpdated;
-                list<shared_ptr<Self> > lstRemoved;
-                pApi->AddNode(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
-
-                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::NODES))
+                if(VersionChanged(pInstance, "ver_slf"))
                 {
-                    pApi->GetPoster()->_NodeChanged(lstAdded, lstUpdated, lstRemoved);
+                    CurlRegister::Get(string(ss.str()+"self"), sResponse, true);
+                    list<shared_ptr<Self> > lstAdded;
+                    list<shared_ptr<Self> > lstUpdated;
+                    list<shared_ptr<Self> > lstRemoved;
+                    pApi->AddNode(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
+
+                    if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::NODES))
+                    {
+                        pApi->GetPoster()->_NodeChanged(lstAdded, lstUpdated, lstRemoved);
+                    }
                 }
-            }
-            if(VersionChanged(pInstance, "ver_dvc") && (nFlags&ClientApi::DEVICES))
-            {
-                CurlRegister::Get(string(ss.str()+"devices"), sResponse, true);
-
-                list<shared_ptr<Device> > lstAdded;
-                list<shared_ptr<Device> > lstUpdated;
-                list<shared_ptr<Device> > lstRemoved;
-                //store the devices this ip address currently provides
-                pApi->StoreDevices(pInstance->sHostIP);
-                //add or update all devices on this ip address
-                pApi->AddDevices(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
-                //remove any devices that we previously stored but didn;t update. i.e. ones that no longer exist
-                pApi->RemoveStaleDevices(lstRemoved);
-
-                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::DEVICES))
+                if(VersionChanged(pInstance, "ver_dvc"))
                 {
-                    pApi->GetPoster()->_DeviceChanged(lstAdded, lstUpdated, lstRemoved);
+                    CurlRegister::Get(string(ss.str()+"devices"), sResponse, true);
+
+                    list<shared_ptr<Device> > lstAdded;
+                    list<shared_ptr<Device> > lstUpdated;
+                    list<shared_ptr<Device> > lstRemoved;
+                    //store the devices this ip address currently provides
+                    pApi->StoreDevices(pInstance->sHostIP);
+                    //add or update all devices on this ip address
+                    pApi->AddDevices(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
+                    //remove any devices that we previously stored but didn;t update. i.e. ones that no longer exist
+                    pApi->RemoveStaleDevices(lstRemoved);
+
+                    if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::DEVICES))
+                    {
+                        pApi->GetPoster()->_DeviceChanged(lstAdded, lstUpdated, lstRemoved);
+                    }
                 }
-            }
-            if(VersionChanged(pInstance, "ver_src") && (nFlags&ClientApi::SOURCES))
-            {
-                CurlRegister::Get(string(ss.str()+"sources"), sResponse, true);
-
-                list<shared_ptr<Source> > lstAdded;
-                list<shared_ptr<Source> > lstUpdated;
-                list<shared_ptr<Source> > lstRemoved;
-
-                pApi->StoreSources(pInstance->sHostIP);
-                pApi->AddSources(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
-                pApi->RemoveStaleSources(lstRemoved);
-
-                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::SOURCES))
+                if(VersionChanged(pInstance, "ver_src"))
                 {
-                    pApi->GetPoster()->_SourceChanged(lstAdded, lstUpdated, lstRemoved);
+                    CurlRegister::Get(string(ss.str()+"sources"), sResponse, true);
+
+                    list<shared_ptr<Source> > lstAdded;
+                    list<shared_ptr<Source> > lstUpdated;
+                    list<shared_ptr<Source> > lstRemoved;
+
+                    pApi->StoreSources(pInstance->sHostIP);
+                    pApi->AddSources(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
+                    pApi->RemoveStaleSources(lstRemoved);
+
+                    if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::SOURCES))
+                    {
+                        pApi->GetPoster()->_SourceChanged(lstAdded, lstUpdated, lstRemoved);
+                    }
                 }
-            }
-            if(VersionChanged(pInstance, "ver_flw") && (nFlags&ClientApi::FLOWS))
-            {
-                CurlRegister::Get(string(ss.str()+"flows"), sResponse, true);
-
-                list<shared_ptr<Flow> > lstAdded;
-                list<shared_ptr<Flow> > lstUpdated;
-                list<shared_ptr<Flow> > lstRemoved;
-
-                pApi->StoreFlows(pInstance->sHostIP);
-                pApi->AddFlows(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
-                pApi->RemoveStaleFlows(lstRemoved);
-
-                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::FLOWS))
+                if(VersionChanged(pInstance, "ver_flw"))
                 {
-                    pApi->GetPoster()->_FlowChanged(lstAdded, lstUpdated, lstRemoved);
+                    CurlRegister::Get(string(ss.str()+"flows"), sResponse, true);
+
+                    list<shared_ptr<Flow> > lstAdded;
+                    list<shared_ptr<Flow> > lstUpdated;
+                    list<shared_ptr<Flow> > lstRemoved;
+
+                    pApi->StoreFlows(pInstance->sHostIP);
+                    pApi->AddFlows(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
+                    pApi->RemoveStaleFlows(lstRemoved);
+
+                    if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::FLOWS))
+                    {
+                        pApi->GetPoster()->_FlowChanged(lstAdded, lstUpdated, lstRemoved);
+                    }
                 }
-            }
-            if(VersionChanged(pInstance, "ver_snd") && (nFlags&ClientApi::SENDERS))
-            {
-                CurlRegister::Get(string(ss.str()+"senders"), sResponse, true);
-
-                list<shared_ptr<Sender> > lstAdded;
-                list<shared_ptr<Sender> > lstUpdated;
-                list<shared_ptr<Sender> > lstRemoved;
-
-                pApi->StoreSenders(pInstance->sHostIP);
-                pApi->AddSenders(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
-                pApi->RemoveStaleSenders(lstRemoved);
-
-                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::SENDERS))
+                if(VersionChanged(pInstance, "ver_snd"))
                 {
-                    pApi->GetPoster()->_SenderChanged(lstAdded, lstUpdated, lstRemoved);
+                    CurlRegister::Get(string(ss.str()+"senders"), sResponse, true);
+
+                    list<shared_ptr<Sender> > lstAdded;
+                    list<shared_ptr<Sender> > lstUpdated;
+                    list<shared_ptr<Sender> > lstRemoved;
+
+                    pApi->StoreSenders(pInstance->sHostIP);
+                    pApi->AddSenders(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
+                    pApi->RemoveStaleSenders(lstRemoved);
+
+                    if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::SENDERS))
+                    {
+                        pApi->GetPoster()->_SenderChanged(lstAdded, lstUpdated, lstRemoved);
+                    }
                 }
-            }
-            if(VersionChanged(pInstance, "ver_rcv") && (nFlags&ClientApi::RECEIVERS))
-            {
-                CurlRegister::Get(string(ss.str()+"receivers"), sResponse, true);
-
-                list<shared_ptr<Receiver> > lstAdded;
-                list<shared_ptr<Receiver> > lstUpdated;
-                list<shared_ptr<Receiver> > lstRemoved;
-                pApi->StoreReceivers(pInstance->sHostIP);
-                pApi->AddReceivers(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
-                pApi->RemoveStaleReceivers(lstRemoved);
-
-                if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::RECEIVERS))
+                if(VersionChanged(pInstance, "ver_rcv"))
                 {
-                    pApi->GetPoster()->_ReceiverChanged(lstAdded, lstUpdated, lstRemoved);
-                }
-            }
+                    CurlRegister::Get(string(ss.str()+"receivers"), sResponse, true);
 
+                    list<shared_ptr<Receiver> > lstAdded;
+                    list<shared_ptr<Receiver> > lstUpdated;
+                    list<shared_ptr<Receiver> > lstRemoved;
+                    pApi->StoreReceivers(pInstance->sHostIP);
+                    pApi->AddReceivers(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
+                    pApi->RemoveStaleReceivers(lstRemoved);
+
+                    if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::RECEIVERS))
+                    {
+                        pApi->GetPoster()->_ReceiverChanged(lstAdded, lstUpdated, lstRemoved);
+                    }
+                }
+
+            }
         }
+        pApi->Signal(ClientApiImpl::CLIENT_SIG_NODE_BROWSED);
     }
-    pApi->Signal(ClientApiImpl::CLIENT_SIG_NODE_BROWSED);
 }
 
 
@@ -304,12 +306,11 @@ void DisconnectThread(ClientApiImpl* pApi, const string& sSenderId, const string
 Class Start
 ************************************************/
 
-void ClientApiImpl::Start(int nFlags)
+void ClientApiImpl::Start()
 {
     if(m_bStarted == false)
     {
         m_bStarted = true;
-        m_nFlags = nFlags;
         thread th(ClientThread, this);
         th.detach();
     }
@@ -1191,17 +1192,6 @@ void ClientApiImpl::DeleteServiceBrowser()
 }
 
 
-void ClientApiImpl::ChangeInterest(int nFlags)
-{
-    lock_guard<mutex> lg(m_mutex);
-    m_nFlags = nFlags;
-}
-
-int ClientApiImpl::GetInterestFlags()
-{
-    lock_guard<mutex> lg(m_mutex);
-    return m_nFlags;
-}
 
 
 map<string, shared_ptr<Self> >::const_iterator ClientApiImpl::GetNodeBegin()

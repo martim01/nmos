@@ -9,7 +9,7 @@ ClientApi& ClientApi::Get()
 
 void ClientApi::Start()
 {
-    m_pApi->Start(ALL);
+    m_pApi->Start();
 }
 
 
