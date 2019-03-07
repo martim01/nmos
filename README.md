@@ -8,7 +8,7 @@ The aim is to implement all of the specifications but currently IS-04 and IS-05 
 
 ## Current Status
 ### IS-04
-- NodeApi - almost complete (link between control management and IS-05 not fully implemented). Supports v1.1, v1.2, v1.3
+- NodeApi - complete. Supports v1.1, v1.2, v1.3
 - RegistryApi - complete. Supports v1.1, v1.2, v1.3
 - QueryApi - Websockets not yet implemented. Paged queries not yet implemented.
 - Client - P2P IS-04 discovery complete. IS-04 Target complete. IS-05 single connections complete. Need to implemenet Query
@@ -25,6 +25,10 @@ The library is intended to be platform agnostic and where possible use widely us
 - Linux: [avahi](http://avahi.org/) for service discovery and publishing
 - Linux: [libuuid](https://linux.die.net/man/3/libuuid) to generate the unique identifiers for the resources
 - Windows: mDNSRepsonder for service discovery and publishing
+- [jsoncpp](https://github.com/open-source-parsers/jsoncpp) for json parsing etc.
+
+# Building
+There are currently CodeBlocks project files to build the library and a number of test applications. The end goal is to use CMake
 
 
 
