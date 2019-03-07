@@ -6,6 +6,7 @@
 #include <vector>
 #include "json/json.h"
 #include "version.h"
+#include <sstream>
 
 class EventPoster;
 class MicroServer;
@@ -15,6 +16,7 @@ struct ConnectionInfo
     enum {GET=0, POST = 1, PUT=2, PATCH = 3};
     ConnectionInfo() : nType(GET), pPost(0){}
     int nType;
+    std::stringstream ssData;
     MicroServer* pServer;
     MHD_PostProcessor *pPost;
 };
@@ -27,16 +29,17 @@ class MicroServer
 
         /** @brief Constructor - this is called in NodeApi::StartService
         *   @param pPoster a sheared_ptr to an object of a class derived from EventPoster.
+        *   @param nPort the port to listed for connections on
         **/
-        MicroServer(std::shared_ptr<EventPoster> pPoster);
+        MicroServer(std::shared_ptr<EventPoster> pPoster,unsigned int nPort=80);
 
         ///< @brief Destructor
         virtual ~MicroServer();
 
         /** @brief Starts the web server
-        *   @param nPort the port to listed for connections on
+
         **/
-        bool Init(unsigned int nPort=80);
+        bool Init();
 
         /** Add ann NMOS server
         *   @param sControl the first part of the url (after the x-nmos/)
@@ -48,19 +51,6 @@ class MicroServer
         **/
         void Stop();
 
-        /** @brief Adds PUT/POST/PATCH data to a buffer ready for parsing
-        *   @param sData the data
-        **/
-        void AddPutData(std::string sData);
-
-        /** @brief Returns the PUT/POST/PATCH buffer
-        *   @return <i>string</i> the data
-        **/
-        std::string GetPutData() const;
-
-        /** @brief Clears the PUT/POST/PATCH buffer
-        **/
-        void ResetPutData();
 
         /** @brief Gets the port number that the web server is using to listen for connections
         *   @return <i>unsigned short</i> the port number
@@ -98,11 +88,12 @@ class MicroServer
 
 
 
-        unsigned short m_nPort;
+
         std::shared_ptr<EventPoster> m_pPoster;
 
         MHD_Daemon* m_pmhd;
-        std::string m_sPut;
+        unsigned short m_nPort;
+
 
         std::vector<std::string> m_vPath;
 

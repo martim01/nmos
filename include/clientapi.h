@@ -192,6 +192,7 @@ class NMOS_EXPOSE ClientApi
         friend void NodeBrowser();
         friend void ClientThread();
         friend class ClientPoster;
+        friend class ClientZCPoster;
 
         ClientApi();
         ~ClientApi();

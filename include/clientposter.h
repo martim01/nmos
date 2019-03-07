@@ -1,5 +1,6 @@
 #pragma once
 #include "eventposter.h"
+#include "zcposter.h"
 
 class ClientPoster : public EventPoster
 {
@@ -10,11 +11,6 @@ class ClientPoster : public EventPoster
     protected:
 
         virtual void CurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId);
-        virtual void InstanceResolved(std::shared_ptr<dnsInstance> pInstance);
-        virtual void AllForNow(const std::string& sService);
-        virtual void Finished();
-        virtual void RegistrationNodeError();
-        virtual void InstanceRemoved(std::shared_ptr<dnsInstance> pInstance);
         virtual void Target(const std::string& sReceiverId, const std::string& sTransportFile, unsigned short nPort);
         virtual void PatchSender(const std::string& sSenderId, const connectionSender& conPatch, unsigned short nPort);
         virtual void PatchReceiver(const std::string& sReceiverId, const connectionReceiver& conPatch, unsigned short nPort);
@@ -22,3 +18,17 @@ class ClientPoster : public EventPoster
         virtual void ActivateReceiver(const std::string& sReceiverId);
 };
 
+class ClientZCPoster : public ZCPoster
+{
+    public:
+        ClientZCPoster(){}
+
+    protected:
+
+        virtual void InstanceResolved(std::shared_ptr<dnsInstance> pInstance);
+        virtual void AllForNow(const std::string& sService);
+        virtual void Finished();
+        virtual void RegistrationNodeError();
+        virtual void InstanceRemoved(std::shared_ptr<dnsInstance> pInstance);
+
+};

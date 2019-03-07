@@ -243,7 +243,7 @@ Json::Value Self::JsonVersions() const
     Json::Value jsVersion;
     for(set<ApiVersion>::iterator itVersion = m_setVersion.begin(); itVersion != m_setVersion.end(); ++itVersion)
     {
-        jsVersion.append((*itVersion).GetVersionAsString());
+        jsVersion.append((*itVersion).GetVersionAsString()+"/");
     }
     return jsVersion;
 }

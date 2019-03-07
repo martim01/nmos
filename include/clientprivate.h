@@ -13,6 +13,7 @@
 #include "receiver.h"
 #include "clientposter.h"
 
+
 class ServiceBrowser;
 class EventPoster;
 class dnsInstance;
@@ -128,12 +129,14 @@ class ClientApiImpl
         void HandleConnect(const std::string& sSenderId, const std::string& sReceiverId, bool bSuccess, const std::string& sResponse);
 
         std::shared_ptr<EventPoster> GetClientPoster();
+        std::shared_ptr<ZCPoster> GetClientZCPoster();
 
         bool AddQuerySubscription(int nResource, const std::string& sQuery, unsigned long nUpdateRate);
         bool RemoveQuerySubscription(const std::string& sSubscriptionId);
 
     private:
         friend class ClientPoster;
+
 
 
         void ConnectToQueryServer();
@@ -201,11 +204,12 @@ class ClientApiImpl
         std::string m_sCurlResourceId;
 
         std::shared_ptr<ClientPoster> m_pClientPoster;
+        std::shared_ptr<ClientZCPoster> m_pClientZCPoster;
         std::unique_ptr<CurlRegister> m_pCurl;
         std::multimap<unsigned short, std::shared_ptr<dnsInstance> > m_mmQueryNodes;
 
         bool m_bStarted;
-
+        bool m_bDoneQueryBrowse;
         struct query
         {
             std::string sId;

@@ -15,7 +15,7 @@
 
 struct dnsService;
 struct dnsInstance;
-class EventPoster;
+class ZCPoster;
 
 
 static void client_callback(AvahiClient * pClient, AvahiClientState state, AVAHI_GCC_UNUSED void * userdata);
@@ -30,7 +30,7 @@ class ServiceBrowser
 
         static ServiceBrowser& Get();
 
-        void AddService(const std::string& sService, std::shared_ptr<EventPoster> pPoster);
+        void AddService(const std::string& sService, std::shared_ptr<ZCPoster> pPoster);
         void RemoveService(const std::string& sService);
 
         bool StartBrowser();
@@ -60,7 +60,7 @@ class ServiceBrowser
         void Stop();
         void CheckStop();
 
-        std::shared_ptr<EventPoster> GetPoster(const std::string& sService);
+        std::shared_ptr<ZCPoster> GetPoster(const std::string& sService);
 
         bool m_bFree;
 
@@ -72,7 +72,7 @@ class ServiceBrowser
         AvahiClient * m_pClient;
         AvahiServiceTypeBrowser* m_pTypeBrowser;
 
-        std::map<std::string, std::shared_ptr<EventPoster> > m_mServiceBrowse;
+        std::map<std::string, std::shared_ptr<ZCPoster> > m_mServiceBrowse;
 
         bool m_bStarted;
         bool m_bBrowsing;

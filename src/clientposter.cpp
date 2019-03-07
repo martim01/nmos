@@ -12,33 +12,6 @@ void ClientPoster::CurlDone(unsigned long nResult, const std::string& sResponse,
 
 }
 
-void ClientPoster::InstanceResolved(std::shared_ptr<dnsInstance> pInstance)
-{
-    ClientApi::Get().m_pApi->SetInstanceResolved(pInstance);
-}
-
-void ClientPoster::AllForNow(const std::string& sService)
-{
-    ClientApi::Get().m_pApi->SetAllForNow(sService);
-}
-
-void ClientPoster::Finished()
-{
-
-}
-
-void ClientPoster::RegistrationNodeError()
-{
-
-}
-
-void ClientPoster::InstanceRemoved(std::shared_ptr<dnsInstance> pInstance)
-{
-    ClientApi::Get().m_pApi->SetInstanceRemoved(pInstance);
-}
-
-
-
 void ClientPoster::Target(const std::string& sReceiverId, const std::string& sTransportFile, unsigned short nPort)
 {
 
@@ -62,4 +35,31 @@ void ClientPoster:: ActivateSender(const std::string& sSenderId)
 void ClientPoster::ActivateReceiver(const std::string& sReceiverId)
 {
 
+}
+
+
+
+void ClientZCPoster::InstanceResolved(std::shared_ptr<dnsInstance> pInstance)
+{
+    ClientApi::Get().m_pApi->SetInstanceResolved(pInstance);
+}
+
+void ClientZCPoster::AllForNow(const std::string& sService)
+{
+    ClientApi::Get().m_pApi->SetAllForNow(sService);
+}
+
+void ClientZCPoster::Finished()
+{
+
+}
+
+void ClientZCPoster::RegistrationNodeError()
+{
+
+}
+
+void ClientZCPoster::InstanceRemoved(std::shared_ptr<dnsInstance> pInstance)
+{
+    ClientApi::Get().m_pApi->SetInstanceRemoved(pInstance);
 }

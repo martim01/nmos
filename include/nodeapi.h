@@ -26,8 +26,8 @@ class Receiver;
 class Sender;
 class NodeThread;
 class MicroServer;
-
-
+class NodeZCPoster;
+class dnsInstance;
 
 class NMOS_EXPOSE NodeApi
 {
@@ -41,12 +41,13 @@ class NMOS_EXPOSE NodeApi
         static NodeApi& Get();
 
         /** @brief sets the initial data the Node needs to run
+        *   @param pPoster pointer to an optional EventPoster class that can be used to update the main thread with events
         *   @param nDiscoveryPort the TCP port to run the discovery web serv on
         *   @param nConnectionPort the TCP port to run the connection port on
         *   @param sLabel the name to give this node
         *   @param sDescription a description aof this node
         **/
-        void Init(unsigned short nDiscoveryPort, unsigned short nConnectionPort, const std::string& sLabel, const std::string& sDescription);
+        void Init(std::shared_ptr<EventPoster> pPoster, unsigned short nDiscoveryPort, unsigned short nConnectionPort, const std::string& sLabel, const std::string& sDescription);
 
         /** @brief adds a device control (other than IS05)
         *   @param sDeviceId the id of the device to add the control to
@@ -61,10 +62,9 @@ class NMOS_EXPOSE NodeApi
         bool AddControl(const std::string& sDeviceId, const std::string& sApi, const ApiVersion& version, unsigned short nPort, const std::string& sUrn, std::shared_ptr<NmosServer> pNmosServer);
 
         /** @brief Launch the thread that starts the web servers and dns publisher and browser
-        *   @param pPoster pointer to an optional EventPoster class that can be used to update the main thread with events
         *   @return <i>bool</i> true on succesfully starting the thread
         **/
-        bool StartServices(std::shared_ptr<EventPoster> pPoster);
+        bool StartServices();
 
         /** @brief Stop the thread that is running the nmos services
         **/
@@ -237,6 +237,7 @@ class NMOS_EXPOSE NodeApi
         friend class NodeThread;
         friend class ServiceBrowser;
         friend class MicroServer;
+        friend class NodeZCPoster;
 
         enum {REG_FAILED = 0, REG_START, REG_DEVICES, REG_SOURCES, REG_FLOWS, REG_SENDERS, REG_RECEIVERS, REG_DONE};
 
@@ -248,11 +249,14 @@ class NMOS_EXPOSE NodeApi
 
         void SignalServer(unsigned short nPort, bool bOk, const std::string& sExtra);
 
-        enum enumSignal{SIG_NONE=0, SIG_COMMIT=1};
+        enum enumSignal{SIG_NONE=0, SIG_COMMIT=1, SIG_INSTANCE_FOUND, SIG_INSTANCE_REMOVED, SIG_BROWSE_DONE};
 
         void Signal(enumSignal eSignal);
         enumSignal GetSignal() const;
 
+
+        void HandleInstanceResolved(std::shared_ptr<dnsInstance> pInstance);
+        void HandleInstanceRemoved(std::shared_ptr<dnsInstance> pInstance);
 
         bool Wait(unsigned long nMilliseconds);
 
@@ -285,7 +289,7 @@ class NMOS_EXPOSE NodeApi
 
         template<class T> long RegisterResources(ResourceHolder<T>& holder, const ApiVersion& version);
         template<class T> long ReregisterResources(ResourceHolder<T>& holder, const ApiVersion& version);
-        template<class T> void UnregisterResources(ResourceHolder<T>& holder);
+        template<class T> bool UnregisterResources(ResourceHolder<T>& holder);
 
 
 
@@ -300,6 +304,7 @@ class NMOS_EXPOSE NodeApi
 
         bool CheckNodeApiPath();
 
+        void MarkRegNodeAsBad();
 
         Self m_self;
         ResourceHolder<Device> m_devices;
@@ -331,10 +336,19 @@ class NMOS_EXPOSE NodeApi
         bool m_bRun;
         bool m_bBrowsing;
         std::shared_ptr<EventPoster> m_pPoster;
+        std::shared_ptr<NodeZCPoster> m_pZCPoster;
         unsigned short m_nConnectionPort;
 
 
         std::map<unsigned short, std::unique_ptr<MicroServer> > m_mServers;
+
+        struct regnode
+        {
+            regnode(unsigned short np) : bGood(true), nPriority(np){}
+            bool bGood;
+            unsigned short nPriority;
+        };
+        std::map<std::string, regnode> m_mRegNode;
 
         unsigned long m_nHeartbeatTime;
 

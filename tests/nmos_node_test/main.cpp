@@ -16,7 +16,10 @@ using namespace std;
 
 int main()
 {
-    NodeApi::Get().Init(8080, 8080, "host Label", "host Description");
+    std::shared_ptr<ThreadPoster> pPoster = std::make_shared<ThreadPoster>();
+
+    NodeApi::Get().Init(pPoster, 8080, 8080, "host Label", "host Description");
+    NodeApi::Get().SetHeartbeatTime(5000);
     NodeApi::Get().GetSelf().AddInternalClock("clk0");
     NodeApi::Get().GetSelf().AddPTPClock("clk1", true, "IEEE1588-2008", "08-00-11-ff-fe-21-e1-b0", true);
     NodeApi::Get().GetSelf().AddInterface("eth0");
@@ -63,10 +66,10 @@ int main()
         cout << "FAILED TO ADD SENDER" << endl;
     }
     NodeApi::Get().Commit();
-    getchar();
-    std::shared_ptr<ThreadPoster> pPoster = std::make_shared<ThreadPoster>();
 
-    NodeApi::Get().StartServices(pPoster);
+
+
+    NodeApi::Get().StartServices();
 
     int nCount(0);
     while(true)
@@ -110,7 +113,7 @@ int main()
                     cout << "NMOS Target: " << pPoster->GetString() << " [" << pPoster->GetSDP() << "]" << endl;
                     cout << "----------------------------------------" << endl;
                     //getchar();
-                    NodeApi::Get().TargetTaken("", pPoster->GetPort(), true);
+                    NodeApi::Get().TargetTaken("192.168.1.113", pPoster->GetPort(), true);
                     break;
                 case ThreadPoster::PATCH_SENDER:
                     cout << "----------------------------------------" << endl;

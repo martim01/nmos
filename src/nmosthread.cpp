@@ -14,36 +14,47 @@ void NodeThread::Main()
     //start the DNS-SD publisher server
     NodeApi::Get().StartmDNSServer();
 
-    unsigned long nBackOff(10);
+    //browse for an registry server this will now wait until all services have been browsed for,
+
+    NodeApi::Get().BrowseForRegistrationNode();
+    bool bDoneOnce(false);
+    int nBackoff = 1000;
     do
     {
-        //browse for an registry server this will now wait until all services have been browsed for,
-        NodeApi::Get().BrowseForRegistrationNode();
-        NodeApi::Get().Wait(2000);  //wait for 2 seconds to see whether we've got any
-
-        //try to find the registartion node
-        if(NodeApi::Get().FindRegistrationNode())
+        if(NodeApi::Get().Wait(nBackoff))
         {
-            nBackOff = 10;
-            //remove the ver_ txt from our publisher
-            NodeApi::Get().ModifyTxtRecords();
-
-            //Run the registered operation loop
-            if(RegisteredOperation(ApiVersion(1,2)))    //@todo use the version that the registry wants us to
-            {   //exited cleanly so still registered
-                NodeApi::Get().UnregisterSimple();
+            switch(NodeApi::Get().GetSignal())
+            {
+                case NodeApi::SIG_BROWSE_DONE:
+                    FindRegisterNode();
+                    break;
             }
         }
         else
         {
-            Log::Get() << "Try again in " << nBackOff << "s..." << std::endl;
-            for(int i = nBackOff; i > 0 && NodeApi::Get().IsRunning(); i--)
-            {   //loop so we wake up to check if the thread should close...
-                this_thread::sleep_for(chrono::seconds(1));
-            }
-            nBackOff = min(nBackOff+5, (unsigned long)30);
+            FindRegisterNode();
+            nBackoff+= 500;
         }
     }while(NodeApi::Get().IsRunning());
+
+}
+
+bool NodeThread::FindRegisterNode()
+{
+    //try to find the registartion node
+    while(NodeApi::Get().FindRegistrationNode())
+    {
+        //remove the ver_ txt from our publisher
+        NodeApi::Get().ModifyTxtRecords();
+
+        //Run the registered operation loop
+        if(RegisteredOperation(ApiVersion(1,2)))    //@todo use the version that the registry wants us to
+        {   //exited cleanly so still registered
+            NodeApi::Get().UnregisterSimple();
+            break;  //break out of the while loop as we are exiting
+        }
+
+    }
 
 }
 
@@ -51,6 +62,8 @@ bool NodeThread::RegisteredOperation(const ApiVersion& version)
 {
     if(NodeApi::Get().RegisterSimple(version) == NodeApi::REG_DONE)
     {
+        long nResponse = NodeApi::Get().RegistrationHeartbeat();
+
         while(NodeApi::Get().IsRunning())
         {
             if(NodeApi::Get().Wait(NodeApi::Get().GetHeartbeatTime()))
@@ -60,21 +73,28 @@ bool NodeThread::RegisteredOperation(const ApiVersion& version)
                     case NodeApi::SIG_COMMIT:
                         NodeApi::Get().UpdateRegisterSimple(version);
                         break;
+                    case NodeApi::SIG_INSTANCE_REMOVED: //this means our reg node has gone
+                        Log::Get() << "Registration server gone" << endl;
+                        return false;
+                        break;
                     default:
                         break;
                 }
             }
-            long nResponse = NodeApi::Get().RegistrationHeartbeat();
-            if(nResponse == 0 || nResponse >= 500)
+            else
             {
-                Log::Get() << "Registration server gone" << endl;
-                return false;
-            }
-            else if(nResponse == 404)
-            {
-                if(NodeApi::Get().RegisterSimple(version) != NodeApi::REG_DONE)
+                long nResponse = NodeApi::Get().RegistrationHeartbeat();
+                if(nResponse == 0 || nResponse >= 500)
                 {
+                    Log::Get() << "Registration server gone" << endl;
                     return false;
+                }
+                else if(nResponse == 404)
+                {
+                    if(NodeApi::Get().RegisterSimple(version) != NodeApi::REG_DONE)
+                    {
+                        return false;
+                    }
                 }
             }
         }

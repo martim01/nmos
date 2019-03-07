@@ -34,12 +34,12 @@ using namespace std;
 const string ClientApiImpl::STR_RESOURCE[6] = {"node", "device", "source", "flow", "sender", "receiver"};
 
 
-
+//Main Client Thread
 void ClientThread(ClientApiImpl* pApi)
 {
     //start the browser
-    ServiceBrowser::Get().AddService("_nmos-node._tcp", pApi->GetClientPoster());
-    ServiceBrowser::Get().AddService("_nmos-query._tcp", pApi->GetClientPoster());
+    ServiceBrowser::Get().AddService("_nmos-node._tcp", pApi->GetClientZCPoster());
+    ServiceBrowser::Get().AddService("_nmos-query._tcp", pApi->GetClientZCPoster());
     ServiceBrowser::Get().StartBrowser();
 
     while(pApi->IsRunning())
@@ -71,6 +71,7 @@ void ClientThread(ClientApiImpl* pApi)
     pApi->DeleteServiceBrowser();
 }
 
+//Called in NodeBrowse Thread
 bool VersionChanged(shared_ptr<dnsInstance> pInstance, const string& sVersion)
 {
     if(pInstance->nUpdate != 0)
@@ -90,6 +91,7 @@ bool VersionChanged(shared_ptr<dnsInstance> pInstance, const string& sVersion)
     return true;
 }
 
+//NodeBrowse Thread  - started within main ClientThread
 static void NodeBrowser(ClientApiImpl* pApi, shared_ptr<dnsInstance> pInstance)
 {
     if(pApi->GetMode() == ClientApiImpl::MODE_P2P)
@@ -209,7 +211,7 @@ static void NodeBrowser(ClientApiImpl* pApi, shared_ptr<dnsInstance> pInstance)
     }
 }
 
-
+//ConnectThread - called from main program thread
 void ConnectThread(ClientApiImpl* pApi, const string& sSenderId, const string& sReceiverId, const string& sSenderStage, const string& sSenderTransport, const string& sReceiverStage)
 {
     // @todo ConnectThread - if a unicast stream then tell the sender where it should be sending stuff
@@ -262,6 +264,7 @@ void ConnectThread(ClientApiImpl* pApi, const string& sSenderId, const string& s
 }
 
 
+//DisconnectThread - called from main program thread
 void DisconnectThread(ClientApiImpl* pApi, const string& sSenderId, const string& sReceiverId, const string& sSenderStage, const string& sSenderTransport, const string& sReceiverStage)
 {
     Json::StyledWriter stw;
@@ -275,7 +278,6 @@ void DisconnectThread(ClientApiImpl* pApi, const string& sSenderId, const string
         aCon.tpSender.bRtpEnabled = true;
 
         nResult = CurlRegister::PutPatch(sSenderStage, stw.write(aCon.GetJson(ApiVersion(1,0))), sResponse, false, "");
-        cout << "Patch Sender: " << nResult << endl;
         if(nResult != 200)
         {
             pApi->HandleConnect(sSenderId, sReceiverId, false, sResponse);
@@ -292,7 +294,6 @@ void DisconnectThread(ClientApiImpl* pApi, const string& sSenderId, const string
     aConR.sSenderId = "";
 
     nResult = CurlRegister::PutPatch(sReceiverStage, stw.write(aConR.GetJson(ApiVersion(1,0))), sResponse, false, "");
-    cout << "DISCONNECT THREAD Receiver: " << nResult << endl;
     if(nResult != 200)
     {
         pApi->HandleConnect("", sReceiverId, false, sResponse);
@@ -330,8 +331,10 @@ ClientApiImpl::ClientApiImpl() :
     m_nCurlThreadCount(0),
     m_pPoster(0),
     m_pClientPoster(make_shared<ClientPoster>()),
+    m_pClientZCPoster(make_shared<ClientZCPoster>()),
     m_pCurl(new CurlRegister(m_pClientPoster)),
-    m_bStarted(false)
+    m_bStarted(false),
+    m_bDoneQueryBrowse(false)
 {
 
 }
@@ -378,6 +381,11 @@ void ClientApiImpl::StopRun()
 shared_ptr<EventPoster> ClientApiImpl::GetClientPoster()
 {
     return m_pClientPoster;
+}
+
+shared_ptr<ZCPoster> ClientApiImpl::GetClientZCPoster()
+{
+    return m_pClientZCPoster;
 }
 
 ClientApiImpl::enumSignal ClientApiImpl::GetSignal()
@@ -441,6 +449,7 @@ void ClientApiImpl::HandleBrowseDone()
     Log::Get(Log::LOG_INFO) << "Browsing for '" << m_sService << "' done for now." << endl;
     if(m_sService == "_nmos-query._tcp")
     {
+        m_bDoneQueryBrowse = true;
         //first entry in our multimap of servers will have joint highest priority so lets use it
         SubscribeToQueryServer();
     }
@@ -470,6 +479,10 @@ void ClientApiImpl::HandleInstanceResolved()
                         {
                             m_pPoster->_ModeChanged(true);
                         }
+                    }
+                    if(m_bDoneQueryBrowse)
+                    {   //could be told all done before we've been given the node due to threading
+                        SubscribeToQueryServer();
                     }
                 }
                 catch(invalid_argument& ia)
@@ -1905,15 +1918,33 @@ bool ClientApiImpl::MeetsQuery(const std::string& sQuery, shared_ptr<Resource> p
 
 void ClientApiImpl::SubscribeToQueryServer()
 {
-    //@todo ClientApiImpl::SubscribeToQueryServer Allow other versions than 1.2
-    stringstream ssUrl;
-    ssUrl <<  m_mmQueryNodes.begin()->second->sHostIP << ":" << m_mmQueryNodes.begin()->second->nPort << "/x-nmos/query/v1.2";
-
-    Log::Get(Log::LOG_DEBUG) << "QUERY URL: " << ssUrl.str() << endl;
-    //we run through all our queries and post them to the query server asking for the websocket
-    for(multimap<int, query>::const_iterator itQuery = m_mmQuery.begin(); itQuery != m_mmQuery.end(); ++itQuery)
+    if(m_mmQueryNodes.empty() == false)
     {
+        //@todo ClientApiImpl::SubscribeToQueryServer Allow other versions than 1.2
+        stringstream ssUrl;
+        ssUrl <<  m_mmQueryNodes.begin()->second->sHostIP << ":" << m_mmQueryNodes.begin()->second->nPort << "/x-nmos/query/v1.2/subscriptions";
 
+        Log::Get(Log::LOG_DEBUG) << "QUERY URL: " << ssUrl.str() << endl;
 
+        Json::StyledWriter stw;
+        //we run through all our queries and post them to the query server asking for the websocket
+        for(multimap<int, query>::const_iterator itQuery = m_mmQuery.begin(); itQuery != m_mmQuery.end(); ++itQuery)
+        {
+            //create our json query
+            Json::Value jsQuery;
+            jsQuery["max_update_rate_ms"] = (int)itQuery->second.nRefreshRate;
+            stringstream ssRes;
+            ssRes << "/" << STR_RESOURCE[itQuery->second.nResource] << "s";
+            jsQuery["resource_path"] = "/" + STR_RESOURCE[itQuery->second.nResource] + "s";//ssRes.str();
+            jsQuery["persist"] = false;
+            jsQuery["secure"] = false;
+
+            //@todo params
+            Json::Value jsParams(Json::objectValue);
+            jsQuery["params"] = jsParams;
+
+            string sResponse;
+            unsigned long nCode = CurlRegister::Post(ssUrl.str(), stw.write(jsQuery), sResponse);
+        }
     }
 }

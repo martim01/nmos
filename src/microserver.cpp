@@ -42,6 +42,10 @@ int MicroServer::DoHttpGet(MHD_Connection* pConnection, string sUrl, ConnectionI
 
     MHD_Response* pResponse = MHD_create_response_from_buffer (sResponse.length(), (void *) sResponse.c_str(), MHD_RESPMEM_MUST_COPY);
     MHD_add_response_header(pResponse, "Content-Type", sContentType.c_str());
+    MHD_add_response_header(pResponse, "Access-Control-Allow-Origin:", "*");
+    MHD_add_response_header(pResponse, "Access-Control-Allow-Methods:", "GET, PUT, POST, HEAD, OPTIONS, DELETE");
+    MHD_add_response_header(pResponse, "Access-Control-Allow-Headers:", "Content-Type, Accept");
+    MHD_add_response_header(pResponse, "Access-Control-Max-Age:", "3600");
     int ret = MHD_queue_response (pConnection, nCode, pResponse);
     MHD_destroy_response (pResponse);
     return ret;
@@ -50,12 +54,16 @@ int MicroServer::DoHttpGet(MHD_Connection* pConnection, string sUrl, ConnectionI
 int MicroServer::DoHttpPut(MHD_Connection* pConnection, string sUrl, ConnectionInfo* pInfo)
 {
     string sResponse;
-    int nCode = pInfo->pServer->PutJson(sUrl, pInfo->pServer->GetPutData(), sResponse);
-    pInfo->pServer->ResetPutData();
+    int nCode = pInfo->pServer->PutJson(sUrl, pInfo->ssData.str(), sResponse);
+
 
 
     MHD_Response* pResponse = MHD_create_response_from_buffer (sResponse.length(), (void *) sResponse.c_str(), MHD_RESPMEM_MUST_COPY);
     MHD_add_response_header(pResponse, "Content-Type", "application/json");
+    MHD_add_response_header(pResponse, "Access-Control-Allow-Origin:", "*");
+    MHD_add_response_header(pResponse, "Access-Control-Allow-Methods:", "GET, PUT, POST, HEAD, OPTIONS, DELETE");
+    MHD_add_response_header(pResponse, "Access-Control-Allow-Headers:", "Content-Type, Accept");
+    MHD_add_response_header(pResponse, "Access-Control-Max-Age:", "3600");
     int ret = MHD_queue_response (pConnection, nCode, pResponse);
     MHD_destroy_response (pResponse);
     return ret;
@@ -66,11 +74,15 @@ int MicroServer::DoHttpPatch(MHD_Connection* pConnection, string sUrl, Connectio
     Log::Get(Log::LOG_DEBUG) << "DoHttpPatch" << std::endl;
 
     string sResponse;
-    int nCode = pInfo->pServer->PatchJson(sUrl, pInfo->pServer->GetPutData(), sResponse);
-    pInfo->pServer->ResetPutData();
+    int nCode = pInfo->pServer->PatchJson(sUrl, pInfo->ssData.str(), sResponse);
+
 
     MHD_Response* pResponse = MHD_create_response_from_buffer (sResponse.length(), (void *) sResponse.c_str(), MHD_RESPMEM_MUST_COPY);
     MHD_add_response_header(pResponse, "Content-Type", "application/json");
+    MHD_add_response_header(pResponse, "Access-Control-Allow-Origin:", "*");
+    MHD_add_response_header(pResponse, "Access-Control-Allow-Methods:", "GET, PUT, POST, HEAD, OPTIONS, DELETE");
+    MHD_add_response_header(pResponse, "Access-Control-Allow-Headers:", "Content-Type, Accept");
+    MHD_add_response_header(pResponse, "Access-Control-Max-Age:", "3600");
     int ret = MHD_queue_response (pConnection, nCode, pResponse);
     MHD_destroy_response (pResponse);
     return ret;
@@ -128,7 +140,8 @@ int MicroServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, cons
         ConnectionInfo* pInfo = reinterpret_cast<ConnectionInfo*>(*ptr);
         if (*upload_data_size != 0)
         {
-            pInfo->pServer->AddPutData(upload_data);
+            Log::Get(Log::LOG_DEBUG) << "Actual connection: PUT: " << upload_data << endl;
+            pInfo->ssData << upload_data;
             *upload_data_size = 0;
             return MHD_YES;
         }
@@ -144,7 +157,7 @@ int MicroServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, cons
         if (*upload_data_size != 0)
         {
             Log::Get(Log::LOG_DEBUG) << "Actual connection: PATCH - more" << endl;
-            pInfo->pServer->AddPutData(upload_data);
+            pInfo->ssData << upload_data;
             *upload_data_size = 0;
             return MHD_YES;
         }
@@ -163,18 +176,18 @@ int MicroServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, cons
 
 
 
-bool MicroServer::Init(unsigned int nPort)
+bool MicroServer::Init()
 {
-    Log::Get() << "MicroServer: " << nPort << " Try Init" << std::endl;
-    m_nPort = nPort;
-    m_pmhd = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY, nPort, NULL, NULL, &MicroServer::AnswerToConnection, this, MHD_OPTION_NOTIFY_COMPLETED, RequestCompleted, NULL, MHD_OPTION_END);
+    Log::Get() << "MicroServer: " << m_nPort << " Try Init" << std::endl;
+
+    m_pmhd = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY, m_nPort, NULL, NULL, &MicroServer::AnswerToConnection, this, MHD_OPTION_NOTIFY_COMPLETED, RequestCompleted, NULL, MHD_OPTION_END);
     if(m_pmhd)
     {
-        Log::Get() << "MicroServer: " << nPort << " Init: OK" << std::endl;
+        Log::Get() << "MicroServer: " << m_nPort << " Init: OK" << std::endl;
     }
     else
     {
-        Log::Get() << "MicroServer: " << nPort << " Init: Failed" << std::endl;
+        Log::Get() << "MicroServer: " << m_nPort << " Init: Failed" << std::endl;
     }
 
     return (m_pmhd!=0);
@@ -189,7 +202,7 @@ void MicroServer::Stop()
     }
 }
 
-MicroServer::MicroServer(shared_ptr<EventPoster> pPoster) : m_pPoster(pPoster), m_pmhd(0)
+MicroServer::MicroServer(shared_ptr<EventPoster> pPoster, unsigned int nPort) : m_pPoster(pPoster), m_pmhd(0), m_nPort(nPort)
 {
 
 }
@@ -206,19 +219,6 @@ bool MicroServer::AddNmosControl(const string& sControl, shared_ptr<NmosServer> 
     return m_mServer.insert(make_pair(sControl, pServer)).second;
 }
 
-void MicroServer::AddPutData(string sData)
-{
-    m_sPut += sData;
-}
-string MicroServer::GetPutData() const
-{
-    return m_sPut;
-}
-
-void MicroServer::ResetPutData()
-{
-    m_sPut.clear();
-}
 
 void MicroServer::PrimeWait()
 {

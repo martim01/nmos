@@ -189,6 +189,7 @@ Json::Value IS04Server::GetJsonSenders(const ApiVersion& version)
 
 int IS04Server::PutJsonNmos(MicroServer* pServer, const string& sJson, string& sResponse)
 {
+    Log::Get(Log::LOG_DEBUG) << "PutJsonNmos: " << sJson << endl;
     Json::StyledWriter stw;
     int nCode = 500;
     if(m_vPath.size() < SZ_TARGET)
@@ -200,26 +201,30 @@ int IS04Server::PutJsonNmos(MicroServer* pServer, const string& sJson, string& s
     {
         if(m_vPath[API_TYPE] == "node" &&  NodeApi::Get().GetSelf().IsVersionSupported(m_vPath[VERSION]) && m_vPath[ENDPOINT] == "receivers" && m_vPath[TARGET] == "target")
         {
+            Log::Get(Log::LOG_DEBUG) << "PutJsonNmos: Find Receiver" << endl;
             ApiVersion version(m_vPath[VERSION]);
             //does the receiver exist?
             shared_ptr<Receiver> pReceiver  = NodeApi::Get().GetReceiver(m_vPath[RESOURCE]);
             if(!pReceiver)
             {
+                Log::Get(Log::LOG_DEBUG) << "PutJsonNmos: No Receiver" << endl;
                 nCode = 404;
                 sResponse = stw.write(GetJsonError(nCode, "Resource "+m_vPath[RESOURCE]+"does not exist."));
             }
             else
             {
-                Log::Get(Log::LOG_DEBUG) << sJson << std::endl;
+                Log::Get(Log::LOG_DEBUG) << "PutJsonNmos: Parse Json" << endl;
                 Json::Value jsRequest;
                 Json::Reader jsReader;
                 if(jsReader.parse(sJson, jsRequest) == false)
                 {
+                    Log::Get(Log::LOG_DEBUG) << "PutJsonNmos: Parse Json: Ill Defined" << endl;
                     nCode = 400;
                     sResponse = stw.write(GetJsonError(nCode, "Request is ill defined."));
                 }
                 else
                 {
+                    Log::Get(Log::LOG_DEBUG) << "PutJsonNmos: Parse Json: Done" << endl;
                     //does the sender have a manifest??
                     std::string sSdp("");
                     std::string sSenderId("");
@@ -227,6 +232,7 @@ int IS04Server::PutJsonNmos(MicroServer* pServer, const string& sJson, string& s
                     //Have we been sent a sender??
                     if(jsRequest.isObject() && jsRequest["id"].isString())
                     {
+                        Log::Get(Log::LOG_DEBUG) << "PutJsonNmos: CreateSender" << endl;
                         pRemoteSender = std::make_shared<Sender>();
                         pRemoteSender->UpdateFromJson(jsRequest);
 
@@ -239,8 +245,10 @@ int IS04Server::PutJsonNmos(MicroServer* pServer, const string& sJson, string& s
                     }
                     if(m_pPoster)
                     {
+                        Log::Get(Log::LOG_DEBUG) << "PutJsonNmos: PrimeWait" << endl;
                         pServer->PrimeWait();
                         //Tell the main thread to connect
+                        Log::Get(Log::LOG_DEBUG) << "PutJsonNmos: _Target " << m_nPort << endl;
                         m_pPoster->_Target(m_vPath[RESOURCE], sSdp, m_nPort);
                         //Pause the HTTP thread
                         Log::Get(Log::LOG_DEBUG) << "IS04Server: Wait" << std::endl;
@@ -269,8 +277,18 @@ int IS04Server::PutJsonNmos(MicroServer* pServer, const string& sJson, string& s
                     }
                     else
                     {   //no way of telling main thread to do this so we'll simply assume it's been done
+                        Log::Get(Log::LOG_DEBUG) << "PutJsonNmos: No Poster" << endl;
                         nCode = 202;
-                        sResponse = stw.write(pRemoteSender->GetJson(version));
+                        if(pRemoteSender)
+                        {
+                            sResponse = stw.write(pRemoteSender->GetJson(version));
+                        }
+                        else
+                        {
+                            sResponse = "{}";
+                        }
+                        pReceiver->SetSender(sSenderId, sSdp, "192.168.1.113"); //@todo work out ip address here
+                        NodeApi::Get().Commit();   //updates the registration node or txt records
                     }
                 }
             }

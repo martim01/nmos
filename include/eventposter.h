@@ -16,11 +16,6 @@ class NMOS_EXPOSE EventPoster
         //virtual ~EventPoster()=0;
 
         void _CurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId=std::string());
-        void _InstanceResolved(std::shared_ptr<dnsInstance> pInstance);
-        void _AllForNow(const std::string& sService);
-        void _Finished();
-        void _RegistrationNodeError();
-        void _InstanceRemoved(std::shared_ptr<dnsInstance> pInstance);
         void _Target(const std::string& sReceiverId, const std::string& sTransportFile, unsigned short nPort);
         void _PatchSender(const std::string& sSenderId, const connectionSender& conPatch, unsigned short nPort);
         void _PatchReceiver(const std::string& sReceiverId, const connectionReceiver& conPatch, unsigned short nPort);
@@ -38,35 +33,6 @@ class NMOS_EXPOSE EventPoster
         **/
         virtual void CurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId)=0;
 
-        /** @brief Called by AvahiBrowser when a dns service instance has been resolved
-        *   @param pInstance a pointer to the resolved instance.
-        *   @note The pointer must not be deleted as it belongs to AvahiBrowser
-        *   @note this is a non-blocking event
-        **/
-        virtual void InstanceResolved(std::shared_ptr<dnsInstance> pInstance)=0;
-
-        /** @brief Called by AvahiBrowser when no more instances of the given service are likely to be found
-        *   @param sService the name of the service
-        *   @note this is a non-blocking event
-        **/
-        virtual void AllForNow(const std::string& sService)=0;
-
-        /** @brief Called by AvahiBrowser when it has definitely finished browsing
-        *   @note this is a non-blocking event
-        **/
-        virtual void Finished()=0;
-
-        /** @brief Called by AvahiBrowser when an error occurs
-        *   @note this is a non-blocking event
-        **/
-        virtual void RegistrationNodeError()=0;
-
-        /** @brief Called by AvahiBrowser when a dns service instance has been removed
-        *   @param pInstance a pointer to the removed instance.
-        *   @param sService the name of the service.
-        *   @note this is a non-blocking event
-        **/
-        virtual void InstanceRemoved(std::shared_ptr<dnsInstance> pInstance)=0;
 
         /** @brief Called by MicroServer when a IS-04 Target PUT is performed
         *   @param sReceiverId the uuid of the Receiver to apply the PU to

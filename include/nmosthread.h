@@ -7,6 +7,7 @@ class NodeThread
         NodeThread(){}
         static void Main();
         static bool RegisteredOperation(const ApiVersion& version);
+        static bool FindRegisterNode();
 
 };
 

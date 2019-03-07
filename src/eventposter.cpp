@@ -2,7 +2,8 @@
 #include "nodeapi.h"
 #include "sender.h"
 #include "receiver.h"
-#
+
+
 void EventPoster::_CurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
@@ -10,36 +11,6 @@ void EventPoster::_CurlDone(unsigned long nResult, const std::string& sResponse,
 }
 
 
-void EventPoster::_InstanceResolved(std::shared_ptr<dnsInstance> pInstance)
-{
-    std::lock_guard<std::mutex> lg(m_mutex);
-    InstanceResolved(pInstance);
-
-}
-
-void EventPoster::_AllForNow(const std::string& sService)
-{
-    std::lock_guard<std::mutex> lg(m_mutex);
-    AllForNow(sService);
-}
-
-void EventPoster::_Finished()
-{
-    std::lock_guard<std::mutex> lg(m_mutex);
-    Finished();
-}
-
-void EventPoster::_RegistrationNodeError()
-{
-    std::lock_guard<std::mutex> lg(m_mutex);
-    RegistrationNodeError();
-}
-
-void EventPoster::_InstanceRemoved(std::shared_ptr<dnsInstance> pInstance)
-{
-    std::lock_guard<std::mutex> lg(m_mutex);
-    InstanceRemoved(pInstance);
-}
 
 void EventPoster::_Target(const std::string& sReceiverId, const std::string& sTransportFile, unsigned short nPort)
 {

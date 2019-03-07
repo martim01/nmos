@@ -213,6 +213,7 @@ void Resource::SetHeartbeat()
 {
     auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
     m_nHeartbeat =(nanos/1000000000);
+    m_nHeartbeat -= 36; //leap seconds;
 }
 
 
