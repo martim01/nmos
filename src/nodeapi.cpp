@@ -372,6 +372,15 @@ void NodeApi::SetmDNSTxt(bool bSecure)
             m_pNodeApiPublisher->AddTxt("ver_snd", to_string(m_senders.GetVersion()),false);
             m_pNodeApiPublisher->AddTxt("ver_rcv", to_string(m_receivers.GetVersion()),false);
         }
+        else
+        {
+            m_pNodeApiPublisher->RemoveTxt("ver_slf", false);
+            m_pNodeApiPublisher->RemoveTxt("ver_src", false);
+            m_pNodeApiPublisher->RemoveTxt("ver_flw", false);
+            m_pNodeApiPublisher->RemoveTxt("ver_dvc", false);
+            m_pNodeApiPublisher->RemoveTxt("ver_snd", false);
+            m_pNodeApiPublisher->RemoveTxt("ver_rcv", false);
+        }
         m_pNodeApiPublisher->Modify();
     }
 }
@@ -419,13 +428,38 @@ void NodeApi::TargetTaken(const std::string& sInterfaceIp, unsigned short nPort,
     SignalServer(nPort, bOk, sInterfaceIp);
 }
 
-void NodeApi::SenderPatchAllowed(unsigned short nPort, bool bOk)
+
+void NodeApi::SenderPatchAllowed(unsigned short nPort, bool bOk, const std::string& sId, const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP)
 {
+    if(bOk)
+    {
+        shared_ptr<Sender> pSender(GetSender(sId));
+        if(pSender)
+        {
+            pSender->SetupActivation(sSourceIp, sDestinationIp, sSDP);
+        }
+        else
+        {
+            bOk = false;
+        }
+    }
     SignalServer(nPort, bOk, "");
 }
 
-void NodeApi::ReceiverPatchAllowed(unsigned short nPort, bool bOk)
+void NodeApi::ReceiverPatchAllowed(unsigned short nPort, bool bOk,const std::string& sId, const std::string& sInterfaceIp)
 {
+    if(bOk)
+    {
+        shared_ptr<Receiver> pReceiver(GetReceiver(sId));
+        if(pReceiver)
+        {
+            pReceiver->SetupActivation(sInterfaceIp);
+        }
+        else
+        {
+            bOk = false;
+        }
+    }
     SignalServer(nPort, bOk, "");
 }
 
@@ -603,7 +637,7 @@ long NodeApi::RegisterResource(const string& sType, const Json::Value& json)
     Json::Value jsonRegister;
     jsonRegister["type"] = sType;
     jsonRegister["data"] = json;
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
     string sPost(stw.write(jsonRegister));
 
     string sResponse;
@@ -903,29 +937,8 @@ NodeApi::enumSignal NodeApi::GetSignal() const
 }
 
 
-bool NodeApi::ActivateSender(const std::string& sId, const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP)
-{
-    shared_ptr<Sender> pSender(GetSender(sId));
-    if(pSender)
-    {
-        pSender->Activate(sSourceIp, sDestinationIp, sSDP);
-        Commit();
-        return true;
-    }
-    return false;
-}
 
-bool NodeApi::ActivateReceiver(const std::string& sId, const std::string& sInterfaceIp)
-{
-    shared_ptr<Receiver> pReceiver(GetReceiver(sId));
-    if(pReceiver)
-    {
-        pReceiver->Activate(sInterfaceIp);
-        Commit();
-        return true;
-    }
-    return false;
-}
+
 
 
 void NodeApi::SetHeartbeatTime(unsigned long nMilliseconds)
@@ -938,4 +951,23 @@ unsigned long NodeApi::GetHeartbeatTime()
 {
     lock_guard<mutex> lg(m_mutex);
     return m_nHeartbeatTime;
+}
+
+
+void NodeApi::ReceiverActivated(const std::string& sId)
+{
+    Commit();
+    if(m_pPoster)
+    {
+        m_pPoster->_ReceiverActivated(sId);
+    }
+}
+
+void NodeApi::SenderActivated(const std::string& sId)
+{
+    Commit();
+    if(m_pPoster)
+    {
+        m_pPoster->_SenderActivated(sId);
+    }
 }

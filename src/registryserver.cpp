@@ -218,7 +218,7 @@ int RegistryServer::GetJson(string sPath, string& sReturn, std::string& sContent
 
     if(m_vPath.size() <= SZ_BASE)
     {
-        Json::StyledWriter stw;
+        Json::FastWriter stw;
         Json::Value jsNode;
         jsNode.append("x-nmos/");
         sReturn = stw.write(jsNode);
@@ -232,7 +232,7 @@ int RegistryServer::GetJson(string sPath, string& sReturn, std::string& sContent
         }
         else
         {
-            Json::StyledWriter stw;
+            Json::FastWriter stw;
             sReturn = stw.write(GetJsonError(404, "Page not found"));
             nCode = 404;
         }
@@ -242,7 +242,7 @@ int RegistryServer::GetJson(string sPath, string& sReturn, std::string& sContent
 
 int RegistryServer::GetJsonNmos(string& sReturn, std::string& sContentType)
 {
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
     if(m_vPath.size() == SZ_NMOS)
     {
         Json::Value jsNode;
@@ -290,7 +290,7 @@ int RegistryServer::GetJsonNmos(string& sReturn, std::string& sContentType)
 
 int RegistryServer::GetJsonNmosResource(string& sReturn, const ApiVersion& version)
 {
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
     int nCode = 200;
     if(m_vPath.size() < SZ_ID)
     {
@@ -317,7 +317,7 @@ int RegistryServer::GetJsonNmosResource(string& sReturn, const ApiVersion& versi
 
 int RegistryServer::GetJsonNmosHealth(string& sReturn)
 {
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
     int nCode = 200;
     if(m_vPath.size() < SZ_ID)
     {
@@ -370,7 +370,7 @@ int RegistryServer::PostJson(string sPath, const string& sJson, string& sRespons
     //make sure path is correct
     transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
 
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
 
     int nCode = 202;
     SplitString(m_vPath, sPath, '/');
@@ -404,7 +404,7 @@ int RegistryServer::PostJsonNmosResource(const std::string& sJson, std::string& 
     //Is sJson Json
     Json::Value jsRequest;
     Json::Reader jsReader;
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
     if(jsReader.parse(sJson, jsRequest) == false || jsRequest["type"].isString()==false || jsRequest["data"].isObject()==false || jsRequest["data"]["id"].isString() == false)
     {
         nCode = 400;
@@ -437,7 +437,7 @@ int RegistryServer::PostJsonNmosResource(const std::string& sJson, std::string& 
 int RegistryServer::PostJsonNmosHealth(std::string& sReturn)
 {
     unsigned short nCode;
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
 
     size_t nHeatbeat = RegistryApi::Get().Heartbeat(m_vPath[HEALTH_ID]);
     if(nHeatbeat != 0)
@@ -461,7 +461,7 @@ int RegistryServer::DeleteJson(string sPath, string& sResponse)
     //make sure path is correct
     transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
 
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
 
     int nCode = 204;
     SplitString(m_vPath, sPath, '/');

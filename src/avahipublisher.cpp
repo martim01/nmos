@@ -248,7 +248,7 @@ void ServicePublisher::AddTxt(string sKey, string sValue, bool bModify)
     }
 }
 
-void ServicePublisher::RemoveTxt(string sKey, string sValue, bool bModify)
+void ServicePublisher::RemoveTxt(string sKey, bool bModify)
 {
     m_mTxt.erase(sKey);
     if(bModify)

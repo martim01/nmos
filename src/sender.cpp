@@ -6,15 +6,21 @@
 #include "flow.h"
 #include "device.h"
 #include "utils.h"
+#include "log.h"
+#include <algorithm>
+#include <vector>
 
 
-static void ActivationThreadSender(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sSenderId, std::shared_ptr<EventPoster> pPoster)
+static void ActivationThreadSender(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId)
 {
+    Log::Get(Log::LOG_DEBUG) << "Thread started at: " << GetCurrentTaiTime() << std::endl;
+    Log::Get(Log::LOG_DEBUG) << "Wait until  " << ConvertTimeToString(tp) << std::endl;
     std::this_thread::sleep_until(tp);
-
-    if(pPoster)
+    Log::Get(Log::LOG_DEBUG) << "Activated at: " << GetCurrentTaiTime() << std::endl;
+    std::shared_ptr<Sender> pSender = NodeApi::Get().GetSender(sId);
+    if(pSender)
     {
-        pPoster->_ActivateSender(sSenderId);
+        pSender->Activate();
     }
 }
 
@@ -64,8 +70,11 @@ Sender::Sender(std::string sLabel, std::string sDescription, std::string sFlowId
         m_Active.tpSender.eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
     }
 
+    m_constraints.nParamsSupported = flagsTransport;
+
     //activate the
-    Activate("","","");
+    SetupActivation("","","");
+    Activate();
 
 }
 
@@ -311,31 +320,23 @@ bool Sender::Stage(const connectionSender& conRequest, std::shared_ptr<EventPost
     switch(m_Staged.eActivate)
     {
         case connection::ACT_NULL:
-            m_Staged.sActivationTime = GetCurrentTime();
+            m_Staged.sActivationTime.clear();
             m_bActivateAllowed = false;
             break;
         case connection::ACT_NOW:
-            m_Staged.sActivationTime = GetCurrentTime();
-            // Tell the main thread to do it's stuff
-            if(pPoster)
-            {
-                m_bActivateAllowed = true;
-                pPoster->_ActivateSender(GetId());
-            }
-            else
-            {
-                // @todo no poster so do the activation bits ourself
-            }
-
+            m_Staged.sActivationTime = GetCurrentTaiTime();
+            m_bActivateAllowed = true;
+            Activate(true);
             break;
         case connection::ACT_ABSOLUTE:
-            if(pPoster)
             {
+
                 std::chrono::time_point<std::chrono::high_resolution_clock> tp;
                 if(ConvertTaiStringToTimePoint(m_Staged.sRequestedTime, tp))
                 {
+                    m_Staged.sActivationTime = m_Staged.sRequestedTime;
                     m_bActivateAllowed = true;
-                    std::thread thActive(ActivationThreadSender, tp, GetId(), pPoster);
+                    std::thread thActive(ActivationThreadSender, tp-LEAP_SECONDS, GetId());
                     thActive.detach();
                 }
                 else
@@ -343,33 +344,32 @@ bool Sender::Stage(const connectionSender& conRequest, std::shared_ptr<EventPost
                     bOk = false;
                 }
             }
-            else
-            {
-                //nothing to do here -
-                bOk = false;
-            }
             break;
         case connection::ACT_RELATIVE:
             // start a thread that will sleep for the given time period and then tell the main thread to do its stuff
-            if(pPoster)
+            try
             {
                 std::chrono::time_point<std::chrono::high_resolution_clock> tp(std::chrono::high_resolution_clock::now().time_since_epoch());
+                std::vector<std::string> vTime;
+                SplitString(vTime, m_Staged.sRequestedTime, ':');
+                if(vTime.size() != 2)
+                {
+                    throw std::invalid_argument("invalid time");
+                }
 
-                try
-                {
-                    std::chrono::nanoseconds nano(stoul(m_Staged.sActivationTime));
-                    m_bActivateAllowed = true;
-                    std::thread thActive(ActivationThreadSender, (tp+nano), GetId(), pPoster);
-                    thActive.detach();
-                }
-                catch(std::invalid_argument& ia)
-                {
-                    bOk = false;
-                }
+                std::chrono::nanoseconds nano((static_cast<long long int>(std::stoul(vTime[0]))*1000000000)+stoul(vTime[1]));
+                std::chrono::time_point<std::chrono::high_resolution_clock> tpAbs(tp+nano-LEAP_SECONDS);
+
+                m_Staged.sActivationTime = ConvertTimeToString(tpAbs, true);
+
+
+                m_bActivateAllowed = true;
+                std::thread thActive(ActivationThreadSender, (tp+nano), GetId());
+                thActive.detach();
             }
-            else
+            catch(std::invalid_argument& ia)
             {
-                //nothing to do here
+                Log::Get(Log::LOG_ERROR) << "Stage Sender: Invalid time" << std::endl;
                 bOk = false;
             }
             break;
@@ -390,14 +390,22 @@ connectionSender Sender::GetActive()
 }
 
 
-
-void Sender::Activate(std::string sSourceIp, std::string sDestinationIp, std::string sSDP)
+void Sender::SetupActivation(std::string sSourceIp, std::string sDestinationIp, std::string sSDP)
 {
+    m_sSourceIp = sSourceIp;
+    m_sDestinationIp = sDestinationIp;
+    m_sSDP = sSDP;
+}
+
+void Sender::Activate(bool bImmediate)
+{
+    std::lock_guard<std::mutex> lg(m_mutex);
+
     m_bActivateAllowed = false;
     //move the staged parameters to active parameters
     m_Active = m_Staged;
 
-    if(sSourceIp.empty())
+    if(m_sSourceIp.empty())
     {
         //get the bound to interface source address
         for(std::set<std::string>::iterator itInteface = m_setInterfaces.begin(); itInteface != m_setInterfaces.end(); ++itInteface)
@@ -405,26 +413,26 @@ void Sender::Activate(std::string sSourceIp, std::string sDestinationIp, std::st
             std::map<std::string, nodeinterface>::const_iterator itDetails = NodeApi::Get().GetSelf().FindInterface((*itInteface));
             if(itDetails != NodeApi::Get().GetSelf().GetInterfaceEnd())
             {
-                sSourceIp = itDetails->second.sMainIpAddress;
+                m_sSourceIp = itDetails->second.sMainIpAddress;
                 break;
             }
         }
     }
 
     //Change auto settings to what they actually are
-    m_Active.tpSender.Actualize(sSourceIp, sDestinationIp);
+    m_Active.tpSender.Actualize(m_sSourceIp, m_sDestinationIp);
 
 
     // create the SDP
     if(m_Active.bMasterEnable)
     {
-        if(sSDP.empty())
+        if(m_sSDP.empty())
         {
             CreateSDP();
         }
         else
         {
-            m_sTransportFile = sSDP;
+            m_sTransportFile = m_sSDP;
         }
     }
     else
@@ -437,12 +445,23 @@ void Sender::Activate(std::string sSourceIp, std::string sDestinationIp, std::st
     m_sReceiverId = m_Staged.sReceiverId;
     m_bReceiverActive = m_Staged.bMasterEnable;
 
+    if(!bImmediate)
+    {
+        CommitActivation();
+    }
+}
+
+void Sender::CommitActivation()
+{
     //reset the staged activation
+    Log::Get(Log::LOG_DEBUG) << "ActivateSender: Reset Staged activation parameters..." << std::endl;
     m_Staged.eActivate = connection::ACT_NULL;
     m_Staged.sActivationTime.clear();
     m_Staged.sRequestedTime.clear();
 
     UpdateVersionTime();
+
+    NodeApi::Get().SenderActivated(GetId());
 }
 
 void Sender::SetDestinationDetails(const std::string& sDestinationIp, unsigned short nDestinationPort)
@@ -468,7 +487,7 @@ void Sender::CreateSDP()
 {
     std::stringstream ssSDP;
     ssSDP << "v=0\r\n";
-    ssSDP << "o=- " << GetCurrentTime(false) << " " << GetCurrentTime(false) << " IN IP";
+    ssSDP << "o=- " << GetCurrentTaiTime(false) << " " << GetCurrentTaiTime(false) << " IN IP";
     switch(SdpManager::CheckIpAddress(m_Active.tpSender.sSourceIp))
     {
         case SdpManager::IP4_UNI:

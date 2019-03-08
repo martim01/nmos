@@ -1,10 +1,16 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "json/json.h"
+#include <chrono>
 
-extern std::string GetCurrentTime(bool bIncludeNano=true);
+static const std::chrono::seconds LEAP_SECONDS(37);
+
+extern std::string ConvertTimeToString(std::chrono::time_point<std::chrono::high_resolution_clock> tp, bool bIncludeNano=true);
+extern std::string GetCurrentTaiTime(bool bIncludeNano=true);
 extern void SplitString(std::vector<std::string>& vSplit, std::string str, char cSplit);
 extern std::string GetIpAddress(const std::string& sInterface);
 extern std::string CreateGuid(std::string sName);
 extern std::string CreateGuid();
 
+extern bool CheckJson(const Json::Value& jsObject, std::initializer_list<std::string> lstAllowed);

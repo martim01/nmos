@@ -4,7 +4,7 @@
 
 static void Notify(ThreadPoster* pPoster)
 {
-    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
     pPoster->Signal();
 }
 
@@ -91,14 +91,14 @@ void ThreadPoster::PatchReceiver(const std::string& sReceiverId, const connectio
     LaunchThread();
 }
 
-void ThreadPoster::ActivateSender(const std::string& sSenderId)
+void ThreadPoster::SenderActivated(const std::string& sSenderId)
 {
     SetReason(ACTIVATE_SENDER);
     m_sString = sSenderId;
     LaunchThread();
 }
 
-void ThreadPoster::ActivateReceiver(const std::string& sReceiverId)
+void ThreadPoster::ReceiverActivated(const std::string& sReceiverId)
 {
     SetReason(ACTIVATE_RECEIVER);
     m_sString = sReceiverId;

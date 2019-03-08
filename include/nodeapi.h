@@ -168,19 +168,26 @@ class NMOS_EXPOSE NodeApi
         **/
         void TargetTaken(const std::string& sInterfaceIp, unsigned short nPort, bool bOk);
 
-        /** @brief To be called by the main thread when an IS-05 Sender Patch is being maded
+        /** @brief To be called by the main thread when an IS-05 Sender Patch is being made. Also allows the main thread to set the parameters which will overwrite any "auto" stage params on activation
         *   @param nPort the port of the MicroServer that is being used for IS-04
         *   @param bOk true if the Sender is allowed to take the patch.
+        *   @param sId the uuid of the Sender
+        *   @param sSourceIp IP address from which RTP packets will be sent (IP address of interface bound to this output)
+        *   @param sDestinationIp IP address to which RTP packets will be sent. Can be a multicast address
+        *   @param sSDP the transport file that the sender should serve. This should be created by the main program logic from the staged transport parameters and associated flow etc. If empty then the Sender will create it's own from the connection parameters
+        *   @note sSourceIp and sDestinationIp should be set to be the same as the Sender's staged parameters unless they are set to auto. In which case the main program logic should choose them.
         *   @note EventPoster::PatchSender is called on the request of the Sender being patched whatever the activation mode is. This function should be called by the main thread to allow the server to respond.
         **/
-        void SenderPatchAllowed(unsigned short nPort, bool bOk);
+        void SenderPatchAllowed(unsigned short nPort, bool bOk, const std::string& sId, const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP="");
 
         /** @brief To be called by the main thread when an IS-05 Receiver Patch is being maded
         *   @param nPort the port of the MicroServer that is being used for IS-04
         *   @param bOk true if the Receiver is allowed to take the patch
+        *   @param sId the uuid of the Receiver
+        *   @param sInterfaceIp IP address of the network interface the receiver should use
         *   @note EventPoster::PatchSender is called on the request of the Receiver being patched whatever the activation mode is. This function should be called by the main thread to allow the server to respond.
         **/
-        void ReceiverPatchAllowed(unsigned short nPort, bool bOk);
+        void ReceiverPatchAllowed(unsigned short nPort, bool bOk, const std::string& sId, const std::string& sInterfaceIp);
 
 
 
@@ -205,22 +212,8 @@ class NMOS_EXPOSE NodeApi
 
 
 
-        /** @brief Activates the stage parameters of the Sender with the given Id and updates any IS-O4 version information
-        *   @param sId the uuid of the Sender
-        *   @param sSourceIp IP address from which RTP packets will be sent (IP address of interface bound to this output)
-        *   @param sDestinationIp IP address to which RTP packets will be sent. Can be a multicast address
-        *   @param sSDP the transport file that the sender should serve. This should be created by the main program logic from the staged transport parameters and associated flow etc. If empty then the Sender will create it's own from the connection parameters
-        *   @return <i>bool</i> true if the Sender was found
-        *   @note sSourceIp and sDestinationIp should be set to be the same as the Sender's staged parameters unless they are set to auto. In which case the main program logic should choose them.
-        **/
-        bool ActivateSender(const std::string& sId, const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP="");
 
-        /** @brief Activates the stage parameters of the Receiver with the given Id and updates any IS-04 version information
-        *   @param sId the uuid of the Receiver
-        *   @param sInterfaceIp IP address of the network interface the receiver should use
-        *   @return <i>bool</i> true if the Receiver was found
-        **/
-        bool ActivateReceiver(const std::string& sId, const std::string& sInterfaceIp);
+
 
 
         /** @brief Sets the regularity that heartbeat messages are sent to a registry
@@ -232,6 +225,12 @@ class NMOS_EXPOSE NodeApi
         *   @return <i>unsigned long</i> the time between heartbeats in milliseconds
         **/
         unsigned long GetHeartbeatTime();
+
+
+        /** @brief Called be a receiver when it is activated
+        **/
+        void ReceiverActivated(const std::string& sId);
+        void SenderActivated(const std::string& sId);
 
     protected:
         friend class NodeThread;

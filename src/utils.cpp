@@ -21,6 +21,7 @@
 
 using namespace std;
 
+
 static uuid_t NameSpace_OID = { /* 6ba7b812-9dad-11d1-80b4-00c04fd430c8 */
        0x6ba7b812,
        0x9dad,
@@ -61,16 +62,21 @@ string GetIpAddress(const string& sInterface)
 }
 
 
-std::string GetCurrentTime(bool bIncludeNano)
+std::string GetCurrentTaiTime(bool bIncludeNano)
 {
-    auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-    nanos = nanos-(1000000000*37);    //leap seconds
-    std::stringstream sstr;
+    std::chrono::time_point<std::chrono::high_resolution_clock> tp(std::chrono::high_resolution_clock::now());
+    tp += LEAP_SECONDS;
+    return ConvertTimeToString(tp, bIncludeNano);
+}
 
-    sstr << (nanos/1000000000);
+std::string ConvertTimeToString(std::chrono::time_point<std::chrono::high_resolution_clock> tp, bool bIncludeNano)
+{
+    std::stringstream sstr;
+    auto seconds = std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch());
+    sstr << seconds.count();
     if(bIncludeNano)
     {
-        sstr << ":" << (nanos%1000000000);
+        sstr << ":" << (std::chrono::duration_cast<std::chrono::nanoseconds>(tp.time_since_epoch()).count()%1000000000);
     }
     return sstr.str();
 }
@@ -91,5 +97,24 @@ std::string CreateGuid(std::string sName)
 
 std::string CreateGuid()
 {
-    return CreateGuid(GetCurrentTime(true));
+    return CreateGuid(GetCurrentTaiTime(true));
+}
+
+
+bool CheckJson(const Json::Value& jsObject, std::initializer_list<std::string> lstAllowed)
+{
+    for(Json::Value::const_iterator itParam = jsObject.begin(); itParam != jsObject.end(); ++itParam)
+    {
+        std::initializer_list<std::string>::iterator itList = lstAllowed.begin();
+        for(; itList != lstAllowed.end(); ++itList)
+        {
+            if((*itList) == itParam.key().asString())
+                break;
+        }
+        if(itList == lstAllowed.end())   //found a non allowed thing
+        {
+            return false;
+        }
+    }
+    return true;
 }

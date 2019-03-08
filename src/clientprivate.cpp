@@ -215,7 +215,7 @@ static void NodeBrowser(ClientApiImpl* pApi, shared_ptr<dnsInstance> pInstance)
 void ConnectThread(ClientApiImpl* pApi, const string& sSenderId, const string& sReceiverId, const string& sSenderStage, const string& sSenderTransport, const string& sReceiverStage)
 {
     // @todo ConnectThread - if a unicast stream then tell the sender where it should be sending stuff
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
     string sResponse;
     connectionSender aCon(connection::FP_ACTIVATION | connection::FP_ENABLE | connection::FP_TRANSPORT_PARAMS);
     aCon.eActivate = connection::ACT_NOW;
@@ -267,7 +267,7 @@ void ConnectThread(ClientApiImpl* pApi, const string& sSenderId, const string& s
 //DisconnectThread - called from main program thread
 void DisconnectThread(ClientApiImpl* pApi, const string& sSenderId, const string& sReceiverId, const string& sSenderStage, const string& sSenderTransport, const string& sReceiverStage)
 {
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
     string sResponse;
     int nResult(200);
     if(false)
@@ -1341,7 +1341,7 @@ bool ClientApiImpl::Subscribe(const string& sSenderId, const string& sReceiverId
     if(sUrl.empty() == false)
     {
         //do a PUT to the correct place on the URL
-        Json::StyledWriter sw;
+        Json::FastWriter sw;
         string sJson(sw.write(pSender->GetJson(version)));
         m_pCurl->PutPatch(sUrl, sJson, ClientPoster::CURLTYPE_TARGET, true, pReceiver->GetId());
         Log::Get(Log::LOG_DEBUG) << "TARGET: " << sUrl << endl;
@@ -1540,7 +1540,7 @@ bool ClientApiImpl::PatchSenderStaged(const string& sSenderId, const connectionS
         return false;
     }
 
-    Json::StyledWriter sw;
+    Json::FastWriter sw;
     string sJson = sw.write(aConnection.GetJson(version));
     Log::Get(Log::LOG_DEBUG) << sJson << endl;
     m_pCurl->PutPatch(sConnectionUrl, sJson, ClientPoster::CURLTYPE_SENDER_PATCH, false, sSenderId);
@@ -1564,7 +1564,7 @@ bool ClientApiImpl::PatchReceiverStaged(const string& sReceiverId, const connect
         return false;
     }
 
-    Json::StyledWriter sw;
+    Json::FastWriter sw;
     string sJson = sw.write(aConnection.GetJson(version));
     m_pCurl->PutPatch(sConnectionUrl, sJson, ClientPoster::CURLTYPE_RECEIVER_PATCH, false, sReceiverId);
 
@@ -1926,7 +1926,7 @@ void ClientApiImpl::SubscribeToQueryServer()
 
         Log::Get(Log::LOG_DEBUG) << "QUERY URL: " << ssUrl.str() << endl;
 
-        Json::StyledWriter stw;
+        Json::FastWriter stw;
         //we run through all our queries and post them to the query server asking for the websocket
         for(multimap<int, query>::const_iterator itQuery = m_mmQuery.begin(); itQuery != m_mmQuery.end(); ++itQuery)
         {

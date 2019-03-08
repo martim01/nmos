@@ -22,7 +22,7 @@ void TestPoster::ModeChanged(bool bQueryApi)
 }
 void TestPoster::NodeChanged(const std::list<std::shared_ptr<Self> >& lstNodesAdded, const std::list<std::shared_ptr<Self> >& lstNodesUpdated, const std::list<std::shared_ptr<Self> >& lstNodesRemoved)
 {
-    Json::StyledWriter sw;
+    Json::FastWriter sw;
 
     cout << "++++++NODES ADDED++++++" << endl;
     for(std::list<std::shared_ptr<Self> >::const_iterator itResource = lstNodesAdded.begin(); itResource != lstNodesAdded.end(); ++itResource)
@@ -48,7 +48,7 @@ void TestPoster::NodeChanged(const std::list<std::shared_ptr<Self> >& lstNodesAd
 
 void TestPoster::DeviceChanged(const std::list<std::shared_ptr<Device> >& lstDevicesAdded, const std::list<std::shared_ptr<Device> >& lstDevicesUpdated, const std::list<std::shared_ptr<Device> >& lstDevicesRemoved)
 {
-    Json::StyledWriter sw;
+    Json::FastWriter sw;
 
     cout << "++++++DEVICES ADDED++++++" << endl;
     for(std::list<std::shared_ptr<Device> >::const_iterator itResource = lstDevicesAdded.begin(); itResource != lstDevicesAdded.end(); ++itResource)
@@ -74,7 +74,7 @@ void TestPoster::DeviceChanged(const std::list<std::shared_ptr<Device> >& lstDev
 
 void TestPoster::SourceChanged(const std::list<std::shared_ptr<Source> >& lstSourcesAdded, const std::list<std::shared_ptr<Source> >& lstSourcesUpdated, const std::list<std::shared_ptr<Source> >& lstSourcesRemoved)
 {
-    Json::StyledWriter sw;
+    Json::FastWriter sw;
 
     cout << "++++++SOURCES ADDED++++++" << endl;
     for(std::list<std::shared_ptr<Source> >::const_iterator itResource = lstSourcesAdded.begin(); itResource != lstSourcesAdded.end(); ++itResource)
@@ -100,7 +100,7 @@ void TestPoster::SourceChanged(const std::list<std::shared_ptr<Source> >& lstSou
 
 void TestPoster::FlowChanged(const std::list<std::shared_ptr<Flow> >& lstFlowsAdded, const std::list<std::shared_ptr<Flow> >& lstFlowsUpdated, const std::list<std::shared_ptr<Flow> >& lstFlowsRemoved)
 {
-    Json::StyledWriter sw;
+    Json::FastWriter sw;
 
     cout << "++++++FLOWS ADDED++++++" << endl;
     for(std::list<std::shared_ptr<Flow> >::const_iterator itResource = lstFlowsAdded.begin(); itResource != lstFlowsAdded.end(); ++itResource)
@@ -126,7 +126,7 @@ void TestPoster::FlowChanged(const std::list<std::shared_ptr<Flow> >& lstFlowsAd
 
 void TestPoster::SenderChanged(const std::list<std::shared_ptr<Sender> >& lstSendersAdded, const std::list<std::shared_ptr<Sender> >& lstSendersUpdated, const std::list<std::shared_ptr<Sender> >& lstSendersRemoved)
 {
-    Json::StyledWriter sw;
+    Json::FastWriter sw;
 
     cout << "++++++SENDERS ADDED++++++" << endl;
     for(std::list<std::shared_ptr<Sender> >::const_iterator itResource = lstSendersAdded.begin(); itResource != lstSendersAdded.end(); ++itResource)
@@ -152,7 +152,7 @@ void TestPoster::SenderChanged(const std::list<std::shared_ptr<Sender> >& lstSen
 
 void TestPoster::ReceiverChanged(const std::list<std::shared_ptr<Receiver> >& lstReceiversAdded, const std::list<std::shared_ptr<Receiver> >& lstReceiversUpdated, const std::list<std::shared_ptr<Receiver> >& lstReceiversRemoved)
 {
-    Json::StyledWriter sw;
+    Json::FastWriter sw;
 
     cout << "++++++RECEIVERS ADDED++++++" << endl;
     for(std::list<std::shared_ptr<Receiver> >::const_iterator itResource = lstReceiversAdded.begin(); itResource != lstReceiversAdded.end(); ++itResource)

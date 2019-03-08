@@ -38,7 +38,7 @@ int main()
     pFlow->SetMediaClkOffset(129122110);
 
     shared_ptr<Sender> pSender = make_shared<Sender>("TestSender", "Description", pFlow->GetId(), Sender::RTP_MCAST, pDevice->GetId(), "eth0");
-    shared_ptr<Receiver> pReceiver = make_shared<Receiver>("Test Receiver", "TestDescription", Receiver::RTP_MCAST, pDevice->GetId(), Receiver::AUDIO);
+    shared_ptr<Receiver> pReceiver = make_shared<Receiver>("Test Receiver", "TestDescription", Receiver::RTP_MCAST, pDevice->GetId(), Receiver::AUDIO, TransportParamsRTP::CORE | TransportParamsRTP::MULTICAST);
 
     pReceiver->AddCap("audio/L24");
     pReceiver->AddCap("audio/L20");
@@ -119,19 +119,18 @@ int main()
                     cout << "----------------------------------------" << endl;
                     cout << "NMOS Patch Sender: " << pPoster->GetString() << endl;
                     cout << "----------------------------------------" << endl;
-                    NodeApi::Get().SenderPatchAllowed(pPoster->GetPort(), true);
+                    NodeApi::Get().SenderPatchAllowed(pPoster->GetPort(), true, pPoster->GetString(),"","239.192.55.101");
                     break;
                 case ThreadPoster::PATCH_RECEIVER:
                     cout << "----------------------------------------" << endl;
                     cout << "NMOS Patch Receiver: " << pPoster->GetString() << endl;
                     cout << "----------------------------------------" << endl;
-                    NodeApi::Get().ReceiverPatchAllowed(pPoster->GetPort(), true);
+                    NodeApi::Get().ReceiverPatchAllowed(pPoster->GetPort(), true, pPoster->GetString(), "192.168.1.113");
                     break;
                 case ThreadPoster::ACTIVATE_SENDER:
                     cout << "----------------------------------------" << endl;
                     cout << "NMOS Activate Sender: " << pPoster->GetString() << endl;
                     cout << "----------------------------------------" << endl;
-                    NodeApi::Get().ActivateSender(pPoster->GetString(),"","239.192.55.101");
                     break;
                 case ThreadPoster::ACTIVATE_RECEIVER:
                     cout << "----------------------------------------" << endl;

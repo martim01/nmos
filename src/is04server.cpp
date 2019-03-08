@@ -35,7 +35,8 @@ int IS04Server::GetJsonNmos(MicroServer* pServer, string& sReturn, std::string& 
 
 int IS04Server::GetJsonNmosNodeApi(string& sReturn)
 {
-    Json::StyledWriter stw;
+
+    Json::FastWriter stw;
     int nCode = 200;
     if(m_vPath.size() == SZ_API_TYPE)
     {
@@ -190,7 +191,7 @@ Json::Value IS04Server::GetJsonSenders(const ApiVersion& version)
 int IS04Server::PutJsonNmos(MicroServer* pServer, const string& sJson, string& sResponse)
 {
     Log::Get(Log::LOG_DEBUG) << "PutJsonNmos: " << sJson << endl;
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
     int nCode = 500;
     if(m_vPath.size() < SZ_TARGET)
     {

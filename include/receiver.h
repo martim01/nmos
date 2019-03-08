@@ -15,7 +15,7 @@ class NMOS_EXPOSE Receiver : public Resource
     public:
         enum enumTransport {RTP, RPT_UCAST, RTP_MCAST, DASH};
         enum enumType {AUDIO, VIDEO, DATA, MUX};
-        Receiver(std::string sLabel, std::string sDescription, enumTransport eTransport, std::string sDeviceId, enumType eType, TransportParamsRTP::flagsTP flagsTransport=TransportParamsRTP::CORE);
+        Receiver(std::string sLabel, std::string sDescription, enumTransport eTransport, std::string sDeviceId, enumType eType, int flagsTransport=TransportParamsRTP::CORE);
         ~Receiver();
         Receiver();
         virtual bool UpdateFromJson(const Json::Value& jsData);
@@ -46,16 +46,20 @@ class NMOS_EXPOSE Receiver : public Resource
 
         bool CheckConstraints(const connectionReceiver& conRequest);
         bool IsLocked() const;
-        bool Stage(const connectionReceiver& conRequest, std::shared_ptr<EventPoster> pPoster);
+        bool Stage(const connectionReceiver& conRequest);
         connectionReceiver GetStaged() const;
 
-        void Activate(const std::string& sInterfaceIp);
+        void SetupActivation(const std::string& sInterfaceIp);
+        void Activate(bool bImmediate=false);
 
         bool IsMasterEnabled() const;
 
         bool IsActivateAllowed() const;
+        void CommitActivation();
 
     private:
+
+
         enumTransport m_eTransport;
         std::string m_sDeviceId;
         std::string m_sManifest;
@@ -68,10 +72,11 @@ class NMOS_EXPOSE Receiver : public Resource
 
         connectionReceiver m_Staged;
         connectionReceiver m_Active;
-        constraintsReceiver m_constraints;
+        constraintsReceiver m_constraints;  // @todo constraints should be same parameters as connection
 
         bool m_bActivateAllowed;
         //std::string m_sSenderId;
+        std::string m_sInterfaceIp;
 
         static const std::string STR_TRANSPORT[4];
         static const std::string STR_TYPE[4];

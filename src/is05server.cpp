@@ -29,7 +29,7 @@ IS05Server::IS05Server() : NmosServer()
 
 int IS05Server::GetJsonNmos(MicroServer* pServer, string& sReturn, std::string& sContentType)
 {
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
     if(m_vPath.size() == SZ_NMOS)
     {
         Json::Value jsNode;
@@ -47,11 +47,13 @@ int IS05Server::GetJsonNmos(MicroServer* pServer, string& sReturn, std::string& 
 
 int IS05Server::GetJsonNmosConnectionApi(string& sReturn, std::string& sContentType)
 {
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
     int nCode = 200;
     if(m_vPath.size() == SZ_API_TYPE)
     {
-        sReturn = stw.write("v1.0/");
+        Json::Value jsNode;
+        jsNode.append("v1.0/");
+        sReturn = stw.write(jsNode);
     }
     else
     {
@@ -95,7 +97,7 @@ int IS05Server::GetJsonNmosConnectionApi(string& sReturn, std::string& sContentT
 int IS05Server::GetJsonNmosConnectionSingleApi(std::string& sReturn, std::string& sContentType, const ApiVersion& version)
 {
     int nCode(200);
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
     if(m_vPath.size() == SZC_TYPE)
     {
         Json::Value jsNode;
@@ -123,7 +125,7 @@ int IS05Server::GetJsonNmosConnectionSingleApi(std::string& sReturn, std::string
 int IS05Server::GetJsonNmosConnectionSingleSenders(std::string& sReturn, std::string& sContentType, const ApiVersion& version)
 {
     int nCode(200);
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
     if(m_vPath.size() == SZC_DIRECTION)
     {
         sReturn = stw.write(NodeApi::Get().GetSenders().GetConnectionJson(version));
@@ -191,7 +193,7 @@ int IS05Server::GetJsonNmosConnectionSingleSenders(std::string& sReturn, std::st
 int IS05Server::GetJsonNmosConnectionSingleReceivers(std::string& sReturn, const ApiVersion& version)
 {
     int nCode(200);
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
     if(m_vPath.size() == SZC_DIRECTION)
     {
         sReturn = stw.write(NodeApi::Get().GetReceivers().GetConnectionJson(version));
@@ -244,7 +246,7 @@ int IS05Server::GetJsonNmosConnectionSingleReceivers(std::string& sReturn, const
 int IS05Server::GetJsonNmosConnectionBulkApi(std::string& sReturn)
 {
     int nCode(200);
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
     if(m_vPath.size() == SZC_TYPE)
     {
         Json::Value jsNode;
@@ -254,11 +256,13 @@ int IS05Server::GetJsonNmosConnectionBulkApi(std::string& sReturn)
     }
     else if(m_vPath[SZC_TYPE] == "senders")
     {
-        // @todo bulk get senders
+        nCode = 405;
+        sReturn = stw.write(GetJsonError(404, "Method not allowed"));
     }
     else if(m_vPath[SZC_TYPE] == "receivers")
     {
-        // @todo bulk get receivers
+        nCode = 405;
+        sReturn = stw.write(GetJsonError(404, "Method not allowed"));
     }
     else
     {
@@ -273,7 +277,7 @@ int IS05Server::GetJsonNmosConnectionBulkApi(std::string& sReturn)
 int IS05Server::PatchJsonNmos(MicroServer* pServer, const string& sJson, string& sResponse)
 {
 
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
 
     int nCode = 202;
 
@@ -302,7 +306,7 @@ int IS05Server::PatchJsonSender(MicroServer* pServer, const std::string& sJson, 
 {
     Log::Get(Log::LOG_DEBUG) << "PatchJsonSender" << std::endl;
     int nCode(200);
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
     //does the sender exist?
     shared_ptr<Sender> pSender = NodeApi::Get().GetSender(m_vPath[C_ID]);
     if(!pSender)
@@ -360,17 +364,19 @@ int IS05Server::PatchJsonSender(MicroServer* pServer, const std::string& sJson, 
                 if(pServer->IsOk() && pSender->Stage(conRequest, m_pPoster)) //PATCH the sender
                 {
                     nCode = 202;
+                    sResponse = stw.write(pSender->GetConnectionStagedJson(version));
+
                     if(conRequest.eActivate == connection::ACT_NULL || conRequest.eActivate == connection::ACT_NOW)
                     {
                         nCode = 200;
+                        pSender->CommitActivation();
                     }
-                    sResponse = stw.write(pSender->GetConnectionStagedJson(version));
                     Log::Get(Log::LOG_DEBUG) << sResponse << std::endl;
                 }
                 else
                 {
                     nCode = 500;
-                    sResponse = stw.write(GetJsonError(nCode, "Sender unable to stage PATCH as no EventPoster or activation time invalid."));
+                    sResponse = stw.write(GetJsonError(nCode, "Sender unable to stage PATCH as activation time invalid."));
                     Log::Get(Log::LOG_DEBUG) << "PatchJsonSender: Sender unable to stage PATCH as no EventPoster or activation time invalid." << std::endl;
                 }
             }
@@ -395,8 +401,9 @@ int IS05Server::PatchJsonSender(MicroServer* pServer, const std::string& sJson, 
 
 int IS05Server::PatchJsonReceiver(MicroServer* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version)
 {
+    Log::Get(Log::LOG_DEBUG) << "IS05Server::PatchJsonReceiver:  " << sJson << std::endl;
     int nCode(200);
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
     //does the sender exist?
     shared_ptr<Receiver> pReceiver = NodeApi::Get().GetReceiver(m_vPath[C_ID]);
     if(!pReceiver)
@@ -447,14 +454,15 @@ int IS05Server::PatchJsonReceiver(MicroServer* pServer, const std::string& sJson
                 //Pause the HTTP thread
                 pServer->Wait();
 
-                if(pServer->IsOk() && pReceiver->Stage(conRequest, m_pPoster)) //PATCH the Receiver
+                if(pServer->IsOk() && pReceiver->Stage(conRequest)) //PATCH the Receiver
                 {
                     nCode = 202;
+                    sResponse = stw.write(pReceiver->GetConnectionStagedJson(version));
                     if(conRequest.eActivate == connection::ACT_NULL || conRequest.eActivate == connection::ACT_NOW)
                     {
                         nCode = 200;
+                        pReceiver->CommitActivation();
                     }
-                    sResponse = stw.write(pReceiver->GetConnectionStagedJson(version));
                     Log::Get(Log::LOG_DEBUG) << sResponse << std::endl;
                 }
                 else
@@ -466,7 +474,7 @@ int IS05Server::PatchJsonReceiver(MicroServer* pServer, const std::string& sJson
             }
             else
             {   //no way of telling main thread to do this so we'll simply assume it's been done
-                if(pReceiver->Stage(conRequest, m_pPoster)) //PATCH the Receiver
+                if(pReceiver->Stage(conRequest)) //PATCH the Receiver
                 {
                     sResponse = stw.write(pReceiver->GetConnectionStagedJson(version));
                     Log::Get(Log::LOG_DEBUG) << sResponse << std::endl;

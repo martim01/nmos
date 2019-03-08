@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string>
 #include "utils.h"
+#include <iostream>
 
 std::string Resource::s_sBase("");
 
@@ -142,7 +143,7 @@ void Resource::UpdateVersionTime()
 {
     m_sLastVersion = m_sVersion;
 
-    m_sVersion = GetCurrentTime();
+    m_sVersion = GetCurrentTaiTime();
 }
 
 
@@ -188,7 +189,7 @@ bool Resource::ConvertTaiStringToTimePoint(const std::string& sTai, std::chrono:
             std::chrono::nanoseconds nano(std::stoul(sNano));
             nano += std::chrono::duration_cast<std::chrono::nanoseconds>(sec);
             tp = std::chrono::time_point<std::chrono::high_resolution_clock>(nano);
-
+            return true;
         }
         catch(std::invalid_argument& e)
         {

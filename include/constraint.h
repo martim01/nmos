@@ -53,15 +53,22 @@ struct constraints
 
     virtual Json::Value GetJson(const ApiVersion& version) const;
 
+    int nParamsSupported;
 
+    constraint source_ip;
     constraint destination_port;
+
     constraint fec_destination_ip;
     constraint fec_enabled;
     constraint fec_mode;
     constraint fec1D_destination_port;
     constraint fec2D_destination_port;
+
+    constraint rtcp_enabled;
     constraint rtcp_destination_ip;
     constraint rtcp_destination_port;
+
+    constraint rtp_enabled;
 };
 
 struct constraintsSender : public constraints
@@ -70,8 +77,9 @@ struct constraintsSender : public constraints
     virtual Json::Value GetJson(const ApiVersion& version) const;
 
 
+
     constraint destination_ip;
-    constraint source_ip;
+
     constraint source_port;
     constraint fec_type;
     constraint fec_block_width;
@@ -80,7 +88,7 @@ struct constraintsSender : public constraints
     constraint fec2D_source_port;
     constraint rtcp_enabled;
     constraint rtcp_source_port;
-    constraint rtp_enabled;
+
 };
 
 
@@ -91,4 +99,5 @@ struct constraintsReceiver : public constraints
     virtual Json::Value GetJson(const ApiVersion& version) const;
 
     constraint interface_ip;
+    constraint multicast_ip;
 };

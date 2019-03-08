@@ -25,7 +25,7 @@ class ServicePublisher
         void Modify();
 
         void AddTxt(std::string sKey, std::string sValue, bool bModify);
-        void RemoveTxt(std::string sKey, std::string sValue, bool bModify);
+        void RemoveTxt(std::string sKey,bool bModify);
 
         void EntryGroupCallback(AvahiEntryGroup* pGroup, AvahiEntryGroupState state);
         void ClientCallback(AvahiClient* pClient, AvahiClientState state);

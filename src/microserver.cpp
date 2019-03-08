@@ -271,7 +271,7 @@ int MicroServer::GetJson(string sPath, string& sReturn, std::string& sContentTyp
 
     if(m_vPath.empty())
     {
-        Json::StyledWriter stw;
+        Json::FastWriter stw;
         Json::Value jsNode;
         jsNode.append("x-nmos/");
         sReturn = stw.write(jsNode);
@@ -294,7 +294,7 @@ int MicroServer::GetJson(string sPath, string& sReturn, std::string& sContentTyp
                 }
                 else
                 {
-                    Json::StyledWriter stw;
+                    Json::FastWriter stw;
                     sReturn = stw.write(GetJsonError(404, "Page not found"));
                     nCode = 404;
                 }
@@ -302,7 +302,7 @@ int MicroServer::GetJson(string sPath, string& sReturn, std::string& sContentTyp
         }
         else
         {
-            Json::StyledWriter stw;
+            Json::FastWriter stw;
             sReturn = stw.write(GetJsonError(404, "Page not found"));
             nCode = 404;
         }
@@ -319,7 +319,7 @@ int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
     //make sure path is correct
     transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
 
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
 
     int nCode = 202;
     SplitString(m_vPath, sPath, '/');
@@ -333,7 +333,7 @@ int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
         }
         else
         {
-            Json::StyledWriter stw;
+            Json::FastWriter stw;
             sResponse = stw.write(GetJsonError(404, "Page not found"));
             nCode = 404;
         }
@@ -354,7 +354,7 @@ int MicroServer::PatchJson(string sPath, const string& sJson, string& sResponse)
     //make sure path is correct
     transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
 
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
 
     int nCode = 202;
     SplitString(m_vPath, sPath, '/');
@@ -368,7 +368,7 @@ int MicroServer::PatchJson(string sPath, const string& sJson, string& sResponse)
         }
         else
         {
-            Json::StyledWriter stw;
+            Json::FastWriter stw;
             sResponse = stw.write(GetJsonError(404, "Page not found"));
             nCode = 404;
         }
@@ -395,7 +395,7 @@ int MicroServer::GetApis(std::string& sReturn)
     {
         jsNode.append(itServer->first+"/");
     }
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
     sReturn = stw.write(jsNode);
     return 200;
 }

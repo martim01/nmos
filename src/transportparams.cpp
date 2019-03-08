@@ -5,7 +5,7 @@ const std::string TransportParamsRTP::STR_FEC_MODE[2] = {"1D", "2D"};
 const std::string TransportParamsRTPSender::STR_FEC_TYPE[2] = {"XOR", "Reed-Solomon"};
 
 TransportParamsRTP::TransportParamsRTP() :
-    sSourceIp("auto"),
+    sSourceIp(""),
     nDestinationPort(0),
     bFecEnabled(false),
     sFecDestinationIp("auto"),
@@ -244,7 +244,7 @@ TransportParamsRTPSender::TransportParamsRTPSender() : TransportParamsRTP(),
     nFec2DSourcePort(0),
     nRtcpSourcePort(0)
 {
-
+    sSourceIp = "auto"; //sender sourceIp defaults to auto. receiver to null
 }
 
 
@@ -394,7 +394,14 @@ Json::Value TransportParamsRTPSender::GetJson(const ApiVersion& version) const
 {
     Json::Value jsTp(TransportParamsRTP::GetJson(version));
 
-    jsTp["destination_ip"] = sDestinationIp;
+    if(sDestinationIp.empty() == false)
+    {
+        jsTp["destination_ip"] = sDestinationIp;
+    }
+    else
+    {
+        jsTp["destination_ip"] = Json::nullValue;
+    }
     SetPort(jsTp, "source_port", nSourcePort);
 
     if(TP_SUPPORTED == eFec)
@@ -471,7 +478,7 @@ void TransportParamsRTPSender::Actualize(const std::string& sSource, const std::
 
 
 TransportParamsRTPReceiver::TransportParamsRTPReceiver() : TransportParamsRTP(),
-    sMulticastIp("auto"),
+    sMulticastIp(),
     sInterfaceIp("auto")
 
 {

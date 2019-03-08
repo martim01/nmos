@@ -19,8 +19,8 @@ class NMOS_EXPOSE EventPoster
         void _Target(const std::string& sReceiverId, const std::string& sTransportFile, unsigned short nPort);
         void _PatchSender(const std::string& sSenderId, const connectionSender& conPatch, unsigned short nPort);
         void _PatchReceiver(const std::string& sReceiverId, const connectionReceiver& conPatch, unsigned short nPort);
-        void _ActivateSender(const std::string& sSenderId);
-        void _ActivateReceiver(const std::string& sReceiverId);
+        void _SenderActivated(const std::string& sSenderId);
+        void _ReceiverActivated(const std::string& sReceiverId);
 
     protected:
 
@@ -58,17 +58,16 @@ class NMOS_EXPOSE EventPoster
         **/
         virtual void PatchReceiver(const std::string& sReceiverId, const connectionReceiver& conPatch, unsigned short nPort)=0;
 
-        /** @brief Called by ActivateThread telling the main thread to activate the staged paramaters - this is called at the point of the act of activation
+        /** @brief Called by ActivateThread telling the main thread that the sender's staged parameters have been activated - this is called at the point of the act of activation
         *   @param sSenderId the Id of the sender to activate
-        *   @note The main thread should call the Sender's Activate function to update the connection API
         **/
-        virtual void ActivateSender(const std::string& sSenderId)=0;
+        virtual void SenderActivated(const std::string& sSenderId)=0;
 
-        /** @brief Called by ActivateThread telling the main thread to activate the staged paramaters - this is called at the point of the act of activation
+        /** @brief Called by ActivateThread telling the main thread that the receviers's staged parameters have been activated - this is called at the point of the act of activation
         *   @param sReceiverId the Id of the receiver to activate
         *   @note The main thread should call the Receivers's Activate function to update the connection API
         **/
-        virtual void ActivateReceiver(const std::string& sReceiverId)=0;
+        virtual void ReceiverActivated(const std::string& sReceiverId)=0;
 
 
     private:

@@ -2,21 +2,21 @@
 
 int NmosServer::GetJsonNmos(MicroServer* pServer, std::string& sReturn, std::string& sContentType)
 {
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
     sReturn = stw.write(GetJsonError(405, "Method not allowed here."));
     return 405;
 }
 
 int NmosServer::PutJsonNmos(MicroServer* pServer, const std::string& sJson, std::string& sResponse)
 {
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
     sResponse = stw.write(GetJsonError(405, "Method not allowed here."));
     return 405;
 }
 
 int NmosServer::PatchJsonNmos(MicroServer* pServer, const std::string& sJson, std::string& sResponse)
 {
-    Json::StyledWriter stw;
+    Json::FastWriter stw;
     sResponse = stw.write(GetJsonError(405, "Method not allowed here."));
     return 405;
 }

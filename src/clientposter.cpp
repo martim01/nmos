@@ -27,12 +27,12 @@ void ClientPoster::PatchReceiver(const std::string& sReceiverId, const connectio
 
 }
 
-void ClientPoster:: ActivateSender(const std::string& sSenderId)
+void ClientPoster:: SenderActivated(const std::string& sSenderId)
 {
 
 }
 
-void ClientPoster::ActivateReceiver(const std::string& sReceiverId)
+void ClientPoster::ReceiverActivated(const std::string& sReceiverId)
 {
 
 }

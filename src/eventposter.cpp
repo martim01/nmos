@@ -30,22 +30,14 @@ void EventPoster::_PatchReceiver(const std::string& sReceiverId, const connectio
     PatchReceiver(sReceiverId, conPatch, nPort);
 }
 
-void EventPoster::_ActivateSender(const std::string& sSenderId)
+void EventPoster::_SenderActivated(const std::string& sSenderId)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
-    std::shared_ptr<Sender> pSender(NodeApi::Get().GetSender(sSenderId));
-    if(pSender && pSender->IsActivateAllowed())
-    {
-        ActivateSender(sSenderId);
-    }
+    SenderActivated(sSenderId);
 }
 
-void EventPoster::_ActivateReceiver(const std::string& sReceiverId)
+void EventPoster::_ReceiverActivated(const std::string& sReceiverId)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
-    std::shared_ptr<Receiver> pReceiver(NodeApi::Get().GetReceiver(sReceiverId));
-    if(pReceiver && pReceiver->IsActivateAllowed())
-    {
-        ActivateReceiver(sReceiverId);
-    }
+    ReceiverActivated(sReceiverId);
 }

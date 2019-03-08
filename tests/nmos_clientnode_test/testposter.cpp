@@ -11,7 +11,7 @@ using namespace std;
 
 void TestPoster::NodeChanged(std::shared_ptr<Self> pNode, enumChange eChange)
 {
-    Json::StyledWriter sw;
+    Json::FastWriter sw;
 
     cout << "++++++NODE CHANGED++++++" << endl;
     cout << sw.write(pNode->GetJson(ApiVersion(1,2))) << endl;
@@ -20,7 +20,7 @@ void TestPoster::NodeChanged(std::shared_ptr<Self> pNode, enumChange eChange)
 
 void TestPoster::DeviceChanged(std::shared_ptr<Device> pDevice, enumChange eChange)
 {
-    Json::StyledWriter sw;
+    Json::FastWriter sw;
 
     cout << "++++DEVICE CHANGED++++++" << endl;
     cout << sw.write(pDevice->GetJson(ApiVersion(1,2))) << endl;
@@ -29,7 +29,7 @@ void TestPoster::DeviceChanged(std::shared_ptr<Device> pDevice, enumChange eChan
 
 void TestPoster::SourceChanged(std::shared_ptr<Source> pSource, enumChange eChange)
 {
-    Json::StyledWriter sw;
+    Json::FastWriter sw;
 
     cout << "++++SOURCE CHANGED++++++" << endl;
     cout << sw.write(pSource->GetJson(ApiVersion(1,2))) << endl;
@@ -38,7 +38,7 @@ void TestPoster::SourceChanged(std::shared_ptr<Source> pSource, enumChange eChan
 
 void TestPoster::FlowChanged(std::shared_ptr<Flow> pFlow, enumChange eChange)
 {
-    Json::StyledWriter sw;
+    Json::FastWriter sw;
 
     cout << "++++++FLOW CHANGED++++++" << endl;
     cout << sw.write(pFlow->GetJson(ApiVersion(1,2))) << endl;
@@ -47,7 +47,7 @@ void TestPoster::FlowChanged(std::shared_ptr<Flow> pFlow, enumChange eChange)
 
 void TestPoster::SenderChanged(std::shared_ptr<Sender> pSender, enumChange eChange)
 {
-    Json::StyledWriter sw;
+    Json::FastWriter sw;
 
     cout << "++++SENDER CHANGED++++++" << endl;
     cout << sw.write(pSender->GetJson(ApiVersion(1,2))) << endl;
@@ -56,7 +56,7 @@ void TestPoster::SenderChanged(std::shared_ptr<Sender> pSender, enumChange eChan
 
 void TestPoster::ReceiverChanged(std::shared_ptr<Receiver> pReceiver, enumChange eChange)
 {
-    Json::StyledWriter sw;
+    Json::FastWriter sw;
 
     cout << "++RECEIVER CHANGED++++++" << endl;
     cout << sw.write(pReceiver->GetJson(ApiVersion(1,2))) << endl;

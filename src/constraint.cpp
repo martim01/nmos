@@ -1,6 +1,6 @@
 #include "constraint.h"
 #include <sstream>
-
+#include "transportparams.h"
 
 using namespace std;
 
@@ -253,14 +253,18 @@ bool constraint::MeetsConstraint(bool bValue)
 
 
 constraints::constraints() :
+    nParamsSupported(TransportParamsRTP::CORE),
+    source_ip("source_ip"),
     destination_port("destination_port"),
     fec_destination_ip("fec_destination_ip"),
     fec_enabled("fec_enabled"),
     fec_mode("fec_mode"),
     fec1D_destination_port("fec1D_destination_port"),
     fec2D_destination_port("fec2D_destination_port"),
+    rtcp_enabled("rtcp_enabled"),
     rtcp_destination_ip("rtcp_destination_ip"),
-    rtcp_destination_port("rtcp_destination_port")
+    rtcp_destination_port("rtcp_destination_port"),
+    rtp_enabled("rtp_enabled")
 {
 
 }
@@ -269,19 +273,28 @@ Json::Value constraints::GetJson(const ApiVersion& version) const
 {
     Json::Value jsConstraints(Json::objectValue);
     jsConstraints[destination_port.GetParam()] = destination_port.GetJson(version);
-    jsConstraints[fec_destination_ip.GetParam()] = fec_destination_ip.GetJson(version);
-    jsConstraints[fec_enabled.GetParam()] = fec_enabled.GetJson(version);
-    jsConstraints[fec_mode.GetParam()] = fec_mode.GetJson(version);
-    jsConstraints[fec1D_destination_port.GetParam()] = fec1D_destination_port.GetJson(version);
-    jsConstraints[fec2D_destination_port.GetParam()] = fec2D_destination_port.GetJson(version);
-    jsConstraints[rtcp_destination_ip.GetParam()] = rtcp_destination_ip.GetJson(version);
-    jsConstraints[rtcp_destination_port.GetParam()] = rtcp_destination_port.GetJson(version);
+    jsConstraints[source_ip.GetParam()] = source_ip.GetJson(version);
+    jsConstraints[rtp_enabled.GetParam()] = rtp_enabled.GetJson(version);
+
+    if(nParamsSupported & TransportParamsRTP::FEC)
+    {
+        jsConstraints[fec_destination_ip.GetParam()] = fec_destination_ip.GetJson(version);
+        jsConstraints[fec_enabled.GetParam()] = fec_enabled.GetJson(version);
+        jsConstraints[fec_mode.GetParam()] = fec_mode.GetJson(version);
+        jsConstraints[fec1D_destination_port.GetParam()] = fec1D_destination_port.GetJson(version);
+        jsConstraints[fec2D_destination_port.GetParam()] = fec2D_destination_port.GetJson(version);
+    }
+    if(nParamsSupported & TransportParamsRTP::RTCP)
+    {
+        jsConstraints[rtcp_enabled.GetParam()] = rtcp_enabled.GetJson(version);
+        jsConstraints[rtcp_destination_ip.GetParam()] = rtcp_destination_ip.GetJson(version);
+        jsConstraints[rtcp_destination_port.GetParam()] = rtcp_destination_port.GetJson(version);
+    }
     return jsConstraints;
 }
 
 constraintsSender::constraintsSender() : constraints(),
     destination_ip("destination_ip"),
-    source_ip("source_ip"),
     source_port("source_port"),
     fec_type("fec_type"),
     fec_block_width("fec_block_width"),
@@ -289,8 +302,8 @@ constraintsSender::constraintsSender() : constraints(),
     fec1D_source_port("fec1D_source_port"),
     fec2D_source_port("fec2D_source_port"),
     rtcp_enabled("rtcp_enabled"),
-    rtcp_source_port("rtcp_source_port"),
-    rtp_enabled("rtp_enabled")
+    rtcp_source_port("rtcp_source_port")
+
 {
 
 }
@@ -298,22 +311,31 @@ constraintsSender::constraintsSender() : constraints(),
 Json::Value constraintsSender::GetJson(const ApiVersion& version) const
 {
     Json::Value jsConstraints(constraints::GetJson(version));
+
     jsConstraints[destination_ip.GetParam()] = destination_ip.GetJson(version);
-    jsConstraints[source_ip.GetParam()] = source_ip.GetJson(version);
     jsConstraints[source_port.GetParam()] = source_port.GetJson(version);
-    jsConstraints[fec_type.GetParam()] = fec_type.GetJson(version);
-    jsConstraints[fec_block_width.GetParam()] = fec_block_width.GetJson(version);
-    jsConstraints[fec_block_height.GetParam()] = fec_block_height.GetJson(version);
-    jsConstraints[fec1D_source_port.GetParam()] = fec1D_source_port.GetJson(version);
-    jsConstraints[fec2D_source_port.GetParam()] = fec2D_source_port.GetJson(version);
-    jsConstraints[rtcp_enabled.GetParam()] = rtcp_enabled.GetJson(version);
-    jsConstraints[rtcp_source_port.GetParam()] = rtcp_source_port.GetJson(version);
-    jsConstraints[rtp_enabled.GetParam()] = rtp_enabled.GetJson(version);
+
+    if(nParamsSupported & TransportParamsRTP::FEC)
+    {
+        jsConstraints[fec_type.GetParam()] = fec_type.GetJson(version);
+        jsConstraints[fec_block_width.GetParam()] = fec_block_width.GetJson(version);
+        jsConstraints[fec_block_height.GetParam()] = fec_block_height.GetJson(version);
+        jsConstraints[fec1D_source_port.GetParam()] = fec1D_source_port.GetJson(version);
+        jsConstraints[fec2D_source_port.GetParam()] = fec2D_source_port.GetJson(version);
+    }
+    if(nParamsSupported & TransportParamsRTP::RTCP)
+    {
+        jsConstraints[rtcp_enabled.GetParam()] = rtcp_enabled.GetJson(version);
+        jsConstraints[rtcp_source_port.GetParam()] = rtcp_source_port.GetJson(version);
+    }
+
+
     return jsConstraints;
 }
 
 constraintsReceiver::constraintsReceiver() : constraints(),
-    interface_ip("interface_ip")
+    interface_ip("interface_ip"),
+    multicast_ip("multicast_ip")
 {
 
 }
@@ -322,5 +344,9 @@ Json::Value constraintsReceiver::GetJson(const ApiVersion& version) const
 {
     Json::Value jsConstraints(constraints::GetJson(version));
     jsConstraints[interface_ip.GetParam()] = interface_ip.GetJson(version);
+    if(nParamsSupported & TransportParamsRTP::MULTICAST)
+    {
+        jsConstraints[multicast_ip.GetParam()] = multicast_ip.GetJson(version);
+    }
     return jsConstraints;
 }

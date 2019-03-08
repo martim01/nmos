@@ -55,7 +55,8 @@ class NMOS_EXPOSE Sender : public Resource
         connectionSender GetActive();
 
         // called by the main thread as a reply to the eventposter
-        void Activate(std::string sSourceIp="", std::string sDestinationIp="", std::string sSDP="");
+        void SetupActivation(std::string sSourceIp="", std::string sDestinationIp="", std::string sSDP="");
+        void Activate(bool bImmediate=false);
 
         void MasterEnable(bool bEnable);
 
@@ -64,6 +65,7 @@ class NMOS_EXPOSE Sender : public Resource
         void CreateSDP();
 
         bool IsActivateAllowed() const;
+        void CommitActivation();
     private:
 
 
@@ -82,6 +84,10 @@ class NMOS_EXPOSE Sender : public Resource
 
         std::string m_sTransportFile;
         bool m_bActivateAllowed;
+
+        std::string m_sSourceIp;
+        std::string m_sDestinationIp;
+        std::string m_sSDP;
 
         static const std::string STR_TRANSPORT[4];
 };

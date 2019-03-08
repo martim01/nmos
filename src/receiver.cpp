@@ -3,17 +3,19 @@
 #include <chrono>
 #include "eventposter.h"
 #include "connection.h"
-#include "activationthread.h"
+
 #include "log.h"
 #include "utils.h"
+#include "nodeapi.h"
 
 
-static void ActivationThreadReceiver(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sReceiverId, std::shared_ptr<EventPoster> pPoster)
+static void ActivationThreadReceiver(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId)
 {
     std::this_thread::sleep_until(tp);
-    if(pPoster)
+    std::shared_ptr<Receiver> pReceiver = NodeApi::Get().GetReceiver(sId);
+    if(pReceiver)
     {
-        pPoster->_ActivateReceiver(sReceiverId);
+        pReceiver->Activate();
     }
 }
 
@@ -23,7 +25,7 @@ const std::string Receiver::STR_TYPE[4] = {"urn:x-nmos:format:audio", "urn:x-nmo
 
 
 
-Receiver::Receiver(std::string sLabel, std::string sDescription, enumTransport eTransport, std::string sDeviceId, enumType eFormat, TransportParamsRTP::flagsTP flagsTransport) :
+Receiver::Receiver(std::string sLabel, std::string sDescription, enumTransport eTransport, std::string sDeviceId, enumType eFormat, int flagsTransport) :
     Resource("receiver", sLabel, sDescription),
     m_eTransport(eTransport),
     m_sDeviceId(sDeviceId),
@@ -63,6 +65,7 @@ Receiver::Receiver(std::string sLabel, std::string sDescription, enumTransport e
         m_Staged.tpReceiver.eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
         m_Active.tpReceiver.eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
     }
+    m_constraints.nParamsSupported = flagsTransport;
 }
 
 Receiver::~Receiver()
@@ -397,8 +400,9 @@ void Receiver::SetSender(const std::string& sSenderId, const std::string& sSdp, 
         m_Staged.bMasterEnable = true;
         m_Staged.sTransportFileData = sSdp;
         m_Staged.sTransportFileType = "application/sdp";
-        m_Staged.sActivationTime = GetCurrentTime();
-        Activate(sInterfaceIp);
+        m_Staged.sActivationTime = GetCurrentTaiTime();
+        SetupActivation(sInterfaceIp);
+        Activate();
     }
     else
     {   //this means unsubscribe
@@ -409,8 +413,9 @@ void Receiver::SetSender(const std::string& sSenderId, const std::string& sSdp, 
         m_Staged.sSenderId.clear();
         m_Staged.sTransportFileData.clear();
         m_Staged.sTransportFileType.clear();
-        m_Staged.sActivationTime = GetCurrentTime();
-        Activate(sInterfaceIp);
+        m_Staged.sActivationTime = GetCurrentTaiTime();
+        SetupActivation(sInterfaceIp);
+        Activate();
     }
     UpdateVersionTime();
 
@@ -447,8 +452,9 @@ bool Receiver::IsLocked() const
     return (m_Staged.eActivate == connection::ACT_ABSOLUTE || m_Staged.eActivate == connection::ACT_RELATIVE);
 }
 
-bool Receiver::Stage(const connectionReceiver& conRequest, std::shared_ptr<EventPoster> pPoster)
+bool Receiver::Stage(const connectionReceiver& conRequest)
 {
+    Log::Get(Log::LOG_DEBUG) << "Receiver::Stage: " << conRequest.eActivate << std::endl;
     bool bOk(true);
     m_mutex.lock();
 
@@ -459,32 +465,27 @@ bool Receiver::Stage(const connectionReceiver& conRequest, std::shared_ptr<Event
     switch(m_Staged.eActivate)
     {
         case connection::ACT_NULL:
-            m_Staged.sActivationTime = GetCurrentTime();
+            m_Staged.sActivationTime.clear();
             m_bActivateAllowed = false;
             break;
         case connection::ACT_NOW:
-            m_Staged.sActivationTime = GetCurrentTime();
-            // Tell the main thread to do it's stuff
-            if(pPoster)
-            {
-                m_bActivateAllowed = true;
-                pPoster->_ActivateReceiver(GetId());
 
-            }
-            else
-            {
-                // @todo no poster so do the activation bits ourself
-            }
+            m_Staged.sActivationTime = GetCurrentTaiTime();
+            m_bActivateAllowed = true;
+            Activate(true);
+
 
             break;
         case connection::ACT_ABSOLUTE:
-            if(pPoster)
             {
+
+                Log::Get(Log::LOG_DEBUG) << "Absolute patch" << std::endl;
                 std::chrono::time_point<std::chrono::high_resolution_clock> tp;
                 if(ConvertTaiStringToTimePoint(m_Staged.sRequestedTime, tp))
                 {
+                    m_Staged.sActivationTime = m_Staged.sRequestedTime;
                     m_bActivateAllowed = true;
-                    std::thread thActive(ActivationThreadReceiver, tp, GetId(), pPoster);
+                    std::thread thActive(ActivationThreadReceiver, tp-LEAP_SECONDS, GetId());
                     thActive.detach();
                 }
                 else
@@ -492,37 +493,36 @@ bool Receiver::Stage(const connectionReceiver& conRequest, std::shared_ptr<Event
                     bOk = false;
                 }
             }
-            else
-            {
-                //nothing to do here -
-                bOk = false;
-            }
             break;
         case connection::ACT_RELATIVE:
-            // start a thread that will sleep for the given time period and then tell the main thread to do its stuff
-            if(pPoster)
+            try
             {
                 std::chrono::time_point<std::chrono::high_resolution_clock> tp(std::chrono::high_resolution_clock::now().time_since_epoch());
+                std::vector<std::string> vTime;
+                SplitString(vTime, m_Staged.sRequestedTime, ':');
+                if(vTime.size() != 2)
+                {
+                    throw std::invalid_argument("invalid time");
+                }
 
-                try
-                {
-                    std::chrono::nanoseconds nano(stoul(m_Staged.sActivationTime));
-                    m_bActivateAllowed = true;
-                    std::thread thActive(ActivationThreadReceiver, (tp+nano), GetId(), pPoster);
-                    thActive.detach();
-                }
-                catch(std::invalid_argument& ia)
-                {
-                    m_bActivateAllowed = false;
-                    bOk = false;
-                }
+                std::chrono::nanoseconds nano((static_cast<long long int>(std::stoul(vTime[0]))*1000000000)+stoul(vTime[1]));
+
+                std::chrono::time_point<std::chrono::high_resolution_clock> tpAbs(tp+nano-LEAP_SECONDS);
+
+                m_Staged.sActivationTime = ConvertTimeToString(tpAbs, true);
+
+                m_bActivateAllowed = true;
+                std::thread thActive(ActivationThreadReceiver, (tp+nano), GetId());
+                thActive.detach();
             }
-            else
+            catch(std::invalid_argument& ia)
             {
-                //nothing to do here
+                m_bActivateAllowed = false;
                 bOk = false;
             }
             break;
+        default:
+            Log::Get(Log::LOG_ERROR) << "Unexpected patch" << std::endl;
     }
     return bOk;
 }
@@ -534,8 +534,12 @@ connectionReceiver Receiver::GetStaged() const
     return m_Staged;
 }
 
+void Receiver::SetupActivation(const std::string& sInterfaceIp)
+{
+    m_sInterfaceIp = sInterfaceIp;
+}
 
-void Receiver::Activate(const std::string& sInterfaceIp)
+void Receiver::Activate(bool bImmediate)
 {
     m_bActivateAllowed = false;
     //move the staged parameters to active parameters
@@ -543,7 +547,7 @@ void Receiver::Activate(const std::string& sInterfaceIp)
 
 
     //Change auto settings to what they actually are
-    m_Active.tpReceiver.Actualize(sInterfaceIp);
+    m_Active.tpReceiver.Actualize(m_sInterfaceIp);
 
     //activeate - set subscription, receiverId and active on master_enable. Commit afterwards
     if(m_Active.bMasterEnable)
@@ -557,14 +561,23 @@ void Receiver::Activate(const std::string& sInterfaceIp)
         m_bSenderActive = false;
     }
 
+    if(!bImmediate)
+    {
+        CommitActivation();
+    }
+}
+
+void Receiver::CommitActivation()
+{
     //reset the staged activation
     m_Staged.eActivate = connection::ACT_NULL;
     m_Staged.sActivationTime.clear();
     m_Staged.sRequestedTime.clear();
 
     UpdateVersionTime();
-}
 
+    NodeApi::Get().ReceiverActivated(GetId());
+}
 
 bool Receiver::IsMasterEnabled() const
 {

@@ -1,12 +1,12 @@
 #include "connection.h"
 #include "log.h"
 #include "sdp.h"
-
+#include "utils.h"
 
 const std::string connection::STR_ACTIVATE[4] = {"", "activate_immediate", "activate_scheduled_absolute", "activate_scheduled_relative"};
 
 connection::connection() :
-    bMasterEnable(true),
+    bMasterEnable(false),
     eActivate(connection::ACT_NULL),
     m_nProperties(connection::FP_ALL)
 {
@@ -14,7 +14,7 @@ connection::connection() :
 }
 
 connection::connection(int flagProperties) :
-    bMasterEnable(true),
+    bMasterEnable(false),
     eActivate(connection::ACT_NULL),
     m_nProperties(flagProperties)
 {
@@ -107,7 +107,22 @@ Json::Value connection::GetJson(const ApiVersion& version) const
         if(eActivate == ACT_NULL)
         {
             jsConnect["activation"]["mode"] = Json::nullValue;
-            jsConnect["activation"]["requested_time"] = Json::nullValue;
+            if(sActivationTime.empty())
+            {
+                jsConnect["activation"]["activation_time"] = Json::nullValue;
+            }
+            else
+            {
+                jsConnect["activation"]["activation_time"] = sActivationTime;
+            }
+            if(sRequestedTime.empty() == false)
+            {
+                jsConnect["activation"]["requested_time"] = sRequestedTime;
+            }
+            else
+            {
+                jsConnect["activation"]["requested_time"] = Json::nullValue;
+            }
 
         }
         else
@@ -137,6 +152,10 @@ Json::Value connection::GetJson(const ApiVersion& version) const
                 {
                     jsConnect["activation"]["activation_time"] = sActivationTime;
                 }
+                else
+                {
+                    jsConnect["activation"]["activation_time"] = Json::nullValue;
+                }
             }
         }
     }
@@ -163,7 +182,7 @@ connectionSender::connectionSender(int flagProperties) : connection(flagProperti
 bool connectionSender::Patch(const Json::Value& jsData)
 {
     Log::Get(Log::LOG_DEBUG) << "Patch: connectionSender" << std::endl;
-    bool bIsOk = connection::Patch(jsData);
+    bool bIsOk = (connection::Patch(jsData) && CheckJson(jsData, {"master_enable", "activation", "transport_params", "receiver_id"}));
     if(bIsOk)
     {
         if(jsData["transport_params"].isArray())
@@ -223,7 +242,7 @@ Json::Value connectionSender::GetJson(const ApiVersion& version) const
 }
 
 
-connectionReceiver::connectionReceiver() : connection()
+connectionReceiver::connectionReceiver() : connection(), sTransportFileType("application/sdp")
 {
 
 }
@@ -235,9 +254,9 @@ connectionReceiver::connectionReceiver(int flagProperties) : connection(flagProp
 
 bool connectionReceiver::Patch(const Json::Value& jsData)
 {
-    bool bIsOk(true);
+    bool bIsOk(CheckJson(jsData, {"master_enable", "activation", "transport_params", "sender_id", "transport_file"}));
     //need to decode the SDP and make the correct transport param changes here so that any connection json will overwrite them
-    if(jsData["transport_file"].isObject())
+    if(bIsOk && jsData["transport_file"].isObject())
     {
         m_nProperties |= FP_TRANSPORT_FILE;
         if(jsData["transport_file"]["type"].isString())
@@ -314,14 +333,20 @@ Json::Value connectionReceiver::GetJson(const ApiVersion& version)  const
         if(sTransportFileType.empty())
         {
             jsConnect["transport_file"]["type"] = Json::nullValue;
-            jsConnect["transport_file"]["data"] = Json::nullValue;
+
         }
         else
         {
             jsConnect["transport_file"]["type"] = sTransportFileType;
+        }
+        if(sTransportFileData.empty() == false)
+        {
             jsConnect["transport_file"]["data"] = sTransportFileData;
         }
-
+        else
+        {
+                jsConnect["transport_file"]["data"] = Json::nullValue;
+        }
     }
 
     if(FP_ID & m_nProperties)
