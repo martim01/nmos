@@ -162,15 +162,15 @@ unsigned short RegistryApi::AddUpdateResource(const string& sType, const Json::V
             }
             return 404;
         }
-        else if(AddResource(sType, jsData,sError))
+        else
         {
-            return 201;
+            return AddResource(sType, jsData,sError);
         }
     }
     return 404;
 }
 
-bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData, std::string& sError)
+unsigned short RegistryApi::AddResource(const string& sType, const Json::Value& jsData, std::string& sError)
 {
     bool bOk(false);
     if(sType == STR_RESOURCE[NODE])
@@ -190,6 +190,10 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData, st
         shared_ptr<Device> pResource = make_shared<Device>();
         if(pResource->UpdateFromJson(jsData))
         {
+            if(!FindNmosResource(STR_RESOURCE[NODE], pResource->GetParentResourceId()))
+            {
+               return 400;
+            }
             bOk = AddResource(sType, pResource);
         }
         else
@@ -202,6 +206,10 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData, st
         shared_ptr<Sender> pResource = make_shared<Sender>();
         if(pResource->UpdateFromJson(jsData))
         {
+            if(!FindNmosResource(STR_RESOURCE[DEVICE], pResource->GetParentResourceId()))
+            {
+                return 400;
+            }
             bOk = AddResource(sType, pResource);
         }
         else
@@ -214,6 +222,10 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData, st
         shared_ptr<Receiver> pResource = make_shared<Receiver>();
         if(pResource->UpdateFromJson(jsData))
         {
+            if(!FindNmosResource(STR_RESOURCE[DEVICE], pResource->GetParentResourceId()))
+            {
+                return 400;
+            }
             bOk = AddResource(sType, pResource);
         }
         else
@@ -231,6 +243,10 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData, st
                 shared_ptr<SourceAudio> pResource = make_shared<SourceAudio>();
                 if(pResource->UpdateFromJson(jsData))
                 {
+                    if(!FindNmosResource(STR_RESOURCE[DEVICE], pResource->GetParentResourceId()))
+                    {
+                        return 400;
+                    }
                     bOk = AddResource(sType, pResource);
                 }
                 else
@@ -243,6 +259,10 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData, st
                 shared_ptr<SourceGeneric> pResource = make_shared<SourceGeneric>();
                 if(pResource->UpdateFromJson(jsData))
                 {
+                    if(!FindNmosResource(STR_RESOURCE[DEVICE], pResource->GetParentResourceId()))
+                    {
+                        return 400;
+                    }
                     bOk = AddResource(sType, pResource);
                 }
                 else
@@ -265,6 +285,10 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData, st
                         shared_ptr<FlowAudioRaw> pResource = make_shared<FlowAudioRaw>();
                         if(pResource->UpdateFromJson(jsData))
                         {
+                            if(!FindNmosResource(STR_RESOURCE[DEVICE], pResource->GetParentResourceId()))
+                            {
+                                return 400;
+                            }
                             bOk = AddResource(sType, pResource);
                         }
                         else
@@ -277,6 +301,10 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData, st
                         shared_ptr<FlowAudioCoded> pResource = make_shared<FlowAudioCoded>();
                         if(pResource->UpdateFromJson(jsData))
                         {
+                            if(!FindNmosResource(STR_RESOURCE[DEVICE], pResource->GetParentResourceId()))
+                            {
+                                return 400;
+                            }
                             bOk = AddResource(sType, pResource);
                         }
                         else
@@ -295,6 +323,10 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData, st
                         shared_ptr<FlowVideoRaw> pResource = make_shared<FlowVideoRaw>();
                         if(pResource->UpdateFromJson(jsData))
                         {
+                            if(!FindNmosResource(STR_RESOURCE[DEVICE], pResource->GetParentResourceId()))
+                            {
+                                return 400;
+                            }
                             bOk = AddResource(sType, pResource);
                         }
                         else
@@ -307,6 +339,10 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData, st
                         shared_ptr<FlowVideoCoded> pResource = make_shared<FlowVideoCoded>(jsData["media_type"].asString());
                         if(pResource->UpdateFromJson(jsData))
                         {
+                            if(!FindNmosResource(STR_RESOURCE[DEVICE], pResource->GetParentResourceId()))
+                            {
+                                return 400;
+                            }
                             bOk = AddResource(sType, pResource);
                         }
                         else
@@ -323,6 +359,10 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData, st
                     shared_ptr<FlowDataSdiAnc> pResource = make_shared<FlowDataSdiAnc>();
                     if(pResource->UpdateFromJson(jsData))
                     {
+                        if(!FindNmosResource(STR_RESOURCE[DEVICE], pResource->GetParentResourceId()))
+                        {
+                            return 400;
+                        }
                         bOk = AddResource(sType, pResource);
                     }
                     else
@@ -338,6 +378,10 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData, st
                 shared_ptr<FlowMux> pResource = make_shared<FlowMux>();
                 if(pResource->UpdateFromJson(jsData))
                 {
+                    if(!FindNmosResource(STR_RESOURCE[DEVICE], pResource->GetParentResourceId()))
+                    {
+                        return 400;
+                    }
                     bOk = AddResource(sType, pResource);
                 }
                 else
@@ -351,7 +395,11 @@ bool RegistryApi::AddResource(const string& sType, const Json::Value& jsData, st
     {
         sError = "Resource type not valid";
     }
-    return bOk;
+    if(bOk)
+    {
+        return 200;
+    }
+    return 404;
 }
 
 bool RegistryApi::UpdateNmosResource(const Json::Value& jsData, std::shared_ptr<Resource> pResource, std::string& sError)

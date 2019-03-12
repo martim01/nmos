@@ -115,10 +115,10 @@ class RegistryServer
         /x-nmos-/registration/{version}/resource/{type}/{id}
         /x-nmos-/registration/{version}/health/nodes/{id}
         */
-        enum {BASE=0, NMOS=1, API=2, VERSION=3, RES_HEALTH=4};
-        enum {RESOURCE_TYPE=5, RESOURCE_ID=6};
-        enum {HEALTH_NODES=5, HEALTH_ID=6};
-        enum {SZ_BASE=1, SZ_NMOS=2, SZ_API=3, SZ_VERSION=4, SZ_RES_HEALTH=5,SZ_RES_TYPE=6,SZ_ID=7};
+        enum {NMOS=0, API=1, VERSION=2, RES_HEALTH=3};
+        enum {RESOURCE_TYPE=4, RESOURCE_ID=5};
+        enum {HEALTH_NODES=4, HEALTH_ID=5};
+        enum {SZ_BASE=0, SZ_NMOS=1, SZ_API=2, SZ_VERSION=3, SZ_RES_HEALTH=4,SZ_RES_TYPE=5,SZ_ID=6};
 };
 
 

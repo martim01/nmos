@@ -1,4 +1,6 @@
 #include "source.h"
+#include "utils.h"
+
 
  Source::Source(std::string sLabel, std::string sDescription, std::string sDeviceId, enumFormat eFormat) : Resource("source", sLabel, sDescription)
  , m_sDeviceId(sDeviceId)
@@ -51,7 +53,7 @@ bool Source::UpdateFromJson(const Json::Value& jsData)
         m_bIsOk = false;
         m_ssJsonError << "'parents' is not an array" << std::endl;
     }
-    if(jsData["clock_name"].isString() == false && jsData["clock_name"].isNull() == false)
+    if(jsData["clock_name"].isString() == false && JsonMemberExistsAndIsNotNull(jsData, "clock_name"))
     {
         m_bIsOk = false;
         m_ssJsonError << "'clock_name' is neither a string or null" << std::endl;

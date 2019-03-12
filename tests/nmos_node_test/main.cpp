@@ -129,12 +129,12 @@ int main()
                     break;
                 case ThreadPoster::ACTIVATE_SENDER:
                     cout << "----------------------------------------" << endl;
-                    cout << "NMOS Activate Sender: " << pPoster->GetString() << endl;
+                    cout << "NMOS Sender Activated: " << pPoster->GetString() << endl;
                     cout << "----------------------------------------" << endl;
                     break;
                 case ThreadPoster::ACTIVATE_RECEIVER:
                     cout << "----------------------------------------" << endl;
-                    cout << "NMOS Activate Receiver: " << pPoster->GetString() << endl;
+                    cout << "NMOS Receiver Activated: " << pPoster->GetString() << endl;
                     cout << "----------------------------------------" << endl;
                     break;
             }

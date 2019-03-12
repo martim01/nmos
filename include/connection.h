@@ -10,6 +10,7 @@ struct NMOS_EXPOSE connection
     connection();
 
     connection(int flagProperties);
+    connection(const connection& conReq);
     connection& operator=(const connection& other);
     virtual bool Patch(const Json::Value& jsData);
     virtual Json::Value GetJson(const ApiVersion& version) const;
@@ -20,7 +21,7 @@ struct NMOS_EXPOSE connection
     std::string sRequestedTime;
     std::string sActivationTime;
 
-    int m_nProperties;
+    int nProperties;
     static const std::string STR_ACTIVATE[4];
 };
 
@@ -29,6 +30,7 @@ struct NMOS_EXPOSE connectionSender : public connection
 
     connectionSender();
     connectionSender(int flagProperties);
+    connectionSender(const connectionSender& conReq);
     connectionSender& operator=(const connectionSender& other);
     virtual bool Patch(const Json::Value& jsData);
 
@@ -45,6 +47,8 @@ struct NMOS_EXPOSE connectionSender : public connection
 struct NMOS_EXPOSE connectionReceiver : public connection
 {
     connectionReceiver();
+    connectionReceiver(const connectionReceiver& conReq);
+
     connectionReceiver(int flagProperties);
     connectionReceiver& operator=(const connectionReceiver& other);
     virtual bool Patch(const Json::Value& jsData);

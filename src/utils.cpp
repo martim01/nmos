@@ -118,3 +118,14 @@ bool CheckJson(const Json::Value& jsObject, std::initializer_list<std::string> l
     }
     return true;
 }
+
+
+bool JsonMemberExistsAndIsNull(const Json::Value& jsObject, const std::string& sMember)
+{
+    return (jsObject.isMember(sMember) && jsObject[sMember].isNull());
+}
+
+bool JsonMemberExistsAndIsNotNull(const Json::Value& jsObject, const std::string& sMember)
+{
+    return (jsObject.isMember(sMember) && (jsObject[sMember].isNull()==false));
+}

@@ -73,7 +73,7 @@ class NMOS_EXPOSE RegistryApi
         bool StartServer(unsigned short nPort);
         void StopServer();
 
-        bool AddResource(const std::string& sType, const Json::Value& jsData, std::string& sError);
+        unsigned short AddResource(const std::string& sType, const Json::Value& jsData, std::string& sError);
 
         bool AddResource(const std::string& sType, std::shared_ptr<Resource> pResource);
         bool UpdateNmosResource(const Json::Value& jsData, std::shared_ptr<Resource> pResource, std::string& sError);

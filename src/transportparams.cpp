@@ -1,5 +1,7 @@
 #include "transportparams.h"
 #include "log.h"
+#include "utils.h"
+
 
 const std::string TransportParamsRTP::STR_FEC_MODE[2] = {"1D", "2D"};
 const std::string TransportParamsRTPSender::STR_FEC_TYPE[2] = {"XOR", "Reed-Solomon"};
@@ -19,6 +21,26 @@ TransportParamsRTP::TransportParamsRTP() :
     eFec(TP_UNKNOWN),
     eRTCP(TP_UNKNOWN),
     eMulticast(TP_UNKNOWN)
+{
+
+}
+
+
+TransportParamsRTP::TransportParamsRTP(const TransportParamsRTP& tp) :
+    sSourceIp(tp.sSourceIp),
+    nDestinationPort(tp.nDestinationPort),
+    bFecEnabled(tp.bFecEnabled),
+    sFecDestinationIp(tp.sFecDestinationIp),
+    eFecMode(tp.eFecMode),
+    nFec1DDestinationPort(tp.nFec1DDestinationPort),
+    nFec2DDestinationPort(tp.nFec2DDestinationPort),
+    bRtcpEnabled(tp.bRtcpEnabled),
+    sRtcpDestinationIp(tp.sRtcpDestinationIp),
+    nRtcpDestinationPort(tp.nRtcpDestinationPort),
+    bRtpEnabled(tp.bRtpEnabled),
+    eFec(tp.eFec),
+    eRTCP(tp.eRTCP),
+    eMulticast(tp.eMulticast)
 {
 
 }
@@ -54,7 +76,7 @@ bool TransportParamsRTP::Patch(const Json::Value& jsData)
                 sSourceIp = jsData["source_ip"].asString();
             }
         }
-        else if(jsData["source_ip"].isNull())
+        else if(JsonMemberExistsAndIsNull(jsData, "source_ip"))
         {
             sSourceIp.clear();
         }
@@ -247,6 +269,19 @@ TransportParamsRTPSender::TransportParamsRTPSender() : TransportParamsRTP(),
     sSourceIp = "auto"; //sender sourceIp defaults to auto. receiver to null
 }
 
+TransportParamsRTPSender::TransportParamsRTPSender(const TransportParamsRTPSender& tp) : TransportParamsRTP(tp),
+    sDestinationIp(tp.sDestinationIp),
+    nSourcePort(tp.nSourcePort),
+    eFecType(tp.eFecType),
+    nFecBlockWidth(tp.nFecBlockWidth),
+    nFecBlockHeight(tp.nFecBlockHeight),
+    nFec1DSourcePort(tp.nFec1DSourcePort),
+    nFec2DSourcePort(tp.nFec2DSourcePort),
+    nRtcpSourcePort(tp.nRtcpSourcePort)
+{
+
+}
+
 
 TransportParamsRTPSender& TransportParamsRTPSender::operator=(const TransportParamsRTPSender& other)
 {
@@ -425,11 +460,11 @@ void TransportParamsRTPSender::Actualize(const std::string& sSource, const std::
 {
     TransportParamsRTP::Actualize();
 
-    if(sSourceIp == "auto")
+    if(sSourceIp == "auto" || sSourceIp.empty())
     {
         sSourceIp =sSource;
     }
-    if(sDestinationIp == "auto")
+    if(sDestinationIp == "auto" || sDestinationIp.empty())
     {
         sDestinationIp = sDestination;
     }
@@ -485,6 +520,14 @@ TransportParamsRTPReceiver::TransportParamsRTPReceiver() : TransportParamsRTP(),
     eMulticast = TP_SUPPORTED;
 }
 
+TransportParamsRTPReceiver::TransportParamsRTPReceiver(const TransportParamsRTPReceiver& tp) : TransportParamsRTP(tp),
+    sMulticastIp(tp.sMulticastIp),
+    sInterfaceIp(tp.sInterfaceIp)
+
+{
+
+}
+
 
 bool TransportParamsRTPReceiver::Patch(const Json::Value& jsData)
 {
@@ -502,7 +545,7 @@ bool TransportParamsRTPReceiver::Patch(const Json::Value& jsData)
                     sMulticastIp = jsData["multicast_ip"].asString();
                 }
             }
-            else if(jsData["multicast_ip"].isNull())
+            else if(JsonMemberExistsAndIsNull(jsData, "multicast_ip"))
             {
                 Log::Get(Log::LOG_DEBUG) << "TransportParamsRTPReceiver::Patch: Multicast=null" << std::endl;
                 eMulticast = TP_SUPPORTED;

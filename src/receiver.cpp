@@ -306,7 +306,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
         {
             m_sSenderId = jsData["subscription"]["sender_id"].asString();
         }
-        else if(jsData["subscription"]["sender_id"].isNull())
+        else if(JsonMemberExistsAndIsNull(jsData["subscription"], "sender_id"))
         {
             m_sSenderId.clear();
         }
@@ -354,13 +354,12 @@ bool Receiver::Commit(const ApiVersion& version)
         if(m_sSenderId.empty())
         {
              m_json["subscription"]["sender_id"] = Json::nullValue;
-             m_json["subscription"]["active"] = false;
         }
         else
         {
             m_json["subscription"]["sender_id"] = m_sSenderId;
-            m_json["subscription"]["active"] = true;    //@todo we need to get this subscription information from somewhere sensible
         }
+        m_json["subscription"]["active"] = m_Active.bMasterEnable;
 
 
         return true;
@@ -552,11 +551,13 @@ void Receiver::Activate(bool bImmediate)
     //activeate - set subscription, receiverId and active on master_enable. Commit afterwards
     if(m_Active.bMasterEnable)
     {
+        Log::Get(Log::LOG_INFO) << "Receiver::Activate enable '" << m_Staged.sSenderId << "'" << std::endl;
         m_sSenderId = m_Staged.sSenderId;
         m_bSenderActive = m_Staged.bMasterEnable;
     }
     else
     {
+        Log::Get(Log::LOG_INFO) << "Receiver::Activate disable '" << m_Staged.sSenderId << "'" << std::endl;
         m_sSenderId.clear();
         m_bSenderActive = false;
     }

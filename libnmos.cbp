@@ -328,6 +328,7 @@
 		<Unit filename="include/nmosserver.h" />
 		<Unit filename="include/nmosthread.h" />
 		<Unit filename="include/nodeapi.h" />
+		<Unit filename="include/nodezcposter.h" />
 		<Unit filename="include/receiver.h" />
 		<Unit filename="include/registry.h" />
 		<Unit filename="include/registryapi.h" />
@@ -345,6 +346,7 @@
 		<Unit filename="include/transportparams.h" />
 		<Unit filename="include/utils.h" />
 		<Unit filename="include/version.h" />
+		<Unit filename="include/zcposter.h" />
 		<Unit filename="src/avahibrowser.cpp">
 			<Option target="Linux Debug" />
 			<Option target="Linux Release" />
@@ -384,6 +386,7 @@
 		<Unit filename="src/nmosserver.cpp" />
 		<Unit filename="src/nmosthread.cpp" />
 		<Unit filename="src/nodeapi.cpp" />
+		<Unit filename="src/nodezcposter.cpp" />
 		<Unit filename="src/receiver.cpp" />
 		<Unit filename="src/registryapi.cpp" />
 		<Unit filename="src/registryholder.cpp" />
@@ -400,6 +403,7 @@
 		<Unit filename="src/transportparams.cpp" />
 		<Unit filename="src/utils.cpp" />
 		<Unit filename="src/version.cpp" />
+		<Unit filename="src/zcposter.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />

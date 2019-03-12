@@ -39,6 +39,10 @@ int RegistryServer::DoHttpGet(MHD_Connection* pConnection, string sUrl, Registry
 
     MHD_Response* pResponse = MHD_create_response_from_buffer (sResponse.length(), (void *) sResponse.c_str(), MHD_RESPMEM_MUST_COPY);
     MHD_add_response_header(pResponse, "Content-Type", sContentType.c_str());
+    MHD_add_response_header(pResponse, "Access-Control-Allow-Origin:", "*");
+    MHD_add_response_header(pResponse, "Access-Control-Allow-Methods:", "GET, PUT, POST, HEAD, OPTIONS, DELETE");
+    MHD_add_response_header(pResponse, "Access-Control-Allow-Headers:", "Content-Type, Accept");
+    MHD_add_response_header(pResponse, "Access-Control-Max-Age:", "3600");
     int ret = MHD_queue_response (pConnection, nCode, pResponse);
     MHD_destroy_response (pResponse);
     return ret;
@@ -57,6 +61,10 @@ int RegistryServer::DoHttpPost(MHD_Connection* pConnection, string sUrl, Registr
     {
         MHD_add_response_header(pResponse, "Location", sLocation.c_str());
     }
+    MHD_add_response_header(pResponse, "Access-Control-Allow-Origin:", "*");
+    MHD_add_response_header(pResponse, "Access-Control-Allow-Methods:", "GET, PUT, POST, HEAD, OPTIONS, DELETE");
+    MHD_add_response_header(pResponse, "Access-Control-Allow-Headers:", "Content-Type, Accept");
+    MHD_add_response_header(pResponse, "Access-Control-Max-Age:", "3600");
     int ret = MHD_queue_response (pConnection, nCode, pResponse);
     MHD_destroy_response (pResponse);
     return ret;
@@ -71,6 +79,10 @@ int RegistryServer::DoHttpDelete(MHD_Connection* pConnection, string sUrl, Regis
 
     MHD_Response* pResponse = MHD_create_response_from_buffer (sResponse.length(), (void *) sResponse.c_str(), MHD_RESPMEM_MUST_COPY);
     MHD_add_response_header(pResponse, "Content-Type", "application/json");
+    MHD_add_response_header(pResponse, "Access-Control-Allow-Origin:", "*");
+    MHD_add_response_header(pResponse, "Access-Control-Allow-Methods:", "GET, PUT, POST, HEAD, OPTIONS, DELETE");
+    MHD_add_response_header(pResponse, "Access-Control-Allow-Headers:", "Content-Type, Accept");
+    MHD_add_response_header(pResponse, "Access-Control-Max-Age:", "3600");
     int ret = MHD_queue_response (pConnection, nCode, pResponse);
     MHD_destroy_response (pResponse);
     return ret;

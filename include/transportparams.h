@@ -9,6 +9,8 @@ struct TransportParamsRTP
     enum enumTParams {TP_UNKNOWN = -1, TP_NOT_SUPPORTED=0, TP_SUPPORTED=1};
     enum flagsTP {CORE=0, FEC=1, RTCP=2, MULTICAST=4};
     TransportParamsRTP();
+    TransportParamsRTP(const TransportParamsRTP& tp);
+
     virtual bool Patch(const Json::Value& jsData);
 
     virtual Json::Value GetJson(const ApiVersion& version) const;
@@ -45,6 +47,7 @@ struct TransportParamsRTPReceiver : public TransportParamsRTP
     std::string sInterfaceIp;
 
     TransportParamsRTPReceiver();
+    TransportParamsRTPReceiver(const TransportParamsRTPReceiver& tp);
     virtual bool Patch(const Json::Value& jsData);
     virtual Json::Value GetJson(const ApiVersion& version) const;
     void Actualize(const std::string& sInterfaceIp);
@@ -57,6 +60,7 @@ struct TransportParamsRTPSender : public TransportParamsRTP
     enum enumFecType {XOR, REED};
 
     TransportParamsRTPSender();
+    TransportParamsRTPSender(const TransportParamsRTPSender& tp);
     virtual bool Patch(const Json::Value& jsData);
 
     virtual Json::Value GetJson(const ApiVersion& version) const;

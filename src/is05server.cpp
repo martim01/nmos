@@ -333,6 +333,8 @@ int IS05Server::PatchJsonSender(MicroServer* pServer, const std::string& sJson, 
         else
         {
             connectionSender conRequest(pSender->GetStaged());
+
+
             //can we patch a connection from the json?
             if(conRequest.Patch(jsRequest) == false)
             {
@@ -366,7 +368,11 @@ int IS05Server::PatchJsonSender(MicroServer* pServer, const std::string& sJson, 
                     nCode = 202;
                     sResponse = stw.write(pSender->GetConnectionStagedJson(version));
 
-                    if(conRequest.eActivate == connection::ACT_NULL || conRequest.eActivate == connection::ACT_NOW)
+                    if(conRequest.eActivate == connection::ACT_NULL)
+                    {
+                        nCode = 200;
+                    }
+                    else if(conRequest.eActivate == connection::ACT_NOW)
                     {
                         nCode = 200;
                         pSender->CommitActivation();
@@ -426,6 +432,7 @@ int IS05Server::PatchJsonReceiver(MicroServer* pServer, const std::string& sJson
         else
         {
             connectionReceiver conRequest(pReceiver->GetStaged());
+            Log::Get(Log::LOG_DEBUG) << "PatchJsonReceiver: Staged SenderId = '" << pReceiver->GetStaged().sSenderId << "' request SebderId = '" << conRequest.sSenderId << "'" <<std::endl;
             //can we patch a connection from the json?
             if(conRequest.Patch(jsRequest) == false)
             {
@@ -458,7 +465,11 @@ int IS05Server::PatchJsonReceiver(MicroServer* pServer, const std::string& sJson
                 {
                     nCode = 202;
                     sResponse = stw.write(pReceiver->GetConnectionStagedJson(version));
-                    if(conRequest.eActivate == connection::ACT_NULL || conRequest.eActivate == connection::ACT_NOW)
+                    if(conRequest.eActivate == connection::ACT_NULL)
+                    {
+                        nCode = 200;
+                    }
+                    else if(conRequest.eActivate == connection::ACT_NOW)
                     {
                         nCode = 200;
                         pReceiver->CommitActivation();

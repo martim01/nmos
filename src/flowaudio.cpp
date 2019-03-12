@@ -1,4 +1,6 @@
 #include "flowaudio.h"
+#include "utils.h"
+
 
 FlowAudio::FlowAudio(std::string sLabel, std::string sDescription, std::string sSourceId, std::string sDeviceId, unsigned int nSampleRate) :
     Flow(sLabel, sDescription, "urn:x-nmos:format:audio", sSourceId, sDeviceId),
@@ -21,7 +23,7 @@ bool FlowAudio::UpdateFromJson(const Json::Value& jsData)
         m_bIsOk = false;
         m_ssJsonError << "'samplerate' 'numerator' is not an int" << std::endl;
     }
-    if(jsData["sample_rate"]["denominator"].isInt() == false && jsData["sample_rate"]["denominator"].isNull() == false)
+    if(jsData["sample_rate"]["denominator"].isInt() == false && JsonMemberExistsAndIsNotNull(jsData["sample_rate"], "denominator"))
     {
         m_bIsOk = false;
         m_ssJsonError << "'samplerate' 'denominator' is not null and not an int" << std::endl;

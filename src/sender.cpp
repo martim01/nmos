@@ -73,7 +73,7 @@ Sender::Sender(std::string sLabel, std::string sDescription, std::string sFlowId
     m_constraints.nParamsSupported = flagsTransport;
 
     //activate the
-    SetupActivation("","","");
+    SetupActivation("", "239.220.1.1","");  // @todo choose some defaults - get the ori
     Activate();
 
 }
@@ -86,7 +86,7 @@ Sender::Sender() : Resource("sender")
 bool Sender::UpdateFromJson(const Json::Value& jsData)
 {
     Resource::UpdateFromJson(jsData);
-    if(jsData["flow_id"].isString() == false && jsData["flow_id"].isNull() == false)
+    if(jsData["flow_id"].isString() == false && JsonMemberExistsAndIsNotNull(jsData, "flow_id"))
     {
         m_bIsOk = false;
         m_ssJsonError << "'flow_id' neither a string or null" << std::endl;
@@ -116,7 +116,7 @@ bool Sender::UpdateFromJson(const Json::Value& jsData)
         m_bIsOk = false;
         m_ssJsonError << "'subscription' is not an object" << std::endl;
     }
-    if(jsData["subscription"]["receiver_id"].isString() ==false && jsData["subscription"]["receiver_id"].isNull() == false)
+    if(jsData["subscription"]["receiver_id"].isString() ==false && JsonMemberExistsAndIsNotNull(jsData["subscription"], "receiver_id"))
     {
         m_bIsOk = false;
         m_ssJsonError << "'subscription' 'receiver_id' is not a string and not null" << std::endl;
