@@ -30,7 +30,8 @@ The library is intended to be platform agnostic and where possible use widely us
 # Building
 There are CodeBlocks project files to build the library and a number of test applications. 
 Alternatively there is a CMakeLists.txt file which can be used to build the library (not yet the test applications) on Linux (Windows etc still to come). To use this:
-```cd build
+```
+cd build
 cmake ..
 cmake --build .
 ```
