@@ -23,9 +23,8 @@ The library is intended to be platform agnostic and where possible use widely us
 - [microhttpd](https://www.gnu.org/software/libmicrohttpd/) for the webserver
 - [libcurl](https://curl.haxx.se/libcurl/) for registering resources and performing queries
 - Linux: [avahi](http://avahi.org/) for service discovery and publishing
-- Linux: [libuuid](https://linux.die.net/man/3/libuuid) to generate the unique identifiers for the resources
 - Windows: mDNSRepsonder for service discovery and publishing
-
+All other external code is included in the external directory
 
 # Building
 There are CodeBlocks project files to build the library and a number of test applications. 
