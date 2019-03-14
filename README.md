@@ -32,7 +32,8 @@ There are CodeBlocks project files to build the library and a number of test app
 Alternatively there is a CMakeLists.txt file which can be used to build the library (not yet the test applications) on Linux (Windows etc still to come). To use this:
 ```cd build
 cmake ..
-cmake --build .```
+cmake --build .
+```
 
 
 
