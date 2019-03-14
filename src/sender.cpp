@@ -13,10 +13,7 @@
 
 static void ActivationThreadSender(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId)
 {
-    Log::Get(Log::LOG_DEBUG) << "Thread started at: " << GetCurrentTaiTime() << std::endl;
-    Log::Get(Log::LOG_DEBUG) << "Wait until  " << ConvertTimeToString(tp) << std::endl;
     std::this_thread::sleep_until(tp);
-    Log::Get(Log::LOG_DEBUG) << "Activated at: " << GetCurrentTaiTime() << std::endl;
     std::shared_ptr<Sender> pSender = NodeApi::Get().GetSender(sId);
     if(pSender)
     {
@@ -330,7 +327,6 @@ bool Sender::Stage(const connectionSender& conRequest, std::shared_ptr<EventPost
             break;
         case connection::ACT_ABSOLUTE:
             {
-
                 std::chrono::time_point<std::chrono::high_resolution_clock> tp;
                 if(ConvertTaiStringToTimePoint(m_Staged.sRequestedTime, tp))
                 {
@@ -341,6 +337,7 @@ bool Sender::Stage(const connectionSender& conRequest, std::shared_ptr<EventPost
                 }
                 else
                 {
+                    Log::Get(Log::LOG_ERROR) << "Stage Sender: Invalid absolute time" << std::endl;
                     bOk = false;
                 }
             }
@@ -442,7 +439,14 @@ void Sender::Activate(bool bImmediate)
     //@todo Set the flow to be whatever the flow is...
 
     //activate - set subscription, receiverId and active on master_enable.
-    m_sReceiverId = m_Staged.sReceiverId;
+    if(m_Staged.bMasterEnable)
+    {
+        m_sReceiverId = m_Staged.sReceiverId;
+    }
+    else
+    {
+        m_sReceiverId.clear();
+    }
     m_bReceiverActive = m_Staged.bMasterEnable;
 
     if(!bImmediate)

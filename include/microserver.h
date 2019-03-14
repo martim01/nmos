@@ -66,6 +66,9 @@ class MicroServer
         static int DoHttpGet(MHD_Connection* pConnection, std::string sUrl, ConnectionInfo* pInfo);
         static int DoHttpPut(MHD_Connection* pConnection, std::string sUrl, ConnectionInfo* pInfo);
         static int DoHttpPatch(MHD_Connection* pConnection, std::string sUrl, ConnectionInfo* pInfo);
+        static int DoHttpPost(MHD_Connection* pConnection, std::string sUrl, ConnectionInfo* pInfo);
+        static int DoReply(MHD_Connection* pConnection, int nCode, const std::string& sResponse, const std::string& sContentType = "application/json");
+
         static int AnswerToConnection(void *cls, MHD_Connection* pConnection, const char * url, const char * method, const char * sVersion, const char * upload_data, size_t * upload_data_size, void **ptr);
 
 
@@ -81,6 +84,8 @@ class MicroServer
         int GetJson(std::string sPath, std::string& sResponse, std::string& sContentType);
         int PutJson(std::string sPath, const std::string& sJson, std::string& sRepsonse);
         int PatchJson(std::string sPath, const std::string& sJson, std::string& sRepsonse);
+        int PostJson(std::string sPath, const std::string& sJson, std::string& sRepsonse);
+        int DeleteJson(std::string sPath, const std::string& sJson, std::string& sRepsonse);
 
         int GetApis(std::string& sReturn);
 

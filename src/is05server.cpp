@@ -276,9 +276,7 @@ int IS05Server::GetJsonNmosConnectionBulkApi(std::string& sReturn)
 
 int IS05Server::PatchJsonNmos(MicroServer* pServer, const string& sJson, string& sResponse)
 {
-
     Json::FastWriter stw;
-
     int nCode = 202;
 
     if(m_vPath.size() < SZC_LAST || NodeApi::Get().GetConnectionPort() != m_nPort || m_vPath[API_TYPE] != "connection" || m_vPath[VERSION] != "v1.0" || m_vPath[C_TYPE] != "single" || (m_vPath[C_DIRECTION] != "senders" && m_vPath[C_DIRECTION] != "receivers") || m_vPath[C_LAST] != "staged")
@@ -301,6 +299,33 @@ int IS05Server::PatchJsonNmos(MicroServer* pServer, const string& sJson, string&
     }
     return nCode;
 }
+
+int IS05Server::PostJsonNmos(MicroServer* pServer, const string& sJson, string& sResponse)
+{
+    Json::FastWriter stw;
+    int nCode = 405;
+
+    if(m_vPath.size() < SZC_DIRECTION || NodeApi::Get().GetConnectionPort() != m_nPort || m_vPath[API_TYPE] != "connection" || m_vPath[VERSION] != "v1.0" || m_vPath[C_TYPE] != "bulk" || (m_vPath[C_DIRECTION] != "senders" && m_vPath[C_DIRECTION] != "receivers"))
+    {
+        nCode = 405;
+        sResponse = stw.write(GetJsonError(nCode, "Method not allowed here."));
+    }
+    else
+    {
+        ApiVersion version(m_vPath[VERSION]);
+
+        if(m_vPath[C_DIRECTION] == "senders")
+        {
+            return PostJsonSenders(pServer, sJson, sResponse, version);
+        }
+        else
+        {
+            return PostJsonReceivers(pServer, sJson, sResponse, version);
+        }
+    }
+    return nCode;
+}
+
 
 int IS05Server::PatchJsonSender(MicroServer* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version)
 {
@@ -332,78 +357,87 @@ int IS05Server::PatchJsonSender(MicroServer* pServer, const std::string& sJson, 
         }
         else
         {
-            connectionSender conRequest(pSender->GetStaged());
-
-
-            //can we patch a connection from the json?
-            if(conRequest.Patch(jsRequest) == false)
-            {
-                nCode = 400;
-                sResponse = stw.write(GetJsonError(nCode, "Request does not meet schema."));
-                Log::Get(Log::LOG_DEBUG) << "PatchJsonSender: Request does not meet schema." << std::endl;
-            }
-            else if(pSender->CheckConstraints(conRequest) == false)
-            {//does the patched connection meet the sender constraints?
-                nCode = 400;
-                sResponse = stw.write(GetJsonError(nCode, "Request does not meet sender's constraints."));
-                Log::Get(Log::LOG_DEBUG) << "PatchJsonSender: Request does not meet sender's constraints." << std::endl;
-            }
-            else if(conRequest.eActivate != connection::ACT_NULL && pSender->IsLocked() == true)
-            {   //locked by previous staged activation
-                nCode = 423;
-                sResponse = stw.write(GetJsonError(nCode, "Sender had pending activation."));
-                Log::Get(Log::LOG_DEBUG) << "PatchJsonSender: Sender had pending activation." << std::endl;
-            }
-            else if(m_pPoster)
-            {   //tell the main thread and wait to see what happens
-                //the main thread should check that it can definitely do what the patch says and simply signal true or false
-                pServer->PrimeWait();
-                m_pPoster->_PatchSender(m_vPath[C_ID], conRequest, m_nPort);
-                //Pause the HTTP thread
-                pServer->Wait();
-
-
-                if(pServer->IsOk() && pSender->Stage(conRequest, m_pPoster)) //PATCH the sender
-                {
-                    nCode = 202;
-                    sResponse = stw.write(pSender->GetConnectionStagedJson(version));
-
-                    if(conRequest.eActivate == connection::ACT_NULL)
-                    {
-                        nCode = 200;
-                    }
-                    else if(conRequest.eActivate == connection::ACT_NOW)
-                    {
-                        nCode = 200;
-                        pSender->CommitActivation();
-                    }
-                    Log::Get(Log::LOG_DEBUG) << sResponse << std::endl;
-                }
-                else
-                {
-                    nCode = 500;
-                    sResponse = stw.write(GetJsonError(nCode, "Sender unable to stage PATCH as activation time invalid."));
-                    Log::Get(Log::LOG_DEBUG) << "PatchJsonSender: Sender unable to stage PATCH as no EventPoster or activation time invalid." << std::endl;
-                }
-            }
-            else
-            {   //no way of telling main thread to do this so we'll simply assume it's been done
-                if(pSender->Stage(conRequest, m_pPoster)) //PATCH the sender
-                {
-                    sResponse = stw.write(pSender->GetConnectionStagedJson(version));
-                    Log::Get(Log::LOG_DEBUG) << sResponse << std::endl;
-                }
-                else
-                {
-                    nCode = 500;
-                    sResponse = stw.write(GetJsonError(nCode, "Sender unable to stage PATCH as no EventPoster or activation time invalid."));
-                    Log::Get(Log::LOG_DEBUG) << "PatchJsonSender: Sender unable to stage PATCH as no EventPoster or activation time invalid." << std::endl;
-                }
-            }
+            nCode = PatchSender(pServer, pSender, jsRequest, sResponse, version);
         }
     }
     return nCode;
 }
+
+
+int IS05Server::PatchSender(MicroServer* pServer, shared_ptr<Sender> pSender, const Json::Value& jsRequest, std::string& sResponse, const ApiVersion& version)
+{
+    Log::Get(Log::LOG_DEBUG) << "PatchSender: " << pSender->GetId() << endl;
+    int nCode(200);
+    Json::FastWriter stw;
+    connectionSender conRequest(pSender->GetStaged());
+    //can we patch a connection from the json?
+    if(conRequest.Patch(jsRequest) == false)
+    {
+        nCode = 400;
+        sResponse = stw.write(GetJsonError(nCode, "Request does not meet schema."));
+        Log::Get(Log::LOG_DEBUG) << "PatchSender: Request does not meet schema." << std::endl;
+    }
+    else if(pSender->CheckConstraints(conRequest) == false)
+    {//does the patched connection meet the sender constraints?
+        nCode = 400;
+        sResponse = stw.write(GetJsonError(nCode, "Request does not meet sender's constraints."));
+        Log::Get(Log::LOG_DEBUG) << "PatchSender: Request does not meet sender's constraints." << std::endl;
+    }
+    else if(conRequest.eActivate != connection::ACT_NULL && pSender->IsLocked() == true)
+    {   //locked by previous staged activation
+        nCode = 423;
+        sResponse = stw.write(GetJsonError(nCode, "Sender had pending activation."));
+        Log::Get(Log::LOG_DEBUG) << "PatchSender: Sender had pending activation." << std::endl;
+    }
+    else if(m_pPoster)
+    {   //tell the main thread and wait to see what happens
+        //the main thread should check that it can definitely do what the patch says and simply signal true or false
+        pServer->PrimeWait();
+        m_pPoster->_PatchSender(pSender->GetId(), conRequest, m_nPort);
+        //Pause the HTTP thread
+        pServer->Wait();
+
+
+        if(pServer->IsOk() && pSender->Stage(conRequest, m_pPoster)) //PATCH the sender
+        {
+            nCode = 202;
+            sResponse = stw.write(pSender->GetConnectionStagedJson(version));
+
+            if(conRequest.eActivate == connection::ACT_NULL)
+            {
+                nCode = 200;
+            }
+            else if(conRequest.eActivate == connection::ACT_NOW)
+            {
+                nCode = 200;
+                pSender->CommitActivation();
+            }
+            Log::Get(Log::LOG_DEBUG) << sResponse << std::endl;
+        }
+        else
+        {
+            nCode = 500;
+            sResponse = stw.write(GetJsonError(nCode, "Sender unable to stage PATCH as activation time invalid."));
+            Log::Get(Log::LOG_DEBUG) << "PatchSender: Sender unable to stage PATCH as activation time invalid." << std::endl;
+        }
+    }
+    else
+    {   //no way of telling main thread to do this so we'll simply assume it's been done
+        if(pSender->Stage(conRequest, m_pPoster)) //PATCH the sender
+        {
+            sResponse = stw.write(pSender->GetConnectionStagedJson(version));
+            Log::Get(Log::LOG_DEBUG) << sResponse << std::endl;
+        }
+        else
+        {
+            nCode = 500;
+            sResponse = stw.write(GetJsonError(nCode, "Sender unable to stage PATCH as no EventPoster or activation time invalid."));
+            Log::Get(Log::LOG_DEBUG) << "PatchSender: Sender unable to stage PATCH as no EventPoster or activation time invalid." << std::endl;
+        }
+    }
+    return nCode;
+}
+
 
 int IS05Server::PatchJsonReceiver(MicroServer* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version)
 {
@@ -431,73 +465,202 @@ int IS05Server::PatchJsonReceiver(MicroServer* pServer, const std::string& sJson
         }
         else
         {
-            connectionReceiver conRequest(pReceiver->GetStaged());
-            Log::Get(Log::LOG_DEBUG) << "PatchJsonReceiver: Staged SenderId = '" << pReceiver->GetStaged().sSenderId << "' request SebderId = '" << conRequest.sSenderId << "'" <<std::endl;
-            //can we patch a connection from the json?
-            if(conRequest.Patch(jsRequest) == false)
+            nCode = PatchReceiver(pServer, pReceiver, jsRequest, sResponse, version);
+        }
+    }
+    return nCode;
+}
+
+int IS05Server::PatchReceiver(MicroServer* pServer, shared_ptr<Receiver> pReceiver, const Json::Value& jsRequest, std::string& sResponse, const ApiVersion& version)
+{
+    int nCode(200);
+    Json::FastWriter stw;
+
+    connectionReceiver conRequest(pReceiver->GetStaged());
+    Log::Get(Log::LOG_DEBUG) << "PatchJsonReceiver: Staged SenderId = '" << pReceiver->GetStaged().sSenderId << "' request SebderId = '" << conRequest.sSenderId << "'" <<std::endl;
+    //can we patch a connection from the json?
+    if(conRequest.Patch(jsRequest) == false)
+    {
+        nCode = 400;
+        sResponse = stw.write(GetJsonError(nCode, "Request does not meet schema."));
+        Log::Get(Log::LOG_DEBUG) << "PatchJsonReceiver: Request does not meet schema." << std::endl;
+    }
+    else if(pReceiver->CheckConstraints(conRequest) == false)
+    {//does the patched connection meet the Receiver constraints?
+        nCode = 400;
+        sResponse = stw.write(GetJsonError(nCode, "Request does not meet Receiver's constraints."));
+        Log::Get(Log::LOG_DEBUG) << "PatchJsonReceiver: Request does not meet Receiver's constraints." << std::endl;
+    }
+    else if(conRequest.eActivate != connection::ACT_NULL && pReceiver->IsLocked() == true)
+    {   //locked by previous staged activation
+        nCode = 423;
+        sResponse = stw.write(GetJsonError(nCode, "Receiver had pending activation."));
+        Log::Get(Log::LOG_DEBUG) << "PatchJsonReceiver: Receiver had pending activation." << std::endl;
+    }
+    else if(m_pPoster)
+    {   //tell the main thread and wait to see what happens
+        pServer->PrimeWait();
+        //the main thread should check that it can definitely do what the patch says and simply signal true or false
+        m_pPoster->_PatchReceiver(pReceiver->GetId(), conRequest, m_nPort);
+        //Pause the HTTP thread
+        pServer->Wait();
+
+        if(pServer->IsOk() && pReceiver->Stage(conRequest)) //PATCH the Receiver
+        {
+            nCode = 202;
+            sResponse = stw.write(pReceiver->GetConnectionStagedJson(version));
+            if(conRequest.eActivate == connection::ACT_NULL)
+            {
+                nCode = 200;
+            }
+            else if(conRequest.eActivate == connection::ACT_NOW)
+            {
+                nCode = 200;
+                pReceiver->CommitActivation();
+            }
+            Log::Get(Log::LOG_DEBUG) << sResponse << std::endl;
+        }
+        else
+        {
+            nCode = 500;
+            sResponse = stw.write(GetJsonError(nCode, "Receiver unable to stage PATCH as no EventPoster or activation time invalid."));
+            Log::Get(Log::LOG_DEBUG) << "PatchJsonReceiver: Receiver unable to stage PATCH as no EventPoster or activation time invalid." << std::endl;
+        }
+    }
+    else
+    {   //no way of telling main thread to do this so we'll simply assume it's been done
+        if(pReceiver->Stage(conRequest)) //PATCH the Receiver
+        {
+            sResponse = stw.write(pReceiver->GetConnectionStagedJson(version));
+            Log::Get(Log::LOG_DEBUG) << sResponse << std::endl;
+        }
+        else
+        {
+            nCode = 500;
+            sResponse = stw.write(GetJsonError(nCode, "Receiver unable to stage PATCH as no EventPoster or activation time invalid."));
+            Log::Get(Log::LOG_DEBUG) << "PatchJsonReceiver: Sender unable to stage PATCH as no EventPoster or activation time invalid." << std::endl;
+        }
+    }
+    return nCode;
+}
+
+
+int IS05Server::PostJsonSenders(MicroServer* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version)
+{
+    Log::Get(Log::LOG_DEBUG) << "IS05Server::PostJsonSenders:  " << sJson << std::endl;
+    int nCode(200);
+    Json::FastWriter stw;
+    //is the json valid?
+    Json::Value jsRequest;
+    Json::Reader jsReader;
+    if(jsReader.parse(sJson, jsRequest) == false || jsRequest.isArray() == false)
+    {
+        nCode = 400;
+        sResponse = stw.write(GetJsonError(nCode, "Request is ill defined."));
+        Log::Get(Log::LOG_DEBUG) << "PostJsonSenders: Request is ill defined." << std::endl;
+    }
+    else
+    {
+        //check that each part of the array is correct.
+        for(Json::ArrayIndex ai = 0; ai < jsRequest.size(); ai++)
+        {
+            if(jsRequest[ai]["id"].isString() == false || jsRequest[ai]["params"].isObject() == false || CheckJson(jsRequest[ai], {"id", "params"}) == false)
             {
                 nCode = 400;
-                sResponse = stw.write(GetJsonError(nCode, "Request does not meet schema."));
-                Log::Get(Log::LOG_DEBUG) << "PatchJsonReceiver: Request does not meet schema." << std::endl;
-                Log::Get(Log::LOG_DEBUG) << sJson << std::endl;
-            }
-            else if(pReceiver->CheckConstraints(conRequest) == false)
-            {//does the patched connection meet the Receiver constraints?
-                nCode = 400;
-                sResponse = stw.write(GetJsonError(nCode, "Request does not meet Receiver's constraints."));
-                Log::Get(Log::LOG_DEBUG) << "PatchJsonReceiver: Request does not meet Receiver's constraints." << std::endl;
-            }
-            else if(conRequest.eActivate != connection::ACT_NULL && pReceiver->IsLocked() == true)
-            {   //locked by previous staged activation
-                nCode = 423;
-                sResponse = stw.write(GetJsonError(nCode, "Receiver had pending activation."));
-                Log::Get(Log::LOG_DEBUG) << "PatchJsonReceiver: Receiver had pending activation." << std::endl;
-            }
-            else if(m_pPoster)
-            {   //tell the main thread and wait to see what happens
-                pServer->PrimeWait();
-                //the main thread should check that it can definitely do what the patch says and simply signal true or false
-                m_pPoster->_PatchReceiver(m_vPath[C_ID], conRequest, m_nPort);
-                //Pause the HTTP thread
-                pServer->Wait();
-
-                if(pServer->IsOk() && pReceiver->Stage(conRequest)) //PATCH the Receiver
-                {
-                    nCode = 202;
-                    sResponse = stw.write(pReceiver->GetConnectionStagedJson(version));
-                    if(conRequest.eActivate == connection::ACT_NULL)
-                    {
-                        nCode = 200;
-                    }
-                    else if(conRequest.eActivate == connection::ACT_NOW)
-                    {
-                        nCode = 200;
-                        pReceiver->CommitActivation();
-                    }
-                    Log::Get(Log::LOG_DEBUG) << sResponse << std::endl;
-                }
-                else
-                {
-                    nCode = 500;
-                    sResponse = stw.write(GetJsonError(nCode, "Receiver unable to stage PATCH as no EventPoster or activation time invalid."));
-                    Log::Get(Log::LOG_DEBUG) << "PatchJsonReceiver: Receiver unable to stage PATCH as no EventPoster or activation time invalid." << std::endl;
-                }
-            }
-            else
-            {   //no way of telling main thread to do this so we'll simply assume it's been done
-                if(pReceiver->Stage(conRequest)) //PATCH the Receiver
-                {
-                    sResponse = stw.write(pReceiver->GetConnectionStagedJson(version));
-                    Log::Get(Log::LOG_DEBUG) << sResponse << std::endl;
-                }
-                else
-                {
-                    nCode = 500;
-                    sResponse = stw.write(GetJsonError(nCode, "Receiver unable to stage PATCH as no EventPoster or activation time invalid."));
-                    Log::Get(Log::LOG_DEBUG) << "PatchJsonReceiver: Sender unable to stage PATCH as no EventPoster or activation time invalid." << std::endl;
-                }
+                sResponse = stw.write(GetJsonError(nCode, "Request is ill defined."));
+                break;
             }
         }
+    }
+
+    if(nCode == 200)
+    {   //passed the JSON checking
+        Json::Value jsResponseArray(Json::arrayValue);
+
+        for(Json::ArrayIndex ai = 0; ai < jsRequest.size(); ai++)
+        {
+            Json::Value jsResponse(Json::objectValue);
+            jsResponse["id"] = jsRequest[ai]["id"];
+
+            shared_ptr<Sender> pSender = NodeApi::Get().GetSender(jsRequest[ai]["id"].asString());
+            if(!pSender)
+            {
+                jsResponse["code"] = 404;
+                jsResponse["error"] = stw.write(GetJsonError(nCode, "Resource does not exist."));
+                Log::Get(Log::LOG_DEBUG) << "PostJsonSenders: Resource does not exist." << std::endl;
+            }
+            else
+            {
+                jsResponse["code"] = PatchSender(pServer, pSender, jsRequest[ai]["params"], sResponse, version);
+                if(jsResponse["code"].asInt() != 200)
+                {
+                    jsResponse["error"] = sResponse;
+                }
+            }
+            jsResponseArray.append(jsResponse);
+        }
+        sResponse = stw.write(jsResponseArray);
+    }
+    return nCode;
+}
+
+
+int IS05Server::PostJsonReceivers(MicroServer* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version)
+{
+    Log::Get(Log::LOG_DEBUG) << "IS05Server::PostJsonReceivers:  " << sJson << std::endl;
+    int nCode(200);
+    Json::FastWriter stw;
+    //is the json valid?
+    Json::Value jsRequest;
+    Json::Reader jsReader;
+    if(jsReader.parse(sJson, jsRequest) == false || jsRequest.isArray() == false)
+    {
+        nCode = 400;
+        sResponse = stw.write(GetJsonError(nCode, "Request is ill defined."));
+        Log::Get(Log::LOG_DEBUG) << "PostJsonReceivers: Request is ill defined." << std::endl;
+    }
+    else
+    {
+        //check that each part of the array is correct.
+        for(Json::ArrayIndex ai = 0; ai < jsRequest.size(); ai++)
+        {
+            if(jsRequest[ai]["id"].isString() == false || jsRequest[ai]["params"].isObject() == false || CheckJson(jsRequest[ai], {"id", "params"}) == false)
+            {
+                nCode = 400;
+                sResponse = stw.write(GetJsonError(nCode, "Request is ill defined."));
+                break;
+            }
+        }
+    }
+
+    if(nCode == 200)
+    {   //passed the JSON checking
+        Json::Value jsResponseArray(Json::arrayValue);
+
+
+        for(Json::ArrayIndex ai = 0; ai < jsRequest.size(); ai++)
+        {
+            Json::Value jsResponse(Json::objectValue);
+            jsResponse["id"] = jsRequest[ai]["id"];
+
+            shared_ptr<Receiver> pReceiver = NodeApi::Get().GetReceiver(jsRequest[ai]["id"].asString());
+            if(!pReceiver)
+            {
+                jsResponse["code"] = 404;
+                jsResponse["error"] = stw.write(GetJsonError(nCode, "Resource does not exist."));
+                Log::Get(Log::LOG_DEBUG) << "PostJsonReceivers: Resource does not exist." << std::endl;
+            }
+            else
+            {
+                jsResponse["code"] = PatchReceiver(pServer, pReceiver, jsRequest[ai]["params"], sResponse, version);
+                if(jsResponse["code"].asInt() != 200)
+                {
+                    jsResponse["error"] = sResponse;
+                }
+            }
+            jsResponseArray.append(jsResponse);
+        }
+        sResponse = stw.write(jsResponseArray);
     }
     return nCode;
 }

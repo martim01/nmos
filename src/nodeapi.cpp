@@ -440,6 +440,7 @@ void NodeApi::SenderPatchAllowed(unsigned short nPort, bool bOk, const std::stri
         }
         else
         {
+            Log::Get(Log::LOG_ERROR) << "No Sender found with id='" << sId << "'" << std::endl;
             bOk = false;
         }
     }

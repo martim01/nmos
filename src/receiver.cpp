@@ -410,6 +410,7 @@ void Receiver::SetSender(const std::string& sSenderId, const std::string& sSdp, 
 
         // need to update the IS-05 stage and active connection settings to match
         m_Staged.sSenderId.clear();
+        m_Staged.bMasterEnable = false;
         m_Staged.sTransportFileData.clear();
         m_Staged.sTransportFileType.clear();
         m_Staged.sActivationTime = GetCurrentTaiTime();
@@ -551,13 +552,11 @@ void Receiver::Activate(bool bImmediate)
     //activeate - set subscription, receiverId and active on master_enable. Commit afterwards
     if(m_Active.bMasterEnable)
     {
-        Log::Get(Log::LOG_INFO) << "Receiver::Activate enable '" << m_Staged.sSenderId << "'" << std::endl;
         m_sSenderId = m_Staged.sSenderId;
         m_bSenderActive = m_Staged.bMasterEnable;
     }
     else
     {
-        Log::Get(Log::LOG_INFO) << "Receiver::Activate disable '" << m_Staged.sSenderId << "'" << std::endl;
         m_sSenderId.clear();
         m_bSenderActive = false;
     }

@@ -16,3 +16,4 @@ extern std::string CreateGuid();
 extern bool CheckJson(const Json::Value& jsObject, std::initializer_list<std::string> lstAllowed);
 extern bool JsonMemberExistsAndIsNull(const Json::Value& jsObject, const std::string& sMember);
 extern bool JsonMemberExistsAndIsNotNull(const Json::Value& jsObject, const std::string& sMember);
+

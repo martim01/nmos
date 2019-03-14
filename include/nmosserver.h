@@ -17,6 +17,8 @@ class NmosServer
         virtual int GetJsonNmos(MicroServer* pServer, std::string& sReturn, std::string& sContentType);
         virtual int PutJsonNmos(MicroServer* pServer, const std::string& sJson, std::string& sResponse);
         virtual int PatchJsonNmos(MicroServer* pServer, const std::string& sJson, std::string& sResponse);
+        virtual int PostJsonNmos(MicroServer* pServer, const std::string& sJson, std::string& sResponse);
+        virtual int DeleteJsonNmos(MicroServer* pServer, const std::string& sJson, std::string& sResponse);
 
         void SetPath(const std::vector<std::string>& vPath);
 
