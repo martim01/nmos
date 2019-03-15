@@ -7,18 +7,7 @@
 #include "log.h"
 #include "utils.h"
 #include "nodeapi.h"
-
-
-static void ActivationThreadReceiver(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId)
-{
-    std::this_thread::sleep_until(tp);
-    std::shared_ptr<Receiver> pReceiver = NodeApi::Get().GetReceiver(sId);
-    if(pReceiver)
-    {
-        pReceiver->Activate();
-    }
-}
-
+#include "activator.h"
 
 const std::string Receiver::STR_TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash"};
 const std::string Receiver::STR_TYPE[4] = {"urn:x-nmos:format:audio", "urn:x-nmos:format:video", "urn:x-nmos:format:data", "urn:x-nmos:format:mux"};
@@ -26,7 +15,7 @@ const std::string Receiver::STR_TYPE[4] = {"urn:x-nmos:format:audio", "urn:x-nmo
 
 
 Receiver::Receiver(std::string sLabel, std::string sDescription, enumTransport eTransport, std::string sDeviceId, enumType eFormat, int flagsTransport) :
-    Resource("receiver", sLabel, sDescription),
+    IOResource("receiver", sLabel, sDescription),
     m_eTransport(eTransport),
     m_sDeviceId(sDeviceId),
     m_sSenderId(""),
@@ -73,7 +62,7 @@ Receiver::~Receiver()
 
 }
 
-Receiver::Receiver() : Resource("receiver")
+Receiver::Receiver() : IOResource("receiver")
 {
 
 }
@@ -454,7 +443,6 @@ bool Receiver::IsLocked() const
 
 bool Receiver::Stage(const connectionReceiver& conRequest)
 {
-    Log::Get(Log::LOG_DEBUG) << "Receiver::Stage: " << conRequest.eActivate << std::endl;
     bool bOk(true);
     m_mutex.lock();
 
@@ -465,28 +453,28 @@ bool Receiver::Stage(const connectionReceiver& conRequest)
     switch(m_Staged.eActivate)
     {
         case connection::ACT_NULL:
-            m_Staged.sActivationTime.clear();
+            if(m_Staged.sActivationTime.empty() == false)
+            {
+                Activator::Get().RemoveActivationReceiver(m_Staged.tpActivation, GetId());
+                m_Staged.sActivationTime.clear();
+                m_Staged.tpActivation = std::chrono::time_point<std::chrono::high_resolution_clock>();
+            }
             m_bActivateAllowed = false;
             break;
         case connection::ACT_NOW:
-
             m_Staged.sActivationTime = GetCurrentTaiTime();
             m_bActivateAllowed = true;
             Activate(true);
-
-
             break;
         case connection::ACT_ABSOLUTE:
             {
-
-                Log::Get(Log::LOG_DEBUG) << "Absolute patch" << std::endl;
                 std::chrono::time_point<std::chrono::high_resolution_clock> tp;
                 if(ConvertTaiStringToTimePoint(m_Staged.sRequestedTime, tp))
                 {
-                    m_Staged.sActivationTime = m_Staged.sRequestedTime;
                     m_bActivateAllowed = true;
-                    std::thread thActive(ActivationThreadReceiver, tp-LEAP_SECONDS, GetId());
-                    thActive.detach();
+                    m_Staged.sActivationTime = m_Staged.sRequestedTime;
+                    m_Staged.tpActivation = tp;
+                    Activator::Get().AddActivationReceiver(tp, GetId());
                 }
                 else
                 {
@@ -505,15 +493,14 @@ bool Receiver::Stage(const connectionReceiver& conRequest)
                     throw std::invalid_argument("invalid time");
                 }
 
+                m_bActivateAllowed = true;
                 std::chrono::nanoseconds nano((static_cast<long long int>(std::stoul(vTime[0]))*1000000000)+stoul(vTime[1]));
-
                 std::chrono::time_point<std::chrono::high_resolution_clock> tpAbs(tp+nano-LEAP_SECONDS);
 
-                m_Staged.sActivationTime = ConvertTimeToString(tpAbs, true);
 
-                m_bActivateAllowed = true;
-                std::thread thActive(ActivationThreadReceiver, (tp+nano), GetId());
-                thActive.detach();
+                m_Staged.sActivationTime = ConvertTimeToString(tpAbs, true);
+                m_Staged.tpActivation = tpAbs;
+                Activator::Get().AddActivationReceiver(tpAbs, GetId());
             }
             catch(std::invalid_argument& ia)
             {

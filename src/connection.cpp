@@ -26,6 +26,7 @@ connection::connection(const connection& conReq) :
     eActivate(conReq.eActivate),
     sRequestedTime(conReq.sRequestedTime),
     sActivationTime(conReq.sActivationTime),
+    tpActivation(conReq.tpActivation),
     nProperties(conReq.nProperties)
 {
 
@@ -413,6 +414,7 @@ connection& connection::operator=(const connection& other)
     eActivate = other.eActivate;
     sRequestedTime = other.sRequestedTime;
     sActivationTime = other.sActivationTime;
+    tpActivation = other.tpActivation;
     return *this;
 }
 

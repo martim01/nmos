@@ -9,23 +9,14 @@
 #include "log.h"
 #include <algorithm>
 #include <vector>
+#include "activator.h"
 
-
-static void ActivationThreadSender(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId)
-{
-    std::this_thread::sleep_until(tp);
-    std::shared_ptr<Sender> pSender = NodeApi::Get().GetSender(sId);
-    if(pSender)
-    {
-        pSender->Activate();
-    }
-}
 
 const std::string Sender::STR_TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash"};
 
 
 Sender::Sender(std::string sLabel, std::string sDescription, std::string sFlowId, enumTransport eTransport, std::string sDeviceId, std::string sInterface, TransportParamsRTP::flagsTP flagsTransport) :
-    Resource("sender", sLabel, sDescription),
+    IOResource("sender", sLabel, sDescription),
     m_sFlowId(sFlowId),
     m_eTransport(eTransport),
     m_sDeviceId(sDeviceId),
@@ -75,7 +66,7 @@ Sender::Sender(std::string sLabel, std::string sDescription, std::string sFlowId
 
 }
 
-Sender::Sender() : Resource("sender")
+Sender::Sender() : IOResource("sender")
 {
 
 }
@@ -317,7 +308,12 @@ bool Sender::Stage(const connectionSender& conRequest, std::shared_ptr<EventPost
     switch(m_Staged.eActivate)
     {
         case connection::ACT_NULL:
-            m_Staged.sActivationTime.clear();
+            if(m_Staged.sActivationTime.empty() == false)
+            {
+                Activator::Get().RemoveActivationSender(m_Staged.tpActivation, GetId());
+                m_Staged.sActivationTime.clear();
+                m_Staged.tpActivation = std::chrono::time_point<std::chrono::high_resolution_clock>();
+            }
             m_bActivateAllowed = false;
             break;
         case connection::ACT_NOW:
@@ -330,10 +326,11 @@ bool Sender::Stage(const connectionSender& conRequest, std::shared_ptr<EventPost
                 std::chrono::time_point<std::chrono::high_resolution_clock> tp;
                 if(ConvertTaiStringToTimePoint(m_Staged.sRequestedTime, tp))
                 {
-                    m_Staged.sActivationTime = m_Staged.sRequestedTime;
                     m_bActivateAllowed = true;
-                    std::thread thActive(ActivationThreadSender, tp-LEAP_SECONDS, GetId());
-                    thActive.detach();
+
+                    m_Staged.sActivationTime = m_Staged.sRequestedTime;
+                    m_Staged.tpActivation = tp;
+                    Activator::Get().AddActivationSender(tp, GetId());
                 }
                 else
                 {
@@ -353,16 +350,14 @@ bool Sender::Stage(const connectionSender& conRequest, std::shared_ptr<EventPost
                 {
                     throw std::invalid_argument("invalid time");
                 }
+                m_bActivateAllowed = true;
 
                 std::chrono::nanoseconds nano((static_cast<long long int>(std::stoul(vTime[0]))*1000000000)+stoul(vTime[1]));
                 std::chrono::time_point<std::chrono::high_resolution_clock> tpAbs(tp+nano-LEAP_SECONDS);
 
                 m_Staged.sActivationTime = ConvertTimeToString(tpAbs, true);
-
-
-                m_bActivateAllowed = true;
-                std::thread thActive(ActivationThreadSender, (tp+nano), GetId());
-                thActive.detach();
+                m_Staged.tpActivation = tpAbs;
+                Activator::Get().AddActivationSender(tpAbs, GetId());
             }
             catch(std::invalid_argument& ia)
             {

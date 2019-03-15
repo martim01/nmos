@@ -6,10 +6,11 @@
 #include "nmosdlldefine.h"
 #include "connection.h"
 #include "constraint.h"
+#include "ioresource.h"
 
 class EventPoster;
 
-class NMOS_EXPOSE Sender : public Resource
+class NMOS_EXPOSE Sender : public IOResource
 {
     public:
         enum enumTransport {RTP, RTP_UCAST, RTP_MCAST, DASH};

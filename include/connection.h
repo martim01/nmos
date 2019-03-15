@@ -2,6 +2,7 @@
 #include "version.h"
 #include "transportparams.h"
 #include "nmosdlldefine.h"
+#include <chrono>
 
 struct NMOS_EXPOSE connection
 {
@@ -20,6 +21,7 @@ struct NMOS_EXPOSE connection
     enumActivate eActivate;
     std::string sRequestedTime;
     std::string sActivationTime;
+    std::chrono::time_point<std::chrono::high_resolution_clock> tpActivation;
 
     int nProperties;
     static const std::string STR_ACTIVATE[4];

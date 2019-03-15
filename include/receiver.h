@@ -1,5 +1,5 @@
 #pragma once
-#include "resource.h"
+#include "ioresource.h"
 #include <set>
 #include <memory>
 #include "nmosdlldefine.h"
@@ -10,7 +10,7 @@
 class Sender;
 class EventPoster;
 
-class NMOS_EXPOSE Receiver : public Resource
+class NMOS_EXPOSE Receiver : public IOResource
 {
     public:
         enum enumTransport {RTP, RPT_UCAST, RTP_MCAST, DASH};

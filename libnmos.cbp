@@ -279,6 +279,7 @@
 		<Unit filename="external/uuid/guid.h" />
 		<Unit filename="external/uuid/md5.cpp" />
 		<Unit filename="external/uuid/md5.h" />
+		<Unit filename="include/activator.h" />
 		<Unit filename="include/avahibrowser.h">
 			<Option target="Linux Debug" />
 			<Option target="Linux Release" />
@@ -296,7 +297,6 @@
 			<Option target="Windows Release" />
 		</Unit>
 		<Unit filename="include/clientapi.h" />
-		<Unit filename="include/clientapiposter.cpp" />
 		<Unit filename="include/clientapiposter.h" />
 		<Unit filename="include/clientholder.h" />
 		<Unit filename="include/clientposter.h" />
@@ -318,6 +318,7 @@
 		<Unit filename="include/flowvideo.h" />
 		<Unit filename="include/flowvideocoded.h" />
 		<Unit filename="include/flowvideoraw.h" />
+		<Unit filename="include/ioresource.h" />
 		<Unit filename="include/is04server.h" />
 		<Unit filename="include/is05server.h" />
 		<Unit filename="include/libnmos.h" />
@@ -347,20 +348,9 @@
 		<Unit filename="include/utils.h" />
 		<Unit filename="include/version.h" />
 		<Unit filename="include/zcposter.h" />
-		<Unit filename="src/avahibrowser.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="src/avahipublisher.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="src/bonjourbrowser.cpp">
-			<Option target="Windows Debug" />
-			<Option target="Windows Release" />
-		</Unit>
-		<Unit filename="src/bonjourpublisher.cpp" />
+		<Unit filename="src/activator.cpp" />
 		<Unit filename="src/clientapi.cpp" />
+		<Unit filename="src/clientapiposter.cpp" />
 		<Unit filename="src/clientholder.cpp" />
 		<Unit filename="src/clientposter.cpp" />
 		<Unit filename="src/clientprivate.cpp" />
@@ -379,6 +369,15 @@
 		<Unit filename="src/flowvideo.cpp" />
 		<Unit filename="src/flowvideocoded.cpp" />
 		<Unit filename="src/flowvideoraw.cpp" />
+		<Unit filename="src/gnu/avahibrowser.cpp">
+			<Option target="Linux Debug" />
+			<Option target="Linux Release" />
+		</Unit>
+		<Unit filename="src/gnu/avahipublisher.cpp">
+			<Option target="Linux Debug" />
+			<Option target="Linux Release" />
+		</Unit>
+		<Unit filename="src/ioresource.cpp" />
 		<Unit filename="src/is04server.cpp" />
 		<Unit filename="src/is05server.cpp" />
 		<Unit filename="src/log.cpp" />
@@ -403,6 +402,14 @@
 		<Unit filename="src/transportparams.cpp" />
 		<Unit filename="src/utils.cpp" />
 		<Unit filename="src/version.cpp" />
+		<Unit filename="src/windows/bonjourbrowser.cpp">
+			<Option target="Windows Debug" />
+			<Option target="Windows Release" />
+		</Unit>
+		<Unit filename="src/windows/bonjourpublisher.cpp">
+			<Option target="Windows Debug" />
+			<Option target="Windows Release" />
+		</Unit>
 		<Unit filename="src/zcposter.cpp" />
 		<Extensions>
 			<code_completion />
