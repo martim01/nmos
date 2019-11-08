@@ -257,12 +257,12 @@ int IS05Server::GetJsonNmosConnectionBulkApi(std::string& sReturn)
     else if(m_vPath[SZC_TYPE] == "senders")
     {
         nCode = 405;
-        sReturn = stw.write(GetJsonError(404, "Method not allowed"));
+        sReturn = stw.write(GetJsonError(405, "Method not allowed"));
     }
     else if(m_vPath[SZC_TYPE] == "receivers")
     {
         nCode = 405;
-        sReturn = stw.write(GetJsonError(404, "Method not allowed"));
+        sReturn = stw.write(GetJsonError(405, "Method not allowed"));
     }
     else
     {

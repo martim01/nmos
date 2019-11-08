@@ -418,6 +418,7 @@ void Sender::Activate(bool bImmediate)
     // create the SDP
     if(m_Active.bMasterEnable)
     {
+        CreateSDP();    // @TODO need to update SDP but keep stuff
         if(m_sSDP.empty())
         {
             CreateSDP();
@@ -516,24 +517,29 @@ void Sender::CreateSDP()
     ssSDP << GetLabel() << "\r\n";
 
 
+    std::stringstream ssc;
     //put in the destination unicast/multicast block
     switch(SdpManager::CheckIpAddress(m_Active.tpSender.sDestinationIp))
     {
         case SdpManager::IP4_UNI:
-            ssSDP << "c=IN IP4 " << m_Active.tpSender.sDestinationIp << "\r\n";
+            ssc << "c=IN IP4 " << m_Active.tpSender.sDestinationIp << "\r\n";
+            ssSDP << ssc.str();
             ssSDP << "a=type:unicast\r\n";
             break;
         case SdpManager::IP4_MULTI:
-            ssSDP << "c=IN IP4 " << m_Active.tpSender.sDestinationIp << "/32\r\n";
+            ssc << "c=IN IP4 " << m_Active.tpSender.sDestinationIp << "/32\r\n";
+            ssSDP << ssc.str();
             ssSDP << "a=source-filter:incl IN IP4 " << m_Active.tpSender.sDestinationIp << " " << m_Active.tpSender.sSourceIp << "\r\n";
             ssSDP << "a=type:multicast\r\n";
             break;
         case SdpManager::IP6_UNI:
-            ssSDP << "c=IN IP6 " << m_Active.tpSender.sDestinationIp << "\r\n";
+            ssc << "c=IN IP6 " << m_Active.tpSender.sDestinationIp << "\r\n";
+            ssSDP << ssc.str();
             ssSDP << "a=type:unicast\r\n";
             break;
         case SdpManager::IP6_MULTI:
-            ssSDP << "c=IN IP6 " << m_Active.tpSender.sDestinationIp << "\r\n";
+            ssc << "c=IN IP6 " << m_Active.tpSender.sDestinationIp << "\r\n";
+            ssSDP << ssc.str();
             ssSDP << "a=source-filter:incl IN IP6 " << m_Active.tpSender.sDestinationIp << " " << m_Active.tpSender.sSourceIp << "\r\n";
             ssSDP << "a=type:multicast\r\n";
             break;
@@ -549,12 +555,14 @@ void Sender::CreateSDP()
         std::shared_ptr<Flow> pFlow = std::dynamic_pointer_cast<Flow>(itFlow->second);
         if(pFlow)
         {
+            Log::Get(Log::LOG_DEBUG) << "CreateSDP Destination Port = " << m_Active.tpSender.nDestinationPort << std::endl;
             unsigned short nPort(m_Active.tpSender.nDestinationPort);
             if(nPort == 0)
             {
                 nPort = 5004;
             }
-            ssSDP << pFlow->CreateSDPLines(5004);
+            ssSDP << pFlow->CreateSDPLines(nPort);
+            ssSDP << ssc.str();
         }
     }
 
@@ -586,6 +594,8 @@ void Sender::CreateSDP()
         }
     }
     m_sTransportFile = ssSDP.str();
+
+    Log::Get(Log::LOG_DEBUG) << "CreateSDP= " << m_sTransportFile << std::endl;
 }
 
 

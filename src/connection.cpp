@@ -201,10 +201,11 @@ connectionSender::connectionSender(const connectionSender& conReq) : connection(
 
 bool connectionSender::Patch(const Json::Value& jsData)
 {
-    Log::Get(Log::LOG_DEBUG) << "Patch: connectionSender" << std::endl;
+    Log::Get(Log::LOG_DEBUG) << "Patch: connectionSender: NOW" << std::endl;
     bool bIsOk = (connection::Patch(jsData) && CheckJson(jsData, {"master_enable", "activation", "transport_params", "receiver_id"}));
     if(bIsOk)
     {
+
         if(jsData["transport_params"].isArray())
         {
             nProperties |= FP_TRANSPORT_PARAMS;
@@ -219,21 +220,29 @@ bool connectionSender::Patch(const Json::Value& jsData)
             bIsOk = false;
         }
 
+
         if(jsData["receiver_id"].isString())
         {
+            Log::Get(Log::LOG_DEBUG) << "Patch: receiver_id string: " << jsData["receiver_id"].asString() << std::endl;
             nProperties |= FP_ID;
             sReceiverId = jsData["receiver_id"].asString();
         }
-        else if(JsonMemberExistsAndIsNull(jsData, "reciever_id"))
+        else if(JsonMemberExistsAndIsNull(jsData, "receiver_id"))
         {
+            Log::Get(Log::LOG_DEBUG) << "Patch: receiver_id null: " << std::endl;
             nProperties |= FP_ID;
             sReceiverId.clear();
         }
-        else if(jsData.isMember("reciever_id"))
+        else if(jsData.isMember("receiver_id"))
         {
             bIsOk = false;
             Log::Get(Log::LOG_DEBUG) << "Patch: receiver_id incorrect type" << std::endl;
         }
+
+    }
+    else
+    {
+    Log::Get(Log::LOG_DEBUG) << "Patch: error" << std::endl;
     }
     return bIsOk;
 }

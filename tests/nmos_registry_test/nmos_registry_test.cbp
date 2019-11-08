@@ -40,6 +40,9 @@
 			<Add directory="$(#json.include)" />
 			<Add directory="../../include" />
 		</Compiler>
+		<Linker>
+			<Add directory="../../lib" />
+		</Linker>
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />

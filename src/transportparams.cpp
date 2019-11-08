@@ -42,7 +42,7 @@ TransportParamsRTP::TransportParamsRTP(const TransportParamsRTP& tp) :
     eRTCP(tp.eRTCP),
     eMulticast(tp.eMulticast)
 {
-
+    Log::Get(Log::LOG_DEBUG) << "CC Destination Port = " << nDestinationPort << std::endl;
 }
 
 
@@ -59,6 +59,8 @@ TransportParamsRTP& TransportParamsRTP::operator=(const TransportParamsRTP& othe
     sRtcpDestinationIp = other.sRtcpDestinationIp;
     nRtcpDestinationPort = other.nRtcpDestinationPort;
     bRtpEnabled = other.bRtpEnabled;
+
+    Log::Get(Log::LOG_DEBUG) << "Op= Destination Port = " << nDestinationPort << std::endl;
     return *this;
 }
 
@@ -87,6 +89,7 @@ bool TransportParamsRTP::Patch(const Json::Value& jsData)
         }
 
         bIsOk &= DecodePort(jsData, "destination_port", nDestinationPort);
+        Log::Get(Log::LOG_DEBUG) << "Destination Port = " << nDestinationPort << std::endl;
 
         if(jsData["fec_enabled"].isBool())
         {
@@ -299,10 +302,12 @@ TransportParamsRTPSender& TransportParamsRTPSender::operator=(const TransportPar
 
 void TransportParamsRTP::Actualize()
 {
-    if(nDestinationPort == 0)
+    if(0 == nDestinationPort)
     {
         nDestinationPort = 5004;
     }
+
+    Log::Get(Log::LOG_DEBUG) << "Actualize Destination Port = " << nDestinationPort << std::endl;
 
     if(bFecEnabled && (TP_SUPPORTED == eFec))
     {
@@ -320,7 +325,7 @@ void TransportParamsRTP::Actualize()
     {
         if(nRtcpDestinationPort==0)
         {
-            if(nDestinationPort%2 == 0)
+            if(0 == nDestinationPort%2)
             {
                 nRtcpDestinationPort = nDestinationPort+1;
             }

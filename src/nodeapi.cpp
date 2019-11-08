@@ -534,16 +534,19 @@ void NodeApi::HandleInstanceResolved(std::shared_ptr<dnsInstance> pInstance)
 {
     map<string, string>::const_iterator itPriority = pInstance->mTxt.find("pri");
     map<string, string>::const_iterator itVersion = pInstance->mTxt.find("api_ver");
-    if(itPriority != pInstance->mTxt.end() && itVersion != pInstance->mTxt.end() && SdpManager::CheckIpAddress(pInstance->sHostIP) == SdpManager::IP4_UNI && itVersion->second.find("v1.2") != string::npos)
+    map<string, string>::const_iterator itProto = pInstance->mTxt.find("api_proto");
+    if(itPriority != pInstance->mTxt.end() && itVersion != pInstance->mTxt.end() && SdpManager::CheckIpAddress(pInstance->sHostIP) == SdpManager::IP4_UNI && itVersion->second.find("v1.2") != string::npos && itProto != pInstance->mTxt.end())
     {
         try
         {
             unsigned short nPriority = stoul(itPriority->second);
             stringstream ssUrl;
             ssUrl <<  pInstance->sHostIP << ":" << pInstance->nPort << "/x-nmos/registration/v1.2";
-
-            m_mRegNode.insert(make_pair(ssUrl.str(), regnode(nPriority)));
-            Log::Get(Log::LOG_DEBUG) << "NodeApi: Found registration node" << ssUrl.str() << endl;
+            if(itProto->second == "http" || itProto->second == "https")
+            {
+                m_mRegNode.insert(make_pair(ssUrl.str(), regnode(nPriority)));
+                Log::Get(Log::LOG_DEBUG) << "NodeApi: Found registration node" << ssUrl.str() << " proto=" << itProto->second << " ver=" << itVersion->second << " priority=" << itPriority->second << endl;
+            }
         }
         catch(invalid_argument& ia){}
     }
@@ -587,6 +590,7 @@ bool NodeApi::FindRegistrationNode()
         Log::Get(Log::LOG_INFO) << "NodeApi: Register: No nmos registration nodes found. Go peer-to-peer" << endl;
         m_nRegistrationStatus = REG_FAILED;
         m_sRegistrationNode.clear();
+        ModifyTxtRecords();
         return false;
     }
     else
@@ -662,7 +666,7 @@ long NodeApi::RegistrationHeartbeat()
     if(m_pRegisterCurl)
     {
         string sResponse;
-        long nResponse = m_pRegisterCurl->Post(m_sRegistrationNode+"/health/nodes/"+m_self.GetId(), "", sResponse);
+        long nResponse = m_pRegisterCurl->Post(m_sRegistrationNode+"/health/nodes/"+m_self.GetId(), string(), sResponse);
         Log::Get(Log::LOG_INFO) << "RegisterApi: Heartbeat: returned [" << nResponse << "] " << sResponse << endl;
 
         if(nResponse == 500)
@@ -689,7 +693,8 @@ int NodeApi::UnregisterSimple()
 
     if(m_sRegistrationNode.empty() == false)
     {
-        UnregisterResources(m_receivers) && UnregisterResources(m_senders) && UnregisterResources(m_flows) && UnregisterResources(m_sources) &&UnregisterResources(m_devices) && UnregisterResource("nodes", m_self.GetId());
+        UnregisterResource("nodes", m_self.GetId());
+//        UnregisterResources(m_receivers) && UnregisterResources(m_senders) && UnregisterResources(m_flows) && UnregisterResources(m_sources) &&UnregisterResources(m_devices) && UnregisterResource("nodes", m_self.GetId());
 
         m_nRegistrationStatus = REG_START;
     }

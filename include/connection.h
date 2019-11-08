@@ -62,6 +62,6 @@ struct NMOS_EXPOSE connectionReceiver : public connection
     std::string sSenderId;
     std::string sTransportFileType;
     std::string sTransportFileData;
-    static const std::string STR_ACTIVATE[4];
+
 
 };

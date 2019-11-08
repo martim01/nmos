@@ -10,7 +10,7 @@
 
 struct endpoint
 {
-    endpoint(std::string sH, unsigned int nP, bool bP) : sHost(sH), nPort(nP), bSecure(bP){}
+    endpoint(const std::string& sH, unsigned int nP, bool bP) : sHost(sH), nPort(nP), bSecure(bP){}
     bool operator<(const endpoint& endp) const
     {
         return (sHost < endp.sHost || (sHost == endp.sHost && nPort < endp.nPort));
@@ -43,7 +43,7 @@ struct endpoint
 
 struct nodeinterface
 {
-    nodeinterface(std::string sC="", std::string sI="") : sChassisMac(sC), sPortMac(sI){}
+    nodeinterface(const std::string& sC="", const std::string& sI="") : sChassisMac(sC), sPortMac(sI){}
     std::string sChassisMac;
     std::string sPortMac;
     std::string sMainIpAddress;
@@ -121,7 +121,7 @@ class NMOS_EXPOSE Self : public Resource
 
         struct clock
         {
-            clock(int nT, std::string sV="", std::string sG="", bool bL = true, bool bT=false ) : nType(nT), sVersion(sV), sGmid(sG), bLocked(bL), bTraceable(bT){}
+            clock(int nT, const std::string& sV="", const std::string& sG="", bool bL = true, bool bT=false ) : nType(nT), sVersion(sV), sGmid(sG), bLocked(bL), bTraceable(bT){}
 
             Json::Value Commit()
             {

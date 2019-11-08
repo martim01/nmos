@@ -110,7 +110,6 @@
 			<Add directory="include" />
 			<Add directory="external/uuid" />
 		</Compiler>
-		<Unit filename="../jsoncpp-master/dist/jsoncpp.cpp" />
 		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXCancellationRequest.cpp">
 			<Option target="Linux Debug" />
 			<Option target="Linux Release" />
@@ -275,6 +274,7 @@
 			<Option target="Linux Debug" />
 			<Option target="Linux Release" />
 		</Unit>
+		<Unit filename="external/jsoncpp/jsoncpp.cpp" />
 		<Unit filename="external/uuid/guid.cpp" />
 		<Unit filename="external/uuid/guid.h" />
 		<Unit filename="external/uuid/md5.cpp" />

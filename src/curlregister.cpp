@@ -112,9 +112,9 @@ long CurlRegister::Post(const std::string& sUrl, const std::string& sJson, std::
         {
             pHeaders = curl_slist_append(pHeaders, "Accept: application/json");
             pHeaders = curl_slist_append(pHeaders, "Content-Type: application/json");
+            curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);
         }
 
-        curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);
         curl_easy_setopt(pCurl, CURLOPT_POSTFIELDS, sJson.c_str());
 
         res = curl_easy_perform(pCurl);

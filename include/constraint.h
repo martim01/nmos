@@ -86,8 +86,7 @@ struct constraintsSender : public constraints
     constraint fec_block_height;
     constraint fec1D_source_port;
     constraint fec2D_source_port;
-    constraint rtcp_enabled;
-    constraint rtcp_source_port;
+        constraint rtcp_source_port;
 
 };
 

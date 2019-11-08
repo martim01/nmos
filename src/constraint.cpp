@@ -301,7 +301,6 @@ constraintsSender::constraintsSender() : constraints(),
     fec_block_height("fec_block_height"),
     fec1D_source_port("fec1D_source_port"),
     fec2D_source_port("fec2D_source_port"),
-    rtcp_enabled("rtcp_enabled"),
     rtcp_source_port("rtcp_source_port")
 
 {
