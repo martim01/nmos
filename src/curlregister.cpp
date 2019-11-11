@@ -99,7 +99,7 @@ long CurlRegister::Post(const std::string& sUrl, const std::string& sJson, std::
         curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
         curl_easy_setopt(pCurl, CURLOPT_DEBUGFUNCTION, debug_callback);
         curl_easy_setopt(pCurl, CURLOPT_ERRORBUFFER, sError);
-
+        curl_easy_setopt(pCurl, CURLOPT_POST, 1);
 
         MemoryStruct chunk;
 
@@ -107,15 +107,21 @@ long CurlRegister::Post(const std::string& sUrl, const std::string& sJson, std::
         curl_easy_setopt(pCurl, CURLOPT_URL, sUrl.c_str());
         curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &chunk);
 
+
         struct curl_slist * pHeaders = NULL;
-        if(sJson.empty() == false)
-        {
+        //if(sJson.length() > 0)
+        //{
             pHeaders = curl_slist_append(pHeaders, "Accept: application/json");
             pHeaders = curl_slist_append(pHeaders, "Content-Type: application/json");
             curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);
-        }
-
-        curl_easy_setopt(pCurl, CURLOPT_POSTFIELDS, sJson.c_str());
+            curl_easy_setopt(pCurl, CURLOPT_POSTFIELDS, sJson.c_str());
+        //}
+//        else
+//        {
+//            Log::Get(Log::LOG_DEBUG) << "No payload " << std::endl;
+//           // curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);
+//            curl_easy_setopt(pCurl, CURLOPT_POSTFIELDSIZE, 0);
+//        }
 
         res = curl_easy_perform(pCurl);
         /* Check for errors */

@@ -604,6 +604,7 @@ bool NodeApi::FindRegistrationNode()
             m_nRegistrationStatus = REG_DONE;
         }
         m_sRegistrationNode = sRegNode;
+        ModifyTxtRecords();
         return true;
     }
 }
@@ -666,7 +667,7 @@ long NodeApi::RegistrationHeartbeat()
     if(m_pRegisterCurl)
     {
         string sResponse;
-        long nResponse = m_pRegisterCurl->Post(m_sRegistrationNode+"/health/nodes/"+m_self.GetId(), string(), sResponse);
+        long nResponse = m_pRegisterCurl->Post(m_sRegistrationNode+"/health/nodes/"+m_self.GetId(), "", sResponse);
         Log::Get(Log::LOG_INFO) << "RegisterApi: Heartbeat: returned [" << nResponse << "] " << sResponse << endl;
 
         if(nResponse == 500)
