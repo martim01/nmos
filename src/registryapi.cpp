@@ -30,7 +30,7 @@ void GarbageThread()
 {
     while(RegistryApi::Get().Running())
     {
-        std::this_thread::sleep_for(std::chrono::seconds(10));
+        std::this_thread::sleep_for(std::chrono::seconds(12));
         RegistryApi::Get().GarbageCollection();
     }
 }
@@ -153,9 +153,11 @@ unsigned short RegistryApi::AddUpdateResource(const string& sType, const Json::V
     //lock_guard<mutex> lg(m_mutex);
     if(m_pRegistry)
     {
+        Log::Get() << "FindNmosResource: " << jsData["id"].asString() << endl;
         shared_ptr<Resource> pResource = m_pRegistry->FindNmosResource(sType, jsData["id"].asString());
         if(pResource)
         {
+            Log::Get() << "Resource already registered!" << endl;
             if(UpdateNmosResource(jsData, pResource,sError))
             {
                 return 200;
@@ -164,6 +166,7 @@ unsigned short RegistryApi::AddUpdateResource(const string& sType, const Json::V
         }
         else
         {
+            Log::Get() << "Add Resource" << endl;
             return AddResource(sType, jsData,sError);
         }
     }
@@ -179,6 +182,10 @@ unsigned short RegistryApi::AddResource(const string& sType, const Json::Value& 
         if(pResource->UpdateFromJson(jsData))
         {
             bOk = AddResource(sType, pResource);
+            if(bOk)
+            {   //mark the registration as a heartbeat so we don't garbage collect
+                m_pRegistry->Heartbeat(pResource->GetId());
+            }
         }
         else
         {
@@ -397,7 +404,7 @@ unsigned short RegistryApi::AddResource(const string& sType, const Json::Value& 
     }
     if(bOk)
     {
-        return 200;
+        return 201;
     }
     return 404;
 }

@@ -12,6 +12,10 @@
 #include "log.h"
 #include "eventposter.h"
 #include "utils.h"
+#ifdef __GNU__
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#endif // __GNU__
 
 using namespace std;
 
@@ -90,7 +94,12 @@ int RegistryServer::DoHttpDelete(MHD_Connection* pConnection, string sUrl, Regis
 
 int RegistryServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, const char * url, const char * method, const char * sVersion, const char * upload_data, size_t * upload_data_size, void **ptr)
 {
-    Log::Get(Log::LOG_DEBUG) << "AnswerToConnection" << endl;
+    sockaddr_in* pAddr = (sockaddr_in*)MHD_get_connection_info(pConnection, MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
+    char sAddr[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(pAddr->sin_addr), sAddr, INET_ADDRSTRLEN);
+
+    Log::Get(Log::LOG_DEBUG) << "AnswerToConnection: " << sAddr << endl;
+
     string sMethod(method);
     if (NULL == *ptr)
     {

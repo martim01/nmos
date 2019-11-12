@@ -1744,12 +1744,14 @@ bool ClientApiImpl::RemoveQuerySubscription(const std::string& sSubscriptionId)
 
 bool ClientApiImpl::AddQuerySubscriptionRegistry(int nResource, const std::string& sQuery, unsigned long nUpdateRate)
 {
-
+    //@todo
+    return false;
 }
 
 bool ClientApiImpl::RemoveQuerySubscriptionRegistry(const std::string& sSubscriptionId)
 {
     // @todo ClientApiImpl::RemoveQuerySubscriptionRegistry
+    return false;
 }
 
 bool ClientApiImpl::AddQuerySubscriptionP2P(int nResource, const std::string& sQuery)

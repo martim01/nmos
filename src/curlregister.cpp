@@ -83,9 +83,6 @@ void CurlRegister::Post(const std::string& sBaseUrl, const std::string& sJson, l
 
 long CurlRegister::Post(const std::string& sUrl, const std::string& sJson, std::string& sResponse)
 {
-    std::cout << std::endl;
-    std::cout << sUrl << std::endl;
-    std::cout << std::endl;
     char sError[CURL_ERROR_SIZE];
     CURLcode res;
     long nResponseCode(500);
@@ -109,6 +106,7 @@ long CurlRegister::Post(const std::string& sUrl, const std::string& sJson, std::
         curl_easy_setopt(pCurl, CURLOPT_URL, sUrl.c_str());
         curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &chunk);
 
+        Log::Get(Log::LOG_DEBUG) << "POST: " << sUrl << " payload=" << sJson << std::endl;
 
         struct curl_slist * pHeaders = NULL;
         if(sJson.length() > 0)
@@ -120,7 +118,6 @@ long CurlRegister::Post(const std::string& sUrl, const std::string& sJson, std::
         }
         else
         {
-            Log::Get(Log::LOG_DEBUG) << "No payload " << std::endl;
             curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);
             pHeaders = curl_slist_append(pHeaders, "Content-Type: ");
             curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);

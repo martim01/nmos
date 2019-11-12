@@ -62,6 +62,14 @@ string GetIpAddress(const string& sInterface)
 }
 
 
+size_t GetCurrentHeartbeatTime()
+{
+    std::chrono::time_point<std::chrono::high_resolution_clock> tp(std::chrono::high_resolution_clock::now());
+    tp += LEAP_SECONDS;
+    return std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
+
+}
+
 std::string GetCurrentTaiTime(bool bIncludeNano)
 {
     std::chrono::time_point<std::chrono::high_resolution_clock> tp(std::chrono::high_resolution_clock::now());

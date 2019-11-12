@@ -12,7 +12,7 @@ extern void SplitString(std::vector<std::string>& vSplit, std::string str, char 
 extern std::string GetIpAddress(const std::string& sInterface);
 extern std::string CreateGuid(std::string sName);
 extern std::string CreateGuid();
-
+extern size_t GetCurrentHeartbeatTime();
 extern bool CheckJson(const Json::Value& jsObject, std::initializer_list<std::string> lstAllowed);
 extern bool JsonMemberExistsAndIsNull(const Json::Value& jsObject, const std::string& sMember);
 extern bool JsonMemberExistsAndIsNotNull(const Json::Value& jsObject, const std::string& sMember);

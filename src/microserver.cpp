@@ -14,7 +14,10 @@
 #include "utils.h"
 #include "curlregister.h"
 #include "nmosserver.h"
-
+#ifdef __GNU__
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#endif // __GNU__
 
 using namespace std;
 
@@ -80,7 +83,12 @@ int MicroServer::DoHttpPost(MHD_Connection* pConnection, string sUrl, Connection
 
 int MicroServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, const char * url, const char * method, const char * sVersion, const char * upload_data, size_t * upload_data_size, void **ptr)
 {
-    Log::Get(Log::LOG_DEBUG) << "AnswerToConnection" << endl;
+    sockaddr* pAddr = MHD_get_connection_info(pConnection, MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
+    char sAddr[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, pAddr, sAddr, INET_ADDRSTRLEN);
+
+    Log::Get(Log::LOG_DEBUG) << "AnswerToConnection: " << sAddr << endl;
+
     string sMethod(method);
     if (NULL == *ptr)
     {
@@ -158,8 +166,8 @@ int MicroServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, cons
     }
     else if("POST" == string(sMethod))
     {
-        Log::Get(Log::LOG_DEBUG) << "Actual connection: POST" << endl;
         ConnectionInfo* pInfo = reinterpret_cast<ConnectionInfo*>(*ptr);
+        Log::Get(Log::LOG_DEBUG) << "Actual connection: POST" << endl;
         if (*upload_data_size != 0)
         {
             Log::Get(Log::LOG_DEBUG) << "Actual connection: POST - more" << endl;

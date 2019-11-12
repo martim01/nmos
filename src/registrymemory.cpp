@@ -3,6 +3,7 @@
 #include "registryapi.h"
 #include "resource.h"
 #include "log.h"
+#include "utils.h"
 
 using namespace std;
 
@@ -83,12 +84,13 @@ bool RegistryMemory::GarbageCollection()
 
     if(itNode != m_mRegistryHolder.end() && itDevice != m_mRegistryHolder.end())
     {
-        auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-        size_t nNow = nanos/1000000000;
+        size_t nNow = GetCurrentHeartbeatTime();
+
 
         list<string> lstDeleteNode;
         for(map<string, shared_ptr<Resource> >::const_iterator itResource = itNode->second.GetResourceBegin(); itResource != itNode->second.GetResourceEnd(); ++itResource)
         {
+            Log::Get() << "GarbageCollection: " << itResource->first << " Now: " << nNow << " Heartbeat: " << itResource->second->GetLastHeartbeat() << endl;
             if(nNow-itResource->second->GetLastHeartbeat() > 30)    //@todo should be able to set the garbage collection time
             {
                 lstDeleteNode.push_back(itResource->first);
