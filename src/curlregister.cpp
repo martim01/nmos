@@ -94,6 +94,8 @@ long CurlRegister::Post(const std::string& sUrl, const std::string& sJson, std::
     if(pCurl)
     {
 
+        curl_easy_setopt(pCurl, CURLOPT_TIMEOUT, 5);
+        curl_easy_setopt(pCurl, CURLOPT_CONNECTTIMEOUT, 5);
         curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1);
         curl_easy_setopt(pCurl, CURLOPT_HEADER, 0);
         curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
@@ -109,19 +111,21 @@ long CurlRegister::Post(const std::string& sUrl, const std::string& sJson, std::
 
 
         struct curl_slist * pHeaders = NULL;
-        //if(sJson.length() > 0)
-        //{
+        if(sJson.length() > 0)
+        {
             pHeaders = curl_slist_append(pHeaders, "Accept: application/json");
             pHeaders = curl_slist_append(pHeaders, "Content-Type: application/json");
             curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);
             curl_easy_setopt(pCurl, CURLOPT_POSTFIELDS, sJson.c_str());
-        //}
-//        else
-//        {
-//            Log::Get(Log::LOG_DEBUG) << "No payload " << std::endl;
-//           // curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);
-//            curl_easy_setopt(pCurl, CURLOPT_POSTFIELDSIZE, 0);
-//        }
+        }
+        else
+        {
+            Log::Get(Log::LOG_DEBUG) << "No payload " << std::endl;
+            curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);
+            pHeaders = curl_slist_append(pHeaders, "Content-Type: ");
+            curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);
+            curl_easy_setopt(pCurl, CURLOPT_POSTFIELDSIZE, 0);
+        }
 
         res = curl_easy_perform(pCurl);
         /* Check for errors */
@@ -167,6 +171,8 @@ long CurlRegister::Delete(const std::string& sUrl, const std::string& sType, con
     if(pCurl)
     {
 
+        curl_easy_setopt(pCurl, CURLOPT_TIMEOUT, 5);
+        curl_easy_setopt(pCurl, CURLOPT_CONNECTTIMEOUT, 5);
         curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1);
         curl_easy_setopt(pCurl, CURLOPT_HEADER, 0);
         curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
@@ -288,6 +294,8 @@ long CurlRegister::Get(const std::string& sUrl, std::string& sResponse, bool bJs
     if(pCurl)
     {
 
+        curl_easy_setopt(pCurl, CURLOPT_TIMEOUT, 5);
+        curl_easy_setopt(pCurl, CURLOPT_CONNECTTIMEOUT, 5);
         curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1);
         curl_easy_setopt(pCurl, CURLOPT_HEADER, 0);
         curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
@@ -370,7 +378,8 @@ long CurlRegister::PutPatch(const std::string& sUrl, const std::string& sJson, s
     CURL* pCurl = curl_easy_init();
     if(pCurl)
     {
-
+        curl_easy_setopt(pCurl, CURLOPT_TIMEOUT, 5);
+        curl_easy_setopt(pCurl, CURLOPT_CONNECTTIMEOUT, 5);
         curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1);
         curl_easy_setopt(pCurl, CURLOPT_HEADER, 0);
         curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);

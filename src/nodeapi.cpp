@@ -686,6 +686,7 @@ void NodeApi::MarkRegNodeAsBad()
     {
         itNode->second.bGood = false;
     }
+
 }
 
 int NodeApi::UnregisterSimple()
