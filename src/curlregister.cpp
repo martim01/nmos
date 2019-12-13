@@ -91,8 +91,8 @@ long CurlRegister::Post(const std::string& sUrl, const std::string& sJson, std::
     if(pCurl)
     {
 
-        curl_easy_setopt(pCurl, CURLOPT_TIMEOUT, 5);
-        curl_easy_setopt(pCurl, CURLOPT_CONNECTTIMEOUT, 5);
+        curl_easy_setopt(pCurl, CURLOPT_TIMEOUT, TIMEOUT_MSG);
+        curl_easy_setopt(pCurl, CURLOPT_CONNECTTIMEOUT, TIMEOUT_CONNECT);
         curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1);
         curl_easy_setopt(pCurl, CURLOPT_HEADER, 0);
         curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
@@ -158,6 +158,7 @@ long CurlRegister::Delete(const std::string& sUrl, const std::string& sType, con
     std::stringstream ssUrl;
     ssUrl << sUrl << "/" << sType << "/" << sId;
 
+    Log::Get(Log::LOG_DEBUG) << "DELETE: " << ssUrl.str() << std::endl;
 
     char sError[CURL_ERROR_SIZE];
     CURLcode res;
@@ -168,8 +169,8 @@ long CurlRegister::Delete(const std::string& sUrl, const std::string& sType, con
     if(pCurl)
     {
 
-        curl_easy_setopt(pCurl, CURLOPT_TIMEOUT, 5);
-        curl_easy_setopt(pCurl, CURLOPT_CONNECTTIMEOUT, 5);
+        curl_easy_setopt(pCurl, CURLOPT_TIMEOUT, TIMEOUT_MSG);
+        curl_easy_setopt(pCurl, CURLOPT_CONNECTTIMEOUT, TIMEOUT_CONNECT);
         curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1);
         curl_easy_setopt(pCurl, CURLOPT_HEADER, 0);
         curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
@@ -291,8 +292,8 @@ long CurlRegister::Get(const std::string& sUrl, std::string& sResponse, bool bJs
     if(pCurl)
     {
 
-        curl_easy_setopt(pCurl, CURLOPT_TIMEOUT, 5);
-        curl_easy_setopt(pCurl, CURLOPT_CONNECTTIMEOUT, 5);
+        curl_easy_setopt(pCurl, CURLOPT_TIMEOUT, TIMEOUT_MSG);
+        curl_easy_setopt(pCurl, CURLOPT_CONNECTTIMEOUT, TIMEOUT_CONNECT);
         curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1);
         curl_easy_setopt(pCurl, CURLOPT_HEADER, 0);
         curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
@@ -375,8 +376,8 @@ long CurlRegister::PutPatch(const std::string& sUrl, const std::string& sJson, s
     CURL* pCurl = curl_easy_init();
     if(pCurl)
     {
-        curl_easy_setopt(pCurl, CURLOPT_TIMEOUT, 5);
-        curl_easy_setopt(pCurl, CURLOPT_CONNECTTIMEOUT, 5);
+        curl_easy_setopt(pCurl, CURLOPT_TIMEOUT, TIMEOUT_MSG);
+        curl_easy_setopt(pCurl, CURLOPT_CONNECTTIMEOUT, TIMEOUT_CONNECT);
         curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1);
         curl_easy_setopt(pCurl, CURLOPT_HEADER, 0);
         curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);

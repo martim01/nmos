@@ -53,31 +53,33 @@ struct nodeinterface
 class NMOS_EXPOSE Self : public Resource
 {
     public:
-        Self(std::string sHostname, std::string sUrl,std::string sLabel, std::string sDescription);
+        Self(const std::string& sHostname, const std::string& sUrl,const std::string& sLabel, const std::string& sDescription);
         Self() : Resource("node"){}
         bool UpdateFromJson(const Json::Value& jsData);
         ~Self();
 
-        void Init(std::string sHostname, std::string sUrl,std::string sLabel, std::string sDescription);
+        void Init(const std::string& sHostname, const std::string& sUrl,const std::string& sLabel, const std::string& sDescription);
 
 
         const std::set<ApiVersion>& GetApiVersions() const;
 
-        void AddService(std::string sUrl, std::string sType);
-        void RemoveService(std::string sUrl);
+        void AddService(const std::string& sUrl, const std::string& sType);
+        void RemoveService(const std::string& sUrl);
 
-        void AddInterface(std::string sInterface, std::string sChassisMac="", std::string sPortMac="");
-        void RemoveInterface(std::string sInterface);
+        void AddInterface(const std::string& sInterface, const std::string& sChassisMac="", const std::string& sPortMac="");
+        void RemoveInterface(const std::string& sInterface);
 
 
-        void AddInternalClock(std::string sName);
-        void AddPTPClock(std::string sName, bool bTraceable, std::string sVersion, std::string sGmid, bool bLocked);
-        void RemoveClock(std::string sName);
+        void AddInternalClock(const std::string& sName);
+        void AddPTPClock(const std::string& sName, bool bTraceable, const std::string& sVersion, const std::string& sGmid, bool bLocked);
+        void RemoveClock(const std::string& sName);
+
+        std::string GetBestClock();
 
         void AddCap(){}
         void RemoveCap(){}
 
-        bool IsVersionSupported(std::string sVersion) const;
+        bool IsVersionSupported(const std::string& sVersion) const;
         Json::Value JsonVersions() const;
 
         virtual bool Commit(const ApiVersion& version);
@@ -85,7 +87,7 @@ class NMOS_EXPOSE Self : public Resource
 
         unsigned char GetDnsVersion() const;
 
-        std::string CreateClockSdp(std::string sInterface) const;
+        std::string CreateClockSdp(const std::string& sClockName, const std::string& sInterface) const;
 
         std::set<endpoint>::const_iterator GetEndpointsBegin() const;
         std::set<endpoint>::const_iterator GetEndpointsEnd() const;
@@ -102,8 +104,8 @@ class NMOS_EXPOSE Self : public Resource
     protected:
         friend class NodeApi;
 
-        void AddEndpoint(std::string sHost, unsigned int nPort, bool bSecure);
-        void RemoveEndpoint(std::string sHost, unsigned int nPort);
+        void AddEndpoint(const std::string& sHost, unsigned int nPort, bool bSecure);
+        void RemoveEndpoint(const std::string& sHost, unsigned int nPort);
 
     private:
         void AddApiVersion(unsigned short nMajor, unsigned short nMinor);

@@ -89,5 +89,8 @@ class CurlRegister
 
         static const std::string STR_RESOURCE[7];
 
+        static const int TIMEOUT_CONNECT = 3;
+        static const int TIMEOUT_MSG = 2;
+
 };
 

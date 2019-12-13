@@ -62,11 +62,14 @@ bool NodeThread::RegisteredOperation(const ApiVersion& version)
 {
     if(NodeApi::Get().RegisterSimple(version) == NodeApi::REG_DONE)
     {
-        long nResponse = NodeApi::Get().RegistrationHeartbeat();
+        if(HandleHeartbeatResponse(NodeApi::Get().RegistrationHeartbeat(), version) == false)
+        {
+            return false;
+        }
 
         while(NodeApi::Get().IsRunning())
         {
-            if(NodeApi::Get().Wait(NodeApi::Get().GetHeartbeatTime()))
+            if(NodeApi::Get().WaitUntil(NodeApi::Get().GetHeartbeatTime()))
             {
                 switch(NodeApi::Get().GetSignal())
                 {
@@ -83,18 +86,9 @@ bool NodeThread::RegisteredOperation(const ApiVersion& version)
             }
             else
             {
-                long nResponse = NodeApi::Get().RegistrationHeartbeat();
-                if(nResponse == 0 || nResponse >= 500)
+                if(HandleHeartbeatResponse(NodeApi::Get().RegistrationHeartbeat(), version) == false)
                 {
-                    Log::Get() << "Registration server gone" << endl;
                     return false;
-                }
-                else if(nResponse == 404)
-                {
-                    if(NodeApi::Get().RegisterSimple(version) != NodeApi::REG_DONE)
-                    {
-                        return false;
-                    }
                 }
             }
         }
@@ -104,3 +98,35 @@ bool NodeThread::RegisteredOperation(const ApiVersion& version)
     return false;
 }
 
+bool NodeThread::HandleHeartbeatResponse(unsigned int nResponse, const ApiVersion& version)
+{
+    bool bRegistryOk(true);
+    if(nResponse == 0 || nResponse >= 500)
+    {   //registry error
+        Log::Get(Log::LOG_WARN) << "Registration server gone" << endl;
+        bRegistryOk = false;
+    }
+    else if(nResponse == 404)
+    { //not known about re-register
+        Log::Get(Log::LOG_WARN) << "Registration server forgotten node. Reregister" << endl;
+        if(NodeApi::Get().RegisterSimple(version) != NodeApi::REG_DONE)
+        {
+            bRegistryOk = false;
+        }
+    }
+    else if(nResponse == 409)
+    {  //already registered with different version - deregister and re-register
+       Log::Get(Log::LOG_WARN) << "Registered with different version. Deregister and reregister." << endl;
+       NodeApi::Get().UnregisterSimple();
+       if(NodeApi::Get().RegisterSimple(version) != NodeApi::REG_DONE)
+       {
+            bRegistryOk = false;
+       }
+    }
+    else if(nResponse >= 400)
+    { //probably validation failure
+        Log::Get(Log::LOG_ERROR) << "Registry validation error!";
+        bRegistryOk = false;
+    }
+    return bRegistryOk;
+}

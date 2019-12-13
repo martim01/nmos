@@ -8,7 +8,7 @@
 #include <condition_variable>
 #include "version.h"
 #include "clientapi.h"
-
+#include <chrono>
 class NmosServer;
 
 class ServiceBrowser;
@@ -224,7 +224,7 @@ class NMOS_EXPOSE NodeApi
         /** @brief Gets the regularity that heartbeat messages are sent to a registry
         *   @return <i>unsigned long</i> the time between heartbeats in milliseconds
         **/
-        unsigned long GetHeartbeatTime();
+        const std::chrono::system_clock::time_point& GetHeartbeatTime();
 
 
         /** @brief Called be a receiver when it is activated
@@ -258,6 +258,7 @@ class NMOS_EXPOSE NodeApi
         void HandleInstanceRemoved(std::shared_ptr<dnsInstance> pInstance);
 
         bool Wait(unsigned long nMilliseconds);
+        bool WaitUntil(const std::chrono::system_clock::time_point& timeout_time);
 
         bool FindRegistrationNode();
         bool IsRunning();
@@ -288,7 +289,7 @@ class NMOS_EXPOSE NodeApi
 
         template<class T> long RegisterResources(ResourceHolder<T>& holder, const ApiVersion& version);
         template<class T> long ReregisterResources(ResourceHolder<T>& holder, const ApiVersion& version);
-        template<class T> bool UnregisterResources(ResourceHolder<T>& holder);
+//        template<class T> bool UnregisterResources(ResourceHolder<T>& holder);
 
 
 
@@ -337,6 +338,8 @@ class NMOS_EXPOSE NodeApi
         std::shared_ptr<EventPoster> m_pPoster;
         std::shared_ptr<NodeZCPoster> m_pZCPoster;
         unsigned short m_nConnectionPort;
+
+        std::chrono::system_clock::time_point m_tpHeartbeat;
 
 
         std::map<unsigned short, std::unique_ptr<MicroServer> > m_mServers;

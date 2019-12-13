@@ -414,6 +414,17 @@ bool NodeApi::Wait(unsigned long nMilliseconds)
     return (m_cvCommit.wait_for(ul, chrono::milliseconds(nMilliseconds)) == cv_status::no_timeout);
 }
 
+bool NodeApi::WaitUntil(const std::chrono::system_clock::time_point& timeout_time)
+{
+    m_mutex.lock();
+    m_eSignal = SIG_NONE;
+    m_mutex.unlock();
+
+    unique_lock<mutex> ul(m_mutex);
+    return (m_cvCommit.wait_until(ul, timeout_time) == cv_status::no_timeout);
+}
+
+
 void NodeApi::Signal(enumSignal eSignal)
 {
     m_mutex.lock();
@@ -663,6 +674,8 @@ long NodeApi::RegisterResource(const string& sType, const Json::Value& json)
 
 long NodeApi::RegistrationHeartbeat()
 {
+    m_tpHeartbeat = chrono::system_clock::now() + chrono::milliseconds(m_nHeartbeatTime);
+
     string sResponse;
     if(m_pRegisterCurl)
     {
@@ -670,7 +683,7 @@ long NodeApi::RegistrationHeartbeat()
         long nResponse = m_pRegisterCurl->Post(m_sRegistrationNode+"/health/nodes/"+m_self.GetId(), "", sResponse);
         Log::Get(Log::LOG_INFO) << "RegisterApi: Heartbeat: returned [" << nResponse << "] " << sResponse << endl;
 
-        if(nResponse == 500)
+        if(nResponse == 500 || nResponse == 0)
         {
             MarkRegNodeAsBad();
         }
@@ -696,26 +709,24 @@ int NodeApi::UnregisterSimple()
     if(m_sRegistrationNode.empty() == false)
     {
         UnregisterResource("nodes", m_self.GetId());
-//        UnregisterResources(m_receivers) && UnregisterResources(m_senders) && UnregisterResources(m_flows) && UnregisterResources(m_sources) &&UnregisterResources(m_devices) && UnregisterResource("nodes", m_self.GetId());
-
         m_nRegistrationStatus = REG_START;
     }
     return m_nRegistrationStatus;
 }
 
 
-template<class T> bool NodeApi::UnregisterResources(ResourceHolder<T>& holder)
-{
-    for(typename map<string, shared_ptr<T> >::const_iterator itResource = holder.GetResourceBegin(); itResource != holder.GetResourceEnd(); ++itResource)
-    {
-        Log::Get(Log::LOG_INFO) << "NodeApi: Unregister. " << holder.GetType() << " : " << itResource->first << endl;
-        if(UnregisterResource(holder.GetType()+"s", itResource->first) == false)
-        {
-            return false;
-        }
-    }
-    return true;
-}
+//template<class T> bool NodeApi::UnregisterResources(ResourceHolder<T>& holder)
+//{
+//    for(typename map<string, shared_ptr<T> >::const_iterator itResource = holder.GetResourceBegin(); itResource != holder.GetResourceEnd(); ++itResource)
+//    {
+//        Log::Get(Log::LOG_INFO) << "NodeApi: Unregister. " << holder.GetType() << " : " << itResource->first << endl;
+//        if(UnregisterResource(holder.GetType()+"s", itResource->first) == false)
+//        {
+//            return false;
+//        }
+//    }
+//    return true;
+//}
 
 
 bool NodeApi::UnregisterResource(const string& sType, const std::string& sId)
@@ -865,6 +876,12 @@ bool NodeApi::AddSource(shared_ptr<Source> pResource)
     if(m_devices.ResourceExists(pResource->GetParentResourceId()))
     {
         m_sources.AddResource(pResource);
+        //if we've set a clock then
+        string sClock = m_self.GetBestClock();
+        if(sClock != "")
+        {
+            pResource->SetClock(sClock);
+        }
         return true;
     }
     return false;
@@ -955,10 +972,10 @@ void NodeApi::SetHeartbeatTime(unsigned long nMilliseconds)
     m_nHeartbeatTime = nMilliseconds;
 }
 
-unsigned long NodeApi::GetHeartbeatTime()
+const std::chrono::system_clock::time_point& NodeApi::GetHeartbeatTime()
 {
     lock_guard<mutex> lg(m_mutex);
-    return m_nHeartbeatTime;
+    return m_tpHeartbeat;
 }
 
 

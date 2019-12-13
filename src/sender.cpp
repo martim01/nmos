@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <vector>
 #include "activator.h"
-
+#include "source.h"
 
 const std::string Sender::STR_TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash"};
 
@@ -549,7 +549,7 @@ void Sender::CreateSDP()
 
 
     //now put in the flow media information
-    std::map<std::string, std::shared_ptr<Flow> >::const_iterator itFlow = NodeApi::Get().GetFlows().FindNmosResource(m_sFlowId);
+    auto itFlow = NodeApi::Get().GetFlows().FindNmosResource(m_sFlowId);
     if(itFlow != NodeApi::Get().GetFlows().GetResourceEnd())
     {
         std::shared_ptr<Flow> pFlow = std::dynamic_pointer_cast<Flow>(itFlow->second);
@@ -563,19 +563,26 @@ void Sender::CreateSDP()
             }
             ssSDP << pFlow->CreateSDPLines(nPort);
             ssSDP << ssc.str();
+
+            //get clock name from source
+            auto itSource = NodeApi::Get().GetSources().FindNmosResource(pFlow->GetSourceId());
+            if(itSource != NodeApi::Get().GetSources().GetResourceEnd())
+            {
+                std::shared_ptr<Source> pSource = std::dynamic_pointer_cast<Source>(itSource->second);
+                std::string sClock = pSource->GetClock();
+
+                //clock information is probably at the media level
+                if(m_setInterfaces.empty() || sClock.empty())
+                {
+                    ssSDP << NodeApi::Get().GetSelf().CreateClockSdp(sClock, "");
+                }
+                else
+                {
+                    ssSDP << NodeApi::Get().GetSelf().CreateClockSdp(sClock, *(m_setInterfaces.begin())); // @todo should we check all the intefaces for the clock mac address??
+                }
+            }
         }
     }
-
-    //clock information is probably at the media level
-    if(m_setInterfaces.empty())
-    {
-        ssSDP << NodeApi::Get().GetSelf().CreateClockSdp("");
-    }
-    else
-    {
-        ssSDP << NodeApi::Get().GetSelf().CreateClockSdp(*m_setInterfaces.begin()); // @todo should we check all the intefaces for the clock mac address??
-    }
-
     //now put in the RTCP info if we've got any
     if(m_Active.tpSender.bRtcpEnabled)
     {

@@ -17,7 +17,7 @@
 using namespace std;
 
 
-Self::Self(string sHostname, string sUrl,string sLabel, string sDescription) : Resource("self", sLabel, sDescription),
+Self::Self(const string& sHostname, const string& sUrl,const string& sLabel, const string& sDescription) : Resource("self", sLabel, sDescription),
     m_sHostname(sHostname),
     m_sUrl(sUrl),
     m_nDnsVersion(0)
@@ -29,7 +29,7 @@ Self::~Self()
 {
 }
 
-void Self::Init(std::string sHostname, std::string sUrl,std::string sLabel, std::string sDescription)
+void Self::Init(const string& sHostname, const string& sUrl,const string& sLabel, const string& sDescription)
 {
     m_sHostname = sHostname;
     m_sUrl = sUrl;
@@ -55,31 +55,31 @@ void Self::RemoveApiVersion(unsigned short nMajor, unsigned short nMinor)
     m_setVersion.erase(ApiVersion(nMajor, nMinor));
 }
 
-void Self::AddEndpoint(string sHost, unsigned int nPort, bool bSecure)
+void Self::AddEndpoint(const string& sHost, unsigned int nPort, bool bSecure)
 {
     m_setEndpoint.insert(endpoint(sHost, nPort, bSecure));
 
 }
 
-void Self::RemoveEndpoint(string sHost, unsigned int nPort)
+void Self::RemoveEndpoint(const string& sHost, unsigned int nPort)
 {
     m_setEndpoint.erase(endpoint(sHost, nPort, false));
 
 }
 
-void Self::AddService(string sUrl, string sType)
+void Self::AddService(const string& sUrl, const string& sType)
 {
     m_mService.insert(make_pair(sUrl, sType));
 
 }
 
-void Self::RemoveService(string sUrl)
+void Self::RemoveService(const string& sUrl)
 {
     m_mService.erase(sUrl);
 
 }
 
-void Self::AddInterface(string sInterface, string sChassisMac, string sPortMac)
+void Self::AddInterface(const string& sInterface, const string& sChassisMac, const string& sPortMac)
 {
     nodeinterface anInterface(sChassisMac, sPortMac);
 
@@ -89,26 +89,26 @@ void Self::AddInterface(string sInterface, string sChassisMac, string sPortMac)
 
 }
 
-void Self::RemoveInterface(string sInterface)
+void Self::RemoveInterface(const string& sInterface)
 {
     m_mInterface.erase(sInterface);
 
 }
 
 
-void Self::AddInternalClock(string sName)
+void Self::AddInternalClock(const string& sName)
 {
     m_mClock.insert(make_pair(sName, clock(clock::INTERNAL)));
 
 }
 
-void Self::AddPTPClock(string sName, bool bTraceable, string sVersion, string sGmid, bool bLocked)
+void Self::AddPTPClock(const string& sName, bool bTraceable, const string& sVersion, const string& sGmid, bool bLocked)
 {
     m_mClock.insert(make_pair(sName, clock(clock::PTP, sVersion, sGmid, bLocked, bTraceable)));
 
 }
 
-void Self::RemoveClock(string sName)
+void Self::RemoveClock(const string& sName)
 {
     m_mClock.erase(sName);
 
@@ -249,7 +249,7 @@ Json::Value Self::JsonVersions() const
 }
 
 
-bool Self::IsVersionSupported(std::string sVersion) const
+bool Self::IsVersionSupported(const string& sVersion) const
 {
     return (m_setVersion.find(ApiVersion(sVersion)) != m_setVersion.end());
 }
@@ -345,11 +345,11 @@ void Self::GetAddresses(const std::string& sInterface, nodeinterface& anInterfac
 }
 
 
-std::string Self::CreateClockSdp(std::string sInterface) const
+std::string Self::CreateClockSdp(const std::string& sClockName, const std::string& sInterface) const
 {
     std::stringstream ss;
-    //run through the clocks twice - first try to find a PTP clock. If none found then return the first internal one
-    for(std::map<std::string, clock>::const_iterator itClock = m_mClockCommited.begin(); itClock != m_mClockCommited.end(); ++itClock)
+    auto itClock = m_mClockCommited.find(sClockName);
+    if(itClock != m_mClockCommited.end())
     {
         if(itClock->second.nType == clock::PTP)
         {
@@ -362,13 +362,8 @@ std::string Self::CreateClockSdp(std::string sInterface) const
             {
                 ss << itClock->second.sVersion << ":" << itClock->second.sGmid << "\r\n";
             }
-            return ss.str();
         }
-    }
-
-    for(std::map<std::string, clock>::const_iterator itClock = m_mClockCommited.begin(); itClock != m_mClockCommited.end(); ++itClock)
-    {
-        if(itClock->second.nType == clock::INTERNAL)
+        else if(itClock->second.nType == clock::INTERNAL)
         {
             map<std::string, nodeinterface>::const_iterator itInterface = m_mInterface.find(sInterface);
             if(itInterface != m_mInterface.end())
@@ -379,7 +374,6 @@ std::string Self::CreateClockSdp(std::string sInterface) const
             {
                 ss << "a=ts-refclk:localmac=" << m_mInterface.begin()->second.sPortMac << "\r\n";
             }
-            return ss.str();
         }
     }
     return ss.str();
@@ -397,4 +391,21 @@ std::map<std::string, nodeinterface>::const_iterator Self::GetInterfaceEnd() con
 std::map<std::string, nodeinterface>::const_iterator Self::FindInterface(const std::string& sInterface) const
 {
     return m_mInterface.find(sInterface);
+}
+
+std::string Self::GetBestClock()
+{
+    for(std::map<std::string, clock>::const_iterator itClock = m_mClockCommited.begin(); itClock != m_mClockCommited.end(); ++itClock)
+    {
+        if(itClock->second.nType == clock::PTP)
+        {
+            return itClock->first;
+        }
+    }
+
+    for(std::map<std::string, clock>::const_iterator itClock = m_mClockCommited.begin(); itClock != m_mClockCommited.end(); ++itClock)
+    {
+        return itClock->first;
+    }
+    return "";
 }

@@ -19,6 +19,8 @@ class NMOS_EXPOSE Source : public Resource
         void RemoveParentId(std::string sId);
 
         void SetClock(std::string sClock);
+        const std::string& GetClock()
+        {   return m_sClock;    }
 
         virtual bool Commit(const ApiVersion& version);
         std::string GetParentResourceId() const
