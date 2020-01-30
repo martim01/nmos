@@ -1,6 +1,6 @@
 #include "sourcegeneric.h"
 
-SourceGeneric::SourceGeneric(std::string sLabel, std::string sDescription, std::string sDeviceId, enumFormat eFormat) :
+SourceGeneric::SourceGeneric(const std::string& sLabel, const std::string& sDescription, const std::string& sDeviceId, enumFormat eFormat) :
     Source(sLabel, sDescription, sDeviceId, eFormat)
 {
 

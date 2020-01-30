@@ -29,7 +29,7 @@ static uuid_t NameSpace_OID = { /* 6ba7b812-9dad-11d1-80b4-00c04fd430c8 */
        0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8
    };
 
-void SplitString(vector<string>& vSplit, string str, char cSplit)
+void SplitString(vector<string>& vSplit, const std::string& str, char cSplit)
 {
     vSplit.clear();
     istringstream f(str);
@@ -89,7 +89,7 @@ std::string ConvertTimeToString(std::chrono::time_point<std::chrono::high_resolu
     return sstr.str();
 }
 
-std::string CreateGuid(std::string sName)
+std::string CreateGuid(const std::string& sName)
 {
     uuid_t guid;
     uuid_create_md5_from_name(&guid, NameSpace_OID, sName.c_str(), sName.length());

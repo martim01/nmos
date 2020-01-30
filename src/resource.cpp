@@ -127,13 +127,13 @@ bool Resource::Commit(const ApiVersion& version)
 }
 
 
-void Resource::UpdateLabel(std::string sLabel)
+void Resource::UpdateLabel(const std::string& sLabel)
 {
     m_sLabel = sLabel;
     UpdateVersionTime();
 }
 
-void Resource::UpdateDescription(std::string sDescription)
+void Resource::UpdateDescription(const std::string& sDescription)
 {
     m_sDescription = sDescription;
     UpdateVersionTime();

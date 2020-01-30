@@ -15,7 +15,7 @@ class NMOS_EXPOSE Sender : public IOResource
     public:
         enum enumTransport {RTP, RTP_UCAST, RTP_MCAST, DASH};
 
-        Sender(std::string sLabel, std::string sDescription, std::string sFlowId, enumTransport eTransport, std::string sDeviceId, std::string sInterface, TransportParamsRTP::flagsTP flagsTransport=TransportParamsRTP::CORE);
+        Sender(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId, const std::string& sInterface, TransportParamsRTP::flagsTP flagsTransport=TransportParamsRTP::CORE);
         Sender();
 
         /** @brief Set the active destination details to create an SDP. This will be overwritten by IS-05
@@ -24,14 +24,14 @@ class NMOS_EXPOSE Sender : public IOResource
 
         virtual bool UpdateFromJson(const Json::Value& jsData);
 
-        void AddInterfaceBinding(std::string sInterface);
-        void RemoveInterfaceBinding(std::string sInterface);
+        void AddInterfaceBinding(const std::string& sInterface);
+        void RemoveInterfaceBinding(const std::string& sInterface);
 
         void SetTransport(enumTransport eTransport);
-        void SetManifestHref(std::string sHref);
+        void SetManifestHref(const std::string& sHref);
         const std::string& GetManifestHref() const;
 
-        void SetReceiverId(std::string sReceiverId, bool bActive);
+        void SetReceiverId(const std::string& sReceiverId, bool bActive);
         virtual bool Commit(const ApiVersion& version);
 
         std::string GetParentResourceId() const
@@ -56,7 +56,7 @@ class NMOS_EXPOSE Sender : public IOResource
         connectionSender GetActive();
 
         // called by the main thread as a reply to the eventposter
-        void SetupActivation(std::string sSourceIp="", std::string sDestinationIp="", std::string sSDP="");
+        void SetupActivation(const std::string& sSourceIp="", const std::string& sDestinationIp="", const std::string& sSDP="");
         void Activate(bool bImmediate=false);
 
         void MasterEnable(bool bEnable);

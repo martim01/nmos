@@ -1,7 +1,7 @@
 #include "sourceaudio.h"
 
 
-SourceAudio::SourceAudio(std::string sLabel, std::string sDescription, std::string sDeviceId) :
+SourceAudio::SourceAudio(const std::string& sLabel, const std::string& sDescription, const std::string& sDeviceId) :
     Source(sLabel, sDescription, sDeviceId, Source::AUDIO),
     m_nCommitedChannelCount(0)
 {
@@ -13,13 +13,13 @@ SourceAudio::SourceAudio() : Source(Source::AUDIO)
 
 }
 
-void SourceAudio::AddChannel(std::string sLabel, std::string sSymbol)
+void SourceAudio::AddChannel(const std::string& sLabel, const std::string& sSymbol)
 {
     m_mChannel.insert(make_pair(sSymbol, sLabel));
     UpdateVersionTime();
 }
 
-void SourceAudio::RemoveChannel(std::string sSymbol)
+void SourceAudio::RemoveChannel(const std::string& sSymbol)
 {
     m_mChannel.erase(sSymbol);
     UpdateVersionTime();

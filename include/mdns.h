@@ -8,7 +8,7 @@
 struct NMOS_EXPOSE dnsInstance
 {
     dnsInstance(){}
-    dnsInstance(std::string sN) : sName(sN), nPort(0), nUpdate(0){}
+    dnsInstance(const std::string& sN) : sName(sN), nPort(0), nUpdate(0){}
 
     std::string sName;
     std::string sHostName;
@@ -26,7 +26,7 @@ struct NMOS_EXPOSE dnsInstance
 struct NMOS_EXPOSE dnsService
 {
     dnsService(){}
-    dnsService(std::string ss) : sService(ss){}
+    dnsService(const std::string& ss) : sService(ss){}
 
     ~dnsService()
     {

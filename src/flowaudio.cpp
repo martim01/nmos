@@ -2,7 +2,7 @@
 #include "utils.h"
 
 
-FlowAudio::FlowAudio(std::string sLabel, std::string sDescription, std::string sSourceId, std::string sDeviceId, unsigned int nSampleRate) :
+FlowAudio::FlowAudio(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId, unsigned int nSampleRate) :
     Flow(sLabel, sDescription, "urn:x-nmos:format:audio", sSourceId, sDeviceId),
     m_nSampleRateNumerator(nSampleRate),
     m_nSampleRateDenominator(1)

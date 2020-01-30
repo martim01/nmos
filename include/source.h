@@ -9,16 +9,16 @@ class NMOS_EXPOSE Source : public Resource
         enum enumFormat{AUDIO, VIDEO, DATA, MUX};
 
 
-        Source(std::string sLabel, std::string sDescription, std::string sDeviceId, enumFormat eFormat);
+        Source(const std::string& sLabel, const std::string& sDescription, const std::string& sDeviceId, enumFormat eFormat);
         Source(enumFormat eFormat);
         virtual bool UpdateFromJson(const Json::Value& jsData);
         virtual ~Source(){}
 
 
-        void AddParentId(std::string sId);
-        void RemoveParentId(std::string sId);
+        void AddParentId(const std::string& sId);
+        void RemoveParentId(const std::string& sId);
 
-        void SetClock(std::string sClock);
+        void SetClock(const std::string& sClock);
         const std::string& GetClock()
         {   return m_sClock;    }
 

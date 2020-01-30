@@ -14,7 +14,7 @@ const std::string Receiver::STR_TYPE[4] = {"urn:x-nmos:format:audio", "urn:x-nmo
 
 
 
-Receiver::Receiver(std::string sLabel, std::string sDescription, enumTransport eTransport, std::string sDeviceId, enumType eFormat, int flagsTransport) :
+Receiver::Receiver(const std::string& sLabel, const std::string& sDescription, enumTransport eTransport, const std::string& sDeviceId, enumType eFormat, int flagsTransport) :
     IOResource("receiver", sLabel, sDescription),
     m_eTransport(eTransport),
     m_sDeviceId(sDeviceId),
@@ -67,17 +67,17 @@ Receiver::Receiver() : IOResource("receiver")
 
 }
 
-void Receiver::AddInterfaceBinding(std::string sInterface)
+void Receiver::AddInterfaceBinding(const std::string& sInterface)
 {
     m_setInterfaces.insert(sInterface);
 }
 
-void Receiver::RemoveInterfaceBinding(std::string sInterface)
+void Receiver::RemoveInterfaceBinding(const std::string& sInterface)
 {
     m_setInterfaces.erase(sInterface);
 }
 
-bool Receiver::AddCap(std::string sCap)
+bool Receiver::AddCap(const std::string& sCap)
 {
     //check that the caps are valid
     switch(m_eType)
@@ -112,7 +112,7 @@ bool Receiver::AddCap(std::string sCap)
     return true;
 }
 
-void Receiver::RemoveCap(std::string sCap)
+void Receiver::RemoveCap(const std::string& sCap)
 {
     m_setCaps.erase(sCap);
     UpdateVersionTime();

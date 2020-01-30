@@ -7,7 +7,7 @@ const string FlowVideoRaw::STR_COMPONENT[11] = { "Y", "Cb", "Cr", "I", "Ct", "Cp
 
 
 
-FlowVideoRaw::FlowVideoRaw(string sLabel, string sDescription, string sSourceId, string sDeviceId, unsigned int nFrameWidth, unsigned int nFrameHeight, enumColour eColour, enumInterlace eInterlace, enumTransfer eTransfer) :
+FlowVideoRaw::FlowVideoRaw(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId, unsigned int nFrameWidth, unsigned int nFrameHeight, enumColour eColour, enumInterlace eInterlace, enumTransfer eTransfer) :
     FlowVideo(sLabel, sDescription, sSourceId, sDeviceId, "vidoe/raw", nFrameWidth, nFrameHeight, eColour, eInterlace, eTransfer)
 {
 

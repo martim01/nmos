@@ -8,13 +8,13 @@ class NMOS_EXPOSE Device : public Resource
     public:
         enum enumType {GENERIC, PIPELINE};
 
-        Device(std::string sLabel, std::string sDescription, enumType eType, std::string sNodeId);
+        Device(const std::string& sLabel, const std::string& sDescription, enumType eType, const std::string& sNodeId);
         Device();
         virtual bool UpdateFromJson(const Json::Value& jsData);
 
         virtual ~Device(){}
-        void AddControl(std::string sType, std::string sUri);
-        void RemoveControl(std::string sType, std::string sUri);
+        void AddControl(const std::string& sType, const std::string& sUri);
+        void RemoveControl(const std::string& sType, const std::string& sUri);
         void ChangeType(enumType eType);
 
         std::set<std::pair<std::string, std::string> >::const_iterator GetControlsBegin() const;

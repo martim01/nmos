@@ -5,7 +5,7 @@
 class NMOS_EXPOSE FlowVideoRaw : public FlowVideo
 {
     public:
-        FlowVideoRaw(std::string sLabel, std::string sDescription, std::string sSourceId, std::string sDeviceId, unsigned int nFrameWidth, unsigned int nFrameHeight, enumColour eColour, enumInterlace eInterlace=PROGRESSIVE, enumTransfer eTransfer=SDR);
+        FlowVideoRaw(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId, unsigned int nFrameWidth, unsigned int nFrameHeight, enumColour eColour, enumInterlace eInterlace=PROGRESSIVE, enumTransfer eTransfer=SDR);
         FlowVideoRaw();
         virtual bool UpdateFromJson(const Json::Value& jsData);
         enum enumComponent{Y, CB, CR, I, CT, CP, A,R, G,B, DEPTHMAP};

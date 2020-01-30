@@ -35,7 +35,7 @@ int NmosServer::DeleteJsonNmos(MicroServer* pServer, const std::string& sJson, s
     return 405;
 }
 
-Json::Value NmosServer::GetJsonError(unsigned long nCode, std::string sError)
+Json::Value NmosServer::GetJsonError(unsigned long nCode, const std::string& sError)
 {
     Json::Value jsError(Json::objectValue);
     jsError["code"] = (int)nCode;

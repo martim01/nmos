@@ -63,10 +63,10 @@ class MicroServer
 
 
         static void RequestCompleted (void *cls, MHD_Connection* pConnection, void **ptr, enum MHD_RequestTerminationCode toe);
-        static int DoHttpGet(MHD_Connection* pConnection, std::string sUrl, ConnectionInfo* pInfo);
-        static int DoHttpPut(MHD_Connection* pConnection, std::string sUrl, ConnectionInfo* pInfo);
-        static int DoHttpPatch(MHD_Connection* pConnection, std::string sUrl, ConnectionInfo* pInfo);
-        static int DoHttpPost(MHD_Connection* pConnection, std::string sUrl, ConnectionInfo* pInfo);
+        static int DoHttpGet(MHD_Connection* pConnection, const std::string& sUrl, ConnectionInfo* pInfo);
+        static int DoHttpPut(MHD_Connection* pConnection, const std::string& sUrl, ConnectionInfo* pInfo);
+        static int DoHttpPatch(MHD_Connection* pConnection, const std::string& sUrl, ConnectionInfo* pInfo);
+        static int DoHttpPost(MHD_Connection* pConnection, const std::string& sUrl, ConnectionInfo* pInfo);
         static int DoReply(MHD_Connection* pConnection, int nCode, const std::string& sResponse, const std::string& sContentType = "application/json");
 
         static int AnswerToConnection(void *cls, MHD_Connection* pConnection, const char * url, const char * method, const char * sVersion, const char * upload_data, size_t * upload_data_size, void **ptr);
@@ -89,7 +89,7 @@ class MicroServer
 
         int GetApis(std::string& sReturn);
 
-        Json::Value GetJsonError(unsigned long nCode = 404, std::string sError="Resource not found");
+        Json::Value GetJsonError(unsigned long nCode = 404, const std::string& sError="Resource not found");
 
 
 

@@ -8,7 +8,7 @@ using namespace std;
 const string SdpManager::STR_FILTER = "a=source-filter:";
 const string SdpManager::STR_RTCP = "a=rtcp:";
 
-bool SdpManager::SdpToTransportParams(string sSdp, TransportParamsRTPReceiver& tpReceiver)
+bool SdpManager::SdpToTransportParams(const std::string& sSdp, TransportParamsRTPReceiver& tpReceiver)
 {
     istringstream f(sSdp);
     string sLine;
@@ -40,7 +40,7 @@ bool SdpManager::SdpToTransportParams(string sSdp, TransportParamsRTPReceiver& t
     return true;
 }
 
-bool SdpManager::ParseConnectionLine(string sLine, TransportParamsRTPReceiver& tpReceiver)
+bool SdpManager::ParseConnectionLine(const std::string& sLine, TransportParamsRTPReceiver& tpReceiver)
 {
     Log::Get(Log::LOG_DEBUG) << "SdpManager::ParseConnectionLine: " << sLine << endl;
     //format is 'type addtypr address'
@@ -61,7 +61,7 @@ bool SdpManager::ParseConnectionLine(string sLine, TransportParamsRTPReceiver& t
     return false;
 }
 
-bool SdpManager::ParseConnectionIp4(string sAddress, TransportParamsRTPReceiver& tpReceiver)
+bool SdpManager::ParseConnectionIp4(const std::string& sAddress, TransportParamsRTPReceiver& tpReceiver)
 {
     size_t nTTL = sAddress.find('/');
     switch(ValidateIp4Address(sAddress.substr(0, nTTL)))
@@ -85,7 +85,7 @@ bool SdpManager::ParseConnectionIp4(string sAddress, TransportParamsRTPReceiver&
     return false;
 }
 
-bool SdpManager::ParseConnectionIp6(string sAddress, TransportParamsRTPReceiver& tpReceiver)
+bool SdpManager::ParseConnectionIp6(const std::string& sAddress, TransportParamsRTPReceiver& tpReceiver)
 {
     size_t nGrouping = sAddress.find('/');
     switch(ValidateIp6Address(sAddress.substr(0, nGrouping)))
@@ -105,7 +105,7 @@ bool SdpManager::ParseConnectionIp6(string sAddress, TransportParamsRTPReceiver&
     return false;
 }
 
-SdpManager::enumIPType SdpManager::ValidateIp4Address(string sAddress)
+SdpManager::enumIPType SdpManager::ValidateIp4Address(const std::string& sAddress)
 {
     vector<string> vSplit;
     SplitString(vSplit, sAddress, '.');
@@ -158,13 +158,13 @@ SdpManager::enumIPType SdpManager::ValidateIp4Address(string sAddress)
     return IP4_UNI;
 }
 
-SdpManager::enumIPType SdpManager::ValidateIp6Address(std::string sAddress)
+SdpManager::enumIPType SdpManager::ValidateIp6Address(const std::string& sAddress)
 {
     //@todo ValidateIp6Address and workout unicast or multicast
     return IP_INVALID;
 }
 
-bool SdpManager::ParseAttributeLine(string sLine, TransportParamsRTPReceiver& tpReceiver)
+bool SdpManager::ParseAttributeLine(const std::string& sLine, TransportParamsRTPReceiver& tpReceiver)
 {
     Log::Get(Log::LOG_DEBUG) << "SdpManager::ParseAttributeLine: " << sLine << endl;
     //find source filter line for ssmc destination address
@@ -184,7 +184,7 @@ bool SdpManager::ParseAttributeLine(string sLine, TransportParamsRTPReceiver& tp
     return true;
 }
 
-bool SdpManager::ParseSourceFilter(std::string sLine, TransportParamsRTPReceiver& tpReceiver)
+bool SdpManager::ParseSourceFilter(const std::string& sLine, TransportParamsRTPReceiver& tpReceiver)
 {
     vector<string> vSplit;
     SplitString(vSplit, sLine, ' ');
@@ -209,7 +209,7 @@ bool SdpManager::ParseSourceFilter(std::string sLine, TransportParamsRTPReceiver
     return false;
 }
 
-bool SdpManager::ParseRTCP(std::string sLine, TransportParamsRTPReceiver& tpReceiver)
+bool SdpManager::ParseRTCP(const std::string& sLine, TransportParamsRTPReceiver& tpReceiver)
 {
     //format is 'port [IN IP4/6 address]'
     vector<string> vSplit;
@@ -254,7 +254,7 @@ bool SdpManager::ParseRTCP(std::string sLine, TransportParamsRTPReceiver& tpRece
     return false;
 }
 
-bool SdpManager::ParseMediaLine(string sLine, TransportParamsRTPReceiver& tpReceiver)
+bool SdpManager::ParseMediaLine(const std::string& sLine, TransportParamsRTPReceiver& tpReceiver)
 {
     Log::Get(Log::LOG_DEBUG) << "SdpManager::ParseMediaLine: " << sLine << endl;
     //format is media port proto etc. We want the port
@@ -289,7 +289,7 @@ bool SdpManager::TransportParamsToSdp(const TransportParamsRTPSender& tpSender, 
 }
 
 
-SdpManager::enumIPType SdpManager::CheckIpAddress(std::string sAddress)
+SdpManager::enumIPType SdpManager::CheckIpAddress(const std::string& sAddress)
 {
     enumIPType eType = ValidateIp4Address(sAddress);
     if(eType != IP_INVALID)

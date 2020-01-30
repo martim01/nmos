@@ -1,6 +1,6 @@
 #include "flowdatasdianc.h"
 
-FlowDataSdiAnc::FlowDataSdiAnc(std::string sLabel, std::string sDescription, std::string sSourceId, std::string sDeviceId) :
+FlowDataSdiAnc::FlowDataSdiAnc(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId) :
     FlowData(sLabel, sDescription, sSourceId, sDeviceId, "video/smpte291")
 {
 

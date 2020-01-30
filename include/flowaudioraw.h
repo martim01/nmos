@@ -8,7 +8,7 @@ class NMOS_EXPOSE FlowAudioRaw : public FlowAudio
         enum enumFormat { L24, L20, L16, L8};
         enum enumPacket { US_125, US_250, US_333, US_1000, US_4000};;
 
-        FlowAudioRaw(std::string sLabel, std::string sDescription, std::string sSourceId, std::string sDeviceId, unsigned int nSampleRate, enumFormat eFormat);
+        FlowAudioRaw(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId, unsigned int nSampleRate, enumFormat eFormat);
         virtual bool Commit(const ApiVersion& version);
 
         FlowAudioRaw();

@@ -1833,7 +1833,7 @@ bool ClientApiImpl::AddQuerySubscriptionP2P(int nResource, const std::string& sQ
         }
         break;
     }
-
+    return true;
 }
 
 bool ClientApiImpl::RemoveQuerySubscriptionP2P(const std::string& sSubscriptionId)

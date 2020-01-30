@@ -2,7 +2,7 @@
 #include "utils.h"
 
 
- Source::Source(std::string sLabel, std::string sDescription, std::string sDeviceId, enumFormat eFormat) : Resource("source", sLabel, sDescription)
+ Source::Source(const std::string& sLabel, const std::string& sDescription, const std::string& sDeviceId, enumFormat eFormat) : Resource("source", sLabel, sDescription)
  , m_sDeviceId(sDeviceId)
  , m_eFormat(eFormat)
  {
@@ -17,19 +17,19 @@
 
 
 
-void Source::AddParentId(std::string sId)
+void Source::AddParentId(const std::string& sId)
 {
     m_setParent.insert(sId);
     UpdateVersionTime();
 }
 
-void Source::RemoveParentId(std::string sId)
+void Source::RemoveParentId(const std::string& sId)
 {
     m_setParent.erase(sId);
     UpdateVersionTime();
 }
 
-void Source::SetClock(std::string sClock)
+void Source::SetClock(const std::string& sClock)
 {
     m_sClock = sClock;
     UpdateVersionTime();

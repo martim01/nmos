@@ -6,12 +6,12 @@
 class NMOS_EXPOSE Flow : public Resource
 {
     public:
-        Flow(std::string sLabel, std::string sDescription, std::string sFormat, std::string sSourceId, std::string sDeviceId);
+        Flow(const std::string& sLabel, const std::string& sDescription, const std::string& sFormat, const std::string& sSourceId, const std::string& sDeviceId);
         virtual ~Flow(){}
-        Flow(std::string sFormat);
+        Flow(const std::string& sFormat);
         virtual bool UpdateFromJson(const Json::Value& jsData);
-        void AddParentId(std::string sId);
-        void RemoveParentId(std::string sId);
+        void AddParentId(const std::string& sId);
+        void RemoveParentId(const std::string& sId);
         const std::string& GetFormat() const;
 
         virtual bool Commit(const ApiVersion& version);

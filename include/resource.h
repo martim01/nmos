@@ -35,8 +35,8 @@ class Resource
         const Json::Value& GetJson(const ApiVersion& version) const;
         virtual bool Commit(const ApiVersion& version);
 
-        void UpdateLabel(std::string sLabel);
-        void UpdateDescription(std::string sDescription);
+        void UpdateLabel(const std::string& sLabel);
+        void UpdateDescription(const std::string& sDescription);
 
         const std::string& GetType() const;
 

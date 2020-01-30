@@ -2,7 +2,7 @@
 
 const std::string Device::STR_TYPE[2] = {"urn:x-nmos:device:generic", "urn:x-nmos:device:pipeline"};
 
-Device::Device(std::string sLabel, std::string sDescription, enumType eType, std::string sNodeId) :
+Device::Device(const std::string& sLabel, const std::string& sDescription, enumType eType, const std::string& sNodeId) :
     Resource("device", sLabel, sDescription),
     m_eType(eType),
     m_sNodeId(sNodeId)
@@ -142,12 +142,12 @@ bool Device::Commit(const ApiVersion& version)
     return false;
 }
 
-void Device::AddControl(std::string sType, std::string sUri)
+void Device::AddControl(const std::string& sType, const std::string& sUri)
 {
     m_setControls.insert(make_pair(sType, sUri));
     UpdateVersionTime();
 }
-void Device::RemoveControl(std::string sType, std::string sUri)
+void Device::RemoveControl(const std::string& sType, const std::string& sUri)
 {
     m_setControls.erase(make_pair(sType, sUri));
     UpdateVersionTime();

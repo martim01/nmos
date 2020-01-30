@@ -15,7 +15,7 @@
 const std::string Sender::STR_TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash"};
 
 
-Sender::Sender(std::string sLabel, std::string sDescription, std::string sFlowId, enumTransport eTransport, std::string sDeviceId, std::string sInterface, TransportParamsRTP::flagsTP flagsTransport) :
+Sender::Sender(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId, const std::string& sInterface, TransportParamsRTP::flagsTP flagsTransport) :
     IOResource("sender", sLabel, sDescription),
     m_sFlowId(sFlowId),
     m_eTransport(eTransport),
@@ -170,17 +170,17 @@ bool Sender::UpdateFromJson(const Json::Value& jsData)
     return m_bIsOk;
 }
 
-void Sender::AddInterfaceBinding(std::string sInterface)
+void Sender::AddInterfaceBinding(const std::string& sInterface)
 {
     m_setInterfaces.insert(sInterface);
 }
 
-void Sender::RemoveInterfaceBinding(std::string sInterface)
+void Sender::RemoveInterfaceBinding(const std::string& sInterface)
 {
     m_setInterfaces.erase(sInterface);
 }
 
-void Sender::SetReceiverId(std::string sReceiverId, bool bActive)
+void Sender::SetReceiverId(const std::string& sReceiverId, bool bActive)
 {
     m_sReceiverId = sReceiverId;
     m_bReceiverActive = bActive;
@@ -382,7 +382,7 @@ connectionSender Sender::GetActive()
 }
 
 
-void Sender::SetupActivation(std::string sSourceIp, std::string sDestinationIp, std::string sSDP)
+void Sender::SetupActivation(const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP)
 {
     m_sSourceIp = sSourceIp;
     m_sDestinationIp = sDestinationIp;
@@ -612,7 +612,7 @@ const std::string& Sender::GetTransportFile() const
 }
 
 
-void Sender::SetManifestHref(std::string sHref)
+void Sender::SetManifestHref(const std::string& sHref)
 {
     m_sManifest = sHref;
 }

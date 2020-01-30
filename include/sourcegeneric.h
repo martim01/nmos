@@ -5,7 +5,7 @@
 class NMOS_EXPOSE SourceGeneric : public Source
 {
     public:
-        SourceGeneric(std::string sLabel, std::string sDescription, std::string sDeviceId, enumFormat eFormat);
+        SourceGeneric(const std::string& sLabel, const std::string& sDescription, const std::string& sDeviceId, enumFormat eFormat);
         SourceGeneric();
         virtual bool UpdateFromJson(const Json::Value& jsData);
     private:

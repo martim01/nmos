@@ -2,7 +2,7 @@
 
 std::map<std::string, unsigned short>  FlowAudioCoded::m_mRtpTypes = std::map<std::string, unsigned short>();
 
-FlowAudioCoded::FlowAudioCoded(std::string sLabel, std::string sDescription, std::string sSourceId, std::string sDeviceId, unsigned int nSampleRate, std::string sMediaType) :
+FlowAudioCoded::FlowAudioCoded(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId, unsigned int nSampleRate, const std::string& sMediaType) :
     FlowAudio(sLabel, sDescription, sSourceId, sDeviceId, nSampleRate),
     m_sMediaType(sMediaType)
 {
@@ -49,7 +49,7 @@ bool FlowAudioCoded::Commit(const ApiVersion& version)
     return false;
 }
 
-void FlowAudioCoded::SetMediaType(std::string sMediaType)
+void FlowAudioCoded::SetMediaType(const std::string& sMediaType)
 {
     m_sMediaType = sMediaType;
     UpdateVersionTime();

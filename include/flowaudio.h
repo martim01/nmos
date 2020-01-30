@@ -5,7 +5,7 @@
 class NMOS_EXPOSE FlowAudio : public Flow
 {
     public:
-        FlowAudio(std::string sLabel, std::string sDescription, std::string sSourceId, std::string sDeviceId, unsigned int nSampleRate);
+        FlowAudio(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId, unsigned int nSampleRate);
         virtual bool Commit(const ApiVersion& version);
 
         FlowAudio();

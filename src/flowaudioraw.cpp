@@ -4,7 +4,7 @@
 #include "nodeapi.h"
 #include "sourceaudio.h"
 
-FlowAudioRaw::FlowAudioRaw(std::string sLabel, std::string sDescription, std::string sSourceId, std::string sDeviceId, unsigned int nSampleRate, enumFormat eFormat) :
+FlowAudioRaw::FlowAudioRaw(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId, unsigned int nSampleRate, enumFormat eFormat) :
     FlowAudio(sLabel, sDescription, sSourceId, sDeviceId, nSampleRate),
     m_eFormat(eFormat),
     m_ePacketTime(US_1000)

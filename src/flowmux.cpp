@@ -1,6 +1,6 @@
 #include "flowmux.h"
 
-FlowMux::FlowMux(std::string sLabel, std::string sDescription, std::string sSourceId, std::string sDeviceId, std::string sMediaType) :
+FlowMux::FlowMux(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId, const std::string& sMediaType) :
     Flow(sLabel, sDescription, "urn:x-nmos:format:mux", sSourceId, sDeviceId),
     m_sMediaType(sMediaType)
 {
@@ -39,7 +39,7 @@ bool FlowMux::Commit(const ApiVersion& version)
 }
 
 
-void FlowMux::SetMediaType(std::string sMediaType)
+void FlowMux::SetMediaType(const std::string& sMediaType)
 {
     m_sMediaType = sMediaType;
     UpdateVersionTime();

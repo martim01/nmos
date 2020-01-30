@@ -218,7 +218,7 @@ bool ServicePublisher::Start()
     return true;
 }
 
-ServicePublisher::ServicePublisher(string sName, string sService, unsigned short nPort, std::string sHostname) :
+ServicePublisher::ServicePublisher(const std::string& sName, const std::string& sService, unsigned short nPort, const std::string& sHostname) :
     m_pClient(0),
     m_pGroup(0),
     m_pThreadedPoll(0),
@@ -239,7 +239,7 @@ ServicePublisher::~ServicePublisher()
 
 
 
-void ServicePublisher::AddTxt(string sKey, string sValue, bool bModify)
+void ServicePublisher::AddTxt(const std::string& sKey, const std::string& sValue, bool bModify)
 {
     m_mTxt[sKey] = sValue;
     if(bModify)
@@ -248,7 +248,7 @@ void ServicePublisher::AddTxt(string sKey, string sValue, bool bModify)
     }
 }
 
-void ServicePublisher::RemoveTxt(string sKey, bool bModify)
+void ServicePublisher::RemoveTxt(const std::string& sKey, bool bModify)
 {
     m_mTxt.erase(sKey);
     if(bModify)

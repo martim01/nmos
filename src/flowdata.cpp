@@ -1,13 +1,13 @@
 #include "flowdata.h"
 
-FlowData::FlowData(std::string sLabel, std::string sDescription, std::string sSourceId, std::string sDeviceId, std::string sMediaType) :
+FlowData::FlowData(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId, const std::string& sMediaType) :
     Flow(sLabel, sDescription, "urn:x-nmos:format:data", sSourceId, sDeviceId),
     m_sMediaType(sMediaType)
 {
 
 }
 
-FlowData::FlowData(const std::string sMediaType) : Flow("urn:x-nmos:format:data"),
+FlowData::FlowData(const std::string& sMediaType) : Flow("urn:x-nmos:format:data"),
     m_sMediaType(sMediaType)
 {
 
@@ -39,7 +39,7 @@ bool FlowData::Commit(const ApiVersion& version)
 }
 
 
-void FlowData::SetMediaType(std::string sMediaType)
+void FlowData::SetMediaType(const std::string& sMediaType)
 {
     m_sMediaType = sMediaType;
     UpdateVersionTime();

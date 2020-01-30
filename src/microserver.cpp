@@ -49,7 +49,7 @@ int MicroServer::DoReply(MHD_Connection* pConnection, int nCode, const std::stri
     return ret;
 }
 
-int MicroServer::DoHttpGet(MHD_Connection* pConnection, string sUrl, ConnectionInfo* pInfo)
+int MicroServer::DoHttpGet(MHD_Connection* pConnection, const std::string& sUrl, ConnectionInfo* pInfo)
 {
     string sResponse, sContentType;
     int nCode = pInfo->pServer->GetJson(sUrl, sResponse, sContentType);
@@ -57,7 +57,7 @@ int MicroServer::DoHttpGet(MHD_Connection* pConnection, string sUrl, ConnectionI
     return DoReply(pConnection, nCode, sResponse, sContentType);
 }
 
-int MicroServer::DoHttpPut(MHD_Connection* pConnection, string sUrl, ConnectionInfo* pInfo)
+int MicroServer::DoHttpPut(MHD_Connection* pConnection, const std::string& sUrl, ConnectionInfo* pInfo)
 {
     string sResponse;
     int nCode = pInfo->pServer->PutJson(sUrl, pInfo->ssData.str(), sResponse);
@@ -65,7 +65,7 @@ int MicroServer::DoHttpPut(MHD_Connection* pConnection, string sUrl, ConnectionI
     return DoReply(pConnection, nCode, sResponse);
 }
 
-int MicroServer::DoHttpPatch(MHD_Connection* pConnection, string sUrl, ConnectionInfo* pInfo)
+int MicroServer::DoHttpPatch(MHD_Connection* pConnection, const std::string& sUrl, ConnectionInfo* pInfo)
 {
     string sResponse;
     int nCode = pInfo->pServer->PatchJson(sUrl, pInfo->ssData.str(), sResponse);
@@ -73,7 +73,7 @@ int MicroServer::DoHttpPatch(MHD_Connection* pConnection, string sUrl, Connectio
     return DoReply(pConnection, nCode, sResponse);
 }
 
-int MicroServer::DoHttpPost(MHD_Connection* pConnection, string sUrl, ConnectionInfo* pInfo)
+int MicroServer::DoHttpPost(MHD_Connection* pConnection, const std::string& sUrl, ConnectionInfo* pInfo)
 {
     string sResponse;
     int nCode = pInfo->pServer->PostJson(sUrl, pInfo->ssData.str(), sResponse);
@@ -274,7 +274,7 @@ bool MicroServer::IsOk()
 
 
 
-int MicroServer::GetJson(string sPath, string& sReturn, std::string& sContentType)
+int MicroServer::GetJson(std::string sPath, string& sReturn, std::string& sContentType)
 {
     transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
     sContentType = "application/json";
@@ -328,7 +328,7 @@ int MicroServer::GetJson(string sPath, string& sReturn, std::string& sContentTyp
 
 
 
-int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
+int MicroServer::PutJson(std::string sPath, const string& sJson, string& sResponse)
 {
     //make sure path is correct
     transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
@@ -361,7 +361,7 @@ int MicroServer::PutJson(string sPath, const string& sJson, string& sResponse)
 }
 
 
-int MicroServer::PatchJson(string sPath, const string& sJson, string& sResponse)
+int MicroServer::PatchJson(std::string sPath, const string& sJson, string& sResponse)
 {
     Log::Get(Log::LOG_DEBUG) << "PatchJson" << std::endl;
 
@@ -395,7 +395,7 @@ int MicroServer::PatchJson(string sPath, const string& sJson, string& sResponse)
     return nCode;
 }
 
-int MicroServer::PostJson(string sPath, const string& sJson, string& sResponse)
+int MicroServer::PostJson(std::string sPath, const string& sJson, string& sResponse)
 {
     //make sure path is correct
     transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
@@ -427,7 +427,7 @@ int MicroServer::PostJson(string sPath, const string& sJson, string& sResponse)
     return nCode;
 }
 
-int MicroServer::DeleteJson(string sPath, const string& sJson, string& sResponse)
+int MicroServer::DeleteJson(std::string sPath, const string& sJson, string& sResponse)
 {
     //make sure path is correct
     transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
@@ -478,7 +478,7 @@ int MicroServer::GetApis(std::string& sReturn)
 }
 
 
-Json::Value MicroServer::GetJsonError(unsigned long nCode, std::string sError)
+Json::Value MicroServer::GetJsonError(unsigned long nCode, const std::string& sError)
 {
     Json::Value jsError(Json::objectValue);
     jsError["code"] = (int)nCode;

@@ -1,6 +1,6 @@
 #include "flow.h"
 
-Flow::Flow(std::string sLabel, std::string sDescription, std::string sFormat, std::string sSourceId, std::string sDeviceId) :
+Flow::Flow(const std::string& sLabel, const std::string& sDescription, const std::string& sFormat, const std::string& sSourceId, const std::string& sDeviceId) :
     Resource("flow", sLabel, sDescription),
     m_nMediaClkOffset(0),
     m_sFormat(sFormat),
@@ -11,7 +11,7 @@ Flow::Flow(std::string sLabel, std::string sDescription, std::string sFormat, st
 
 }
 
-Flow::Flow(std::string sFormat) : Resource("flow"),
+Flow::Flow(const std::string& sFormat) : Resource("flow"),
     m_sFormat(sFormat)
 {
 
@@ -74,13 +74,13 @@ bool Flow::Commit(const ApiVersion& version)
     return false;
 }
 
-void Flow::AddParentId(std::string sId)
+void Flow::AddParentId(const std::string& sId)
 {
     m_setParent.insert(sId);
     UpdateVersionTime();
 }
 
-void Flow::RemoveParentId(std::string sId)
+void Flow::RemoveParentId(const std::string& sId)
 {
     m_setParent.erase(sId);
     UpdateVersionTime();

@@ -7,11 +7,11 @@ class NMOS_EXPOSE SourceAudio : public Source
 {
     public:
 
-        SourceAudio(std::string sLabel, std::string sDescription, std::string sDeviceId);
+        SourceAudio(const std::string& sLabel, const std::string& sDescription, const std::string& sDeviceId);
         SourceAudio();
         virtual bool UpdateFromJson(const Json::Value& jsData);
-        void AddChannel(std::string sLabel, std::string sSymbol);
-        void RemoveChannel(std::string sSymbol);
+        void AddChannel(const std::string& sLabel, const std::string& sSymbol);
+        void RemoveChannel(const std::string& sSymbol);
 
 
         bool Commit(const ApiVersion& version);

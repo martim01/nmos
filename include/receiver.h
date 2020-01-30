@@ -15,7 +15,7 @@ class NMOS_EXPOSE Receiver : public IOResource
     public:
         enum enumTransport {RTP, RPT_UCAST, RTP_MCAST, DASH};
         enum enumType {AUDIO, VIDEO, DATA, MUX};
-        Receiver(std::string sLabel, std::string sDescription, enumTransport eTransport, std::string sDeviceId, enumType eType, int flagsTransport=TransportParamsRTP::CORE);
+        Receiver(const std::string& sLabel, const std::string& sDescription, enumTransport eTransport, const std::string& sDeviceId, enumType eType, int flagsTransport=TransportParamsRTP::CORE);
         ~Receiver();
         Receiver();
         virtual bool UpdateFromJson(const Json::Value& jsData);
@@ -23,11 +23,11 @@ class NMOS_EXPOSE Receiver : public IOResource
         void SetTransport(enumTransport eTransport);
         void SetType(enumType eType);
 
-        void AddInterfaceBinding(std::string sInterface);
-        void RemoveInterfaceBinding(std::string sInterface);
+        void AddInterfaceBinding(const std::string& sInterface);
+        void RemoveInterfaceBinding(const std::string& sInterface);
 
-        bool AddCap(std::string sCap);
-        void RemoveCap(std::string sCap);
+        bool AddCap(const std::string& sCap);
+        void RemoveCap(const std::string& sCap);
 
 
         virtual bool Commit(const ApiVersion& version);

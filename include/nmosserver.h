@@ -23,7 +23,7 @@ class NmosServer
         void SetPath(const std::vector<std::string>& vPath);
 
     protected:
-        Json::Value GetJsonError(unsigned long nCode = 404, std::string sError="Resource not found");
+        Json::Value GetJsonError(unsigned long nCode = 404, const std::string& sError="Resource not found");
 
         std::shared_ptr<EventPoster> m_pPoster;
         unsigned short m_nPort;

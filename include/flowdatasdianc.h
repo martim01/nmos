@@ -6,7 +6,7 @@
 class NMOS_EXPOSE FlowDataSdiAnc : public FlowData
 {
     public:
-        FlowDataSdiAnc(std::string sLabel, std::string sDescription, std::string sSourceId, std::string sDeviceId);
+        FlowDataSdiAnc(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId);
         FlowDataSdiAnc();
         virtual bool UpdateFromJson(const Json::Value& jsData);
         virtual bool Commit(const ApiVersion& version);
