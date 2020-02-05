@@ -28,8 +28,8 @@ class IS04Server : public NmosServer
 
 
 
-        int GetJsonNmos(MicroServer* pServer, std::string& sReturn, std::string& sContentType);
-        int PutJsonNmos(MicroServer* pServer, const std::string& sJson, std::string& sResponse);
+        int GetJsonNmos(Server* pServer, std::string& sReturn, std::string& sContentType);
+        int PutJsonNmos(Server* pServer, const std::string& sJson, std::string& sResponse);
 
         int GetJsonNmosNodeApi(std::string& sReturn);
         Json::Value GetJsonSources(const ApiVersion& version);

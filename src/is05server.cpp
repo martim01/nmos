@@ -14,7 +14,7 @@
 #include "eventposter.h"
 #include "utils.h"
 #include "curlregister.h"
-#include "microserver.h"
+#include "server.h"
 
 using namespace std;
 
@@ -27,7 +27,7 @@ IS05Server::IS05Server() : NmosServer()
 
 
 
-int IS05Server::GetJsonNmos(MicroServer* pServer, string& sReturn, std::string& sContentType)
+int IS05Server::GetJsonNmos(Server* pServer, string& sReturn, std::string& sContentType)
 {
     Json::FastWriter stw;
     if(m_vPath.size() == SZ_NMOS)
@@ -274,7 +274,7 @@ int IS05Server::GetJsonNmosConnectionBulkApi(std::string& sReturn)
 
 
 
-int IS05Server::PatchJsonNmos(MicroServer* pServer, const string& sJson, string& sResponse)
+int IS05Server::PatchJsonNmos(Server* pServer, const string& sJson, string& sResponse)
 {
     Json::FastWriter stw;
     int nCode = 202;
@@ -300,7 +300,7 @@ int IS05Server::PatchJsonNmos(MicroServer* pServer, const string& sJson, string&
     return nCode;
 }
 
-int IS05Server::PostJsonNmos(MicroServer* pServer, const string& sJson, string& sResponse)
+int IS05Server::PostJsonNmos(Server* pServer, const string& sJson, string& sResponse)
 {
     Json::FastWriter stw;
     int nCode = 405;
@@ -327,7 +327,7 @@ int IS05Server::PostJsonNmos(MicroServer* pServer, const string& sJson, string& 
 }
 
 
-int IS05Server::PatchJsonSender(MicroServer* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version)
+int IS05Server::PatchJsonSender(Server* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version)
 {
     Log::Get(Log::LOG_DEBUG) << "PatchJsonSender" << std::endl;
     int nCode(200);
@@ -364,7 +364,7 @@ int IS05Server::PatchJsonSender(MicroServer* pServer, const std::string& sJson, 
 }
 
 
-int IS05Server::PatchSender(MicroServer* pServer, shared_ptr<Sender> pSender, const Json::Value& jsRequest, std::string& sResponse, const ApiVersion& version)
+int IS05Server::PatchSender(Server* pServer, shared_ptr<Sender> pSender, const Json::Value& jsRequest, std::string& sResponse, const ApiVersion& version)
 {
     Log::Get(Log::LOG_DEBUG) << "PatchSender: " << pSender->GetId() << endl;
     int nCode(200);
@@ -439,7 +439,7 @@ int IS05Server::PatchSender(MicroServer* pServer, shared_ptr<Sender> pSender, co
 }
 
 
-int IS05Server::PatchJsonReceiver(MicroServer* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version)
+int IS05Server::PatchJsonReceiver(Server* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version)
 {
     Log::Get(Log::LOG_DEBUG) << "IS05Server::PatchJsonReceiver:  " << sJson << std::endl;
     int nCode(200);
@@ -471,7 +471,7 @@ int IS05Server::PatchJsonReceiver(MicroServer* pServer, const std::string& sJson
     return nCode;
 }
 
-int IS05Server::PatchReceiver(MicroServer* pServer, shared_ptr<Receiver> pReceiver, const Json::Value& jsRequest, std::string& sResponse, const ApiVersion& version)
+int IS05Server::PatchReceiver(Server* pServer, shared_ptr<Receiver> pReceiver, const Json::Value& jsRequest, std::string& sResponse, const ApiVersion& version)
 {
     int nCode(200);
     Json::FastWriter stw;
@@ -545,7 +545,7 @@ int IS05Server::PatchReceiver(MicroServer* pServer, shared_ptr<Receiver> pReceiv
 }
 
 
-int IS05Server::PostJsonSenders(MicroServer* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version)
+int IS05Server::PostJsonSenders(Server* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version)
 {
     Log::Get(Log::LOG_DEBUG) << "IS05Server::PostJsonSenders:  " << sJson << std::endl;
     int nCode(200);
@@ -605,7 +605,7 @@ int IS05Server::PostJsonSenders(MicroServer* pServer, const std::string& sJson, 
 }
 
 
-int IS05Server::PostJsonReceivers(MicroServer* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version)
+int IS05Server::PostJsonReceivers(Server* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version)
 {
     Log::Get(Log::LOG_DEBUG) << "IS05Server::PostJsonReceivers:  " << sJson << std::endl;
     int nCode(200);

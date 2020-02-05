@@ -1,34 +1,34 @@
 #include "nmosserver.h"
 
-int NmosServer::GetJsonNmos(MicroServer* pServer, std::string& sReturn, std::string& sContentType)
+int NmosServer::GetJsonNmos(Server* pServer, std::string& sReturn, std::string& sContentType)
 {
     Json::FastWriter stw;
     sReturn = stw.write(GetJsonError(405, "Method not allowed here."));
     return 405;
 }
 
-int NmosServer::PutJsonNmos(MicroServer* pServer, const std::string& sJson, std::string& sResponse)
+int NmosServer::PutJsonNmos(Server* pServer, const std::string& sJson, std::string& sResponse)
 {
     Json::FastWriter stw;
     sResponse = stw.write(GetJsonError(405, "Method not allowed here."));
     return 405;
 }
 
-int NmosServer::PatchJsonNmos(MicroServer* pServer, const std::string& sJson, std::string& sResponse)
+int NmosServer::PatchJsonNmos(Server* pServer, const std::string& sJson, std::string& sResponse)
 {
     Json::FastWriter stw;
     sResponse = stw.write(GetJsonError(405, "Method not allowed here."));
     return 405;
 }
 
-int NmosServer::PostJsonNmos(MicroServer* pServer, const std::string& sJson, std::string& sResponse)
+int NmosServer::PostJsonNmos(Server* pServer, const std::string& sJson, std::string& sResponse)
 {
     Json::FastWriter stw;
     sResponse = stw.write(GetJsonError(405, "Method not allowed here."));
     return 405;
 }
 
-int NmosServer::DeleteJsonNmos(MicroServer* pServer, const std::string& sJson, std::string& sResponse)
+int NmosServer::DeleteJsonNmos(Server* pServer, const std::string& sJson, std::string& sResponse)
 {
     Json::FastWriter stw;
     sResponse = stw.write(GetJsonError(405, "Method not allowed here."));

@@ -13,7 +13,7 @@
 #include "eventposter.h"
 #include "utils.h"
 #include "curlregister.h"
-#include "microserver.h"
+#include "server.h"
 
 
 using namespace std;
@@ -27,7 +27,7 @@ IS04Server::IS04Server() : NmosServer()
 
 
 
-int IS04Server::GetJsonNmos(MicroServer* pServer, string& sReturn, std::string& sContentType)
+int IS04Server::GetJsonNmos(Server* pServer, string& sReturn, std::string& sContentType)
 {
     return GetJsonNmosNodeApi(sReturn);
 
@@ -188,7 +188,7 @@ Json::Value IS04Server::GetJsonSenders(const ApiVersion& version)
 
 
 
-int IS04Server::PutJsonNmos(MicroServer* pServer, const string& sJson, string& sResponse)
+int IS04Server::PutJsonNmos(Server* pServer, const string& sJson, string& sResponse)
 {
     Log::Get(Log::LOG_DEBUG) << "PutJsonNmos: " << sJson << endl;
     Json::FastWriter stw;

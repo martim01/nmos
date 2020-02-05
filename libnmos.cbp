@@ -106,9 +106,11 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 			<Add option="-DNMOS_EXPORT" />
+			<Add option="-DMG_ENABLE_HTTP_STREAMING_MULTIPART" />
 			<Add directory="$(#json.include)" />
 			<Add directory="include" />
 			<Add directory="external/uuid" />
+			<Add directory="external/mongoose" />
 		</Compiler>
 		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXCancellationRequest.cpp">
 			<Option target="Linux Debug" />
@@ -275,6 +277,10 @@
 			<Option target="Linux Release" />
 		</Unit>
 		<Unit filename="external/jsoncpp/jsoncpp.cpp" />
+		<Unit filename="external/mongoose/mongoose.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="external/mongoose/mongoose.h" />
 		<Unit filename="external/uuid/guid.cpp" />
 		<Unit filename="external/uuid/guid.h" />
 		<Unit filename="external/uuid/md5.cpp" />
@@ -325,6 +331,7 @@
 		<Unit filename="include/log.h" />
 		<Unit filename="include/mdns.h" />
 		<Unit filename="include/microserver.h" />
+		<Unit filename="include/mongooseserver.h" />
 		<Unit filename="include/nmosdlldefine.h" />
 		<Unit filename="include/nmosserver.h" />
 		<Unit filename="include/nmosthread.h" />
@@ -341,6 +348,7 @@
 		<Unit filename="include/sdp.h" />
 		<Unit filename="include/self.h" />
 		<Unit filename="include/sender.h" />
+		<Unit filename="include/server.h" />
 		<Unit filename="include/source.h" />
 		<Unit filename="include/sourceaudio.h" />
 		<Unit filename="include/sourcegeneric.h" />
@@ -382,6 +390,7 @@
 		<Unit filename="src/is05server.cpp" />
 		<Unit filename="src/log.cpp" />
 		<Unit filename="src/microserver.cpp" />
+		<Unit filename="src/mongooseserver.cpp" />
 		<Unit filename="src/nmosserver.cpp" />
 		<Unit filename="src/nmosthread.cpp" />
 		<Unit filename="src/nodeapi.cpp" />
@@ -396,6 +405,7 @@
 		<Unit filename="src/sdp.cpp" />
 		<Unit filename="src/self.cpp" />
 		<Unit filename="src/sender.cpp" />
+		<Unit filename="src/server.cpp" />
 		<Unit filename="src/source.cpp" />
 		<Unit filename="src/sourceaudio.cpp" />
 		<Unit filename="src/sourcegeneric.cpp" />

@@ -34,27 +34,27 @@ class NMOS_EXPOSE EventPoster
         virtual void CurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId)=0;
 
 
-        /** @brief Called by MicroServer when a IS-04 Target PUT is performed
+        /** @brief Called by Server when a IS-04 Target PUT is performed
         *   @param sReceiverId the uuid of the Receiver to apply the PU to
         *   @param sTransportFile - the SDP served up by the sender
-        *   @param nPort - the MicroServer port that the request came from
-        *   @note this is a blocking event. The target of this function should call the NodeApi::TargetTaken function once it is ready for the MicroServer to continue
+        *   @param nPort - the Server port that the request came from
+        *   @note this is a blocking event. The target of this function should call the NodeApi::TargetTaken function once it is ready for the Server to continue
         **/
         virtual void Target(const std::string& sReceiverId, const std::string& sTransportFile, unsigned short nPort)=0;
 
-        /** @brief Called by MicroServer when a IS-05 Sender/Staged PATCH is performed
+        /** @brief Called by Server when a IS-05 Sender/Staged PATCH is performed
         *   @param sSenderId the uuid of the Sender to apply the patch to
         *   @param conPatch the connectionSender details that should be applied to the Sender
-        *   @param nPort - the MicroServer port that the request came from
-        *   @note this is a blocking event. The target of this function should call the NodeApi::SenderPatchAllowed function once it is ready for the MicroServer to continue
+        *   @param nPort - the Server port that the request came from
+        *   @note this is a blocking event. The target of this function should call the NodeApi::SenderPatchAllowed function once it is ready for the Server to continue
         **/
         virtual void PatchSender(const std::string& sSenderId, const connectionSender& conPatch, unsigned short nPort)=0;
 
-        /** @brief Called by MicroServer when a IS-05 Receiver/Staged PATCH is performed
+        /** @brief Called by Server when a IS-05 Receiver/Staged PATCH is performed
         *   @param sReceiverId the uuid of the Receiver to apply the patch to
         *   @param conPatch the connectionReceiver details that should be applied to the Receiver
-        *   @param nPort - the MicroServer port that the request came from
-        *   @note this is a blocking event. The target of this function should call the NodeApi::ReceiverPatchAllowed function once it is ready for the MicroServer to continue
+        *   @param nPort - the Server port that the request came from
+        *   @note this is a blocking event. The target of this function should call the NodeApi::ReceiverPatchAllowed function once it is ready for the Server to continue
         **/
         virtual void PatchReceiver(const std::string& sReceiverId, const connectionReceiver& conPatch, unsigned short nPort)=0;
 

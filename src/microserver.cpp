@@ -49,38 +49,6 @@ int MicroServer::DoReply(MHD_Connection* pConnection, int nCode, const std::stri
     return ret;
 }
 
-int MicroServer::DoHttpGet(MHD_Connection* pConnection, const std::string& sUrl, ConnectionInfo* pInfo)
-{
-    string sResponse, sContentType;
-    int nCode = pInfo->pServer->GetJson(sUrl, sResponse, sContentType);
-
-    return DoReply(pConnection, nCode, sResponse, sContentType);
-}
-
-int MicroServer::DoHttpPut(MHD_Connection* pConnection, const std::string& sUrl, ConnectionInfo* pInfo)
-{
-    string sResponse;
-    int nCode = pInfo->pServer->PutJson(sUrl, pInfo->ssData.str(), sResponse);
-
-    return DoReply(pConnection, nCode, sResponse);
-}
-
-int MicroServer::DoHttpPatch(MHD_Connection* pConnection, const std::string& sUrl, ConnectionInfo* pInfo)
-{
-    string sResponse;
-    int nCode = pInfo->pServer->PatchJson(sUrl, pInfo->ssData.str(), sResponse);
-
-    return DoReply(pConnection, nCode, sResponse);
-}
-
-int MicroServer::DoHttpPost(MHD_Connection* pConnection, const std::string& sUrl, ConnectionInfo* pInfo)
-{
-    string sResponse;
-    int nCode = pInfo->pServer->PostJson(sUrl, pInfo->ssData.str(), sResponse);
-
-    return DoReply(pConnection, nCode, sResponse);
-}
-
 int MicroServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, const char * url, const char * method, const char * sVersion, const char * upload_data, size_t * upload_data_size, void **ptr)
 {
     sockaddr* pAddr = MHD_get_connection_info(pConnection, MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
@@ -188,6 +156,42 @@ int MicroServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, cons
 
 
 
+int MicroServer::DoHttpGet(MHD_Connection* pConnection, const std::string& sUrl, ConnectionInfo* pInfo)
+{
+    string sResponse, sContentType;
+    int nCode = pInfo->pServer->GetJson(sUrl, sResponse, sContentType);
+
+    return DoReply(pConnection, nCode, sResponse, sContentType);
+}
+
+int MicroServer::DoHttpPut(MHD_Connection* pConnection, const std::string& sUrl, ConnectionInfo* pInfo)
+{
+    string sResponse;
+    int nCode = pInfo->pServer->PutJson(sUrl, pInfo->ssData.str(), sResponse);
+
+    return DoReply(pConnection, nCode, sResponse);
+}
+
+int MicroServer::DoHttpPatch(MHD_Connection* pConnection, const std::string& sUrl, ConnectionInfo* pInfo)
+{
+    string sResponse;
+    int nCode = pInfo->pServer->PatchJson(sUrl, pInfo->ssData.str(), sResponse);
+
+    return DoReply(pConnection, nCode, sResponse);
+}
+
+int MicroServer::DoHttpPost(MHD_Connection* pConnection, const std::string& sUrl, ConnectionInfo* pInfo)
+{
+    string sResponse;
+    int nCode = pInfo->pServer->PostJson(sUrl, pInfo->ssData.str(), sResponse);
+
+    return DoReply(pConnection, nCode, sResponse);
+}
+
+
+
+
+
 
 
 bool MicroServer::Init()
@@ -216,7 +220,7 @@ void MicroServer::Stop()
     }
 }
 
-MicroServer::MicroServer(shared_ptr<EventPoster> pPoster, unsigned int nPort) : m_pPoster(pPoster), m_pmhd(0), m_nPort(nPort)
+MicroServer::MicroServer(shared_ptr<EventPoster> pPoster, unsigned int nPort) : Server(pPoster, nPort),  m_pmhd(0)
 {
 
 }
@@ -224,265 +228,4 @@ MicroServer::MicroServer(shared_ptr<EventPoster> pPoster, unsigned int nPort) : 
 MicroServer::~MicroServer()
 {
     Stop();
-
-}
-
-bool MicroServer::AddNmosControl(const string& sControl, shared_ptr<NmosServer> pServer)
-{
-    pServer->SetPoster(m_pPoster, m_nPort);
-    return m_mServer.insert(make_pair(sControl, pServer)).second;
-}
-
-
-void MicroServer::PrimeWait()
-{
-    lock_guard<mutex> lock(m_mutex);
-    m_eOk = WAIT;
-}
-
-void MicroServer::Wait()
-{
-    std::unique_lock<std::mutex> lk(m_mutex);
-    while(m_eOk == WAIT)
-    {
-        m_cvSync.wait(lk);
-    }
-}
-
-void MicroServer::Signal(bool bOk, const std::string& sData)
-{
-    lock_guard<mutex> lock(m_mutex);
-    Log::Get(Log::LOG_DEBUG) << "Microserver: " << m_nPort << " Signal= " << bOk << endl;
-    if(bOk)
-    {
-        m_eOk = SUCCESS;
-    }
-    else
-    {
-        m_eOk = FAIL;
-    }
-    m_sSignalData = sData;
-    m_cvSync.notify_one();
-}
-
-bool MicroServer::IsOk()
-{
-    lock_guard<mutex> lock(m_mutex);
-    return (m_eOk == SUCCESS);
-}
-
-
-
-
-int MicroServer::GetJson(std::string sPath, string& sReturn, std::string& sContentType)
-{
-    transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
-    sContentType = "application/json";
-
-    int nCode = 200;
-    SplitString(m_vPath, sPath, '/');
-
-
-    if(m_vPath.empty())
-    {
-        Json::FastWriter stw;
-        Json::Value jsNode;
-        jsNode.append("x-nmos/");
-        sReturn = stw.write(jsNode);
-    }
-    else
-    {
-        if(m_vPath[0] == "x-nmos")
-        {   //check on nmos
-            if(m_vPath.size() == 1)
-            {
-                nCode = GetApis(sReturn);
-            }
-            else
-            {
-                map<string, shared_ptr<NmosServer> >::iterator itServer = m_mServer.find(m_vPath[1]);
-                if(itServer != m_mServer.end())
-                {
-                    itServer->second->SetPath(m_vPath);
-                    nCode = itServer->second->GetJsonNmos(this, sReturn, sContentType);
-                }
-                else
-                {
-                    Json::FastWriter stw;
-                    sReturn = stw.write(GetJsonError(404, "Page not found"));
-                    nCode = 404;
-                }
-            }
-        }
-        else
-        {
-            Json::FastWriter stw;
-            sReturn = stw.write(GetJsonError(404, "Page not found"));
-            nCode = 404;
-        }
-    }
-    return nCode;
-}
-
-
-
-
-
-int MicroServer::PutJson(std::string sPath, const string& sJson, string& sResponse)
-{
-    //make sure path is correct
-    transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
-
-    Json::FastWriter stw;
-
-    int nCode = 202;
-    SplitString(m_vPath, sPath, '/');
-    if(m_vPath.size() > 1 && m_vPath[0] == "x-nmos")
-    {
-        map<string, shared_ptr<NmosServer> >::iterator itServer = m_mServer.find(m_vPath[1]);
-        if(itServer != m_mServer.end())
-        {
-            itServer->second->SetPath(m_vPath);
-            nCode = itServer->second->PutJsonNmos(this, sJson, sResponse);
-        }
-        else
-        {
-            Json::FastWriter stw;
-            sResponse = stw.write(GetJsonError(404, "Page not found"));
-            nCode = 404;
-        }
-    }
-    else
-    {
-        nCode = 404;
-        sResponse = stw.write(GetJsonError(404, "Page not found"));
-    }
-    return nCode;
-}
-
-
-int MicroServer::PatchJson(std::string sPath, const string& sJson, string& sResponse)
-{
-    Log::Get(Log::LOG_DEBUG) << "PatchJson" << std::endl;
-
-    //make sure path is correct
-    transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
-
-    Json::FastWriter stw;
-
-    int nCode = 202;
-    SplitString(m_vPath, sPath, '/');
-    if(m_vPath.size() > 1 && m_vPath[0] == "x-nmos")
-    {
-        map<string, shared_ptr<NmosServer> >::iterator itServer = m_mServer.find(m_vPath[1]);
-        if(itServer != m_mServer.end())
-        {
-            itServer->second->SetPath(m_vPath);
-            nCode = itServer->second->PatchJsonNmos(this, sJson, sResponse);
-        }
-        else
-        {
-            Json::FastWriter stw;
-            sResponse = stw.write(GetJsonError(404, "Page not found"));
-            nCode = 404;
-        }
-    }
-    else
-    {
-        nCode = 405;
-        sResponse = stw.write(GetJsonError(nCode, "Method not allowed here."));
-    }
-    return nCode;
-}
-
-int MicroServer::PostJson(std::string sPath, const string& sJson, string& sResponse)
-{
-    //make sure path is correct
-    transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
-
-    Json::FastWriter stw;
-
-    int nCode = 202;
-    SplitString(m_vPath, sPath, '/');
-    if(m_vPath.size() > 1 && m_vPath[0] == "x-nmos")
-    {
-        map<string, shared_ptr<NmosServer> >::iterator itServer = m_mServer.find(m_vPath[1]);
-        if(itServer != m_mServer.end())
-        {
-            itServer->second->SetPath(m_vPath);
-            nCode = itServer->second->PostJsonNmos(this, sJson, sResponse);
-        }
-        else
-        {
-            Json::FastWriter stw;
-            sResponse = stw.write(GetJsonError(404, "Page not found"));
-            nCode = 404;
-        }
-    }
-    else
-    {
-        nCode = 404;
-        sResponse = stw.write(GetJsonError(404, "Page not found"));
-    }
-    return nCode;
-}
-
-int MicroServer::DeleteJson(std::string sPath, const string& sJson, string& sResponse)
-{
-    //make sure path is correct
-    transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
-
-    Json::FastWriter stw;
-
-    int nCode = 202;
-    SplitString(m_vPath, sPath, '/');
-    if(m_vPath.size() > 1 && m_vPath[0] == "x-nmos")
-    {
-        map<string, shared_ptr<NmosServer> >::iterator itServer = m_mServer.find(m_vPath[1]);
-        if(itServer != m_mServer.end())
-        {
-            itServer->second->SetPath(m_vPath);
-            nCode = itServer->second->DeleteJsonNmos(this, sJson, sResponse);
-        }
-        else
-        {
-            Json::FastWriter stw;
-            sResponse = stw.write(GetJsonError(404, "Page not found"));
-            nCode = 404;
-        }
-    }
-    else
-    {
-        nCode = 404;
-        sResponse = stw.write(GetJsonError(404, "Page not found"));
-    }
-    return nCode;
-}
-
-const std::string& MicroServer::GetSignalData()
-{
-    return m_sSignalData;
-}
-
-
-int MicroServer::GetApis(std::string& sReturn)
-{
-    Json::Value jsNode;
-    for(map<string, shared_ptr<NmosServer> >::iterator itServer = m_mServer.begin(); itServer != m_mServer.end(); ++itServer)
-    {
-        jsNode.append(itServer->first+"/");
-    }
-    Json::FastWriter stw;
-    sReturn = stw.write(jsNode);
-    return 200;
-}
-
-
-Json::Value MicroServer::GetJsonError(unsigned long nCode, const std::string& sError)
-{
-    Json::Value jsError(Json::objectValue);
-    jsError["code"] = (int)nCode;
-    jsError["error"] = sError;
-    jsError["debug"] = "null";
-    return jsError;
 }

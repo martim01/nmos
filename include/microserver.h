@@ -1,4 +1,5 @@
 #pragma once
+#include "server.h"
 #include <string>
 #include <condition_variable>
 #include "microhttpd.h"
@@ -23,7 +24,7 @@ struct ConnectionInfo
 
 class NmosServer;
 
-class MicroServer
+class MicroServer : public Server
 {
     public:
 
@@ -39,27 +40,12 @@ class MicroServer
         /** @brief Starts the web server
 
         **/
-        bool Init();
+        bool Init() override;
 
-        /** Add ann NMOS server
-        *   @param sControl the first part of the url (after the x-nmos/)
-        *   @param pServer the server
-        **/
-        bool AddNmosControl(const std::string& sControl, std::shared_ptr<NmosServer> pServer);
 
         /** @brief Stope the web server
         **/
-        void Stop();
-
-
-        /** @brief Gets the port number that the web server is using to listen for connections
-        *   @return <i>unsigned short</i> the port number
-        **/
-        unsigned short GetPort() const
-        {
-            return m_nPort;
-        }
-
+        void Stop() override;
 
 
         static void RequestCompleted (void *cls, MHD_Connection* pConnection, void **ptr, enum MHD_RequestTerminationCode toe);
@@ -72,45 +58,9 @@ class MicroServer
         static int AnswerToConnection(void *cls, MHD_Connection* pConnection, const char * url, const char * method, const char * sVersion, const char * upload_data, size_t * upload_data_size, void **ptr);
 
 
-        void Wait();
-        void PrimeWait();
-        bool IsOk();
-        void Signal(bool bOk, const std::string& sData);
-        const std::string& GetSignalData();
-
 
     protected:
 
-        int GetJson(std::string sPath, std::string& sResponse, std::string& sContentType);
-        int PutJson(std::string sPath, const std::string& sJson, std::string& sRepsonse);
-        int PatchJson(std::string sPath, const std::string& sJson, std::string& sRepsonse);
-        int PostJson(std::string sPath, const std::string& sJson, std::string& sRepsonse);
-        int DeleteJson(std::string sPath, const std::string& sJson, std::string& sRepsonse);
-
-        int GetApis(std::string& sReturn);
-
-        Json::Value GetJsonError(unsigned long nCode = 404, const std::string& sError="Resource not found");
-
-
-
-
-        std::shared_ptr<EventPoster> m_pPoster;
-
         MHD_Daemon* m_pmhd;
-        unsigned short m_nPort;
-
-
-        std::vector<std::string> m_vPath;
-
-        std::mutex m_mutex;
-        std::condition_variable m_cvSync;
-        enum enumSignal{WAIT, FAIL, SUCCESS};
-
-        enumSignal m_eOk;
-
-        std::string m_sSignalData;
-
-        std::map<std::string, std::shared_ptr<NmosServer> > m_mServer;
-
 };
 

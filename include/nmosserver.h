@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 
-class MicroServer;
+class Server;
 class EventPoster;
 
 class NmosServer
@@ -14,11 +14,11 @@ class NmosServer
 
         void SetPoster(std::shared_ptr<EventPoster> pPoster,unsigned short nPort);
 
-        virtual int GetJsonNmos(MicroServer* pServer, std::string& sReturn, std::string& sContentType);
-        virtual int PutJsonNmos(MicroServer* pServer, const std::string& sJson, std::string& sResponse);
-        virtual int PatchJsonNmos(MicroServer* pServer, const std::string& sJson, std::string& sResponse);
-        virtual int PostJsonNmos(MicroServer* pServer, const std::string& sJson, std::string& sResponse);
-        virtual int DeleteJsonNmos(MicroServer* pServer, const std::string& sJson, std::string& sResponse);
+        virtual int GetJsonNmos(Server* pServer, std::string& sReturn, std::string& sContentType);
+        virtual int PutJsonNmos(Server* pServer, const std::string& sJson, std::string& sResponse);
+        virtual int PatchJsonNmos(Server* pServer, const std::string& sJson, std::string& sResponse);
+        virtual int PostJsonNmos(Server* pServer, const std::string& sJson, std::string& sResponse);
+        virtual int DeleteJsonNmos(Server* pServer, const std::string& sJson, std::string& sResponse);
 
         void SetPath(const std::vector<std::string>& vPath);
 

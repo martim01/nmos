@@ -25,7 +25,7 @@ class Flow;
 class Receiver;
 class Sender;
 class NodeThread;
-class MicroServer;
+class Server;
 class NodeZCPoster;
 class dnsInstance;
 
@@ -57,7 +57,7 @@ class NMOS_EXPOSE NodeApi
         *   @param sUrn the urn of the control
         *   @param pNmosServer a pointer to the derived NmosServer object that will handle the control
         *   @return <i>bool</i> true if the device is found
-        *   @note To add the same server to more than one device pass the same port number and NULL for the MicroServer
+        *   @note To add the same server to more than one device pass the same port number and NULL for the Server
         **/
         bool AddControl(const std::string& sDeviceId, const std::string& sApi, const ApiVersion& version, unsigned short nPort, const std::string& sUrn, std::shared_ptr<NmosServer> pNmosServer);
 
@@ -163,13 +163,13 @@ class NMOS_EXPOSE NodeApi
 
         /** @brief To be called by the main thread when an IS-04 connection is made. The server tread will have called Target
         *   @param sInterfaceIp the ip address of the interface that is being used by the receiver to receive the flow
-        *   @param nPort the port of the MicroServer that is being used for IS-04
+        *   @param nPort the port of the Server that is being used for IS-04
         *   @param bOk true if the receiver has succesfully connected to the sender. False otherwise
         **/
         void TargetTaken(const std::string& sInterfaceIp, unsigned short nPort, bool bOk);
 
         /** @brief To be called by the main thread when an IS-05 Sender Patch is being made. Also allows the main thread to set the parameters which will overwrite any "auto" stage params on activation
-        *   @param nPort the port of the MicroServer that is being used for IS-04
+        *   @param nPort the port of the Server that is being used for IS-04
         *   @param bOk true if the Sender is allowed to take the patch.
         *   @param sId the uuid of the Sender
         *   @param sSourceIp IP address from which RTP packets will be sent (IP address of interface bound to this output)
@@ -181,7 +181,7 @@ class NMOS_EXPOSE NodeApi
         void SenderPatchAllowed(unsigned short nPort, bool bOk, const std::string& sId, const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP="");
 
         /** @brief To be called by the main thread when an IS-05 Receiver Patch is being maded
-        *   @param nPort the port of the MicroServer that is being used for IS-04
+        *   @param nPort the port of the Server that is being used for IS-04
         *   @param bOk true if the Receiver is allowed to take the patch
         *   @param sId the uuid of the Receiver
         *   @param sInterfaceIp IP address of the network interface the receiver should use
@@ -235,7 +235,9 @@ class NMOS_EXPOSE NodeApi
     protected:
         friend class NodeThread;
         friend class ServiceBrowser;
+        friend class Server;
         friend class MicroServer;
+        friend class MongooseServer;
         friend class NodeZCPoster;
 
         enum {REG_FAILED = 0, REG_START, REG_DEVICES, REG_SOURCES, REG_FLOWS, REG_SENDERS, REG_RECEIVERS, REG_DONE};
@@ -342,7 +344,7 @@ class NMOS_EXPOSE NodeApi
         std::chrono::system_clock::time_point m_tpHeartbeat;
 
 
-        std::map<unsigned short, std::unique_ptr<MicroServer> > m_mServers;
+        std::map<unsigned short, std::unique_ptr<Server> > m_mServers;
 
         struct regnode
         {

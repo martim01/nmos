@@ -30,9 +30,9 @@ class IS05Server : public NmosServer
 
 
 
-        int GetJsonNmos(MicroServer* pServer, std::string& sReturn, std::string& sContentType);
-        int PatchJsonNmos(MicroServer* pServer, const std::string& sJson, std::string& sResponse);
-        int PostJsonNmos(MicroServer* pServer, const std::string& sJson, std::string& sResponse);
+        int GetJsonNmos(Server* pServer, std::string& sReturn, std::string& sContentType);
+        int PatchJsonNmos(Server* pServer, const std::string& sJson, std::string& sResponse);
+        int PostJsonNmos(Server* pServer, const std::string& sJson, std::string& sResponse);
 
         int GetJsonNmosConnectionApi(std::string& sReturn, std::string& sContentType);
         int GetJsonNmosConnectionSingleApi(std::string& sReturn, std::string& sContentType, const ApiVersion& version);
@@ -41,14 +41,14 @@ class IS05Server : public NmosServer
         int GetJsonNmosConnectionSingleSenders(std::string& sReturn, std::string& sContentType, const ApiVersion& version);
         int GetJsonNmosConnectionSingleReceivers(std::string& sReturn, const ApiVersion& version);
 
-        int PatchJsonSender(MicroServer* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version);
-        int PatchJsonReceiver(MicroServer* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version);
+        int PatchJsonSender(Server* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version);
+        int PatchJsonReceiver(Server* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version);
 
-        int PostJsonSenders(MicroServer* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version);
-        int PostJsonReceivers(MicroServer* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version);
+        int PostJsonSenders(Server* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version);
+        int PostJsonReceivers(Server* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version);
 
-        int PatchSender(MicroServer* pServer, std::shared_ptr<Sender> pSender, const Json::Value& jsRequest, std::string& sResponse, const ApiVersion& version);
-        int PatchReceiver(MicroServer* pServer, std::shared_ptr<Receiver> pReceiver, const Json::Value& jsRequest, std::string& sResponse, const ApiVersion& version);
+        int PatchSender(Server* pServer, std::shared_ptr<Sender> pSender, const Json::Value& jsRequest, std::string& sResponse, const ApiVersion& version);
+        int PatchReceiver(Server* pServer, std::shared_ptr<Receiver> pReceiver, const Json::Value& jsRequest, std::string& sResponse, const ApiVersion& version);
 
         enum {NMOS=0, API_TYPE=1,VERSION=2,ENDPOINT=3, RESOURCE=4, TARGET=5};
         enum {SZ_BASE=0, SZ_NMOS=1, SZ_API_TYPE=2,SZ_VERSION=3,SZ_ENDPOINT=4, SZ_RESOURCE=5, SZ_TARGET=6};

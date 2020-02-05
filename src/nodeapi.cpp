@@ -21,7 +21,7 @@
 #include <iphlpapi.h>
 #include <iptypes.h>
 #endif
-#include "microserver.h"
+#include "server.h"
 #include "log.h"
 #include "curlregister.h"
 #include "eventposter.h"
@@ -39,7 +39,7 @@
 #include "sdp.h"
 #include "utils.h"
 #include "nodezcposter.h"
-
+#include "mongooseserver.h"
 
 using namespace std;
 
@@ -193,12 +193,12 @@ void NodeApi::Init(std::shared_ptr<EventPoster> pPoster, unsigned short nDiscove
 
 
 
-    map<unsigned short, std::unique_ptr<MicroServer> >::iterator itServer = m_mServers.insert(make_pair(nDiscoveryPort, new MicroServer(m_pPoster, nConnectionPort))).first;
+    map<unsigned short, std::unique_ptr<Server> >::iterator itServer = m_mServers.insert(make_pair(nDiscoveryPort, new MongooseServer(m_pPoster, nConnectionPort))).first;
     itServer->second->AddNmosControl("node", make_shared<IS04Server>());
 
     if(nConnectionPort != nDiscoveryPort)
     {
-        itServer = m_mServers.insert(make_pair(nConnectionPort, new MicroServer(m_pPoster, nDiscoveryPort))).first;
+        itServer = m_mServers.insert(make_pair(nConnectionPort, new MongooseServer(m_pPoster, nDiscoveryPort))).first;
     }
     itServer->second->AddNmosControl("connection", make_shared<IS05Server>());
 
@@ -210,7 +210,7 @@ bool NodeApi::StartHttpServers()
 {
     Log::Get(Log::LOG_DEBUG) << "Start Http Servers" << endl;
 
-    for(map<unsigned short, unique_ptr<MicroServer> >::iterator itServer = m_mServers.begin(); itServer != m_mServers.end(); ++itServer)
+    for(map<unsigned short, unique_ptr<Server> >::iterator itServer = m_mServers.begin(); itServer != m_mServers.end(); ++itServer)
     {
         itServer->second->Init();
 
@@ -224,7 +224,7 @@ bool NodeApi::StartHttpServers()
 
 void NodeApi::StopHttpServers()
 {
-    for(map<unsigned short, unique_ptr<MicroServer> >::iterator itServer = m_mServers.begin(); itServer != m_mServers.end(); ++itServer)
+    for(map<unsigned short, unique_ptr<Server> >::iterator itServer = m_mServers.begin(); itServer != m_mServers.end(); ++itServer)
     {
         itServer->second->Stop();
     }
@@ -477,7 +477,7 @@ void NodeApi::ReceiverPatchAllowed(unsigned short nPort, bool bOk,const std::str
 
 void NodeApi::SignalServer(unsigned short nPort, bool bOk, const std::string& sExtra)
 {
-    map<unsigned short, std::unique_ptr<MicroServer> >::iterator itServer = m_mServers.find(nPort);
+    map<unsigned short, std::unique_ptr<Server> >::iterator itServer = m_mServers.find(nPort);
     if(itServer != m_mServers.end())
     {
         itServer->second->Signal(bOk, sExtra);
@@ -832,10 +832,10 @@ bool NodeApi::AddControl(const std::string& sDeviceId, const std::string& sApi, 
     map<string, shared_ptr<Device> >::iterator itDevice = m_devices.GetResource(sDeviceId, false);
     if(itDevice != m_devices.GetStagedResourceEnd())
     {
-        map<unsigned short, std::unique_ptr<MicroServer> >::iterator itServer = m_mServers.find(nPort);
+        map<unsigned short, std::unique_ptr<Server> >::iterator itServer = m_mServers.find(nPort);
         if(itServer == m_mServers.end())
         {
-            itServer = m_mServers.insert(make_pair(nPort, new MicroServer(m_pPoster, nPort))).first;
+            itServer = m_mServers.insert(make_pair(nPort, new MongooseServer(m_pPoster, nPort))).first;
         }
 
         itServer->second->AddNmosControl(sApi, pNmosServer);
