@@ -30,7 +30,7 @@ bool FlowAudioCoded::UpdateFromJson(const Json::Value& jsData)
     if(jsData["media_type"].isString() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'media_type' is not a string" << std::endl;
+        m_ssJsonError << "'media_type' is not a string" ;
     }
     else
     {

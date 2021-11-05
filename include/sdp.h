@@ -17,12 +17,16 @@ class SdpManager
         static enumIPType CheckIpAddress(const std::string& sAddress);
 
     protected:
+        static bool ParseOriginLine(const std::string& sLine, TransportParamsRTPReceiver& tpReceiver);
         static bool ParseConnectionLine(const std::string& sLine, TransportParamsRTPReceiver& tpReceiver);
         static bool ParseAttributeLine(const std::string& sLine, TransportParamsRTPReceiver& tpReceiver);
         static bool ParseMediaLine(const std::string& sLine, TransportParamsRTPReceiver& tpReceiver);
 
         static bool ParseConnectionIp4(const std::string& sAddress, TransportParamsRTPReceiver& tpReceiver);
         static bool ParseConnectionIp6(const std::string& sAddress, TransportParamsRTPReceiver& tpReceiver);
+
+        static bool ParseOriginIp4(const std::string& sAddress, TransportParamsRTPReceiver& tpReceiver);
+        static bool ParseOriginIp6(const std::string& sAddress, TransportParamsRTPReceiver& tpReceiver);
 
         static bool ParseSourceFilter(const std::string& sLine, TransportParamsRTPReceiver& tpReceiver);
         static bool ParseRTCP(const std::string& sLine, TransportParamsRTPReceiver& tpReceiver);

@@ -62,11 +62,7 @@ template<class T> void ResourceHolder<T>::RemoveResource(shared_ptr<T> pResource
 
 template<class T> void ResourceHolder<T>::RemoveResource(string sUuid)
 {
-    typename map<string, shared_ptr<T> >::iterator itResource = m_mResourceStaging.find(sUuid);
-    if(itResource != m_mResourceStaging.end())
-    {
-        m_mResourceStaging.erase(itResource);
-    }
+    m_mResourceStaging.erase(sUuid);
 }
 
 template<class T> bool ResourceHolder<T>::Commit(const set<ApiVersion>& setVersion)
@@ -74,17 +70,17 @@ template<class T> bool ResourceHolder<T>::Commit(const set<ApiVersion>& setVersi
     m_mResource = m_mResourceStaging;
     m_mResourceChanged.clear();
 
-    for(set<ApiVersion>::const_iterator itVersion = setVersion.begin(); itVersion != setVersion.end(); ++itVersion)
+    for(auto version : setVersion)
     {
         m_json.clear();
 
-        for(typename map<string, shared_ptr<T> >::const_iterator itResource = m_mResource.begin(); itResource != m_mResource.end(); ++itResource)
+        for(auto pairResource : m_mResource)
         {
-            if(itResource->second->Commit((*itVersion)))
+            if(pairResource.second->Commit(version))
             {
-                m_mResourceChanged.insert(make_pair(itResource->first, itResource->second));
+                m_mResourceChanged.insert(pairResource);
             }
-            m_json.append(itResource->second->GetJson((*itVersion)));
+            m_json.append(pairResource.second->GetJson(version));
         }
     }
     if(m_mResourceChanged.empty() == false)
@@ -103,9 +99,9 @@ template<class T> const Json::Value& ResourceHolder<T>::GetJson(const ApiVersion
 template<class T> Json::Value ResourceHolder<T>::GetConnectionJson(const ApiVersion& version) const
 {
     Json::Value jsArray(Json::arrayValue);
-    for(typename map<string, shared_ptr<T> >::const_iterator itResource = m_mResource.begin(); itResource != m_mResource.end(); ++itResource)
+    for(auto pairResource : m_mResource)
     {
-        jsArray.append(itResource->first+"/");
+        jsArray.append(pairResource.first+"/");
     }
     return jsArray;
 }

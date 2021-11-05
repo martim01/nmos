@@ -10,18 +10,24 @@
 #include "sender.h"
 #include "receiver.h"
 #include "log.h"
+#include "../../log/include/log.h"
+
 using namespace std;
 
 
 
 int main()
 {
+
+    LogStream::AddOutput(make_unique<LogOutput>());
+    pml::LogStream::AddOutput(make_unique<pml::LogOutput>());
+
     std::shared_ptr<ThreadPoster> pPoster = std::make_shared<ThreadPoster>();
 
     NodeApi::Get().Init(pPoster, 8080, 8080, "host Label", "host Description");
     NodeApi::Get().SetHeartbeatTime(5000);
     NodeApi::Get().GetSelf().AddInternalClock("clk0");
-    NodeApi::Get().GetSelf().AddPTPClock("clk1", true, "IEEE1588-2008", "08-00-11-ff-fe-21-e1-b0", true);
+    NodeApi::Get().GetSelf().AddPTPClock("clk1", false, "IEEE1588-2008", "08-00-11-ff-fe-21-e1-b0", true);
     NodeApi::Get().GetSelf().AddInterface("eth0");
     NodeApi::Get().GetSelf().AddTag("location", "W1");
     NodeApi::Get().GetSelf().AddTag("location", "MCR1");
@@ -35,7 +41,7 @@ int main()
 
     shared_ptr<FlowAudioRaw> pFlow = make_shared<FlowAudioRaw>("TestFlow", "TestDescription", pSource->GetId(), pDevice->GetId(),48000, FlowAudioRaw::L24);
     pFlow->SetPacketTime(FlowAudioRaw::US_125);
-    pFlow->SetMediaClkOffset(129122110);
+    pFlow->SetMediaClkOffset(0);
 
     shared_ptr<Sender> pSender = make_shared<Sender>("TestSender", "Description", pFlow->GetId(), Sender::RTP_MCAST, pDevice->GetId(), "eth0");
     shared_ptr<Receiver> pReceiver = make_shared<Receiver>("Test Receiver", "TestDescription", Receiver::RTP_MCAST, pDevice->GetId(), Receiver::AUDIO, TransportParamsRTP::CORE | TransportParamsRTP::MULTICAST);

@@ -175,6 +175,17 @@ class ClientApiImpl
 
         void SubscribeToQueryServer();
 
+        void CreateFlow(std::list<std::shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress);
+        void CreateFlowAudio(std::list<std::shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress);
+        void CreateFlowAudioCoded(std::list<std::shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress);
+        void CreateFlowAudioRaw(std::list<std::shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress);
+        void CreateFlowVideo(std::list<std::shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress);
+        void CreateFlowVideoRaw(std::list<std::shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress);
+        void CreateFlowVideoCoded(std::list<std::shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress);
+        void CreateFlowData(std::list<std::shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress);
+        void CreateFlowMux(std::list<std::shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress);
+
+
         enumMode m_eMode;
 
         ClientHolder<Self> m_nodes;

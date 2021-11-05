@@ -16,33 +16,62 @@ bool SdpManager::SdpToTransportParams(const std::string& sSdp, TransportParamsRT
     {
         switch(sLine[0])
         {
-        case 'c':
-            if(ParseConnectionLine(sLine, tpReceiver) == false)
-            {
-                return false;
-            }
-            break;
-        case 'a':
-            if(ParseAttributeLine(sLine, tpReceiver) == false)
-            {
-                return false;
-            }
-            break;
-        case 'm':
-            if(ParseMediaLine(sLine, tpReceiver) == false)
-            {
-                return false;
-            }
-            break;
+            case 'o':
+                if(ParseOriginLine(sLine, tpReceiver) == false)
+                {
+                    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager:: ParseOriginLine failed";
+                    return false;
+                }
+                break;
+            case 'c':
+                if(ParseConnectionLine(sLine, tpReceiver) == false)
+                {
+                    return false;
+                }
+                break;
+            case 'a':
+                if(ParseAttributeLine(sLine, tpReceiver) == false)
+                {
+                    return false;
+                }
+                break;
+            case 'm':
+                if(ParseMediaLine(sLine, tpReceiver) == false)
+                {
+                    return false;
+                }
+                break;
         }
 
     }
+
+    pmlLog(pml::LOG_DEBUG) << tpReceiver.GetJson(ApiVersion(1,2));
+
     return true;
+}
+
+bool SdpManager::ParseOriginLine(const std::string& sLine, TransportParamsRTPReceiver& tpReceiver)
+{
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager::ParseOriginLine " << sLine;
+    vector<string> vSplit;
+    SplitString(vSplit, sLine, ' ');
+    if(vSplit.size() == 6)
+    {
+        if(vSplit[4] == "IP4")
+        {
+            return ParseOriginIp4(vSplit[5], tpReceiver);
+        }
+        else if(vSplit[4] == "IP6")
+        {
+            return ParseOriginIp6(vSplit[5], tpReceiver);
+        }
+    }
+    return false;
 }
 
 bool SdpManager::ParseConnectionLine(const std::string& sLine, TransportParamsRTPReceiver& tpReceiver)
 {
-    Log::Get(Log::LOG_DEBUG) << "SdpManager::ParseConnectionLine: " << sLine << endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager::ParseConnectionLine: " << sLine ;
     //format is 'type addtypr address'
     vector<string> vSplit;
     SplitString(vSplit, sLine, ' ');
@@ -57,7 +86,7 @@ bool SdpManager::ParseConnectionLine(const std::string& sLine, TransportParamsRT
             return ParseConnectionIp6(vSplit[2], tpReceiver);
         }
     }
-    Log::Get(Log::LOG_DEBUG) << "SdpManager::ParseConnectionLine: " << vSplit.size() << " " << vSplit[0] << endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager::ParseConnectionLine: " << vSplit.size() << " " << vSplit[0] ;
     return false;
 }
 
@@ -68,18 +97,14 @@ bool SdpManager::ParseConnectionIp4(const std::string& sAddress, TransportParams
     {
         case IP4_MULTI:
             tpReceiver.sMulticastIp = sAddress.substr(0, nTTL);
-            tpReceiver.sSourceIp.clear();
-            Log::Get(Log::LOG_DEBUG) << "SdpManager::ParseConnectionIp4: " << sAddress.substr(0, nTTL) << " multicast" << endl;
-            //@todo do we care about TTL and possible address grouping??
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager::ParseConnectionIp4: " << sAddress.substr(0, nTTL) << " multicast" ; //@todo do we care about TTL and possible address grouping??
             return true;
         case IP4_UNI:
             tpReceiver.sMulticastIp.clear();
-            tpReceiver.sSourceIp = sAddress.substr(0, nTTL);
-            Log::Get(Log::LOG_DEBUG) << "SdpManager::ParseConnectionIp4: " << sAddress << " unicast" << endl;
-            //@todo do we care about TTL and possible address grouping??
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager::ParseConnectionIp4: " << sAddress << " unicast" ; //@todo do we care about TTL and possible address grouping??
             return true;
         default:
-            Log::Get(Log::LOG_DEBUG) << "SdpManager::ParseConnectionIp4: " << sAddress << " invalid" << endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager::ParseConnectionIp4: " << sAddress << " invalid" ;
             return false;
     }
     return false;
@@ -96,7 +121,7 @@ bool SdpManager::ParseConnectionIp6(const std::string& sAddress, TransportParams
             return true;
         case IP6_UNI:
             tpReceiver.sMulticastIp.clear();
-            tpReceiver.sSourceIp = sAddress.substr(0, nGrouping);
+            //tpReceiver.sSourceIp = sAddress.substr(0, nGrouping);
             //@todo do we care about TTL and possible address grouping??
             return true;
         default:
@@ -105,6 +130,34 @@ bool SdpManager::ParseConnectionIp6(const std::string& sAddress, TransportParams
     return false;
 }
 
+
+bool SdpManager::ParseOriginIp4(const std::string& sAddress, TransportParamsRTPReceiver& tpReceiver)
+{
+    switch(ValidateIp4Address(sAddress))
+    {
+        case IP4_MULTI:
+            tpReceiver.sSourceIp.clear();
+            return false;
+        case IP4_UNI:
+            tpReceiver.sSourceIp = sAddress;
+            return true;
+    }
+    return false;
+}
+
+bool SdpManager::ParseOriginIp6(const std::string& sAddress, TransportParamsRTPReceiver& tpReceiver)
+{
+    switch(ValidateIp6Address(sAddress))
+    {
+        case IP6_MULTI:
+           tpReceiver.sSourceIp.clear();
+           return false;
+        case IP6_UNI:
+            tpReceiver.sSourceIp = sAddress;
+            return true;
+    }
+    return false;
+}
 SdpManager::enumIPType SdpManager::ValidateIp4Address(const std::string& sAddress)
 {
     vector<string> vSplit;
@@ -166,7 +219,7 @@ SdpManager::enumIPType SdpManager::ValidateIp6Address(const std::string& sAddres
 
 bool SdpManager::ParseAttributeLine(const std::string& sLine, TransportParamsRTPReceiver& tpReceiver)
 {
-    Log::Get(Log::LOG_DEBUG) << "SdpManager::ParseAttributeLine: " << sLine << endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager::ParseAttributeLine: " << sLine ;
     //find source filter line for ssmc destination address
     size_t nStart = sLine.find(STR_FILTER);
     if(nStart != string::npos)
@@ -190,7 +243,7 @@ bool SdpManager::ParseSourceFilter(const std::string& sLine, TransportParamsRTPR
     SplitString(vSplit, sLine, ' ');
     if(vSplit.size() > 4)
     {
-        Log::Get(Log::LOG_DEBUG) << "SdpManager::ParseSourceFilter " << vSplit[0] << " " << vSplit[1] << " " << vSplit[2] << endl;
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager::ParseSourceFilter " << vSplit[0] << " " << vSplit[1] << " " << vSplit[2] ;
         if(vSplit[0] == "IN" && vSplit[1] == "incl")
         {
             if(vSplit[2] == "IP4" && ValidateIp4Address(vSplit[3]) == IP4_MULTI && ValidateIp4Address(vSplit[4]) == IP4_UNI)
@@ -205,7 +258,7 @@ bool SdpManager::ParseSourceFilter(const std::string& sLine, TransportParamsRTPR
             }
         }
     }
-    Log::Get(Log::LOG_DEBUG) << "SdpManager::ParseSourceFilter " << vSplit.size() << endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager::ParseSourceFilter " << vSplit.size() ;
     return false;
 }
 
@@ -256,7 +309,7 @@ bool SdpManager::ParseRTCP(const std::string& sLine, TransportParamsRTPReceiver&
 
 bool SdpManager::ParseMediaLine(const std::string& sLine, TransportParamsRTPReceiver& tpReceiver)
 {
-    Log::Get(Log::LOG_DEBUG) << "SdpManager::ParseMediaLine: " << sLine << endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager::ParseMediaLine: " << sLine ;
     //format is media port proto etc. We want the port
     vector<string> vSplit;
     SplitString(vSplit, sLine, ' ');

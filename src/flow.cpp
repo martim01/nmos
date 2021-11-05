@@ -23,17 +23,17 @@ bool Flow::UpdateFromJson(const Json::Value& jsData)
     if(jsData["device_id"].isString() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'device_id' is not a string" << std::endl;
+        m_ssJsonError << "'device_id' is not a string" ;
     }
     if(jsData["source_id"].isString() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'device_id' is not a string" << std::endl;
+        m_ssJsonError << "'device_id' is not a string" ;
     }
     if(jsData["parents"].isArray() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'parents' is not an array" << std::endl;
+        m_ssJsonError << "'parents' is not an array" ;
     }
     if(m_bIsOk)
     {
@@ -45,7 +45,7 @@ bool Flow::UpdateFromJson(const Json::Value& jsData)
             if(jsData["parents"][ai].isString() == false)
             {
                 m_bIsOk = false;
-                m_ssJsonError << "'parents' #" << ai << " is not a string" << std::endl;
+                m_ssJsonError << "'parents' #" << ai << " is not a string" ;
             }
             else
             {

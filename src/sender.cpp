@@ -77,42 +77,42 @@ bool Sender::UpdateFromJson(const Json::Value& jsData)
     if(jsData["flow_id"].isString() == false && JsonMemberExistsAndIsNotNull(jsData, "flow_id"))
     {
         m_bIsOk = false;
-        m_ssJsonError << "'flow_id' neither a string or null" << std::endl;
+        m_ssJsonError << "'flow_id' neither a string or null" ;
     }
     if(jsData["device_id"].isString() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'device_id' is not a string" << std::endl;
+        m_ssJsonError << "'device_id' is not a string" ;
     }
     if(jsData["manifest_href"].isString() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'manifest_href' is not a string" << std::endl;
+        m_ssJsonError << "'manifest_href' is not a string" ;
     }
     if(jsData["transport"].isString() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'transport' is not a string" << std::endl;
+        m_ssJsonError << "'transport' is not a string" ;
     }
     if(jsData["interface_bindings"].isArray() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'interface_bindings' is not an array" << std::endl;
+        m_ssJsonError << "'interface_bindings' is not an array" ;
     }
     if(jsData["subscription"].isObject() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'subscription' is not an object" << std::endl;
+        m_ssJsonError << "'subscription' is not an object" ;
     }
     if(jsData["subscription"]["receiver_id"].isString() ==false && JsonMemberExistsAndIsNotNull(jsData["subscription"], "receiver_id"))
     {
         m_bIsOk = false;
-        m_ssJsonError << "'subscription' 'receiver_id' is not a string and not null" << std::endl;
+        m_ssJsonError << "'subscription' 'receiver_id' is not a string and not null" ;
     }
     if(jsData["subscription"]["active"].isBool() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'subscription' 'active' is not a bool" << std::endl;
+        m_ssJsonError << "'subscription' 'active' is not a bool" ;
     }
 
     if(m_bIsOk)
@@ -145,7 +145,7 @@ bool Sender::UpdateFromJson(const Json::Value& jsData)
         else
         {
             m_bIsOk = false;
-            m_ssJsonError << "'transport' " <<jsData["transport"].asString() <<" incorrect" << std::endl;
+            m_ssJsonError << "'transport' " <<jsData["transport"].asString() <<" incorrect" ;
         }
         for(Json::ArrayIndex n = 0; n < jsData["interface_bindings"].size(); n++)
         {
@@ -156,7 +156,7 @@ bool Sender::UpdateFromJson(const Json::Value& jsData)
             else
             {
                 m_bIsOk = false;
-                m_ssJsonError << "'interface_bindings' #" << n <<" not a string" << std::endl;
+                m_ssJsonError << "'interface_bindings' #" << n <<" not a string" ;
                 break;
             }
         }
@@ -227,7 +227,7 @@ bool Sender::Commit(const ApiVersion& version)
         {
             m_json["subscription"]["active"] = false;
         }
-        CreateSDP();
+        CreateSDP(m_Active);
         return true;
     }
     return false;
@@ -334,7 +334,7 @@ bool Sender::Stage(const connectionSender& conRequest, std::shared_ptr<EventPost
                 }
                 else
                 {
-                    Log::Get(Log::LOG_ERROR) << "Stage Sender: Invalid absolute time" << std::endl;
+                    pmlLog(pml::LOG_ERROR) << "NMOS: " << "Stage Sender: Invalid absolute time" ;
                     bOk = false;
                 }
             }
@@ -361,7 +361,7 @@ bool Sender::Stage(const connectionSender& conRequest, std::shared_ptr<EventPost
             }
             catch(std::invalid_argument& ia)
             {
-                Log::Get(Log::LOG_ERROR) << "Stage Sender: Invalid time" << std::endl;
+                pmlLog(pml::LOG_ERROR) << "NMOS: " << "Stage Sender: Invalid time" ;
                 bOk = false;
             }
             break;
@@ -418,10 +418,10 @@ void Sender::Activate(bool bImmediate)
     // create the SDP
     if(m_Active.bMasterEnable)
     {
-        CreateSDP();    // @TODO need to update SDP but keep stuff
+        CreateSDP(m_Active);    // @TODO need to update SDP but keep stuff
         if(m_sSDP.empty())
         {
-            CreateSDP();
+            CreateSDP(m_Active);
         }
         else
         {
@@ -454,7 +454,7 @@ void Sender::Activate(bool bImmediate)
 void Sender::CommitActivation()
 {
     //reset the staged activation
-    Log::Get(Log::LOG_DEBUG) << "ActivateSender: Reset Staged activation parameters..." << std::endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ActivateSender: Reset Staged activation parameters..." ;
     m_Staged.eActivate = connection::ACT_NULL;
     m_Staged.sActivationTime.clear();
     m_Staged.sRequestedTime.clear();
@@ -469,7 +469,7 @@ void Sender::SetDestinationDetails(const std::string& sDestinationIp, unsigned s
     std::lock_guard<std::mutex> lock(m_mutex);
     m_Active.tpSender.sDestinationIp = sDestinationIp;
     m_Active.tpSender.nDestinationPort = nDestinationPort;
-    CreateSDP();
+    CreateSDP(m_Active);
     UpdateVersionTime();
 }
 
@@ -483,12 +483,12 @@ void Sender::MasterEnable(bool bEnable)
     UpdateVersionTime();
 }
 
-void Sender::CreateSDP()
+void Sender::CreateSDP(const connectionSender& state)
 {
     std::stringstream ssSDP;
     ssSDP << "v=0\r\n";
     ssSDP << "o=- " << GetCurrentTaiTime(false) << " " << GetCurrentTaiTime(false) << " IN IP";
-    switch(SdpManager::CheckIpAddress(m_Active.tpSender.sSourceIp))
+    switch(SdpManager::CheckIpAddress(state.tpSender.sSourceIp))
     {
         case SdpManager::IP4_UNI:
         case SdpManager::IP4_MULTI:
@@ -502,7 +502,7 @@ void Sender::CreateSDP()
             ssSDP << " ";
             break;
     }
-    ssSDP << m_Active.tpSender.sSourceIp << "\r\n";    // @todo should check here if sSourceIp is not set to auto
+    ssSDP << state.tpSender.sSourceIp << "\r\n";    // @todo should check here if sSourceIp is not set to auto
     ssSDP << "t=0 0 \r\n";
 
     std::map<std::string, std::shared_ptr<Device> >::const_iterator itDevice = NodeApi::Get().GetDevices().FindNmosResource(m_sDeviceId);
@@ -519,31 +519,32 @@ void Sender::CreateSDP()
 
     std::stringstream ssc;
     //put in the destination unicast/multicast block
-    switch(SdpManager::CheckIpAddress(m_Active.tpSender.sDestinationIp))
+    switch(SdpManager::CheckIpAddress(state.tpSender.sDestinationIp))
     {
         case SdpManager::IP4_UNI:
-            ssc << "c=IN IP4 " << m_Active.tpSender.sDestinationIp << "\r\n";
+            ssc << "c=IN IP4 " << state.tpSender.sDestinationIp << "\r\n";
             ssSDP << ssc.str();
             ssSDP << "a=type:unicast\r\n";
             break;
         case SdpManager::IP4_MULTI:
-            ssc << "c=IN IP4 " << m_Active.tpSender.sDestinationIp << "/32\r\n";
+            ssc << "c=IN IP4 " << state.tpSender.sDestinationIp << "/32\r\n";
             ssSDP << ssc.str();
-            ssSDP << "a=source-filter:incl IN IP4 " << m_Active.tpSender.sDestinationIp << " " << m_Active.tpSender.sSourceIp << "\r\n";
+            ssSDP << "a=source-filter:incl IN IP4 " << state.tpSender.sDestinationIp << " " << state.tpSender.sSourceIp << "\r\n";
             ssSDP << "a=type:multicast\r\n";
             break;
         case SdpManager::IP6_UNI:
-            ssc << "c=IN IP6 " << m_Active.tpSender.sDestinationIp << "\r\n";
+            ssc << "c=IN IP6 " << state.tpSender.sDestinationIp << "\r\n";
             ssSDP << ssc.str();
             ssSDP << "a=type:unicast\r\n";
             break;
         case SdpManager::IP6_MULTI:
-            ssc << "c=IN IP6 " << m_Active.tpSender.sDestinationIp << "\r\n";
+            ssc << "c=IN IP6 " << state.tpSender.sDestinationIp << "\r\n";
             ssSDP << ssc.str();
-            ssSDP << "a=source-filter:incl IN IP6 " << m_Active.tpSender.sDestinationIp << " " << m_Active.tpSender.sSourceIp << "\r\n";
+            ssSDP << "a=source-filter:incl IN IP6 " << state.tpSender.sDestinationIp << " " << state.tpSender.sSourceIp << "\r\n";
             ssSDP << "a=type:multicast\r\n";
             break;
         case SdpManager::SdpManager::IP_INVALID:
+            pmlLog(pml::LOG_WARN) << "NMOS: Sender can't create SDP - destination IP invalid '" << state.tpSender.sDestinationIp << "'";
             break;
     }
 
@@ -552,11 +553,11 @@ void Sender::CreateSDP()
     auto itFlow = NodeApi::Get().GetFlows().FindNmosResource(m_sFlowId);
     if(itFlow != NodeApi::Get().GetFlows().GetResourceEnd())
     {
-        std::shared_ptr<Flow> pFlow = std::dynamic_pointer_cast<Flow>(itFlow->second);
+        auto pFlow = std::dynamic_pointer_cast<Flow>(itFlow->second);
         if(pFlow)
         {
-            Log::Get(Log::LOG_DEBUG) << "CreateSDP Destination Port = " << m_Active.tpSender.nDestinationPort << std::endl;
-            unsigned short nPort(m_Active.tpSender.nDestinationPort);
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "CreateSDP Destination Port = " << state.tpSender.nDestinationPort ;
+            unsigned short nPort(state.tpSender.nDestinationPort);
             if(nPort == 0)
             {
                 nPort = 5004;
@@ -568,8 +569,8 @@ void Sender::CreateSDP()
             auto itSource = NodeApi::Get().GetSources().FindNmosResource(pFlow->GetSourceId());
             if(itSource != NodeApi::Get().GetSources().GetResourceEnd())
             {
-                std::shared_ptr<Source> pSource = std::dynamic_pointer_cast<Source>(itSource->second);
-                std::string sClock = pSource->GetClock();
+                auto pSource = std::dynamic_pointer_cast<Source>(itSource->second);
+                auto sClock = pSource->GetClock();
 
                 //clock information is probably at the media level
                 if(m_setInterfaces.empty() || sClock.empty())
@@ -584,17 +585,17 @@ void Sender::CreateSDP()
         }
     }
     //now put in the RTCP info if we've got any
-    if(m_Active.tpSender.bRtcpEnabled)
+    if(state.tpSender.bRtcpEnabled)
     {
-        switch(SdpManager::CheckIpAddress(m_Active.tpSender.sRtcpDestinationIp))
+        switch(SdpManager::CheckIpAddress(state.tpSender.sRtcpDestinationIp))
         {
             case SdpManager::IP4_UNI:
             case SdpManager::IP4_MULTI:
-                ssSDP << "a=rtcp:" << m_Active.tpSender.nRtcpDestinationPort << " IN IP4 " << m_Active.tpSender.sRtcpDestinationIp << "\r\n";
+                ssSDP << "a=rtcp:" << state.tpSender.nRtcpDestinationPort << " IN IP4 " << state.tpSender.sRtcpDestinationIp << "\r\n";
                 break;
             case SdpManager::IP6_UNI:
             case SdpManager::IP6_MULTI:
-                ssSDP << "a=rtcp:" << m_Active.tpSender.nRtcpDestinationPort << " IN IP6 " << m_Active.tpSender.sRtcpDestinationIp << "\r\n";
+                ssSDP << "a=rtcp:" << state.tpSender.nRtcpDestinationPort << " IN IP6 " << state.tpSender.sRtcpDestinationIp << "\r\n";
                 break;
             default:
                 break;
@@ -602,7 +603,7 @@ void Sender::CreateSDP()
     }
     m_sTransportFile = ssSDP.str();
 
-    Log::Get(Log::LOG_DEBUG) << "CreateSDP= " << m_sTransportFile << std::endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "CreateSDP= " << m_sTransportFile ;
 }
 
 

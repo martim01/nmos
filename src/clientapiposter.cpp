@@ -1,4 +1,5 @@
 #include "clientapiposter.h"
+#include "log.h"
 
 
 void ClientApiPoster::_ModeChanged(bool bQueryApi)
@@ -8,31 +9,37 @@ void ClientApiPoster::_ModeChanged(bool bQueryApi)
 
 void ClientApiPoster::_NodeChanged(const std::list<std::shared_ptr<Self> >& lstNodesAdded, const std::list<std::shared_ptr<Self> >& lstNodesUpdated, const std::list<std::shared_ptr<Self> >& lstNodesRemoved)
 {
+    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApiPoster::_NodeChanged" ;
     NodeChanged(lstNodesAdded, lstNodesUpdated, lstNodesRemoved);
 }
 
 void ClientApiPoster::_DeviceChanged(const std::list<std::shared_ptr<Device> >& lstDevicesAdded, const std::list<std::shared_ptr<Device> >& lstDevicesUpdated, const std::list<std::shared_ptr<Device> >& lstDevicesRemoved)
 {
+    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApiPoster::_DeviceChanged" ;
     DeviceChanged(lstDevicesAdded, lstDevicesUpdated, lstDevicesRemoved);
 }
 
 void ClientApiPoster::_SourceChanged(const std::list<std::shared_ptr<Source> >& lstSourcesAdded, const std::list<std::shared_ptr<Source> >& lstSourcesUpdated, const std::list<std::shared_ptr<Source> >& lstSourcesRemoved)
 {
+    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApiPoster::_SourceChanged" ;
     SourceChanged(lstSourcesAdded, lstSourcesUpdated, lstSourcesRemoved);
 }
 
 void ClientApiPoster::_FlowChanged(const std::list<std::shared_ptr<Flow> >& lstFlowsAdded, const std::list<std::shared_ptr<Flow> >& lstFlowsUpdated, const std::list<std::shared_ptr<Flow> >& lstFlowsRemoved)
 {
+    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApiPoster::_FlowChanged" ;
     FlowChanged(lstFlowsAdded, lstFlowsUpdated, lstFlowsRemoved);
 }
 
 void ClientApiPoster::_SenderChanged(const std::list<std::shared_ptr<Sender> >& lstSendersAdded, const std::list<std::shared_ptr<Sender> >& lstSendersUpdated, const std::list<std::shared_ptr<Sender> >& lstSendersRemoved)
 {
+    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApiPoster::_SenderChanged" ;
     SenderChanged(lstSendersAdded, lstSendersUpdated, lstSendersRemoved);
 }
 
 void ClientApiPoster::_ReceiverChanged(const std::list<std::shared_ptr<Receiver> >& lstReceiversAdded, const std::list<std::shared_ptr<Receiver> >& lstReceiversUpdated, const std::list<std::shared_ptr<Receiver> >& lstReceiversRemoved)
 {
+    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApiPoster::_ReceiverChanged" ;
     ReceiverChanged(lstReceiversAdded, lstReceiversUpdated, lstReceiversRemoved);
 }
 

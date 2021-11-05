@@ -27,7 +27,10 @@ class Sender;
 class NodeThread;
 class Server;
 class NodeZCPoster;
+class RestGoose;
 class dnsInstance;
+class IS04Server;
+class IS05Server;
 
 class NMOS_EXPOSE NodeApi
 {
@@ -148,6 +151,10 @@ class NMOS_EXPOSE NodeApi
         const ResourceHolder<Sender>& GetSenders();
 
 
+        void RemoveSender(const std::string& sId);
+        void RemoveReceiver(const std::string& sId);
+
+
         /** @brief Returns a pointer to the receiver with the given id if one exists or null.
         *   @param sId the uuid of the receiver
         *   @return <i>Receiver*</i> pointer to the given receiver or null
@@ -210,8 +217,10 @@ class NMOS_EXPOSE NodeApi
         **/
         unsigned short GetConnectionPort() const;
 
+        unsigned short GetDiscoveryPort() const;
 
 
+        Json::Value JsonConnectionVersions() const;
 
 
 
@@ -232,12 +241,14 @@ class NMOS_EXPOSE NodeApi
         void ReceiverActivated(const std::string& sId);
         void SenderActivated(const std::string& sId);
 
+
+
+
     protected:
         friend class NodeThread;
         friend class ServiceBrowser;
         friend class Server;
-        friend class MicroServer;
-        friend class MongooseServer;
+
         friend class NodeZCPoster;
 
         enum {REG_FAILED = 0, REG_START, REG_DEVICES, REG_SOURCES, REG_FLOWS, REG_SENDERS, REG_RECEIVERS, REG_DONE};
@@ -340,11 +351,14 @@ class NMOS_EXPOSE NodeApi
         std::shared_ptr<EventPoster> m_pPoster;
         std::shared_ptr<NodeZCPoster> m_pZCPoster;
         unsigned short m_nConnectionPort;
+        unsigned short m_nDiscoveryPort;
 
         std::chrono::system_clock::time_point m_tpHeartbeat;
 
 
-        std::map<unsigned short, std::unique_ptr<Server> > m_mServers;
+        std::list<std::shared_ptr<RestGoose>> m_lstServers;
+        std::map<ApiVersion, std::unique_ptr<IS04Server>> m_mDiscoveryServers;
+        std::map<ApiVersion, std::unique_ptr<IS05Server>> m_mConnectionServers;
 
         struct regnode
         {
@@ -359,3 +373,4 @@ class NMOS_EXPOSE NodeApi
         enumSignal m_eSignal;
         static const std::string STR_RESOURCE[7];
 };
+

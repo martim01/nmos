@@ -22,7 +22,7 @@ bool FlowMux::UpdateFromJson(const Json::Value& jsData)
     }
     else
     {
-        m_ssJsonError << "'media-type' is not a string" << std::endl;
+        m_ssJsonError << "'media-type' is not a string" ;
     }
     return m_bIsOk;
 }

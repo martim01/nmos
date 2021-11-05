@@ -32,12 +32,12 @@ bool SourceAudio::UpdateFromJson(const Json::Value& jsData)
     if(jsData["channels"].isArray() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'channels' is not an array" << std::endl;
+        m_ssJsonError << "'channels' is not an array" ;
     }
     else if(jsData["channels"].size() ==0 )
     {
         m_bIsOk = false;
-        m_ssJsonError << "'channels' is an empty array" << std::endl;
+        m_ssJsonError << "'channels' is an empty array" ;
     }
     if(m_bIsOk)
     {
@@ -46,19 +46,19 @@ bool SourceAudio::UpdateFromJson(const Json::Value& jsData)
             if(jsData["channels"][ai].isObject() == false)
             {
                 m_bIsOk = false;
-                m_ssJsonError << "'channels' #" << ai << " is not an object" << std::endl;
+                m_ssJsonError << "'channels' #" << ai << " is not an object" ;
                 break;
             }
             else if(jsData["channels"][ai]["label"].isString() == false)
             {
                 m_bIsOk = false;
-                m_ssJsonError << "'channels' #" << ai << " 'label' is not a string" << std::endl;
+                m_ssJsonError << "'channels' #" << ai << " 'label' is not a string" ;
                 break;
             }
             else if(jsData["channels"][ai]["symbol"].isString() == false)
             {
                 m_bIsOk = false;
-                m_ssJsonError << "'channels' #" << ai << " 'symbol' is not a string" << std::endl;
+                m_ssJsonError << "'channels' #" << ai << " 'symbol' is not a string" ;
                 break;
             }
             else

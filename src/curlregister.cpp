@@ -106,7 +106,7 @@ long CurlRegister::Post(const std::string& sUrl, const std::string& sJson, std::
         curl_easy_setopt(pCurl, CURLOPT_URL, sUrl.c_str());
         curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &chunk);
 
-        Log::Get(Log::LOG_DEBUG) << "POST: " << sUrl << " payload=" << sJson << std::endl;
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "POST: " << sUrl << " payload=" << sJson ;
 
         struct curl_slist * pHeaders = NULL;
         if(sJson.length() > 0)
@@ -158,7 +158,7 @@ long CurlRegister::Delete(const std::string& sUrl, const std::string& sType, con
     std::stringstream ssUrl;
     ssUrl << sUrl << "/" << sType << "/" << sId;
 
-    Log::Get(Log::LOG_DEBUG) << "DELETE: " << ssUrl.str() << std::endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "DELETE: " << ssUrl.str() ;
 
     char sError[CURL_ERROR_SIZE];
     CURLcode res;
@@ -321,7 +321,7 @@ long CurlRegister::Get(const std::string& sUrl, std::string& sResponse, bool bJs
         {
             curl_easy_getinfo(pCurl, CURLINFO_RESPONSE_CODE, &nResponseCode);
             sResponse = curl_easy_strerror(res);
-            Log::Get(Log::LOG_ERROR) << "CURL Error: " << sResponse << std::endl;
+            pmlLog(pml::LOG_ERROR) << "NMOS: " << "CURL Error: " << sResponse ;
         }
         else
         {
@@ -354,7 +354,7 @@ long CurlRegister::Get(const std::string& sUrl, std::string& sResponse, bool bJs
 //    }
 //    else
 //    {
-//        Log::Get(Log::LOG_ERROR) << "Query: Could not parse response" << std::endl;
+//        pmlLog(pml::LOG_ERROR) << "NMOS: " << "Query: Could not parse response" ;
 //    }
 //}
 //
@@ -451,7 +451,7 @@ size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *user
 
 int debug_callback(CURL *handle, curl_infotype type, char *data, size_t size, void *userptr)
 {
-//    wmLog::Get()->Log(wxT("Curl"), wxString::FromAscii(data));
+//    wmpmlLog(pml::LOG_INFO)->Log(wxT("Curl"), wxString::FromAscii(data));
     return size;
 }
 

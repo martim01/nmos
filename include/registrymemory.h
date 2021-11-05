@@ -1,3 +1,4 @@
+#ifdef __NMOS_REGISTRY__
 #include "registry.h"
 #include <map>
 #include <list>
@@ -27,3 +28,4 @@ class RegistryMemory : public Registry
         std::map<std::string, RegistryHolder> m_mRegistryHolder;
 
 };
+#endif

@@ -44,6 +44,8 @@ class NMOS_EXPOSE Sender : public IOResource
             return m_sFlowId;
         }
 
+        const std::string& GetTransportType() const { return STR_TRANSPORT[m_eTransport]; }
+
         Json::Value GetConnectionStagedJson(const ApiVersion& version) const;
         Json::Value GetConnectionActiveJson(const ApiVersion& version) const;
         Json::Value GetConnectionConstraintsJson(const ApiVersion& version) const;
@@ -63,12 +65,15 @@ class NMOS_EXPOSE Sender : public IOResource
 
 
         const std::string& GetTransportFile() const;
-        void CreateSDP();
 
+        void CreateSDP() { CreateSDP(m_Active); }
         bool IsActivateAllowed() const;
         void CommitActivation();
+
+        const std::string GetDestinationIp() const {return m_sDestinationIp;}
     private:
 
+        void CreateSDP(const connectionSender& state);
 
 
         std::string m_sFlowId;

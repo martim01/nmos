@@ -77,16 +77,16 @@ bool ServiceBrowser::StartBrowser()
     {
         int error;
 
-        Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: Create Threaded poll object." << endl;
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser: Create Threaded poll object." ;
         /* Allocate main loop object */
         if (!(m_pThreadedPoll = avahi_threaded_poll_new()))
         {
-            Log::Get(Log::LOG_ERROR) << "ServiceBrowser: Failed to create Threaded poll object." << endl;
+            pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServiceBrowser: Failed to create Threaded poll object." ;
             return false;
         }
 
         /* Allocate a new client */
-        Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: Allocate a new client." << endl;
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser: Allocate a new client." ;
         avahi_client_new(avahi_threaded_poll_get(m_pThreadedPoll), AVAHI_CLIENT_NO_FAIL, client_callback, reinterpret_cast<void*>(this), &error);
         avahi_threaded_poll_start(m_pThreadedPoll);
         m_bStarted = true;
@@ -137,7 +137,7 @@ void ServiceBrowser::Stop()
 
 bool ServiceBrowser::Start(AvahiClient* pClient)
 {
-    Log::Get(Log::LOG_DEBUG) << "ServiceBrowser:Start" << endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser:Start" ;
     if(!m_bBrowsing)
     {
         //lock_guard<mutex> lg(m_mutex);
@@ -150,7 +150,7 @@ bool ServiceBrowser::Start(AvahiClient* pClient)
 
 void ServiceBrowser::Browse()
 {
-    Log::Get(Log::LOG_DEBUG) << "ServiceBrowser:Browse" << endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser:Browse" ;
 
     for(map<string, shared_ptr<ZCPoster> >::iterator itService = m_mServiceBrowse.begin(); itService != m_mServiceBrowse.end(); ++itService)
     {
@@ -160,11 +160,11 @@ void ServiceBrowser::Browse()
             /* Create the service browser */
             if (!(psb = avahi_service_browser_new(m_pClient, AVAHI_IF_UNSPEC, AVAHI_PROTO_INET, (itService->first).c_str(), NULL, (AvahiLookupFlags)0, browse_callback, reinterpret_cast<void*>(this))))
             {
-                Log::Get(Log::LOG_ERROR) << "ServiceBrowser: Failed to create service browser" << endl;
+                pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServiceBrowser: Failed to create service browser" ;
             }
             else
             {
-                Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: Service '" << itService->first << "' browse" << endl;
+                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser: Service '" << itService->first << "' browse" ;
                 m_setBrowser.insert(psb);
                 m_nWaitingOn++;
             }
@@ -174,16 +174,16 @@ void ServiceBrowser::Browse()
 
 void ServiceBrowser::ClientCallback(AvahiClient * pClient, AvahiClientState state)
 {
-    Log::Get(Log::LOG_DEBUG) << "ServiceBrowser:ClientCallback" << endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser:ClientCallback" ;
     switch (state)
     {
         case AVAHI_CLIENT_FAILURE:
-            Log::Get(Log::LOG_ERROR) << "ServiceBrowser: ClientCallback: failure" << endl;
+            pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServiceBrowser: ClientCallback: failure" ;
             if (avahi_client_errno(pClient) == AVAHI_ERR_DISCONNECTED)
             {
                 int error;
                 /* We have been disconnected, so let reconnect */
-                Log::Get(Log::LOG_WARN) << "ServiceBrowser:  Disconnected, reconnecting ..." << endl;
+                pmlLog(pml::LOG_WARN) << "NMOS: " << "ServiceBrowser:  Disconnected, reconnecting ..." ;
 
                 avahi_client_free(pClient);
                 m_pClient = NULL;
@@ -192,31 +192,31 @@ void ServiceBrowser::ClientCallback(AvahiClient * pClient, AvahiClientState stat
 
                 if (!(avahi_client_new(avahi_threaded_poll_get(m_pThreadedPoll), AVAHI_CLIENT_NO_FAIL, client_callback, reinterpret_cast<void*>(this), &error)))
                 {
-                    Log::Get(Log::LOG_ERROR) << "ServiceBrowser: Failed to create client object: " << avahi_strerror(avahi_client_errno(m_pClient));// << endl;
+                    pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServiceBrowser: Failed to create client object: " << avahi_strerror(avahi_client_errno(m_pClient));// ;
                     Stop();
 
                 }
             }
             else
             {
-                Log::Get(Log::LOG_ERROR) << "ServiceBrowser: Server connection failure" << endl;
+                pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServiceBrowser: Server connection failure" ;
                 Stop();
             }
             break;
         case AVAHI_CLIENT_S_REGISTERING:
         case AVAHI_CLIENT_S_RUNNING:
         case AVAHI_CLIENT_S_COLLISION:
-            Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: Registering/Running ..." << endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser: Registering/Running ..." ;
             if (!m_bBrowsing)
             {
                 Start(pClient);
             }
             break;
         case AVAHI_CLIENT_CONNECTING:
-            Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: Waiting for daemon ..." << endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser: Waiting for daemon ..." ;
             break;
         default:
-            Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: ClientCallback: " << state << endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser: ClientCallback: " << state ;
     }
 
 }
@@ -228,7 +228,7 @@ void ServiceBrowser::TypeCallback(AvahiIfIndex interface, AvahiProtocol protocol
         case AVAHI_BROWSER_NEW:
             {
                 string sService(type);
-                Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: Service '" << type << "' found in domain '" << domain << "'" << endl;
+                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser: Service '" << type << "' found in domain '" << domain << "'" ;
                 map<string, shared_ptr<ZCPoster> >::iterator itServiceBrowse = m_mServiceBrowse.find(sService);
                 if(itServiceBrowse != m_mServiceBrowse.end())
                 {
@@ -240,11 +240,11 @@ void ServiceBrowser::TypeCallback(AvahiIfIndex interface, AvahiProtocol protocol
                         /* Create the service browser */
                         if (!(psb = avahi_service_browser_new(m_pClient, interface, protocol, type, domain, (AvahiLookupFlags)0, browse_callback, reinterpret_cast<void*>(this))))
                         {
-                            Log::Get(Log::LOG_ERROR) << "ServiceBrowser: Failed to create service browser" << endl;
+                            pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServiceBrowser: Failed to create service browser" ;
                         }
                         else
                         {
-                            Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: Service '" << type << "' browse" << endl;
+                            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser: Service '" << type << "' browse" ;
                             m_setBrowser.insert(psb);
                             m_nWaitingOn++;
                         }
@@ -255,21 +255,21 @@ void ServiceBrowser::TypeCallback(AvahiIfIndex interface, AvahiProtocol protocol
             break;
          case AVAHI_BROWSER_REMOVE:
                 /* We're dirty and never remove the browser again */
-            Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: Service '" << type << "' removed" << endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser: Service '" << type << "' removed" ;
                 break;
         case AVAHI_BROWSER_FAILURE:
-            Log::Get(Log::LOG_ERROR) << "ServiceBrowser: service_type_browser failed" << endl;
+            pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServiceBrowser: service_type_browser failed" ;
             Stop();
             break;
         case AVAHI_BROWSER_CACHE_EXHAUSTED:
-            Log::Get(Log::LOG_ERROR) << "ServiceBrowser: AVAHI_BROWSER_CACHE_EXHAUSTED" << endl;
+            pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServiceBrowser: AVAHI_BROWSER_CACHE_EXHAUSTED" ;
             break;
         case AVAHI_BROWSER_ALL_FOR_NOW:
-            Log::Get(Log::LOG_ERROR) << "ServiceBrowser: AVAHI_BROWSER_ALL_FOR_NOW" << endl;
+            pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServiceBrowser: AVAHI_BROWSER_ALL_FOR_NOW" ;
             CheckStop();
             break;
         default:
-            Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: TypeCallback: " << event << endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser: TypeCallback: " << event ;
     }
 }
 
@@ -279,7 +279,7 @@ void ServiceBrowser::BrowseCallback(AvahiServiceBrowser* pBrowser, AvahiIfIndex 
     switch (event)
     {
         case AVAHI_BROWSER_FAILURE:
-            Log::Get(Log::LOG_ERROR) << "ServiceBrowser: Browser Failure: " << avahi_strerror(avahi_client_errno(m_pClient)) << endl;
+            pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServiceBrowser: Browser Failure: " << avahi_strerror(avahi_client_errno(m_pClient)) ;
             Stop();
             break;
         case AVAHI_BROWSER_NEW:
@@ -287,11 +287,11 @@ void ServiceBrowser::BrowseCallback(AvahiServiceBrowser* pBrowser, AvahiIfIndex 
                 string sService(type);
                 string sName(name);
 
-                Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: (Browser) NEW: service '" << name << "' of type '" << type << "' in domain '" << domain << "'" << endl;
+                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser: (Browser) NEW: service '" << name << "' of type '" << type << "' in domain '" << domain << "'" ;
                 AvahiServiceResolver* pResolver= avahi_service_resolver_new(m_pClient, interface, protocol, name, type, domain, AVAHI_PROTO_INET, (AvahiLookupFlags)0, resolve_callback, reinterpret_cast<void*>(this));
                 if(!pResolver)
                 {
-                    Log::Get(Log::LOG_ERROR) << "ServiceBrowser: Failed to resolve service " << name << ": " << avahi_strerror(avahi_client_errno(m_pClient)) << endl;
+                    pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServiceBrowser: Failed to resolve service " << name << ": " << avahi_strerror(avahi_client_errno(m_pClient)) ;
                 }
                 else
                 {
@@ -301,12 +301,12 @@ void ServiceBrowser::BrowseCallback(AvahiServiceBrowser* pBrowser, AvahiIfIndex 
             }
             break;
         case AVAHI_BROWSER_REMOVE:
-            Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: (Browser) REMOVE: service '" << name << "' of type '" << type << "' in domain '" << domain << "'" << endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser: (Browser) REMOVE: service '" << name << "' of type '" << type << "' in domain '" << domain << "'" ;
             RemoveServiceInstance(type, name);
             break;
         case AVAHI_BROWSER_ALL_FOR_NOW:
             {
-                Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: (Browser) '" << type << "' in domain '" << domain << "' ALL_FOR_NOW" << endl;
+                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser: (Browser) '" << type << "' in domain '" << domain << "' ALL_FOR_NOW" ;
                 shared_ptr<ZCPoster> pPoster(GetPoster(type));
                 if(pPoster)
                 {
@@ -327,11 +327,11 @@ void ServiceBrowser::BrowseCallback(AvahiServiceBrowser* pBrowser, AvahiIfIndex 
             break;
         case AVAHI_BROWSER_CACHE_EXHAUSTED:
             {
-                Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: (Browser) ' CACHE_EXHAUSTED " << endl;
+                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser: (Browser) ' CACHE_EXHAUSTED " ;
             }
             break;
         default:
-            Log::Get(Log::LOG_DEBUG) << "ServiceBrowser: BrowseCallback: " << event << endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser: BrowseCallback: " << event ;
     }
 }
 
@@ -347,7 +347,7 @@ void ServiceBrowser::ResolveCallback(AvahiServiceResolver* pResolver, AvahiResol
         switch (event)
         {
             case AVAHI_RESOLVER_FAILURE:
-                Log::Get(Log::LOG_ERROR) << "ServiceBrowser: (Resolver) Failed to resolve service '" << name << "' of type '" << type << "' in domain '" << domain << "': " << avahi_strerror(avahi_client_errno(m_pClient)) << endl;
+                pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServiceBrowser: (Resolver) Failed to resolve service '" << name << "' of type '" << type << "' in domain '" << domain << "': " << avahi_strerror(avahi_client_errno(m_pClient)) ;
                 m_mResolvers.erase(string(name)+"__"+string(type));
                 avahi_service_resolver_free(pResolver);
                 break;
@@ -393,11 +393,11 @@ void ServiceBrowser::ResolveCallback(AvahiServiceResolver* pResolver, AvahiResol
                     m_mutex.unlock();
                     if(itInstance->second->nUpdate == 0)
                     {
-                        Log::Get() << "ServiceBrowser: Instance '" << itInstance->second->sName << "' resolved at '" << itInstance->second->sHostIP << "'" << endl;
+                        pmlLog(pml::LOG_INFO) << "NMOS: " << "ServiceBrowser: Instance '" << itInstance->second->sName << "' resolved at '" << itInstance->second->sHostIP << "'" ;
                     }
                     else
                     {
-                        Log::Get() << "ServiceBrowser: Instance '" << itInstance->second->sName << "' updated at '" << itInstance->second->sHostIP << "'" << endl;
+                        pmlLog(pml::LOG_INFO) << "NMOS: " << "ServiceBrowser: Instance '" << itInstance->second->sName << "' updated at '" << itInstance->second->sHostIP << "'" ;
                     }
                 }
 

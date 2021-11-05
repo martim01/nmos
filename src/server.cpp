@@ -58,7 +58,7 @@ void Server::Wait()
 void Server::Signal(bool bOk, const std::string& sData)
 {
     lock_guard<mutex> lock(m_mutex);
-    Log::Get(Log::LOG_DEBUG) << "Server: " << m_nPort << " Signal= " << bOk << endl;
+    LogStream(LOG_DEBUG) << "Server: " << m_nPort << " Signal= " << bOk ;
     if(bOk)
     {
         m_eOk = SUCCESS;
@@ -169,7 +169,7 @@ int Server::PutJson(std::string sPath, const string& sJson, string& sResponse)
 
 int Server::PatchJson(std::string sPath, const string& sJson, string& sResponse)
 {
-    Log::Get(Log::LOG_DEBUG) << "PatchJson" << std::endl;
+    LogStream(LOG_DEBUG) << "PatchJson" ;
 
     //make sure path is correct
     transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);

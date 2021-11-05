@@ -35,7 +35,7 @@ connection::connection(const connection& conReq) :
 
 bool connection::Patch(const Json::Value& jsData)
 {
-    Log::Get(Log::LOG_DEBUG) << "Patch: connection" << std::endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: connection" ;
 
     bool bIsOk(true);
 
@@ -48,7 +48,7 @@ bool connection::Patch(const Json::Value& jsData)
         }
         else if(jsData["master_enable"].empty() == false)
         {
-            Log::Get(Log::LOG_DEBUG) << "Patch: master_enable incorrect type." << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: master_enable incorrect type." ;
             bIsOk = false;
         }
 
@@ -69,7 +69,7 @@ bool connection::Patch(const Json::Value& jsData)
                 }
                 if(!bFound)
                 {
-                    Log::Get(Log::LOG_DEBUG) << "Patch: activation mode not found." << std::endl;
+                    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: activation mode not found." ;
                 }
                 bIsOk &= bFound;
             }
@@ -77,7 +77,7 @@ bool connection::Patch(const Json::Value& jsData)
             {
                 if(jsData["activation"]["mode"].isNull() == false)
                 {
-                    Log::Get(Log::LOG_DEBUG) << "Patch: activation mode incorrect type" << std::endl;
+                    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: activation mode incorrect type" ;
                     bIsOk = false;
                 }
             }
@@ -89,22 +89,22 @@ bool connection::Patch(const Json::Value& jsData)
             else if(jsData["activation"].isMember("requested_time") && jsData["activation"]["requested_time"].isNull() == false)
             {
                 bIsOk = false;
-                Log::Get(Log::LOG_DEBUG) << "Patch: activation requested_time incorrect type" << std::endl;
+                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: activation requested_time incorrect type" ;
             }
         }
         else if(jsData["activation"].empty() == false)
         {
-            Log::Get(Log::LOG_DEBUG) << "Patch: activation must be an object if it exists" << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: activation must be an object if it exists" ;
             bIsOk = false;
         }
     }
     else
     {
-        Log::Get(Log::LOG_DEBUG) << "Patch: json not an object" << std::endl;
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: json not an object" ;
         bIsOk = false;
     }
 
-    Log::Get(Log::LOG_DEBUG) << "Patch: connection result " << bIsOk << std::endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: connection result " << bIsOk ;
     return bIsOk;
 }
 
@@ -201,7 +201,7 @@ connectionSender::connectionSender(const connectionSender& conReq) : connection(
 
 bool connectionSender::Patch(const Json::Value& jsData)
 {
-    Log::Get(Log::LOG_DEBUG) << "Patch: connectionSender: NOW" << std::endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: connectionSender: NOW" ;
     bool bIsOk = (connection::Patch(jsData) && CheckJson(jsData, {"master_enable", "activation", "transport_params", "receiver_id"}));
     if(bIsOk)
     {
@@ -216,33 +216,33 @@ bool connectionSender::Patch(const Json::Value& jsData)
         }
         else if(jsData["transport_params"].empty() == false)
         {
-            Log::Get(Log::LOG_DEBUG) << "Patch: transport_params not an array." << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: transport_params not an array." ;
             bIsOk = false;
         }
 
 
         if(jsData["receiver_id"].isString())
         {
-            Log::Get(Log::LOG_DEBUG) << "Patch: receiver_id string: " << jsData["receiver_id"].asString() << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: receiver_id string: " << jsData["receiver_id"].asString() ;
             nProperties |= FP_ID;
             sReceiverId = jsData["receiver_id"].asString();
         }
         else if(JsonMemberExistsAndIsNull(jsData, "receiver_id"))
         {
-            Log::Get(Log::LOG_DEBUG) << "Patch: receiver_id null: " << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: receiver_id null: " ;
             nProperties |= FP_ID;
             sReceiverId.clear();
         }
         else if(jsData.isMember("receiver_id"))
         {
             bIsOk = false;
-            Log::Get(Log::LOG_DEBUG) << "Patch: receiver_id incorrect type" << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: receiver_id incorrect type" ;
         }
 
     }
     else
     {
-    Log::Get(Log::LOG_DEBUG) << "Patch: error" << std::endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: error" ;
     }
     return bIsOk;
 }
@@ -296,6 +296,8 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
     //need to decode the SDP and make the correct transport param changes here so that any connection json will overwrite them
     if(bIsOk && jsData["transport_file"].isObject())
     {
+        bMasterEnable = true;   //should this be set to true here?
+
         nProperties |= FP_TRANSPORT_FILE;
         if(jsData["transport_file"]["type"].isString())
         {
@@ -304,7 +306,7 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
         else if(jsData["transport_file"].isMember("type") && jsData["transport_file"]["type"].isNull() == false)
         {
             bIsOk = false;
-            Log::Get(Log::LOG_DEBUG) << "Patch: transport_file type incorrect type" << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: transport_file type incorrect type" ;
         }
         if(jsData["transport_file"]["data"].isString())
         {
@@ -313,12 +315,12 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
         else if(jsData["transport_file"].isMember("data") && jsData["transport_file"]["data"].isNull() == false)
         {
             bIsOk = false;
-            Log::Get(Log::LOG_DEBUG) << "Patch: transport_file data incorrect type" << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: transport_file data incorrect type" ;
         }
 
         if(sTransportFileType == "application/sdp" && sTransportFileData.empty() == false)
         {
-            Log::Get(Log::LOG_DEBUG) << "Patch: transport_file data correct" << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: transport_file data correct" ;
             SdpManager::SdpToTransportParams(sTransportFileData, tpReceiver);
         }
     }
@@ -336,25 +338,29 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
         }
         else if(jsData["transport_params"].empty() == false)
         {
-            Log::Get(Log::LOG_DEBUG) << "Patch: transport_params not an array." << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: transport_params not an array." ;
             bIsOk = false;
+        }
+        else
+        {
+            tpReceiver.bRtpEnabled = bMasterEnable;
         }
 
         if(jsData["sender_id"].isString())
         {
             nProperties |= FP_ID;
             sSenderId = jsData["sender_id"].asString();
-            Log::Get(Log::LOG_DEBUG) << "PatchReceiver Connection: sender_id is " << sSenderId << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchReceiver Connection: sender_id is " << sSenderId ;
         }
         else if(JsonMemberExistsAndIsNull(jsData, "sender_id"))
         {
-            Log::Get(Log::LOG_DEBUG) << "PatchReceiver Connection: sender_id is NULL" << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchReceiver Connection: sender_id is NULL" ;
             sSenderId.clear();
         }
         else if(jsData.isMember("sender_id") != false)
         {
             bIsOk = false;
-            Log::Get(Log::LOG_DEBUG) << "Patch: sender_id incorrect type" << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: sender_id incorrect type" ;
         }
     }
 

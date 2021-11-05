@@ -41,7 +41,7 @@ static void ev_handler(mg_connection *pConnection, int nEvent, void* pData)
 
 static mg_str file_upload(mg_connection*, mg_str file_name)
 {
-    Log::Get(Log::LOG_DEBUG) << "upload" << endl;
+    LogStream(LOG_DEBUG) << "upload" ;
     char* filename= reinterpret_cast<char*>(malloc(strlen("/tmp/ns_temp.src")+1));
     strcpy(filename, "/tmp/ns_temp.src");
     return mg_mk_str(filename);
@@ -54,16 +54,16 @@ void MongooseServer::HandleEvent(mg_connection *pConnection, int nEvent, void* p
     {
     case MG_EV_WEBSOCKET_HANDSHAKE_DONE:
     {
-        Log::Get(Log::LOG_DEBUG) << "Event Websocket" << endl;
+        LogStream(LOG_DEBUG) << "Event Websocket" ;
     //    EventWebsocket(pConnection, nEvent, pData);
-        Log::Get(Log::LOG_DEBUG) << "Done" << endl;
+        LogStream(LOG_DEBUG) << "Done" ;
     }
     break;
     case MG_EV_HTTP_REQUEST:
     {
-        Log::Get(Log::LOG_DEBUG) << "Event HTTP" << endl;
+        LogStream(LOG_DEBUG) << "Event HTTP" ;
         EventHttp(pConnection, nEvent, pData);
-        Log::Get(Log::LOG_DEBUG) << "Done" << endl;
+        LogStream(LOG_DEBUG) << "Done" ;
     }
     break;
     case MG_EV_TIMER:
@@ -74,27 +74,27 @@ void MongooseServer::HandleEvent(mg_connection *pConnection, int nEvent, void* p
     break;
     case MG_EV_CLOSE:
     {
-        Log::Get(Log::LOG_DEBUG) << "Event Close" << endl;
+        LogStream(LOG_DEBUG) << "Event Close" ;
         if (is_websocket(pConnection))
         {
             pConnection->user_data = 0;
         }
-        Log::Get(Log::LOG_DEBUG) << "Done" << endl;
+        LogStream(LOG_DEBUG) << "Done" ;
     }
     break;
     case MG_EV_HTTP_MULTIPART_REQUEST:
         StartUpload(reinterpret_cast<http_message*>(pData));
         break;
     case MG_EV_HTTP_PART_BEGIN:
-        Log::Get(Log::LOG_DEBUG) << "MG_EV_HTTP_PART_BEGIN" << endl;
+        LogStream(LOG_DEBUG) << "MG_EV_HTTP_PART_BEGIN" ;
         mg_file_upload_handler(pConnection, nEvent, pData, file_upload);
         break;
     case MG_EV_HTTP_PART_DATA:
-        Log::Get(Log::LOG_DEBUG) << "MG_EV_HTTP_PART_DATA" << endl;
+        LogStream(LOG_DEBUG) << "MG_EV_HTTP_PART_DATA" ;
         mg_file_upload_handler(pConnection, nEvent, pData, file_upload);
         break;
     case MG_EV_HTTP_PART_END:
-        Log::Get(Log::LOG_DEBUG) << "MG_EV_HTTP_PART_END" << endl;
+        LogStream(LOG_DEBUG) << "MG_EV_HTTP_PART_END" ;
         mg_file_upload_handler(pConnection, nEvent, pData, file_upload);
         EndUpload(pConnection);
     case 0:
@@ -111,25 +111,25 @@ void MongooseServer::EventHttp(mg_connection *pConnection, int nEvent, void* pDa
     string sUri;
     sUri.assign(pMessage->uri.p, pMessage->uri.len);
 
-    cout << "METHOD=" << sMethod << std::endl;
+    cout << "METHOD=" << sMethod ;
     if(mg_vcmp(&pMessage->method, "GET") == 0)
     {
-        Log::Get(Log::LOG_DEBUG) << "Actual connection: GET" << endl;
+        LogStream(LOG_DEBUG) << "Actual connection: GET" ;
         DoHttpGet(pConnection, sUri);
     }
     else if(mg_vcmp(&pMessage->method, "PUT") == 0)
     {
-        Log::Get(Log::LOG_DEBUG) << "Actual connection: PUT" << endl;
+        LogStream(LOG_DEBUG) << "Actual connection: PUT" ;
          DoHttpPut(pConnection, sUri, pMessage);
     }
     else if(mg_vcmp(&pMessage->method, "PATCH") == 0)
     {
-        Log::Get(Log::LOG_DEBUG) << "Actual connection: PATCH" << endl;
+        LogStream(LOG_DEBUG) << "Actual connection: PATCH" ;
         DoHttpPatch(pConnection, sUri, pMessage);
     }
     else if(mg_vcmp(&pMessage->method, "POST") == 0)
     {
-        Log::Get(Log::LOG_DEBUG) << "Actual connection: POST" << endl;
+        LogStream(LOG_DEBUG) << "Actual connection: POST" ;
         DoHttpPost(pConnection, sUri, pMessage);
     }
 
@@ -138,7 +138,7 @@ void MongooseServer::EventHttp(mg_connection *pConnection, int nEvent, void* pDa
 
 int MongooseServer::DoReply(mg_connection* pConnection, int nCode, const std::string& sResponse, const std::string& sContentType)
 {
-    Log::Get() << "MongooseServer::DoReply "<< sResponse << endl;
+    LogStream() << "MongooseServer::DoReply "<< sResponse ;
     /* Send headers */
     stringstream ssHeaders;
     ssHeaders << "HTTP/1.1 " << nCode << "\r\n"
@@ -195,7 +195,7 @@ int MongooseServer::DoHttpPost(mg_connection* pConnection, const std::string& sU
 bool MongooseServer::Init()
 {
 
-    Log::Get() << "MongooseServer: " << m_nPort << " Try Init" << std::endl;
+    LogStream() << "MongooseServer: " << m_nPort << " Try Init" ;
 
     s_ServerOpts.document_root = "/";
     s_ServerOpts.enable_directory_listing = "no";
@@ -216,14 +216,14 @@ bool MongooseServer::Init()
         thread th(&MongooseServer::Loop, this);
         th.detach();
 
-        Log::Get() << m_pConnection->user_data << endl;
-        Log::Get() << s_ServerOpts.document_root << endl;
-        Log::Get() << "--------------------------" << endl;
+        LogStream() << m_pConnection->user_data ;
+        LogStream() << s_ServerOpts.document_root ;
+        LogStream() << "--------------------------" ;
         return true;
     }
     else
     {
-        Log::Get() << "Could not start webserver" << endl;
+        LogStream() << "Could not start webserver" ;
         return false;
     }
 
@@ -231,6 +231,7 @@ bool MongooseServer::Init()
 
 void MongooseServer::Loop()
 {
+    LogStream() << "WRONG LOOP!!!";
     if(m_pConnection)
     {
         m_bRun = true;
@@ -268,7 +269,7 @@ MongooseServer::~MongooseServer()
 void MongooseServer::StartUpload(http_message* pMessage)
 {
 
-    Log::Get(Log::LOG_INFO) << "Starting upload" << endl;
+    LogStream(LOG_INFO) << "Starting upload" ;
 
 }
 

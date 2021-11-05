@@ -13,7 +13,7 @@ using namespace std;
 
 void DNSSD_API IterateServiceTypes( DNSServiceRef sdRef, DNSServiceFlags flags, uint32_t interfaceIndex, DNSServiceErrorType errorCode, const char *serviceName, const char *regtype, const char *replyDomain, void *context )
 {
-    Log::Get(Log::LOG_DEBUG) << "BonjourBrowser: IterateServiceTypes" << endl;
+    pmlLog(pml::LOG_DEBUG) << "BonjourBrowser: IterateServiceTypes" ;
 	ServiceBrowser* pBrowser = (ServiceBrowser *) context;
     pBrowser->IterateTypes(sdRef, flags, interfaceIndex, errorCode, serviceName, regtype, replyDomain, context);
 }
@@ -21,7 +21,7 @@ void DNSSD_API IterateServiceTypes( DNSServiceRef sdRef, DNSServiceFlags flags, 
 
 void DNSSD_API IterateServiceInstances( DNSServiceRef sdRef, DNSServiceFlags flags, uint32_t interfaceIndex, DNSServiceErrorType errorCode, const char *serviceName, const char *regtype, const char *replyDomain, void *context )
 {
-    Log::Get(Log::LOG_DEBUG) << "BonjourBrowser: IterateServiceInstances" << endl;
+    pmlLog(pml::LOG_DEBUG) << "BonjourBrowser: IterateServiceInstances" ;
 
 	ServiceBrowser* pBrowser = (ServiceBrowser *) context;
 	pBrowser->IterateInstances(sdRef, flags, interfaceIndex, errorCode, serviceName, regtype, replyDomain, context );
@@ -29,7 +29,7 @@ void DNSSD_API IterateServiceInstances( DNSServiceRef sdRef, DNSServiceFlags fla
 
 void DNSSD_API ResolveInstance( DNSServiceRef sdRef, DNSServiceFlags flags, uint32_t interfaceIndex, DNSServiceErrorType errorCode, const char *fullname, const char *hosttarget, uint16_t port, uint16_t txtLen, const unsigned char *txtRecord, void *context )
 {
-    Log::Get(Log::LOG_DEBUG) << "BonjourBrowser: ResolveInstance" << endl;
+    pmlLog(pml::LOG_DEBUG) << "BonjourBrowser: ResolveInstance" ;
 	ServiceBrowser* pBrowser = (ServiceBrowser *) context;
 	pBrowser->Resolve(sdRef, flags, interfaceIndex, errorCode, fullname, hosttarget, port, txtLen, txtRecord, context );
 }
@@ -37,7 +37,7 @@ void DNSSD_API ResolveInstance( DNSServiceRef sdRef, DNSServiceFlags flags, uint
 
 void DNSSD_API GetAddress( DNSServiceRef sdRef, DNSServiceFlags flags, uint32_t interfaceIndex, DNSServiceErrorType errorCode, const char *hostname, const struct sockaddr *address, uint32_t ttl, void *context )
 {
-    Log::Get(Log::LOG_DEBUG) << "BonjourBrowser: GetAddress" << endl;
+    pmlLog(pml::LOG_DEBUG) << "BonjourBrowser: GetAddress" ;
 	ServiceBrowser* pBrowser = (ServiceBrowser *) context;
 	pBrowser->Address(sdRef, flags, interfaceIndex, errorCode, hostname, address, ttl, context );
 }
@@ -54,21 +54,21 @@ ServiceBrowser::ServiceBrowser(std::shared_ptr<EventPoster> pPoster) :
 
 bool ServiceBrowser::StartBrowser(const set<string>& setServices)
 {
-    Log::Get(Log::LOG_DEBUG) << "BonjourBrowser: Start" << endl;
+    pmlLog(pml::LOG_DEBUG) << "BonjourBrowser: Start" ;
     m_setServices = setServices;
 	DNSServiceRef client = NULL;
 	DNSServiceErrorType err = DNSServiceBrowse(&client, 0, 0, "_services._dns-sd._udp", "", IterateServiceTypes, this );
 	if ( err == 0 )
 	{
         m_mClientToFd[client] = DNSServiceRefSockFD(client);
-        Log::Get(Log::LOG_DEBUG) << "BonjourBrowser: StartThread" << endl;
+        pmlLog(pml::LOG_DEBUG) << "BonjourBrowser: StartThread" ;
 
         thread th(RunSelect, this);
         th.detach();
 
 		return true;
 	}
-    Log::Get(Log::LOG_ERROR) << "BonjourBrowser: Failed to start" << endl;
+    pmlLog(pml::LOG_ERROR) << "BonjourBrowser: Failed to start" ;
     return false;
 }
 
@@ -81,7 +81,7 @@ void ServiceBrowser::RunSelect(ServiceBrowser* pBrowser)
 		{
             if(pBrowser->m_pPoster)
             {
-                Log::Get(Log::LOG_DEBUG) << "BonjourBrowser: Finished" << endl;
+                pmlLog(pml::LOG_DEBUG) << "BonjourBrowser: Finished" ;
                 pBrowser->m_pPoster->_Finished();
             }
             break;
@@ -96,7 +96,7 @@ void ServiceBrowser::RunSelect(ServiceBrowser* pBrowser)
 		}
 
 
-		Log::Get(Log::LOG_DEBUG) << "BonjourBrowser: Start select: fd =" << pBrowser->m_mClientToFd.size() << " nfds =" << nfds << endl;
+		pmlLog(pml::LOG_DEBUG) << "BonjourBrowser: Start select: fd =" << pBrowser->m_mClientToFd.size() << " nfds =" << nfds ;
 		struct timeval tv = { 0, 1000 };
 
 		//mDNSPosixGetFDSet(m, &nfds, &readfds, &tv);
@@ -104,7 +104,7 @@ void ServiceBrowser::RunSelect(ServiceBrowser* pBrowser)
 
 		if ( result > 0 )
 		{
-		    Log::Get(Log::LOG_DEBUG) << "BonjourBrowser: Select done"  << endl;
+		    pmlLog(pml::LOG_DEBUG) << "BonjourBrowser: Select done"  ;
             //
             // While iterating through the loop, the callback functions might delete
             // the client pointed to by the current iterator, so I have to increment
@@ -125,7 +125,7 @@ void ServiceBrowser::RunSelect(ServiceBrowser* pBrowser)
 		}
 		else
 		{
-		    Log::Get(Log::LOG_DEBUG) << "Result = " << result << endl;
+		    pmlLog(pml::LOG_DEBUG) << "Result = " << result ;
 			break;
 		}
         if ( count > 10 )
@@ -174,7 +174,7 @@ void DNSSD_API ServiceBrowser::IterateTypes( DNSServiceRef sdRef, DNSServiceFlag
                 }
                 else
                 {
-                    Log::Get(Log::LOG_ERROR) << "Bonjour Browser: Error trying to browse service type: " << service_type.c_str() << endl;
+                    pmlLog(pml::LOG_ERROR) << "Bonjour Browser: Error trying to browse service type: " << service_type.c_str() ;
                 }
             }
         }
@@ -205,7 +205,7 @@ void DNSSD_API ServiceBrowser::IterateInstances( DNSServiceRef sdRef, DNSService
             DNSServiceRef client = NULL;
             DNSServiceErrorType err = DNSServiceResolve ( &client, 0, interfaceIndex, serviceName, regtype, replyDomain, ResolveInstance, context );
 
-            Log::Get(Log::LOG_DEBUG) << "BonjourBrowser: Resolving instance of " << serviceName << " " << regtype << endl;
+            pmlLog(pml::LOG_DEBUG) << "BonjourBrowser: Resolving instance of " << serviceName << " " << regtype ;
 
             if ( err == 0 )
 			{
@@ -216,7 +216,7 @@ void DNSSD_API ServiceBrowser::IterateInstances( DNSServiceRef sdRef, DNSService
             }
 			else
 			{
-			    Log::Get(Log::LOG_DEBUG) << "BonjourBrowser: Error trying to browse service instance: " << serviceName << endl;
+			    pmlLog(pml::LOG_DEBUG) << "BonjourBrowser: Error trying to browse service instance: " << serviceName ;
             }
         }
         else
@@ -253,11 +253,11 @@ void DNSSD_API ServiceBrowser::Resolve( DNSServiceRef sdRef, DNSServiceFlags fla
 				{
                     m_mClientToFd[client] = DNSServiceRefSockFD(client);
                     m_mInstances[client] = itInstance->second;
-					Log::Get(Log::LOG_DEBUG)  << "BonjourBrowser: Looking up " << itInstance->second->sHostName << " on " << sAdapter << endl;
+					pmlLog(pml::LOG_DEBUG)  << "BonjourBrowser: Looking up " << itInstance->second->sHostName << " on " << sAdapter ;
                 }
 				else
 				{
-					Log::Get(Log::LOG_ERROR) << "BonjourBrowser: Error looking up address info for "<<  itInstance->second->sHostName << endl;
+					pmlLog(pml::LOG_ERROR) << "BonjourBrowser: Error looking up address info for "<<  itInstance->second->sHostName ;
                 }
 			}
 			uint8_t lolo = (port >> 0) & 0xFF;

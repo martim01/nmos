@@ -41,22 +41,22 @@ bool Source::UpdateFromJson(const Json::Value& jsData)
     if(jsData["device_id"].isString() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'device_id' is not a string" << std::endl;
+        m_ssJsonError << "'device_id' is not a string" ;
     }
     if(jsData["caps"].isObject() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'caps' is not an object" << std::endl;
+        m_ssJsonError << "'caps' is not an object" ;
     }
     if(jsData["parents"].isArray() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'parents' is not an array" << std::endl;
+        m_ssJsonError << "'parents' is not an array" ;
     }
     if(jsData["clock_name"].isString() == false && JsonMemberExistsAndIsNotNull(jsData, "clock_name"))
     {
         m_bIsOk = false;
-        m_ssJsonError << "'clock_name' is neither a string or null" << std::endl;
+        m_ssJsonError << "'clock_name' is neither a string or null" ;
     }
     if(m_bIsOk)
     {
@@ -70,7 +70,7 @@ bool Source::UpdateFromJson(const Json::Value& jsData)
             if(jsData["parents"][ai].isString() == false)
             {
                 m_bIsOk = false;
-                m_ssJsonError << "'parents' #" << ai << " is not a string" << std::endl;
+                m_ssJsonError << "'parents' #" << ai << " is not a string" ;
                 break;
             }
             else

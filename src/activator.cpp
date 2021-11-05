@@ -75,7 +75,7 @@ void Activator::RemoveActivation(const std::chrono::time_point<std::chrono::high
         }
         else
         {   //don't need to disturb the thread
-            for(std::multimap<std::chrono::time_point<std::chrono::high_resolution_clock>, std::shared_ptr<IOResource> >::iterator itEvent = m_mmActivations.lower_bound(tp); itEvent != m_mmActivations.upper_bound(tp); ++itEvent)
+            for(auto itEvent = m_mmActivations.lower_bound(tp); itEvent != m_mmActivations.upper_bound(tp); ++itEvent)
             {
                 if(itEvent->second == pResource)
                 {
@@ -110,7 +110,7 @@ void Activator::PrimeWait()
 bool Activator::Wait()
 {
     std::unique_lock<std::mutex> lk(m_mutex);
-    std::chrono::time_point<std::chrono::high_resolution_clock> tp(m_mmActivations.begin()->first);
+    auto tp  = m_mmActivations.begin()->first;
     tp-=LEAP_SECONDS;
     while(m_bWait == true)
     {
@@ -141,7 +141,7 @@ void Activator::Activate()
     std::lock_guard<std::mutex> lock(m_mutex);
     if(m_mmActivations.empty() == false)
     {
-        for(std::multimap<std::chrono::time_point<std::chrono::high_resolution_clock>, std::shared_ptr<IOResource> >::iterator itEvent = m_mmActivations.begin(); itEvent != m_mmActivations.upper_bound(m_mmActivations.begin()->first); ++itEvent)
+        for(auto itEvent = m_mmActivations.begin(); itEvent != m_mmActivations.upper_bound(m_mmActivations.begin()->first); ++itEvent)
         {
             itEvent->second->Activate();
         }
@@ -152,7 +152,7 @@ void Activator::Activate()
 
 bool Activator::AddActivationSender(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId)
 {
-    std::shared_ptr<Sender> pSender = NodeApi::Get().GetSender(sId);
+    auto pSender = NodeApi::Get().GetSender(sId);
     if(pSender)
     {
         AddActivation(tp, std::static_pointer_cast<IOResource>(pSender));
@@ -164,7 +164,7 @@ bool Activator::AddActivationSender(const std::chrono::time_point<std::chrono::h
 
 bool Activator::RemoveActivationSender(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId)
 {
-    std::shared_ptr<Sender> pSender = NodeApi::Get().GetSender(sId);
+    auto pSender = NodeApi::Get().GetSender(sId);
     if(pSender)
     {
         RemoveActivation(tp,std::static_pointer_cast<IOResource>(pSender));
@@ -175,7 +175,7 @@ bool Activator::RemoveActivationSender(const std::chrono::time_point<std::chrono
 
 bool Activator::AddActivationReceiver(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId)
 {
-    std::shared_ptr<Receiver> pReceiver = NodeApi::Get().GetReceiver(sId);
+    auto pReceiver = NodeApi::Get().GetReceiver(sId);
     if(pReceiver)
     {
         AddActivation(tp,std::static_pointer_cast<IOResource>(pReceiver));
@@ -186,7 +186,7 @@ bool Activator::AddActivationReceiver(const std::chrono::time_point<std::chrono:
 
 bool Activator::RemoveActivationReceiver(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId)
 {
-    std::shared_ptr<Receiver> pReceiver = NodeApi::Get().GetReceiver(sId);
+    auto pReceiver = NodeApi::Get().GetReceiver(sId);
     if(pReceiver)
     {
         RemoveActivation(tp,std::static_pointer_cast<IOResource>(pReceiver));

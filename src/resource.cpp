@@ -37,27 +37,27 @@ bool Resource::UpdateFromJson(const Json::Value& jsValue)
     if(m_json["id"].isString() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'id' not a string" << std::endl;
+        m_ssJsonError << "'id' not a string" ;
     }
     if(m_json["label"].isString()==false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'label' not a string" << std::endl;
+        m_ssJsonError << "'label' not a string" ;
     }
     if(m_json["description"].isString()==false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'description' not a string" << std::endl;
+        m_ssJsonError << "'description' not a string" ;
     }
     if(m_json["version"].isString() ==false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'version' not a string" << std::endl;
+        m_ssJsonError << "'version' not a string" ;
     }
     if(m_json["tags"].isObject() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'tags' not an object" << std::endl;
+        m_ssJsonError << "'tags' not an object" ;
     }
     if(m_bIsOk)
     {

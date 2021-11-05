@@ -12,6 +12,5 @@
 			<Depends filename="libnmos.cbp" />
 		</Project>
 		<Project filename="tests/nmos_clientnode_test/nmos_clientnode_test.cbp" />
-		<Project filename="../rdswebserver/rdswebserver.cbp" />
 	</Workspace>
 </CodeBlocks_workspace_file>

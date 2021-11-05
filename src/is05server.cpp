@@ -14,653 +14,646 @@
 #include "eventposter.h"
 #include "utils.h"
 #include "curlregister.h"
-#include "server.h"
 
-using namespace std;
-
+using namespace std::placeholders;
 
 
-IS05Server::IS05Server() : NmosServer()
+const std::string IS05Server::ROOT = "/x-nmos/connection/";
+const std::string IS05Server::BULK = "/bulk";
+const std::string IS05Server::SINGLE = "/single";
+const std::string IS05Server::SENDERS = "/senders";
+const std::string IS05Server::RECEIVERS = "/receivers";
+const std::string IS05Server::CONSTRAINTS = "/constraints";
+const std::string IS05Server::STAGED = "/staged";
+const std::string IS05Server::ACTIVE = "/active";
+const std::string IS05Server::TRANSPORTFILE = "/transportfile";
+const std::string IS05Server::TRANSPORTTYPE = "/transporttype";
+
+IS05Server::IS05Server(std::shared_ptr<RestGoose> pServer, const ApiVersion& version, std::shared_ptr<EventPoster> pPoster) :
+    NmosServer(pServer, version, pPoster)
+{
+    AddBaseEndpoints();
+}
+
+IS05Server::~IS05Server()
 {
 
 }
 
-
-
-int IS05Server::GetJsonNmos(Server* pServer, string& sReturn, std::string& sContentType)
+void IS05Server::AddBaseEndpoints()
 {
-    Json::FastWriter stw;
-    if(m_vPath.size() == SZ_NMOS)
-    {
-        Json::Value jsNode;
-        jsNode.append("connection/");
-        sReturn = stw.write(jsNode);
-        return 200;
-    }
-    else if(m_vPath[API_TYPE] == "connection" && NodeApi::Get().GetConnectionPort())
-    {
-        return GetJsonNmosConnectionApi(sReturn, sContentType);
-    }
-    sReturn = stw.write(GetJsonError(404, "API not found"));
-    return 404;
+    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url("/x-nmos/connection")), std::bind(&IS05Server::GetNmosRoot, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString())), std::bind(&IS05Server::GetNmosVersion, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+BULK)), std::bind(&IS05Server::GetNmosBulk, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+BULK+SENDERS)), std::bind(&IS05Server::GetNmosBulkSenders, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(endpoint(RestGoose::POST,url(ROOT+m_version.GetVersionAsString()+BULK+SENDERS)), std::bind(&IS05Server::PostNmosBulkSenders, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+BULK+RECEIVERS)), std::bind(&IS05Server::GetNmosBulkReceivers, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(endpoint(RestGoose::POST,url(ROOT+m_version.GetVersionAsString()+BULK+RECEIVERS)), std::bind(&IS05Server::PostNmosBulkReceivers, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE)), std::bind(&IS05Server::GetNmosSingle, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS)), std::bind(&IS05Server::GetNmosSingleSenders, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS)), std::bind(&IS05Server::GetNmosSingleReceivers, this, _1,_2,_3,_4));
 }
 
-int IS05Server::GetJsonNmosConnectionApi(string& sReturn, std::string& sContentType)
+void IS05Server::AddSenderEndpoint(const std::string& sId)
 {
-    Json::FastWriter stw;
-    int nCode = 200;
-    if(m_vPath.size() == SZ_API_TYPE)
+    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId)), std::bind(&IS05Server::GetNmosSingleSender, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+CONSTRAINTS)), std::bind(&IS05Server::GetNmosSingleSenderConstraints, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+STAGED)), std::bind(&IS05Server::GetNmosSingleSenderStaged, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+ACTIVE)), std::bind(&IS05Server::GetNmosSingleSenderActive, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTFILE)), std::bind(&IS05Server::GetNmosSingleSenderTransportfile, this, _1,_2,_3,_4));
+    if(m_version > ApiVersion(1,0))
     {
-        Json::Value jsNode;
-        jsNode.append("v1.0/");
-        sReturn = stw.write(jsNode);
+        m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTTYPE)), std::bind(&IS05Server::GetNmosSingleSenderTransportType, this, _1,_2,_3,_4));
+    }
+    m_pServer->AddEndpoint(endpoint(RestGoose::PATCH, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+STAGED)), std::bind(&IS05Server::PatchNmosSingleSenderStaged, this, _1,_2,_3,_4));
+}
+
+void IS05Server::AddReceiverEndpoint(const std::string& sId)
+{
+    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId)), std::bind(&IS05Server::GetNmosSingleReceiver, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+CONSTRAINTS)), std::bind(&IS05Server::GetNmosSingleReceiverConstraints, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+STAGED)), std::bind(&IS05Server::GetNmosSingleReceiverStaged, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+ACTIVE)), std::bind(&IS05Server::GetNmosSingleReceiverActive, this, _1,_2,_3,_4));
+    if(m_version > ApiVersion(1,0))
+    {
+        m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+TRANSPORTTYPE)), std::bind(&IS05Server::GetNmosSingleReceiverTransportType, this, _1,_2,_3,_4));
+    }
+    m_pServer->AddEndpoint(endpoint(RestGoose::PATCH, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+STAGED)), std::bind(&IS05Server::PatchNmosSingleReceiverStaged, this, _1,_2,_3,_4));
+}
+
+void IS05Server::RemoveSenderEndpoint(const std::string& sId)
+{
+    m_pServer->DeleteEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId)));
+    m_pServer->DeleteEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+CONSTRAINTS)));
+    m_pServer->DeleteEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+STAGED)));
+    m_pServer->DeleteEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+ACTIVE)));
+    m_pServer->DeleteEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTFILE)));
+    if(m_version > ApiVersion(1,0))
+    {
+        m_pServer->DeleteEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTTYPE)));
+    }
+    m_pServer->DeleteEndpoint(endpoint(RestGoose::PATCH, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+STAGED)));
+}
+
+void IS05Server::RemoveReceiverEndpoint(const std::string& sId)
+{
+    m_pServer->DeleteEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId)));
+    m_pServer->DeleteEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+CONSTRAINTS)));
+    m_pServer->DeleteEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+STAGED)));
+    m_pServer->DeleteEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+ACTIVE)));
+    if(m_version > ApiVersion(1,0))
+    {
+        m_pServer->DeleteEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+TRANSPORTTYPE)));
+    }
+    m_pServer->DeleteEndpoint(endpoint(RestGoose::PATCH, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+STAGED)));
+}
+
+
+response IS05Server::GetNmosRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+{
+    response resp;
+    resp.jsonData = NodeApi::Get().JsonConnectionVersions();
+    return resp;
+}
+
+response IS05Server::GetNmosVersion(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+{
+    response resp;
+    resp.jsonData.append("bulk/");
+    resp.jsonData.append("single/");
+    return resp;
+}
+
+response IS05Server::GetNmosBulk(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+{
+    response resp;
+    resp.jsonData.append("senders/");
+    resp.jsonData.append("receivers/");
+    return resp;
+
+}
+
+response IS05Server::GetNmosBulkSenders(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+{
+    return JsonError(405, "Method not allowed here", theUrl.Get());
+}
+
+response IS05Server::PostNmosBulkSenders(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+{
+    return PostJsonSenders(ConvertToJson(theData.Get()));
+}
+
+response IS05Server::GetNmosBulkReceivers(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+{
+    return JsonError(405, "Method not allowed here", theUrl.Get());
+}
+
+response IS05Server::PostNmosBulkReceivers(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+{
+    return PostJsonReceivers(ConvertToJson(theData.Get()));
+}
+
+response IS05Server::GetNmosSingle(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+{
+    response resp;
+    resp.jsonData.append("senders/");
+    resp.jsonData.append("receivers/");
+    return resp;
+}
+
+response IS05Server::GetNmosSingleSenders(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+{
+    response resp;
+    resp.jsonData = NodeApi::Get().GetSenders().GetConnectionJson(m_version);
+    return resp;
+}
+
+response IS05Server::GetNmosSingleReceivers(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+{
+    response resp;
+    resp.jsonData = NodeApi::Get().GetReceivers().GetConnectionJson(m_version);
+    return resp;
+}
+
+response IS05Server::GetNmosSingleSender(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+{
+    response resp;
+    if(GetSender(theUrl) != nullptr)
+    {
+        resp.jsonData.append("constraints/");
+        resp.jsonData.append("staged/");
+        resp.jsonData.append("active/");
+        resp.jsonData.append("transportfile/");
+        if(m_version > ApiVersion(1,0))
+        {
+            resp.jsonData.append("transporttype/");
+        }
     }
     else
     {
-        if(m_vPath[VERSION] == "v1.0")
-        {
-            if(m_vPath.size() == SZ_VERSION)
-            {
-                //check the version::
-                Json::Value jsNode;
-                jsNode.append("bulk/");
-                jsNode.append("single/");
-                sReturn = stw.write(jsNode);
-            }
-            else
-            {
-                if(m_vPath[SZ_VERSION] == "bulk")
-                {
-                    return GetJsonNmosConnectionBulkApi(sReturn);
-                }
-                else if(m_vPath[SZ_VERSION] == "single")
-                {
-                    return GetJsonNmosConnectionSingleApi(sReturn, sContentType, ApiVersion(1,0));
+        resp = JsonError(404, "Sender does not exist", theUrl.Get());
+    }
 
-                }
-                else
-                {
-                    nCode = 404;
-                    sReturn = stw.write(GetJsonError(404, "Type not supported"));
-                }
-            }
+    return resp;
+}
+
+response IS05Server::GetNmosSingleSenderConstraints(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+{
+    response resp;
+    auto pSender = GetSender(theUrl);
+    if(pSender)
+    {
+        resp.jsonData = pSender->GetConnectionConstraintsJson(m_version);
+    }
+    else
+    {
+        resp = JsonError(404, "Sender does not exist", theUrl.Get());
+    }
+    return resp;
+}
+
+response IS05Server::GetNmosSingleSenderStaged(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+{
+    response resp;
+    auto pSender = GetSender(theUrl);
+    if(pSender)
+    {
+        resp.jsonData = pSender->GetConnectionStagedJson(m_version);
+    }
+    else
+    {
+        resp = JsonError(404, "Sender does not exist", theUrl.Get());
+    }
+    return resp;
+}
+
+response IS05Server::GetNmosSingleSenderActive(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+{
+    response resp;
+    auto pSender = GetSender(theUrl);
+    if(pSender)
+    {
+        resp.jsonData = pSender->GetConnectionActiveJson(m_version);
+    }
+    else
+    {
+        resp = JsonError(404, "Sender does not exist", theUrl.Get());
+    }
+    return resp;
+}
+
+response IS05Server::GetNmosSingleSenderTransportfile(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+{
+    response resp;
+    auto pSender = GetSender(theUrl);
+    if(pSender)
+    {
+        if(pSender->GetActive().bMasterEnable)
+        {
+            resp.sContentType = "application/sdp";
+            resp.sData = pSender->GetTransportFile();
         }
         else
         {
-            nCode = 404;
-            sReturn = stw.write(GetJsonError(404, "Version not supported"));
+            resp = JsonError(404, "MasterEnable=false", theUrl.Get());
         }
-    }
-    return nCode;
-}
 
-int IS05Server::GetJsonNmosConnectionSingleApi(std::string& sReturn, std::string& sContentType, const ApiVersion& version)
-{
-    int nCode(200);
-    Json::FastWriter stw;
-    if(m_vPath.size() == SZC_TYPE)
-    {
-        Json::Value jsNode;
-        jsNode.append("senders/");
-        jsNode.append("receivers/");
-        sReturn = stw.write(jsNode);
-    }
-    else if(m_vPath[C_DIRECTION] == "senders")
-    {
-        return GetJsonNmosConnectionSingleSenders(sReturn, sContentType, version);
-    }
-    else if(m_vPath[C_DIRECTION] == "receivers")
-    {
-        return GetJsonNmosConnectionSingleReceivers(sReturn, version);
     }
     else
     {
-        nCode = 404;
-        sReturn = stw.write(GetJsonError(404, "Endpoint not found"));
+        resp = JsonError(404, "Sender does not exist", theUrl.Get());
     }
-    return nCode;
+    return resp;
 }
 
-
-int IS05Server::GetJsonNmosConnectionSingleSenders(std::string& sReturn, std::string& sContentType, const ApiVersion& version)
+response IS05Server::GetNmosSingleSenderTransportType(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
 {
-    int nCode(200);
-    Json::FastWriter stw;
-    if(m_vPath.size() == SZC_DIRECTION)
+    response resp;
+    auto pSender = GetSender(theUrl);
+    if(pSender)
     {
-        sReturn = stw.write(NodeApi::Get().GetSenders().GetConnectionJson(version));
+        auto vType = SplitString(pSender->GetTransportType(),'.');
+        resp.jsonData = vType[0];
     }
     else
     {
-        map<string, shared_ptr<Sender> >::const_iterator itResource = NodeApi::Get().GetSenders().FindNmosResource(m_vPath[SZC_DIRECTION]);
-        if(itResource != NodeApi::Get().GetSenders().GetResourceEnd())
-        {
-            if(m_vPath.size() == SZC_ID)
-            {
-                Json::Value jsNode;
-                jsNode.append("constraints/");
-                jsNode.append("staged/");
-                jsNode.append("active/");
-                jsNode.append("transportfile/");
-                sReturn = stw.write(jsNode);
-            }
-            else
-            {
-                shared_ptr<Sender> pSender = dynamic_pointer_cast<Sender>(itResource->second);
-                if(m_vPath[C_LAST] == "constraints")
-                {
-                    sReturn = stw.write(pSender->GetConnectionConstraintsJson(version));
-                }
-                else if(m_vPath[C_LAST] == "staged")
-                {
-                    sReturn = stw.write(pSender->GetConnectionStagedJson(version));
-                }
-                else if(m_vPath[C_LAST] == "active")
-                {
-                    sReturn = stw.write(pSender->GetConnectionActiveJson(version));
-                }
-                else if(m_vPath[C_LAST] == "transportfile")
-                {
-                    if(pSender->GetActive().bMasterEnable)
-                    {
-                        // transportfile get
-                        sContentType = "application/sdp";
-                        sReturn = pSender->GetTransportFile();
-                        nCode = 200;
-                    }
-                    else
-                    {
-                        nCode = 404;
-                        sReturn = stw.write(GetJsonError(404, "MasterEnable=false"));
-                    }
-                }
-                else
-                {
-                    nCode = 404;
-                    sReturn = stw.write(GetJsonError(404, "Endpoint not found"));
-                }
-            }
-        }
-        else
-        {
-            nCode = 404;
-            sReturn = stw.write(GetJsonError(404, "Sender not found"));
-        }
+        resp = JsonError(404, "Sender does not exist", theUrl.Get());
     }
-    return nCode;
+    return resp;
 }
 
-int IS05Server::GetJsonNmosConnectionSingleReceivers(std::string& sReturn, const ApiVersion& version)
+response IS05Server::PatchNmosSingleSenderStaged(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
 {
-    int nCode(200);
-    Json::FastWriter stw;
-    if(m_vPath.size() == SZC_DIRECTION)
+    auto pSender = GetSender(theUrl);
+    if(pSender)
     {
-        sReturn = stw.write(NodeApi::Get().GetReceivers().GetConnectionJson(version));
+        return PatchSender(pSender, ConvertToJson(theData.Get()));
     }
     else
     {
-        map<string, shared_ptr<Receiver> >::const_iterator itResource = NodeApi::Get().GetReceivers().FindNmosResource(m_vPath[SZC_DIRECTION]);
-        if(itResource != NodeApi::Get().GetReceivers().GetResourceEnd())
-        {
-            if(m_vPath.size() == SZC_ID)
-            {
-                Json::Value jsNode;
-                jsNode.append("constraints/");
-                jsNode.append("staged/");
-                jsNode.append("active/");
-                sReturn = stw.write(jsNode);
-            }
-            else
-            {
-                shared_ptr<Receiver> pReceiver(dynamic_pointer_cast<Receiver>(itResource->second));
-                if(m_vPath[C_LAST] == "constraints")
-                {
-                    sReturn = stw.write(pReceiver->GetConnectionConstraintsJson(version));
-                }
-                else if(m_vPath[C_LAST] == "staged")
-                {
-                    sReturn = stw.write(pReceiver->GetConnectionStagedJson(version));
-                }
-                else if(m_vPath[C_LAST] == "active")
-                {
-                    sReturn = stw.write(pReceiver->GetConnectionActiveJson(version));
-                }
-                else
-                {
-                    nCode = 404;
-                    sReturn = stw.write(GetJsonError(404, "Endpoint not found"));
-                }
-            }
-        }
-        else
-        {
-            nCode = 404;
-            sReturn = stw.write(GetJsonError(404, "Receiver not found"));
-        }
+        return JsonError(404, "Sender does not exist", theUrl.Get());
     }
-    return nCode;
 }
 
-
-int IS05Server::GetJsonNmosConnectionBulkApi(std::string& sReturn)
+response IS05Server::GetNmosSingleReceiver(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
 {
-    int nCode(200);
-    Json::FastWriter stw;
-    if(m_vPath.size() == SZC_TYPE)
+    response resp;
+    auto pReceiver = GetReceiver(theUrl);
+    if(pReceiver)
     {
-        Json::Value jsNode;
-        jsNode.append("senders/");
-        jsNode.append("receivers/");
-        sReturn = stw.write(jsNode);
-    }
-    else if(m_vPath[SZC_TYPE] == "senders")
-    {
-        nCode = 405;
-        sReturn = stw.write(GetJsonError(405, "Method not allowed"));
-    }
-    else if(m_vPath[SZC_TYPE] == "receivers")
-    {
-        nCode = 405;
-        sReturn = stw.write(GetJsonError(405, "Method not allowed"));
+        resp.jsonData.append("constraints/");
+        resp.jsonData.append("staged/");
+        resp.jsonData.append("active/");
+        if(m_version > ApiVersion(1,0))
+        {
+            resp.jsonData.append("transporttype/");
+        }
     }
     else
     {
-        nCode = 404;
-        sReturn = stw.write(GetJsonError(404, "Endpoint not found"));
+        resp = JsonError(404, "Receiver does not exist", theUrl.Get());
     }
-    return nCode;
+    return resp;
 }
 
-
-
-int IS05Server::PatchJsonNmos(Server* pServer, const string& sJson, string& sResponse)
+response IS05Server::GetNmosSingleReceiverConstraints(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
 {
-    Json::FastWriter stw;
-    int nCode = 202;
-
-    if(m_vPath.size() < SZC_LAST || NodeApi::Get().GetConnectionPort() != m_nPort || m_vPath[API_TYPE] != "connection" || m_vPath[VERSION] != "v1.0" || m_vPath[C_TYPE] != "single" || (m_vPath[C_DIRECTION] != "senders" && m_vPath[C_DIRECTION] != "receivers") || m_vPath[C_LAST] != "staged")
+    response resp;
+    auto pReceiver = GetReceiver(theUrl);
+    if(pReceiver)
     {
-        nCode = 405;
-        sResponse = stw.write(GetJsonError(nCode, "Method not allowed here."));
+        resp.jsonData = pReceiver->GetConnectionConstraintsJson(m_version);
     }
     else
     {
-        ApiVersion version(m_vPath[VERSION]);
-
-        if(m_vPath[C_DIRECTION] == "senders")
-        {
-            return PatchJsonSender(pServer, sJson, sResponse, version);
-        }
-        else
-        {
-            return PatchJsonReceiver(pServer, sJson, sResponse, version);
-        }
+        resp = JsonError(404, "Receiver does not exist", theUrl.Get());
     }
-    return nCode;
+    return resp;
 }
 
-int IS05Server::PostJsonNmos(Server* pServer, const string& sJson, string& sResponse)
+response IS05Server::GetNmosSingleReceiverStaged(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
 {
-    Json::FastWriter stw;
-    int nCode = 405;
-
-    if(m_vPath.size() < SZC_DIRECTION || NodeApi::Get().GetConnectionPort() != m_nPort || m_vPath[API_TYPE] != "connection" || m_vPath[VERSION] != "v1.0" || m_vPath[C_TYPE] != "bulk" || (m_vPath[C_DIRECTION] != "senders" && m_vPath[C_DIRECTION] != "receivers"))
+    response resp;
+    auto pReceiver = GetReceiver(theUrl);
+    if(pReceiver)
     {
-        nCode = 405;
-        sResponse = stw.write(GetJsonError(nCode, "Method not allowed here."));
+        resp.jsonData = pReceiver->GetConnectionStagedJson(m_version);
     }
     else
     {
-        ApiVersion version(m_vPath[VERSION]);
-
-        if(m_vPath[C_DIRECTION] == "senders")
-        {
-            return PostJsonSenders(pServer, sJson, sResponse, version);
-        }
-        else
-        {
-            return PostJsonReceivers(pServer, sJson, sResponse, version);
-        }
+        resp = JsonError(404, "Receiver does not exist", theUrl.Get());
     }
-    return nCode;
+    return resp;
 }
 
-
-int IS05Server::PatchJsonSender(Server* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version)
+response IS05Server::GetNmosSingleReceiverActive(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
 {
-    Log::Get(Log::LOG_DEBUG) << "PatchJsonSender" << std::endl;
-    int nCode(200);
-    Json::FastWriter stw;
-    //does the sender exist?
-    shared_ptr<Sender> pSender = NodeApi::Get().GetSender(m_vPath[C_ID]);
-    if(!pSender)
+    response resp;
+    auto pReceiver = GetReceiver(theUrl);
+    if(pReceiver)
     {
-        nCode = 404;
-        sResponse = stw.write(GetJsonError(nCode, "Resource does not exist."));
-        Log::Get(Log::LOG_DEBUG) << "PatchJsonSender: Resource does not exist." << std::endl;
+        resp.jsonData = pReceiver->GetConnectionActiveJson(m_version);
     }
     else
     {
-        Log::Get(Log::LOG_DEBUG) << "PatchJsonSender: --------------------------------" << std::endl;
-        Log::Get(Log::LOG_DEBUG) << sJson << std::endl;
-        Log::Get(Log::LOG_DEBUG) << "PatchJsonSender: --------------------------------" << std::endl;
-        //is the json valid?
-        Json::Value jsRequest;
-        Json::Reader jsReader;
-        if(jsReader.parse(sJson, jsRequest) == false)
-        {
-            nCode = 400;
-            sResponse = stw.write(GetJsonError(nCode, "Request is ill defined."));
-
-            Log::Get(Log::LOG_DEBUG) << "PatchJsonSender: Request is ill defined." << std::endl;
-        }
-        else
-        {
-            nCode = PatchSender(pServer, pSender, jsRequest, sResponse, version);
-        }
+        resp = JsonError(404, "Receiver does not exist", theUrl.Get());
     }
-    return nCode;
+    return resp;
+}
+
+response IS05Server::GetNmosSingleReceiverTransportType(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+{
+    response resp;
+    auto pReceiver = GetReceiver(theUrl);
+    if(pReceiver)
+    {
+        auto vType = SplitString(pReceiver->GetTransportType(),'.');
+        resp.jsonData = vType[0];
+    }
+    else
+    {
+        resp = JsonError(404, "Receiver does not exist", theUrl.Get());
+    }
+    return resp;
+}
+
+response IS05Server::PatchNmosSingleReceiverStaged(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+{
+    auto pReceiver = GetReceiver(theUrl);
+    if(pReceiver)
+    {
+        return PatchReceiver(pReceiver, ConvertToJson(theData.Get()));
+    }
+    else
+    {
+        return JsonError(404, "Receiver does not exist", theUrl.Get());
+    }
 }
 
 
-int IS05Server::PatchSender(Server* pServer, shared_ptr<Sender> pSender, const Json::Value& jsRequest, std::string& sResponse, const ApiVersion& version)
+
+response IS05Server::PatchSender(std::shared_ptr<Sender> pSender, const Json::Value& jsRequest)
 {
-    Log::Get(Log::LOG_DEBUG) << "PatchSender: " << pSender->GetId() << endl;
-    int nCode(200);
-    Json::FastWriter stw;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchSender: " << pSender->GetId() ;
+    response resp;
+
+
     connectionSender conRequest(pSender->GetStaged());
     //can we patch a connection from the json?
     if(conRequest.Patch(jsRequest) == false)
     {
-        nCode = 400;
-        sResponse = stw.write(GetJsonError(nCode, "Request does not meet schema."));
-        Log::Get(Log::LOG_DEBUG) << "PatchSender: Request does not meet schema." << std::endl;
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchSender: Request does not meet schema." ;
+
+        std::stringstream ssDebug;
+        ssDebug << jsRequest;
+        resp = JsonError(400, "Request does not meet schema.", ssDebug.str());
     }
     else if(pSender->CheckConstraints(conRequest) == false)
     {//does the patched connection meet the sender constraints?
-        nCode = 400;
-        sResponse = stw.write(GetJsonError(nCode, "Request does not meet sender's constraints."));
-        Log::Get(Log::LOG_DEBUG) << "PatchSender: Request does not meet sender's constraints." << std::endl;
+        std::stringstream ssDebug;
+        ssDebug << jsRequest;
+        resp = JsonError(400, "Request does not meet sender's constraints.", ssDebug.str());
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchSender: Request does not meet sender's constraints." ;
     }
     else if(conRequest.eActivate != connection::ACT_NULL && pSender->IsLocked() == true)
     {   //locked by previous staged activation
-        nCode = 423;
-        sResponse = stw.write(GetJsonError(nCode, "Sender had pending activation."));
-        Log::Get(Log::LOG_DEBUG) << "PatchSender: Sender had pending activation." << std::endl;
+        resp = JsonError(423, "Sender had pending activation.");
     }
     else if(m_pPoster)
     {   //tell the main thread and wait to see what happens
         //the main thread should check that it can definitely do what the patch says and simply signal true or false
-        pServer->PrimeWait();
-        m_pPoster->_PatchSender(pSender->GetId(), conRequest, m_nPort);
+        m_pServer->PrimeWait();
+        m_pPoster->_PatchSender(pSender->GetId(), conRequest, m_pServer->GetPort());
         //Pause the HTTP thread
-        pServer->Wait();
+        m_pServer->Wait();
 
 
-        if(pServer->IsOk() && pSender->Stage(conRequest, m_pPoster)) //PATCH the sender
+        if(m_pServer->IsOk() && pSender->Stage(conRequest, m_pPoster)) //PATCH the sender
         {
-            nCode = 202;
-            sResponse = stw.write(pSender->GetConnectionStagedJson(version));
+            resp.nHttpCode = 202;
+            resp.jsonData = pSender->GetConnectionStagedJson(m_version);
 
             if(conRequest.eActivate == connection::ACT_NULL)
             {
-                nCode = 200;
+                resp.nHttpCode = 200;
             }
             else if(conRequest.eActivate == connection::ACT_NOW)
             {
-                nCode = 200;
+                resp.nHttpCode = 200;
                 pSender->CommitActivation();
             }
-            Log::Get(Log::LOG_DEBUG) << sResponse << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << resp.jsonData ;
         }
         else
         {
-            nCode = 500;
-            sResponse = stw.write(GetJsonError(nCode, "Sender unable to stage PATCH as activation time invalid."));
-            Log::Get(Log::LOG_DEBUG) << "PatchSender: Sender unable to stage PATCH as activation time invalid." << std::endl;
+            resp = JsonError(500, "Sender unable to stage PATCH as activation time invalid.");
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchSender: Sender unable to stage PATCH as activation time invalid." ;
         }
     }
     else
     {   //no way of telling main thread to do this so we'll simply assume it's been done
         if(pSender->Stage(conRequest, m_pPoster)) //PATCH the sender
         {
-            sResponse = stw.write(pSender->GetConnectionStagedJson(version));
-            Log::Get(Log::LOG_DEBUG) << sResponse << std::endl;
+            resp.nHttpCode = 200;
+            resp.jsonData = pSender->GetConnectionStagedJson(m_version);
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << resp.jsonData ;
         }
         else
         {
-            nCode = 500;
-            sResponse = stw.write(GetJsonError(nCode, "Sender unable to stage PATCH as no EventPoster or activation time invalid."));
-            Log::Get(Log::LOG_DEBUG) << "PatchSender: Sender unable to stage PATCH as no EventPoster or activation time invalid." << std::endl;
+            resp = JsonError(500, "Sender unable to stage PATCH as no EventPoster or activation time invalid.");
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchSender: Sender unable to stage PATCH as no EventPoster or activation time invalid." ;
         }
     }
-    return nCode;
+    return resp;
 }
 
 
-int IS05Server::PatchJsonReceiver(Server* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version)
+response IS05Server::PatchReceiver(std::shared_ptr<Receiver> pReceiver, const Json::Value& jsRequest)
 {
-    Log::Get(Log::LOG_DEBUG) << "IS05Server::PatchJsonReceiver:  " << sJson << std::endl;
-    int nCode(200);
-    Json::FastWriter stw;
-    //does the sender exist?
-    shared_ptr<Receiver> pReceiver = NodeApi::Get().GetReceiver(m_vPath[C_ID]);
-    if(!pReceiver)
-    {
-        nCode = 404;
-        sResponse = stw.write(GetJsonError(nCode, "Resource does not exist."));
-    }
-    else
-    {
-        //is the json valid?
-        Json::Value jsRequest;
-        Json::Reader jsReader;
-        if(jsReader.parse(sJson, jsRequest) == false)
-        {
-            nCode = 400;
-            sResponse = stw.write(GetJsonError(nCode, "Request is ill defined."));
-
-            Log::Get(Log::LOG_DEBUG) << "PatchJsonReceiver: Request is ill defined." << std::endl;
-        }
-        else
-        {
-            nCode = PatchReceiver(pServer, pReceiver, jsRequest, sResponse, version);
-        }
-    }
-    return nCode;
-}
-
-int IS05Server::PatchReceiver(Server* pServer, shared_ptr<Receiver> pReceiver, const Json::Value& jsRequest, std::string& sResponse, const ApiVersion& version)
-{
-    int nCode(200);
-    Json::FastWriter stw;
+    response resp;
 
     connectionReceiver conRequest(pReceiver->GetStaged());
-    Log::Get(Log::LOG_DEBUG) << "PatchJsonReceiver: Staged SenderId = '" << pReceiver->GetStaged().sSenderId << "' request SebderId = '" << conRequest.sSenderId << "'" <<std::endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchJsonReceiver: Staged SenderId = '" << pReceiver->GetStaged().sSenderId << "' request SenderId = '" << conRequest.sSenderId << "'";
     //can we patch a connection from the json?
     if(conRequest.Patch(jsRequest) == false)
     {
-        nCode = 400;
-        sResponse = stw.write(GetJsonError(nCode, "Request does not meet schema."));
-        Log::Get(Log::LOG_DEBUG) << "PatchJsonReceiver: Request does not meet schema." << std::endl;
+        resp =JsonError(400, "Request does not meet schema.");
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchJsonReceiver: Request does not meet schema." ;
     }
     else if(pReceiver->CheckConstraints(conRequest) == false)
     {//does the patched connection meet the Receiver constraints?
-        nCode = 400;
-        sResponse = stw.write(GetJsonError(nCode, "Request does not meet Receiver's constraints."));
-        Log::Get(Log::LOG_DEBUG) << "PatchJsonReceiver: Request does not meet Receiver's constraints." << std::endl;
+        resp =JsonError(400, "Request does not meet Receiver's constraints.");
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchJsonReceiver: Request does not meet Receiver's constraints." ;
     }
     else if(conRequest.eActivate != connection::ACT_NULL && pReceiver->IsLocked() == true)
     {   //locked by previous staged activation
-        nCode = 423;
-        sResponse = stw.write(GetJsonError(nCode, "Receiver had pending activation."));
-        Log::Get(Log::LOG_DEBUG) << "PatchJsonReceiver: Receiver had pending activation." << std::endl;
+        resp =JsonError(423, "Receiver had pending activation.");
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchJsonReceiver: Receiver had pending activation." ;
     }
     else if(m_pPoster)
     {   //tell the main thread and wait to see what happens
-        pServer->PrimeWait();
+        m_pServer->PrimeWait();
         //the main thread should check that it can definitely do what the patch says and simply signal true or false
-        m_pPoster->_PatchReceiver(pReceiver->GetId(), conRequest, m_nPort);
+        m_pPoster->_PatchReceiver(pReceiver->GetId(), conRequest, m_pServer->GetPort());
         //Pause the HTTP thread
-        pServer->Wait();
+        m_pServer->Wait();
 
-        if(pServer->IsOk() && pReceiver->Stage(conRequest)) //PATCH the Receiver
+        if(m_pServer->IsOk() && pReceiver->Stage(conRequest)) //PATCH the Receiver
         {
-            nCode = 202;
-            sResponse = stw.write(pReceiver->GetConnectionStagedJson(version));
+            resp.nHttpCode = 202;
+            resp.jsonData = pReceiver->GetConnectionStagedJson(m_version);
             if(conRequest.eActivate == connection::ACT_NULL)
             {
-                nCode = 200;
+                resp.nHttpCode = 200;
             }
             else if(conRequest.eActivate == connection::ACT_NOW)
             {
-                nCode = 200;
+                resp.nHttpCode = 200;
                 pReceiver->CommitActivation();
             }
-            Log::Get(Log::LOG_DEBUG) << sResponse << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << resp.jsonData ;
         }
         else
         {
-            nCode = 500;
-            sResponse = stw.write(GetJsonError(nCode, "Receiver unable to stage PATCH as no EventPoster or activation time invalid."));
-            Log::Get(Log::LOG_DEBUG) << "PatchJsonReceiver: Receiver unable to stage PATCH as no EventPoster or activation time invalid." << std::endl;
+            resp =JsonError(500, "Receiver unable to stage PATCH as no EventPoster or activation time invalid.");
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchJsonReceiver: Receiver unable to stage PATCH as no EventPoster or activation time invalid." ;
         }
     }
     else
     {   //no way of telling main thread to do this so we'll simply assume it's been done
         if(pReceiver->Stage(conRequest)) //PATCH the Receiver
         {
-            sResponse = stw.write(pReceiver->GetConnectionStagedJson(version));
-            Log::Get(Log::LOG_DEBUG) << sResponse << std::endl;
+            resp.jsonData = pReceiver->GetConnectionStagedJson(m_version);
+            pmlLog(pml::LOG_DEBUG) << resp.jsonData ;
         }
         else
         {
-            nCode = 500;
-            sResponse = stw.write(GetJsonError(nCode, "Receiver unable to stage PATCH as no EventPoster or activation time invalid."));
-            Log::Get(Log::LOG_DEBUG) << "PatchJsonReceiver: Sender unable to stage PATCH as no EventPoster or activation time invalid." << std::endl;
+            resp =JsonError(500, "Receiver unable to stage PATCH as no EventPoster or activation time invalid.");
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchJsonReceiver: Sender unable to stage PATCH as no EventPoster or activation time invalid." ;
         }
     }
-    return nCode;
+    return resp;
 }
 
 
-int IS05Server::PostJsonSenders(Server* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version)
+response IS05Server::PostJsonSenders(const Json::Value& jsRequest)
 {
-    Log::Get(Log::LOG_DEBUG) << "IS05Server::PostJsonSenders:  " << sJson << std::endl;
-    int nCode(200);
-    Json::FastWriter stw;
-    //is the json valid?
-    Json::Value jsRequest;
-    Json::Reader jsReader;
-    if(jsReader.parse(sJson, jsRequest) == false || jsRequest.isArray() == false)
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "IS05Server::PostJsonSenders:  " << jsRequest ;
+
+    response resp;
+    //check that each part of the array is correct.
+    for(Json::ArrayIndex ai = 0; ai < jsRequest.size(); ai++)
     {
-        nCode = 400;
-        sResponse = stw.write(GetJsonError(nCode, "Request is ill defined."));
-        Log::Get(Log::LOG_DEBUG) << "PostJsonSenders: Request is ill defined." << std::endl;
-    }
-    else
-    {
-        //check that each part of the array is correct.
-        for(Json::ArrayIndex ai = 0; ai < jsRequest.size(); ai++)
+        if(jsRequest[ai]["id"].isString() == false || jsRequest[ai]["params"].isObject() == false || CheckJson(jsRequest[ai], {"id", "params"}) == false)
         {
-            if(jsRequest[ai]["id"].isString() == false || jsRequest[ai]["params"].isObject() == false || CheckJson(jsRequest[ai], {"id", "params"}) == false)
-            {
-                nCode = 400;
-                sResponse = stw.write(GetJsonError(nCode, "Request is ill defined."));
-                break;
-            }
+            resp = JsonError(400, "Request is ill defined.");
+            break;
         }
     }
 
-    if(nCode == 200)
+
+    if(resp.nHttpCode == 200)
     {   //passed the JSON checking
-        Json::Value jsResponseArray(Json::arrayValue);
 
         for(Json::ArrayIndex ai = 0; ai < jsRequest.size(); ai++)
         {
             Json::Value jsResponse(Json::objectValue);
             jsResponse["id"] = jsRequest[ai]["id"];
 
-            shared_ptr<Sender> pSender = NodeApi::Get().GetSender(jsRequest[ai]["id"].asString());
+            std::shared_ptr<Sender> pSender = NodeApi::Get().GetSender(jsRequest[ai]["id"].asString());
             if(!pSender)
             {
                 jsResponse["code"] = 404;
-                jsResponse["error"] = stw.write(GetJsonError(nCode, "Resource does not exist."));
-                Log::Get(Log::LOG_DEBUG) << "PostJsonSenders: Resource does not exist." << std::endl;
+                jsResponse["error"] = "Resource does not exist.";
+                jsResponse["debug"] = "null";
+                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PostJsonSenders: Resource does not exist." ;
             }
             else
             {
-                jsResponse["code"] = PatchSender(pServer, pSender, jsRequest[ai]["params"], sResponse, version);
-                if(jsResponse["code"].asInt() != 200)
+                auto patchResponse = PatchSender(pSender, jsRequest[ai]["params"]);
+                jsResponse["code"] = patchResponse.nHttpCode;
+                if(patchResponse.nHttpCode != 200)
                 {
-                    jsResponse["error"] = sResponse;
+                    jsResponse["error"] = patchResponse.jsonData["error"];
                 }
             }
-            jsResponseArray.append(jsResponse);
+            resp.jsonData.append(jsResponse);
         }
-        sResponse = stw.write(jsResponseArray);
+
     }
-    return nCode;
+    return resp;
 }
 
 
-int IS05Server::PostJsonReceivers(Server* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version)
+response IS05Server::PostJsonReceivers(const Json::Value& jsRequest)
 {
-    Log::Get(Log::LOG_DEBUG) << "IS05Server::PostJsonReceivers:  " << sJson << std::endl;
-    int nCode(200);
-    Json::FastWriter stw;
-    //is the json valid?
-    Json::Value jsRequest;
-    Json::Reader jsReader;
-    if(jsReader.parse(sJson, jsRequest) == false || jsRequest.isArray() == false)
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "IS05Server::PostJsonReceivers:  " << jsRequest ;
+
+    response resp;
+    //check that each part of the array is correct.
+    for(Json::ArrayIndex ai = 0; ai < jsRequest.size(); ai++)
     {
-        nCode = 400;
-        sResponse = stw.write(GetJsonError(nCode, "Request is ill defined."));
-        Log::Get(Log::LOG_DEBUG) << "PostJsonReceivers: Request is ill defined." << std::endl;
-    }
-    else
-    {
-        //check that each part of the array is correct.
-        for(Json::ArrayIndex ai = 0; ai < jsRequest.size(); ai++)
+        if(jsRequest[ai]["id"].isString() == false || jsRequest[ai]["params"].isObject() == false || CheckJson(jsRequest[ai], {"id", "params"}) == false)
         {
-            if(jsRequest[ai]["id"].isString() == false || jsRequest[ai]["params"].isObject() == false || CheckJson(jsRequest[ai], {"id", "params"}) == false)
-            {
-                nCode = 400;
-                sResponse = stw.write(GetJsonError(nCode, "Request is ill defined."));
-                break;
-            }
+            resp = JsonError(400, "Request is ill defined.");
+            break;
         }
     }
 
-    if(nCode == 200)
+
+    if(resp.nHttpCode == 200)
     {   //passed the JSON checking
-        Json::Value jsResponseArray(Json::arrayValue);
-
-
         for(Json::ArrayIndex ai = 0; ai < jsRequest.size(); ai++)
         {
             Json::Value jsResponse(Json::objectValue);
             jsResponse["id"] = jsRequest[ai]["id"];
 
-            shared_ptr<Receiver> pReceiver = NodeApi::Get().GetReceiver(jsRequest[ai]["id"].asString());
+            std::shared_ptr<Receiver> pReceiver = NodeApi::Get().GetReceiver(jsRequest[ai]["id"].asString());
             if(!pReceiver)
             {
                 jsResponse["code"] = 404;
-                jsResponse["error"] = stw.write(GetJsonError(nCode, "Resource does not exist."));
-                Log::Get(Log::LOG_DEBUG) << "PostJsonReceivers: Resource does not exist." << std::endl;
+                jsResponse["error"] = "Resource does not exist.";
+                jsResponse["debug"] = "null";
+                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PostJsonReceivers: Resource does not exist." ;
             }
             else
             {
-                jsResponse["code"] = PatchReceiver(pServer, pReceiver, jsRequest[ai]["params"], sResponse, version);
-                if(jsResponse["code"].asInt() != 200)
+                auto patchResponse = PatchReceiver(pReceiver, jsRequest[ai]["params"]);
+                jsResponse["code"] = patchResponse.nHttpCode;
+                if(patchResponse.nHttpCode != 200)
                 {
-                    jsResponse["error"] = sResponse;
+                    jsResponse["error"] = patchResponse.jsonData["error"];
                 }
             }
-            jsResponseArray.append(jsResponse);
+            resp.jsonData.append(jsResponse);
         }
-        sResponse = stw.write(jsResponseArray);
     }
-    return nCode;
+    return resp;
+}
+
+
+std::shared_ptr<Sender> IS05Server::GetSender(const url& theUrl)
+{
+    auto vPath = SplitUrl(theUrl);
+    if(vPath.size() > RESOURCE_ID)
+    {
+        return NodeApi::Get().GetSender(vPath[RESOURCE_ID]);
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
+std::shared_ptr<Receiver> IS05Server::GetReceiver(const url& theUrl)
+{
+    auto vPath = SplitUrl(theUrl);
+    if(vPath.size() > RESOURCE_ID)
+    {
+        return NodeApi::Get().GetReceiver(vPath[RESOURCE_ID]);
+    }
+    else
+    {
+        return nullptr;
+    }
 }

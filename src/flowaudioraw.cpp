@@ -23,12 +23,12 @@ bool FlowAudioRaw::UpdateFromJson(const Json::Value& jsData)
     if(jsData["media_type"].isString() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'media_type' is not a string" << std::endl;
+        m_ssJsonError << "'media_type' is not a string" ;
     }
     if(jsData["bit_depth"].isInt() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'bit_depth' is not an int" << std::endl;
+        m_ssJsonError << "'bit_depth' is not an int" ;
     }
     if(m_bIsOk)
     {
@@ -51,7 +51,7 @@ bool FlowAudioRaw::UpdateFromJson(const Json::Value& jsData)
         else
         {
             m_bIsOk = false;
-            m_ssJsonError << "'media_type' and bit_depth' not compatible" << std::endl;
+            m_ssJsonError << "'media_type' and bit_depth' not compatible" ;
         }
     }
     return m_bIsOk;

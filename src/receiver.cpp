@@ -54,6 +54,9 @@ Receiver::Receiver(const std::string& sLabel, const std::string& sDescription, e
         m_Staged.tpReceiver.eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
         m_Active.tpReceiver.eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
     }
+    m_Active.tpReceiver.nDestinationPort = 5004;
+    m_Active.tpReceiver.sInterfaceIp = "127.0.0.1";
+
     m_constraints.nParamsSupported = flagsTransport;
 }
 
@@ -138,42 +141,42 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
     if(jsData["device_id"].isString() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'device_id' not string" << std::endl;
+        m_ssJsonError << "'device_id' not string" ;
     }
     if(jsData["transport"].isString() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'transport' not string" << std::endl;
+        m_ssJsonError << "'transport' not string" ;
     }
     if(jsData["interface_bindings"].isArray() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'interface_bindings' not array" << std::endl;
+        m_ssJsonError << "'interface_bindings' not array" ;
     }
     if(jsData["subscription"].isObject() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'subscription' not object" << std::endl;
+        m_ssJsonError << "'subscription' not object" ;
     }
     if(jsData["caps"].isObject() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'caps' not object" << std::endl;
+        m_ssJsonError << "'caps' not object" ;
     }
     if(jsData["caps"]["media_types"].isArray() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'caps' 'media_types' not array" << std::endl;
+        m_ssJsonError << "'caps' 'media_types' not array" ;
     }
     if(jsData["caps"]["media_types"].size() == 0)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'caps' 'media_types' empty" << std::endl;
+        m_ssJsonError << "'caps' 'media_types' empty" ;
     }
     if(jsData["format"].isString() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'format' not string" << std::endl;
+        m_ssJsonError << "'format' not string" ;
     }
 
     if(m_bIsOk)
@@ -191,7 +194,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
         }
         if(!bFound)
         {
-            m_ssJsonError << "'transport' " <<jsData["transport"].asString() <<" incorrect" << std::endl;
+            m_ssJsonError << "'transport' " <<jsData["transport"].asString() <<" incorrect" ;
         }
 
         m_bIsOk &= bFound;
@@ -206,7 +209,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
         }
         if(!bFound)
         {
-            m_ssJsonError << "'format' " <<jsData["format"].asString() <<" incorrect" << std::endl;
+            m_ssJsonError << "'format' " <<jsData["format"].asString() <<" incorrect" ;
         }
 
         m_bIsOk &= bFound;
@@ -224,7 +227,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
         }
         if(!bFound)
         {
-            m_ssJsonError << "'interface_bindings' " <<jsData["interface_bindings"].asString() <<" incorrect" << std::endl;
+            m_ssJsonError << "'interface_bindings' " <<jsData["interface_bindings"].asString() <<" incorrect" ;
         }
 
         for(Json::ArrayIndex ai = 0; ai < jsData["caps"]["media_types"].size(); ++ai)
@@ -232,7 +235,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
             if(jsData["caps"]["media_types"][ai].isString() == false)
             {
                 m_bIsOk = false;
-                m_ssJsonError << "'caps' 'media_types' #" << ai << "not a string" << std::endl;
+                m_ssJsonError << "'caps' 'media_types' #" << ai << "not a string" ;
             }
             else
             {
@@ -243,7 +246,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
                     if(jsData["caps"]["media_types"][ai].asString().find("audio/") == std::string::npos)
                     {
                         m_bIsOk = false;
-                        m_ssJsonError << "'caps' 'media_types' #" << ai << " not audio whilst 'format' is" << std::endl;
+                        m_ssJsonError << "'caps' 'media_types' #" << ai << " not audio whilst 'format' is" ;
                     }
                     else
                     {
@@ -254,7 +257,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
                     if(jsData["caps"]["media_types"][ai].asString().find("video/") == std::string::npos)
                     {
                         m_bIsOk = false;
-                        m_ssJsonError << "'caps' 'media_types' #" << ai << " not video whilst 'format' is" << std::endl;
+                        m_ssJsonError << "'caps' 'media_types' #" << ai << " not video whilst 'format' is" ;
                     }
                     else
                     {
@@ -265,7 +268,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
                     if(jsData["caps"]["media_types"][ai].asString() != "video/smpte291")
                     {
                         m_bIsOk = false;
-                        m_ssJsonError << "'caps' 'media_types' #" << ai << " not smpte291 whilst 'format' is data" << std::endl;
+                        m_ssJsonError << "'caps' 'media_types' #" << ai << " not smpte291 whilst 'format' is data" ;
                     }
                     else
                     {
@@ -276,7 +279,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
                     if(jsData["caps"]["media_types"][ai].asString() != "video/SMPTE2022-6")
                     {
                         m_bIsOk = false;
-                        m_ssJsonError << "'caps' 'media_types' #" << ai << "not 2022-6 whilst 'format' is mux" << std::endl;
+                        m_ssJsonError << "'caps' 'media_types' #" << ai << "not 2022-6 whilst 'format' is mux" ;
                     }
                     else
                     {
@@ -302,7 +305,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
         else
         {
             m_bIsOk = false;
-            m_ssJsonError << "'subscription' 'sender_id' neither a string or null" << std::endl;
+            m_ssJsonError << "'subscription' 'sender_id' neither a string or null" ;
         }
         if(jsData["subscription"]["active"].isBool())
         {
@@ -311,7 +314,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
         else
         {
             m_bIsOk = false;
-            m_ssJsonError << "'subscription' 'active' not bool" << std::endl;
+            m_ssJsonError << "'subscription' 'active' not bool" ;
         }
     }
     return m_bIsOk;
@@ -380,7 +383,7 @@ void Receiver::SetSender(const std::string& sSenderId, const std::string& sSdp, 
 {
     if(sSenderId.empty() == false)
     {
-        Log::Get(Log::LOG_INFO) << "Receiver subscribe to sender " << sSenderId << std::endl;
+        pmlLog(pml::LOG_INFO) << "Receiver subscribe to sender " << sSenderId ;
         m_sSenderId = sSenderId;
 
         // need to update the IS-05 stage and active connection settings to match
@@ -394,7 +397,7 @@ void Receiver::SetSender(const std::string& sSenderId, const std::string& sSdp, 
     }
     else
     {   //this means unsubscribe
-        Log::Get(Log::LOG_INFO) << "Receiver unssubscribe " << std::endl;
+        pmlLog(pml::LOG_INFO) << "Receiver unssubscribe " ;
         m_sSenderId.clear();
 
         // need to update the IS-05 stage and active connection settings to match
@@ -408,6 +411,16 @@ void Receiver::SetSender(const std::string& sSenderId, const std::string& sSdp, 
     }
     UpdateVersionTime();
 
+}
+
+void Receiver::MasterEnable(bool bEnable)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_Active.bMasterEnable = bEnable;
+    m_Active.tpReceiver.bRtpEnabled = bEnable;
+    m_Staged.bMasterEnable = bEnable;
+    m_Staged.tpReceiver.bRtpEnabled = bEnable;
+    UpdateVersionTime();
 }
 
 
@@ -509,7 +522,7 @@ bool Receiver::Stage(const connectionReceiver& conRequest)
             }
             break;
         default:
-            Log::Get(Log::LOG_ERROR) << "Unexpected patch" << std::endl;
+            pmlLog(pml::LOG_ERROR) << "Unexpected patch" ;
     }
     return bOk;
 }

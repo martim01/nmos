@@ -21,12 +21,12 @@ bool FlowAudio::UpdateFromJson(const Json::Value& jsData)
     if(jsData["sample_rate"]["numerator"].isInt() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'samplerate' 'numerator' is not an int" << std::endl;
+        m_ssJsonError << "'samplerate' 'numerator' is not an int" ;
     }
     if(jsData["sample_rate"]["denominator"].isInt() == false && JsonMemberExistsAndIsNotNull(jsData["sample_rate"], "denominator"))
     {
         m_bIsOk = false;
-        m_ssJsonError << "'samplerate' 'denominator' is not null and not an int" << std::endl;
+        m_ssJsonError << "'samplerate' 'denominator' is not null and not an int" ;
     }
 
     if(m_bIsOk)

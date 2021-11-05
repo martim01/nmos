@@ -21,7 +21,7 @@
 #include <iphlpapi.h>
 #include <iptypes.h>
 #endif
-#include "server.h"
+
 #include "log.h"
 #include "curlregister.h"
 #include "eventposter.h"
@@ -39,7 +39,51 @@
 #include "sdp.h"
 #include "utils.h"
 #include "nodezcposter.h"
-#include "mongooseserver.h"
+#include <algorithm>
+#include <numeric>
+#include <memory>
+
+
+using namespace std::placeholders;
+
+response GetRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+{
+    response resp;
+    resp.jsonData.append("x-nmos/");
+    return resp;
+}
+
+response GetNmosDiscoveryRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+{
+    response resp;
+    resp.jsonData.append("node/");
+
+    if(NodeApi::Get().GetConnectionPort() == NodeApi::Get().GetDiscoveryPort())
+    {
+        resp.jsonData.append("connection/");
+    }
+    return resp;
+}
+
+response GetNmosConnectionRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+{
+    response resp;
+    resp.jsonData.append("connection/");
+
+    return resp;
+}
+
+
+response NotFound(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+{
+    response resp(404);
+    resp.jsonData["code"] = 404;
+    resp.jsonData["error"] = theUrl.Get() + " not found";
+    resp.jsonData["debug"] = "null";
+
+    return resp;
+}
+
 
 using namespace std;
 
@@ -80,6 +124,10 @@ NodeApi::~NodeApi()
 
 void NodeApi::Init(std::shared_ptr<EventPoster> pPoster, unsigned short nDiscoveryPort, unsigned short nConnectionPort, const string& sLabel, const string& sDescription)
 {
+
+    m_nConnectionPort = nConnectionPort;
+    m_nDiscoveryPort = nDiscoveryPort;
+
     m_pPoster = pPoster;
 
     char sHost[256];
@@ -98,7 +146,7 @@ void NodeApi::Init(std::shared_ptr<EventPoster> pPoster, unsigned short nDiscove
         {
             if(temp_addr->ifa_addr->sa_family == AF_INET)
             {
-                Log::Get(Log::LOG_DEBUG) << "Interface: " << temp_addr->ifa_name << endl;
+                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Interface: " << temp_addr->ifa_name ;
                 string sInterface(temp_addr->ifa_name);
                 string sAddress(inet_ntoa(((sockaddr_in*)temp_addr->ifa_addr)->sin_addr));
                 if(sAddress != "127.0.0.1")
@@ -111,7 +159,7 @@ void NodeApi::Init(std::shared_ptr<EventPoster> pPoster, unsigned short nDiscove
                     nodeinterface anInterface;
                     Self::GetAddresses(sInterface, anInterface);
                     Resource::s_sBase = anInterface.sPortMac;
-                    Log::Get(Log::LOG_DEBUG) << "Base: " << Resource::s_sBase << endl;
+                    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Base: " << Resource::s_sBase ;
                 }
             }
             temp_addr = temp_addr->ifa_next;
@@ -136,7 +184,7 @@ void NodeApi::Init(std::shared_ptr<EventPoster> pPoster, unsigned short nDiscove
         pAddresses = (IP_ADAPTER_ADDRESSES *) malloc(outBufLen);
         if (pAddresses == NULL)
         {
-            Log::Get() << "Memory allocation failed for IP_ADAPTER_ADDRESSES struct" << endl;
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "Memory allocation failed for IP_ADAPTER_ADDRESSES struct" ;
             return;
         }
         dwRetVal = GetAdaptersAddresses(family, flags, NULL, pAddresses, &outBufLen);
@@ -174,7 +222,7 @@ void NodeApi::Init(std::shared_ptr<EventPoster> pPoster, unsigned short nDiscove
     }
     else
     {
-        Log::Get() << "Call to GetAdaptersAddresses failed with error: " << dwRetVal << endl;
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "Call to GetAdaptersAddresses failed with error: " << dwRetVal ;
     }
     if (pAddresses)
     {
@@ -193,51 +241,63 @@ void NodeApi::Init(std::shared_ptr<EventPoster> pPoster, unsigned short nDiscove
 
 
 
-    map<unsigned short, std::unique_ptr<Server> >::iterator itServer = m_mServers.insert(make_pair(nDiscoveryPort, new MongooseServer(m_pPoster, nConnectionPort))).first;
-    itServer->second->AddNmosControl("node", make_shared<IS04Server>());
+    m_lstServers.push_back(std::make_shared<RestGoose>());
+    m_lstServers.back()->Init("","",nConnectionPort, "", false);
 
-    if(nConnectionPort != nDiscoveryPort)
+    m_mDiscoveryServers.insert(std::make_pair(ApiVersion(1,1), make_unique<IS04Server>(m_lstServers.back(), ApiVersion(1,1), m_pPoster)));
+    m_mDiscoveryServers.insert(std::make_pair(ApiVersion(1,2), make_unique<IS04Server>(m_lstServers.back(), ApiVersion(1,2), m_pPoster)));
+
+
+    m_lstServers.back()->AddEndpoint(endpoint(RestGoose::GET, url("")), std::bind(&GetRoot, _1,_2,_3,_4));
+    m_lstServers.back()->AddEndpoint(endpoint(RestGoose::GET, url("/x-nmos")), std::bind(&GetNmosDiscoveryRoot, _1,_2,_3,_4));
+    m_lstServers.back()->AddNotFoundCallback(std::bind(&NotFound, _1,_2,_3,_4));
+
+    //Create another RestGoose server if using different ports
+    if(m_nConnectionPort != m_nDiscoveryPort)
     {
-        itServer = m_mServers.insert(make_pair(nConnectionPort, new MongooseServer(m_pPoster, nDiscoveryPort))).first;
+         m_lstServers.push_back(std::make_shared<RestGoose>());
+         m_lstServers.back()->Init("","",nDiscoveryPort, "", false);
+         m_lstServers.back()->AddEndpoint(endpoint(RestGoose::GET, url("")), std::bind(&GetRoot, _1,_2,_3,_4));
+         m_lstServers.back()->AddEndpoint(endpoint(RestGoose::GET, url("/x-nmos")), std::bind(&GetNmosConnectionRoot, _1,_2,_3,_4));
+         m_lstServers.back()->AddNotFoundCallback(std::bind(&NotFound, _1,_2,_3,_4));
     }
-    itServer->second->AddNmosControl("connection", make_shared<IS05Server>());
 
-    m_nConnectionPort = nConnectionPort;
+    m_mConnectionServers.insert(std::make_pair(ApiVersion(1,0), make_unique<IS05Server>(m_lstServers.back(), ApiVersion(1,0), m_pPoster)));
+    m_mConnectionServers.insert(std::make_pair(ApiVersion(1,1), make_unique<IS05Server>(m_lstServers.back(), ApiVersion(1,1), m_pPoster)));
+
+
 }
 
 
 bool NodeApi::StartHttpServers()
 {
-    Log::Get(Log::LOG_DEBUG) << "Start Http Servers" << endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Start Http Servers" ;
 
-    for(map<unsigned short, unique_ptr<Server> >::iterator itServer = m_mServers.begin(); itServer != m_mServers.end(); ++itServer)
+    for(auto& pServer : m_lstServers)
     {
-        itServer->second->Init();
-
+        pServer->Run(true);
     }
 
-
-    Log::Get(Log::LOG_DEBUG) << "Start Http Servers: Done" << endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Start Http Servers: Done" ;
     return true;
 
 }
 
 void NodeApi::StopHttpServers()
 {
-    for(map<unsigned short, unique_ptr<Server> >::iterator itServer = m_mServers.begin(); itServer != m_mServers.end(); ++itServer)
+    for(auto pServer : m_lstServers)
     {
-        itServer->second->Stop();
+        pServer->Stop();
     }
-    m_mServers.clear();
 }
 
 bool NodeApi::StartmDNSServer()
 {
     StopmDNSServer();
-    set<endpoint>::const_iterator itEndpoint = m_self.GetEndpointsBegin();
+    auto itEndpoint = m_self.GetEndpointsBegin();
     if(itEndpoint != m_self.GetEndpointsEnd())
     {
-        Log::Get() << "Start mDNS Publisher" << endl;
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "Start mDNS Publisher" ;
         m_pNodeApiPublisher.reset(new ServicePublisher(CreateGuid(itEndpoint->sHost), "_nmos-node._tcp", itEndpoint->nPort, itEndpoint->sHost));
         SetmDNSTxt(itEndpoint->bSecure);
         return m_pNodeApiPublisher->Start();
@@ -250,7 +310,7 @@ void NodeApi::StopmDNSServer()
 {
     if(m_pNodeApiPublisher)
     {
-        Log::Get() << "Stop mDNS Publisher" << endl;
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "Stop mDNS Publisher" ;
         m_pNodeApiPublisher->Stop();
     }
 }
@@ -310,7 +370,7 @@ const ResourceHolder<Sender>& NodeApi::GetSenders()
 bool NodeApi::Commit()
 {
     m_mutex.lock();
-    Log::Get() << "Node: Commit" << endl;
+    pmlLog(pml::LOG_INFO) << "NMOS: " << "Node: Commit" ;
     bool bChange = m_self.Commit();
     bChange |= m_sources.Commit(m_self.GetApiVersions());
     bChange |= m_devices.Commit(m_self.GetApiVersions());
@@ -339,7 +399,7 @@ bool NodeApi::Commit()
 
 void NodeApi::ModifyTxtRecords()
 {
-    set<endpoint>::const_iterator itEndpoint = m_self.GetEndpointsBegin();
+    auto itEndpoint = m_self.GetEndpointsBegin();
     if(itEndpoint != m_self.GetEndpointsEnd())
     {
         SetmDNSTxt(itEndpoint->bSecure);
@@ -360,11 +420,22 @@ void NodeApi::SetmDNSTxt(bool bSecure)
         {
             m_pNodeApiPublisher->AddTxt("api_proto", "http", false);
         }
-        m_pNodeApiPublisher->AddTxt("api_ver", "v1.2", false);
+        std::string sVersion;
+        for(const auto& pairServer : m_mDiscoveryServers)
+        {
+            if(sVersion.empty() == false)
+            {
+                sVersion += ',';
+            }
+            sVersion += pairServer.first.GetVersionAsString();
+
+        }
+
+         m_pNodeApiPublisher->AddTxt("api_ver", sVersion, false);
 
         if(m_sRegistrationNode.empty())
         {
-            Log::Get(Log::LOG_DEBUG) << "Peer to peer mode" << endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Peer to peer mode" ;
             m_pNodeApiPublisher->AddTxt("ver_slf", to_string(m_self.GetDnsVersion()),false);
             m_pNodeApiPublisher->AddTxt("ver_src", to_string(m_sources.GetVersion()),false);
             m_pNodeApiPublisher->AddTxt("ver_flw", to_string(m_flows.GetVersion()),false);
@@ -390,8 +461,15 @@ bool NodeApi::BrowseForRegistrationNode()
 {
     if(m_bBrowsing == false)
     {
-        ServiceBrowser::Get().AddService("_nmos-registration._tcp", m_pZCPoster);
-        Log::Get() << "Browse for register nodes" << endl;
+        if(m_mConnectionServers.begin()->first < ApiVersion(1,3))
+        {
+            ServiceBrowser::Get().AddService("_nmos-registration._tcp", m_pZCPoster);
+        }
+        if(m_mConnectionServers.rbegin()->first > ApiVersion(1,2))
+        {
+            ServiceBrowser::Get().AddService("_nmos-register._tcp", m_pZCPoster);
+        }
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "Browse for register nodes" ;
         ServiceBrowser::Get().StartBrowser();
         m_bBrowsing = true;
     }
@@ -451,7 +529,7 @@ void NodeApi::SenderPatchAllowed(unsigned short nPort, bool bOk, const std::stri
         }
         else
         {
-            Log::Get(Log::LOG_ERROR) << "No Sender found with id='" << sId << "'" << std::endl;
+            pmlLog(pml::LOG_ERROR) << "NMOS: " << "No Sender found with id='" << sId << "'" ;
             bOk = false;
         }
     }
@@ -477,14 +555,14 @@ void NodeApi::ReceiverPatchAllowed(unsigned short nPort, bool bOk,const std::str
 
 void NodeApi::SignalServer(unsigned short nPort, bool bOk, const std::string& sExtra)
 {
-    map<unsigned short, std::unique_ptr<Server> >::iterator itServer = m_mServers.find(nPort);
-    if(itServer != m_mServers.end())
+    auto itServer = std::find_if(m_lstServers.begin(), m_lstServers.end(), [nPort](std::shared_ptr<RestGoose> pGoose){ return pGoose->GetPort() == nPort;});
+    if(itServer != m_lstServers.end())
     {
-        itServer->second->Signal(bOk, sExtra);
+        (*itServer)->Signal(bOk, sExtra);
     }
     else
     {
-        Log::Get(Log::LOG_ERROR) << "No server with port " << nPort << endl;
+        pmlLog(pml::LOG_ERROR) << "NMOS: " << "No server with port " << nPort ;
     }
 }
 
@@ -500,7 +578,6 @@ int NodeApi::RegisterSimple(const ApiVersion& version)
         m_nRegistrationStatus = REG_FAILED;
         if(m_sRegistrationNode.empty() == false)
         {
-            Log::Get(Log::LOG_DEBUG) << "------------- " << m_sRegistrationNode << " -------------------------" << endl;
             long nResponse = RegisterResource("node", m_self.GetJson(version));
             if(nResponse == 200)
             {   //Node already registered. Unregister and start again
@@ -509,7 +586,7 @@ int NodeApi::RegisterSimple(const ApiVersion& version)
             }
             else if(nResponse != 201)
             {
-                Log::Get(Log::LOG_ERROR) << "RegisterResources: Failed" << endl;
+                pmlLog(pml::LOG_ERROR) << "NMOS: " << "RegisterResources: Failed" ;
                 UnregisterSimple();
                 m_nRegistrationStatus = REG_FAILED;
                 return m_nRegistrationStatus;
@@ -517,12 +594,12 @@ int NodeApi::RegisterSimple(const ApiVersion& version)
 
             if(RegisterResources(m_devices, version) != 201 || RegisterResources(m_sources, version) != 201 || RegisterResources(m_flows, version) != 201 || RegisterResources(m_senders, version) != 201 || RegisterResources(m_receivers, version) != 201)
             {
-                Log::Get(Log::LOG_ERROR) << "RegisterResources: Failed" << endl;
+                pmlLog(pml::LOG_ERROR) << "NMOS: " << "RegisterResources: Failed" ;
                 UnregisterSimple();
                 m_nRegistrationStatus = REG_FAILED;
                 return m_nRegistrationStatus;
             }
-            Log::Get(Log::LOG_INFO) << "RegisterResources: Done" << endl;
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "RegisterResources: Done" ;
             m_nRegistrationStatus = REG_DONE;
 
         }
@@ -546,20 +623,44 @@ void NodeApi::HandleInstanceResolved(std::shared_ptr<dnsInstance> pInstance)
     map<string, string>::const_iterator itPriority = pInstance->mTxt.find("pri");
     map<string, string>::const_iterator itVersion = pInstance->mTxt.find("api_ver");
     map<string, string>::const_iterator itProto = pInstance->mTxt.find("api_proto");
-    if(itPriority != pInstance->mTxt.end() && itVersion != pInstance->mTxt.end() && SdpManager::CheckIpAddress(pInstance->sHostIP) == SdpManager::IP4_UNI && itVersion->second.find("v1.2") != string::npos && itProto != pInstance->mTxt.end())
+    if(itPriority != pInstance->mTxt.end() && itVersion != pInstance->mTxt.end() && SdpManager::CheckIpAddress(pInstance->sHostIP) == SdpManager::IP4_UNI && itProto != pInstance->mTxt.end())
     {
-        try
+        //check if the registration node can handle one of our versions...
+        bool bVersion(false);
+        for(const auto& pairServer : m_mDiscoveryServers)
         {
-            unsigned short nPriority = stoul(itPriority->second);
-            stringstream ssUrl;
-            ssUrl <<  pInstance->sHostIP << ":" << pInstance->nPort << "/x-nmos/registration/v1.2";
-            if(itProto->second == "http" || itProto->second == "https")
+            if(itVersion->second.find(pairServer.first.GetVersionAsString()) != string::npos)
             {
-                m_mRegNode.insert(make_pair(ssUrl.str(), regnode(nPriority)));
-                Log::Get(Log::LOG_DEBUG) << "NodeApi: Found registration node" << ssUrl.str() << " proto=" << itProto->second << " ver=" << itVersion->second << " priority=" << itPriority->second << endl;
+                bVersion = true;
+                break;
             }
         }
-        catch(invalid_argument& ia){}
+        if(bVersion)
+        {
+            try
+            {
+                unsigned short nPriority = stoul(itPriority->second);
+                stringstream ssUrl;
+                ssUrl <<  pInstance->sHostIP << ":" << pInstance->nPort << "/x-nmos/registration/v1.2";
+                if(itProto->second == "http" || itProto->second == "https")
+                {
+                    m_mRegNode.insert(make_pair(ssUrl.str(), regnode(nPriority)));
+                    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "NodeApi: Found registration node" << ssUrl.str() << " proto=" << itProto->second << " ver=" << itVersion->second << " priority=" << itPriority->second ;
+                }
+            }
+            catch(invalid_argument& ia)
+            {
+                pmlLog(pml::LOG_WARN) << "NMOS: " << "NodeApi: Registration node -Invalid argument";
+            }
+        }
+        else
+        {
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "NodeApi: Found registration node but api versions different to ours";
+        }
+    }
+    else
+    {
+
     }
 
 }
@@ -577,28 +678,29 @@ void NodeApi::HandleInstanceRemoved(std::shared_ptr<dnsInstance> pInstance)
 
 bool NodeApi::FindRegistrationNode()
 {
-    Log::Get(Log::LOG_INFO) << "NodeApi: Find best registration node" << endl;
-
     string sRegNode;
 
     unsigned long nPriority(200);
     for(map<string, regnode >::const_iterator itNode = m_mRegNode.begin(); itNode != m_mRegNode.end(); ++itNode)
     {   //get the registration node with smallest priority number
 
-        Log::Get(Log::LOG_DEBUG) << "NodeApi: Checkregistration node" << itNode->first << endl;
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "NodeApi: Checkregistration node" << itNode->first ;
 
         if(itNode->second.bGood && itNode->second.nPriority < nPriority)
         {//for now only doing v1.2
             nPriority = itNode->second.nPriority;
             sRegNode = itNode->first;
-            Log::Get(Log::LOG_INFO) << "NodeApi: Register. Found nmos registration node with v1.2 and lower priority: " << sRegNode << " " << nPriority << endl;
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "NodeApi: Register. Found nmos registration node with v1.2 and lower priority: " << sRegNode << " " << nPriority ;
         }
 
     }
 
     if(sRegNode.empty())
     {
-        Log::Get(Log::LOG_INFO) << "NodeApi: Register: No nmos registration nodes found. Go peer-to-peer" << endl;
+        if(m_sRegistrationNode.empty() == false)
+        {
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "NodeApi: Register: No nmos registration nodes found. Go peer-to-peer" ;
+        }
         m_nRegistrationStatus = REG_FAILED;
         m_sRegistrationNode.clear();
         ModifyTxtRecords();
@@ -625,7 +727,7 @@ template<class T> long NodeApi::RegisterResources(ResourceHolder<T>& holder, con
 {
     for(typename map<string, shared_ptr<T> >::const_iterator itResource = holder.GetResourceBegin(); itResource != holder.GetResourceEnd(); ++itResource)
     {
-        Log::Get(Log::LOG_INFO) << "NodeApi: Register. " << holder.GetType() << " : " << itResource->first << endl;
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "NodeApi: Register. " << holder.GetType() << " : " << itResource->first ;
         long nResult = RegisterResource(holder.GetType(), itResource->second->GetJson(version));
         if(nResult != 201 && nResult != 200)
         {
@@ -639,7 +741,7 @@ template<class T> long NodeApi::ReregisterResources(ResourceHolder<T>& holder, c
 {
     for(typename map<string, shared_ptr<T> >::const_iterator itResource = holder.GetChangedResourceBegin(); itResource != holder.GetChangedResourceEnd(); ++itResource)
     {
-        Log::Get(Log::LOG_INFO) << "NodeApi: Register. " << holder.GetType() << " : " << itResource->first << endl;
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "NodeApi: Register. " << holder.GetType() << " : " << itResource->first ;
         long nResult = RegisterResource(holder.GetType(), itResource->second->GetJson(version));
         if(nResult != 200 && nResult != 201)
         {
@@ -654,15 +756,14 @@ long NodeApi::RegisterResource(const string& sType, const Json::Value& json)
     Json::Value jsonRegister;
     jsonRegister["type"] = sType;
     jsonRegister["data"] = json;
-    Json::FastWriter stw;
-    string sPost(stw.write(jsonRegister));
+    string sPost(ConvertFromJson(jsonRegister));
 
     string sResponse;
 
     if(m_pRegisterCurl)
     {
         long  nResponse = m_pRegisterCurl->Post(m_sRegistrationNode+"/resource", sPost, sResponse);
-        Log::Get(Log::LOG_INFO) << "RegisterApi: Register returned [" << nResponse << "] " << sResponse << endl;
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "RegisterApi: Register returned [" << nResponse << "] " << sResponse ;
         if(nResponse == 500)
         {
             MarkRegNodeAsBad();
@@ -681,7 +782,7 @@ long NodeApi::RegistrationHeartbeat()
     {
         string sResponse;
         long nResponse = m_pRegisterCurl->Post(m_sRegistrationNode+"/health/nodes/"+m_self.GetId(), "", sResponse);
-        Log::Get(Log::LOG_INFO) << "RegisterApi: Heartbeat: returned [" << nResponse << "] " << sResponse << endl;
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "RegisterApi: Heartbeat: returned [" << nResponse << "] " << sResponse ;
 
         if(nResponse == 500 || nResponse == 0)
         {
@@ -704,7 +805,7 @@ void NodeApi::MarkRegNodeAsBad()
 
 int NodeApi::UnregisterSimple()
 {
-    Log::Get() << "Unregister: " << m_nRegistrationStatus << endl;
+    pmlLog(pml::LOG_INFO) << "NMOS: " << "Unregister: " << m_nRegistrationStatus ;
 
     if(m_sRegistrationNode.empty() == false)
     {
@@ -719,7 +820,7 @@ int NodeApi::UnregisterSimple()
 //{
 //    for(typename map<string, shared_ptr<T> >::const_iterator itResource = holder.GetResourceBegin(); itResource != holder.GetResourceEnd(); ++itResource)
 //    {
-//        Log::Get(Log::LOG_INFO) << "NodeApi: Unregister. " << holder.GetType() << " : " << itResource->first << endl;
+//        pmlLog(pml::LOG_INFO) << "NMOS: " << "NodeApi: Unregister. " << holder.GetType() << " : " << itResource->first ;
 //        if(UnregisterResource(holder.GetType()+"s", itResource->first) == false)
 //        {
 //            return false;
@@ -735,7 +836,7 @@ bool NodeApi::UnregisterResource(const string& sType, const std::string& sId)
     {
         string sResponse;
         long nResponse = m_pRegisterCurl->Delete(m_sRegistrationNode+"/resource", sType, sId, sResponse);
-        Log::Get(Log::LOG_INFO) << "RegisterApi:Unregister returned [" << nResponse << "] " << sResponse << endl;
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "RegisterApi:Unregister returned [" << nResponse << "] " << sResponse ;
         if(nResponse == 500)
         {
             MarkRegNodeAsBad();
@@ -754,13 +855,13 @@ bool NodeApi::UnregisterResource(const string& sType, const std::string& sId)
 //        map<string, std::shared_ptr<dnsService> >::const_iterator itService = m_pRegistrationBrowser->FindService("_nmos-query._tcp");
 //        if(itService != m_pRegistrationBrowser->GetServiceEnd())
 //        {
-//            Log::Get(Log::LOG_INFO) << "NodeApi: Query. Found nmos query service." << endl;
+//            pmlLog(pml::LOG_INFO) << "NMOS: " << "NodeApi: Query. Found nmos query service." ;
 //            shared_ptr<dnsInstance>  pInstance(0);
 //            string sApiVersion;
 //            for(map<string, shared_ptr<dnsInstance> >::const_iterator itInstance = itService->second->mInstances.begin(); itInstance != itService->second->mInstances.end(); ++itInstance)
 //            {   //get the registration node with smallest priority number
 //
-//                Log::Get(Log::LOG_INFO) << "NodeApi: Query. Found nmos query node: " << itInstance->second->sName << endl;
+//                pmlLog(pml::LOG_INFO) << "NMOS: " << "NodeApi: Query. Found nmos query node: " << itInstance->second->sName ;
 //                //get top priority
 //                unsigned long nPriority(200);
 //                map<string, string>::const_iterator itPriority = itInstance->second->mTxt.find("pri");
@@ -773,7 +874,7 @@ bool NodeApi::UnregisterResource(const string& sType, const std::string& sId)
 //                        pInstance = itInstance->second;
 //                        nPriority = stoi(itPriority->second);
 //
-//                        Log::Get(Log::LOG_INFO) << "NodeApi: Query. Found nmos query node with v1.2 and low priority: " << itInstance->second->sName << " " << nPriority << endl;
+//                        pmlLog(pml::LOG_INFO) << "NMOS: " << "NodeApi: Query. Found nmos query node with v1.2 and low priority: " << itInstance->second->sName << " " << nPriority ;
 //
 //                    }
 //                }
@@ -795,7 +896,7 @@ bool NodeApi::UnregisterResource(const string& sType, const std::string& sId)
 
 //const ResourceHolder& NodeApi::GetQueryResults()
 //{
-//    Log::Get() << "GetQueryResults: " << m_query.GetResourceCount() << " " << (int)&m_query << std::endl;
+//    pmlLog(pml::LOG_INFO) << "NMOS: " << "GetQueryResults: " << m_query.GetResourceCount() << " " << (int)&m_query ;
 //    return m_query;
 //}
 
@@ -829,26 +930,26 @@ void NodeApi::StopRun()
 
 bool NodeApi::AddControl(const std::string& sDeviceId, const std::string& sApi, const ApiVersion& version, unsigned short nPort, const std::string& sUrn, shared_ptr<NmosServer> pNmosServer)
 {
-    map<string, shared_ptr<Device> >::iterator itDevice = m_devices.GetResource(sDeviceId, false);
-    if(itDevice != m_devices.GetStagedResourceEnd())
-    {
-        map<unsigned short, std::unique_ptr<Server> >::iterator itServer = m_mServers.find(nPort);
-        if(itServer == m_mServers.end())
-        {
-            itServer = m_mServers.insert(make_pair(nPort, new MongooseServer(m_pPoster, nPort))).first;
-        }
-
-        itServer->second->AddNmosControl(sApi, pNmosServer);
-
-        //add the control endpoints for the urn
-        for(set<endpoint>::const_iterator itEndpoint = m_self.GetEndpointsBegin(); itEndpoint != m_self.GetEndpointsEnd(); ++itEndpoint)
-        {
-            stringstream sstr;
-            sstr << "http://" << itEndpoint->sHost << ":" << nPort << "/x-nmos/" << sApi << "/" << version.GetVersionAsString();
-            itDevice->second->AddControl(sUrn, sstr.str());
-        }
-        return true;
-    }
+//    map<string, shared_ptr<Device> >::iterator itDevice = m_devices.GetResource(sDeviceId, false);
+//    if(itDevice != m_devices.GetStagedResourceEnd())
+//    {
+//        map<unsigned short, std::unique_ptr<Server> >::iterator itServer = m_mServers.find(nPort);
+//        if(itServer == m_mServers.end())
+//        {
+//            itServer = m_mServers.insert(make_pair(nPort, new MongooseServer(m_pPoster, nPort))).first;
+//        }
+//
+//        itServer->second->AddNmosControl(sApi, pNmosServer);
+//
+//        //add the control endpoints for the urn
+//        for(auto itEndpoint = m_self.GetEndpointsBegin(); itEndpoint != m_self.GetEndpointsEnd(); ++itEndpoint)
+//        {
+//            stringstream sstr;
+//            sstr << "http://" << itEndpoint->sHost << ":" << nPort << "/x-nmos/" << sApi << "/" << version.GetVersionAsString();
+//            itDevice->second->AddControl(sUrn, sstr.str());
+//        }
+//        return true;
+//    }
     return false;
 }
 
@@ -859,13 +960,23 @@ bool NodeApi::AddDevice(shared_ptr<Device> pResource)
     if(pResource->GetParentResourceId() == m_self.GetId())
     {
         m_devices.AddResource(pResource);
+
         //add the control endpoints for is/05
-        for(set<endpoint>::const_iterator itEndpoint = m_self.GetEndpointsBegin(); itEndpoint != m_self.GetEndpointsEnd(); ++itEndpoint)
+        for(const auto& pairServer : m_mConnectionServers)
         {
-            stringstream sstr;
-            sstr << "http://" << itEndpoint->sHost << ":" << m_nConnectionPort << "/x-nmos/connection/v1.0";
-            pResource->AddControl("urn:x-nmos:control:sr-ctrl/v1.0", sstr.str());
+            for(auto itEndpoint = m_self.GetEndpointsBegin(); itEndpoint != m_self.GetEndpointsEnd(); ++itEndpoint)
+            {
+                stringstream sstr;
+                sstr << "http://" << itEndpoint->sHost << ":" << m_nConnectionPort << "/x-nmos/connection/" << pairServer.first.GetVersionAsString();
+                pResource->AddControl("urn:x-nmos:control:sr-ctrl/"+pairServer.first.GetVersionAsString(), sstr.str());
+            }
         }
+        //add the discovery endpoints
+        for(const auto& pairServer : m_mDiscoveryServers)
+        {
+            pairServer.second->AddDeviceEndpoint(pResource->GetId());
+        }
+
         return true;
     }
     return false;
@@ -882,6 +993,12 @@ bool NodeApi::AddSource(shared_ptr<Source> pResource)
         {
             pResource->SetClock(sClock);
         }
+        //add the discovery endpoints
+        for(const auto& pairServer : m_mDiscoveryServers)
+        {
+            pairServer.second->AddSourceEndpoint(pResource->GetId());
+        }
+
         return true;
     }
     return false;
@@ -892,6 +1009,11 @@ bool NodeApi::AddFlow(shared_ptr<Flow> pResource)
     if(m_devices.ResourceExists(pResource->GetParentResourceId()) && m_sources.ResourceExists(pResource->GetSourceId()))
     {
         m_flows.AddResource(pResource);
+        //add the discovery endpoints
+        for(const auto& pairServer : m_mDiscoveryServers)
+        {
+            pairServer.second->AddFlowEndpoint(pResource->GetId());
+        }
         return true;
     }
     return false;
@@ -901,8 +1023,19 @@ bool NodeApi::AddReceiver(shared_ptr<Receiver> pResource)
 {
     if(m_devices.ResourceExists(pResource->GetParentResourceId()))
     {
-        m_receivers.AddResource(pResource);
-        return true;
+        if(m_receivers.AddResource(pResource))
+        {
+            //add the discovery endpoints
+            for(const auto& pairServer : m_mDiscoveryServers)
+            {
+                pairServer.second->AddReceiverEndpoint(pResource->GetId());
+            }
+            for(const auto& pairServer : m_mConnectionServers)
+            {
+                pairServer.second->AddReceiverEndpoint(pResource->GetId());
+            }
+            return true;
+        }
     }
     return false;
 }
@@ -912,24 +1045,65 @@ bool NodeApi::AddSender(shared_ptr<Sender> pResource)
 
     if(m_devices.ResourceExists(pResource->GetParentResourceId()))
     {
-        m_senders.AddResource(pResource);
-
-        //Make the IS-04 manifest href the same as the IS-05 control transportfile endpoint
-        if(m_self.GetEndpointsBegin() != m_self.GetEndpointsEnd())
+        if(m_senders.AddResource(pResource))
         {
-            stringstream sstr;
-            sstr << "http://" << m_self.GetEndpointsBegin()->sHost << ":" << m_nConnectionPort << "/x-nmos/connection/v1.0/single/senders/";
-            sstr << pResource->GetId() << "/transportfile";
-            pResource->SetManifestHref(sstr.str());
-        }
+            //Make the IS-04 manifest href the same as the IS-05 control transportfile endpoint
+            if(m_self.GetEndpointsBegin() != m_self.GetEndpointsEnd())
+            {
+                stringstream sstr;
+                sstr << "http://" << m_self.GetEndpointsBegin()->sHost << ":" << m_nConnectionPort << "/x-nmos/connection/v1.0/single/senders/";
+                sstr << pResource->GetId() << "/transportfile";
+                pResource->SetManifestHref(sstr.str());
+            }
 
-        return true;
+            //add the discovery endpoints
+            for(const auto& pairServer : m_mDiscoveryServers)
+            {
+                pairServer.second->AddSenderEndpoint(pResource->GetId());
+            }
+            for(const auto& pairServer : m_mConnectionServers)
+            {
+                pairServer.second->AddSenderEndpoint(pResource->GetId());
+            }
+            return true;
+        }
     }
     return false;
 }
 
+void NodeApi::RemoveSender(const std::string& sId)
+{
+    m_senders.RemoveResource(sId);
+    for(const auto& pairServer : m_mDiscoveryServers)
+    {
+        pairServer.second->RemoveSenderEndpoint(sId);
+    }
+    for(const auto& pairServer : m_mConnectionServers)
+    {
+        pairServer.second->RemoveSenderEndpoint(sId);
+    }
+}
+
+void NodeApi::RemoveReceiver(const std::string& sId)
+{
+    m_receivers.RemoveResource(sId);
+     for(const auto& pairServer : m_mDiscoveryServers)
+    {
+        pairServer.second->RemoveReceiverEndpoint(sId);
+    }
+    for(const auto& pairServer : m_mConnectionServers)
+    {
+        pairServer.second->RemoveReceiverEndpoint(sId);
+    }
+}
+
 
 unsigned short NodeApi::GetConnectionPort() const
+{
+    return m_nConnectionPort;
+}
+
+unsigned short NodeApi::GetDiscoveryPort() const
 {
     return m_nConnectionPort;
 }
@@ -995,4 +1169,14 @@ void NodeApi::SenderActivated(const std::string& sId)
     {
         m_pPoster->_SenderActivated(sId);
     }
+}
+
+Json::Value NodeApi::JsonConnectionVersions() const
+{
+    Json::Value jsVersion;
+    for(const auto& pairServer : m_mConnectionServers)
+    {
+        jsVersion.append(pairServer.first.GetVersionAsString()+"/");
+    }
+    return jsVersion;
 }

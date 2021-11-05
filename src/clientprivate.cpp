@@ -27,7 +27,7 @@
 #include "receiver.h"
 #include "clientapiposter.h"
 #include "utils.h"
-
+#include <algorithm>
 
 using namespace std;
 
@@ -107,6 +107,8 @@ static void NodeBrowser(ClientApiImpl* pApi, shared_ptr<dnsInstance> pInstance)
 
                 if(VersionChanged(pInstance, "ver_slf"))
                 {
+                    pmlLog(pml::LOG_DEBUG) << "NMOS: NodeBrowser ver_slf changed" ;
+
                     CurlRegister::Get(string(ss.str()+"self"), sResponse, true);
                     list<shared_ptr<Self> > lstAdded;
                     list<shared_ptr<Self> > lstUpdated;
@@ -115,11 +117,20 @@ static void NodeBrowser(ClientApiImpl* pApi, shared_ptr<dnsInstance> pInstance)
 
                     if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::NODES))
                     {
-                        pApi->GetPoster()->_NodeChanged(lstAdded, lstUpdated, lstRemoved);
+                        if(pApi->GetPoster())
+                        {
+                            pApi->GetPoster()->_NodeChanged(lstAdded, lstUpdated, lstRemoved);
+                        }
+                    }
+                    else
+                    {
+                        pmlLog(pml::LOG_DEBUG) << "NMOS: NodeBrowser Node does not meet query" ;
                     }
                 }
                 if(VersionChanged(pInstance, "ver_dvc"))
                 {
+                    pmlLog(pml::LOG_DEBUG) << "NMOS: NodeBrowser ver_dvc changed" ;
+
                     CurlRegister::Get(string(ss.str()+"devices"), sResponse, true);
 
                     list<shared_ptr<Device> > lstAdded;
@@ -134,11 +145,20 @@ static void NodeBrowser(ClientApiImpl* pApi, shared_ptr<dnsInstance> pInstance)
 
                     if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::DEVICES))
                     {
-                        pApi->GetPoster()->_DeviceChanged(lstAdded, lstUpdated, lstRemoved);
+                        if(pApi->GetPoster())
+                        {
+                            pApi->GetPoster()->_DeviceChanged(lstAdded, lstUpdated, lstRemoved);
+                        }
+                    }
+                    else
+                    {
+                        pmlLog(pml::LOG_DEBUG) << "NMOS: NodeBrowser Device does not meet query" ;
                     }
                 }
                 if(VersionChanged(pInstance, "ver_src"))
                 {
+                    pmlLog(pml::LOG_DEBUG) << "NMOS: NodeBrowser ver_src changed" ;
+
                     CurlRegister::Get(string(ss.str()+"sources"), sResponse, true);
 
                     list<shared_ptr<Source> > lstAdded;
@@ -151,11 +171,20 @@ static void NodeBrowser(ClientApiImpl* pApi, shared_ptr<dnsInstance> pInstance)
 
                     if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::SOURCES))
                     {
-                        pApi->GetPoster()->_SourceChanged(lstAdded, lstUpdated, lstRemoved);
+                        if(pApi->GetPoster())
+                        {
+                            pApi->GetPoster()->_SourceChanged(lstAdded, lstUpdated, lstRemoved);
+                        }
+                    }
+                    else
+                    {
+                        pmlLog(pml::LOG_DEBUG) << "NMOS: NodeBrowser source does not meet query" ;
                     }
                 }
                 if(VersionChanged(pInstance, "ver_flw"))
                 {
+                    pmlLog(pml::LOG_DEBUG) << "NMOS: NodeBrowser ver_flw changed" ;
+
                     CurlRegister::Get(string(ss.str()+"flows"), sResponse, true);
 
                     list<shared_ptr<Flow> > lstAdded;
@@ -168,11 +197,20 @@ static void NodeBrowser(ClientApiImpl* pApi, shared_ptr<dnsInstance> pInstance)
 
                     if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::FLOWS))
                     {
-                        pApi->GetPoster()->_FlowChanged(lstAdded, lstUpdated, lstRemoved);
+                        if(pApi->GetPoster())
+                        {
+                            pApi->GetPoster()->_FlowChanged(lstAdded, lstUpdated, lstRemoved);
+                        }
+                    }
+                    else
+                    {
+                        pmlLog(pml::LOG_DEBUG) << "NMOS: NodeBrowser Flow does not meet query" ;
                     }
                 }
                 if(VersionChanged(pInstance, "ver_snd"))
                 {
+                    pmlLog(pml::LOG_DEBUG) << "NMOS: NodeBrowser ver_snd changed" ;
+
                     CurlRegister::Get(string(ss.str()+"senders"), sResponse, true);
 
                     list<shared_ptr<Sender> > lstAdded;
@@ -185,11 +223,20 @@ static void NodeBrowser(ClientApiImpl* pApi, shared_ptr<dnsInstance> pInstance)
 
                     if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::SENDERS))
                     {
-                        pApi->GetPoster()->_SenderChanged(lstAdded, lstUpdated, lstRemoved);
+                        if(pApi->GetPoster())
+                        {
+                            pApi->GetPoster()->_SenderChanged(lstAdded, lstUpdated, lstRemoved);
+                        }
+                    }
+                    else
+                    {
+                        pmlLog(pml::LOG_DEBUG) << "NMOS: NodeBrowser Sender does not meet query" ;
                     }
                 }
                 if(VersionChanged(pInstance, "ver_rcv"))
                 {
+                    pmlLog(pml::LOG_DEBUG) << "NMOS: NodeBrowser ver_rcv changed" ;
+
                     CurlRegister::Get(string(ss.str()+"receivers"), sResponse, true);
 
                     list<shared_ptr<Receiver> > lstAdded;
@@ -201,7 +248,14 @@ static void NodeBrowser(ClientApiImpl* pApi, shared_ptr<dnsInstance> pInstance)
 
                     if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::RECEIVERS))
                     {
-                        pApi->GetPoster()->_ReceiverChanged(lstAdded, lstUpdated, lstRemoved);
+                        if(pApi->GetPoster())
+                        {
+                            pApi->GetPoster()->_ReceiverChanged(lstAdded, lstUpdated, lstRemoved);
+                        }
+                    }
+                    else
+                    {
+                        pmlLog(pml::LOG_DEBUG) << "NMOS: NodeBrowser Receiver does not meet query" ;
                     }
                 }
 
@@ -215,7 +269,7 @@ static void NodeBrowser(ClientApiImpl* pApi, shared_ptr<dnsInstance> pInstance)
 void ConnectThread(ClientApiImpl* pApi, const string& sSenderId, const string& sReceiverId, const string& sSenderStage, const string& sSenderTransport, const string& sReceiverStage)
 {
     // @todo ConnectThread - if a unicast stream then tell the sender where it should be sending stuff
-    Json::FastWriter stw;
+
     string sResponse;
     connectionSender aCon(connection::FP_ACTIVATION | connection::FP_ENABLE | connection::FP_TRANSPORT_PARAMS);
     aCon.eActivate = connection::ACT_NOW;
@@ -223,8 +277,7 @@ void ConnectThread(ClientApiImpl* pApi, const string& sSenderId, const string& s
     aCon.tpSender.bRtpEnabled = true;
 
 
-    int nResult = CurlRegister::PutPatch(sSenderStage, stw.write(aCon.GetJson(ApiVersion(1,0))), sResponse, false, "");
-    cout << "Patch Sender: " << nResult << endl;
+    int nResult = CurlRegister::PutPatch(sSenderStage, ConvertFromJson(aCon.GetJson(ApiVersion(1,0))), sResponse, false, "");
     if(nResult != 200)
     {
         pApi->HandleConnect(sSenderId, sReceiverId, false, sResponse);
@@ -240,17 +293,15 @@ void ConnectThread(ClientApiImpl* pApi, const string& sSenderId, const string& s
 
 
         nResult = CurlRegister::Get(sSenderTransport, aConR.sTransportFileData, false);
-        cout << "Get SDP: " << nResult << endl;
         if(nResult != 200)
         {
             pApi->HandleConnect(sSenderId, sReceiverId, false, aConR.sTransportFileData);
         }
         else
         {
-            string sData(stw.write(aConR.GetJson(ApiVersion(1,0))));
+            string sData(ConvertFromJson(aConR.GetJson(ApiVersion(1,0))));
 
             nResult = CurlRegister::PutPatch(sReceiverStage, sData, sResponse, false, "");
-            cout << "Patch Receiver: " << sData << endl;
             if(nResult != 200)
             {
                 pApi->HandleConnect(sSenderId, sReceiverId, false, sResponse);
@@ -267,7 +318,6 @@ void ConnectThread(ClientApiImpl* pApi, const string& sSenderId, const string& s
 //DisconnectThread - called from main program thread
 void DisconnectThread(ClientApiImpl* pApi, const string& sSenderId, const string& sReceiverId, const string& sSenderStage, const string& sSenderTransport, const string& sReceiverStage)
 {
-    Json::FastWriter stw;
     string sResponse;
     int nResult(200);
     if(false)
@@ -277,7 +327,7 @@ void DisconnectThread(ClientApiImpl* pApi, const string& sSenderId, const string
         aCon.bMasterEnable = true;
         aCon.tpSender.bRtpEnabled = true;
 
-        nResult = CurlRegister::PutPatch(sSenderStage, stw.write(aCon.GetJson(ApiVersion(1,0))), sResponse, false, "");
+        nResult = CurlRegister::PutPatch(sSenderStage, ConvertFromJson(aCon.GetJson(ApiVersion(1,0))), sResponse, false, "");
         if(nResult != 200)
         {
             pApi->HandleConnect(sSenderId, sReceiverId, false, sResponse);
@@ -293,7 +343,7 @@ void DisconnectThread(ClientApiImpl* pApi, const string& sSenderId, const string
     aConR.sTransportFileData = "";
     aConR.sSenderId = "";
 
-    nResult = CurlRegister::PutPatch(sReceiverStage, stw.write(aConR.GetJson(ApiVersion(1,0))), sResponse, false, "");
+    nResult = CurlRegister::PutPatch(sReceiverStage, ConvertFromJson(aConR.GetJson(ApiVersion(1,0))), sResponse, false, "");
     if(nResult != 200)
     {
         pApi->HandleConnect("", sReceiverId, false, sResponse);
@@ -446,7 +496,7 @@ void ClientApiImpl::Signal(enumSignal eSignal)
 void ClientApiImpl::HandleBrowseDone()
 {
     lock_guard<mutex> lg(m_mutex);
-    Log::Get(Log::LOG_INFO) << "Browsing for '" << m_sService << "' done for now." << endl;
+    pmlLog(pml::LOG_INFO) << "NMOS: " << "Browsing for '" << m_sService << "' done for now." ;
     if(m_sService == "_nmos-query._tcp")
     {
         m_bDoneQueryBrowse = true;
@@ -462,7 +512,7 @@ void ClientApiImpl::HandleInstanceResolved()
     {
         if(m_pInstance->sService == "_nmos-query._tcp")
         {
-            Log::Get(Log::LOG_INFO) << "Query node found: " << m_pInstance->sName << endl;
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "Query node found: " << m_pInstance->sName ;
             m_lstResolve.clear();
 
             //add the node to our priority sorted list of query servers
@@ -487,7 +537,7 @@ void ClientApiImpl::HandleInstanceResolved()
                 }
                 catch(invalid_argument& ia)
                 {
-                    Log::Get(Log::LOG_ERROR) << "Priority '" << itTxt->second << "' invalid" << endl;
+                    pmlLog(pml::LOG_ERROR) << "NMOS: " << "Priority '" << itTxt->second << "' invalid" ;
                 }
             }
         }
@@ -495,12 +545,12 @@ void ClientApiImpl::HandleInstanceResolved()
         {
             if(m_pInstance->nUpdate == 0)
             {
-                Log::Get(Log::LOG_INFO) << "Nmos node found" << endl;
+                pmlLog(pml::LOG_INFO) << "NMOS: " << "Nmos node found" ;
                 m_lstResolve.push_back(m_pInstance);
             }
             else
             {
-                Log::Get(Log::LOG_INFO) << "Nmos node updated" << endl;
+                pmlLog(pml::LOG_INFO) << "NMOS: " << "Nmos node updated" ;
                 m_lstResolve.push_back(m_pInstance);
             }
         }
@@ -514,7 +564,7 @@ void ClientApiImpl::HandleInstanceRemoved()
     {
         if(m_pInstance->sService == "_nmos_query._tcp")
         {
-            Log::Get(Log::LOG_INFO) << "Query node: " << m_pInstance->sName << "removed" << endl;
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "Query node: " << m_pInstance->sName << "removed" ;
             if(m_eMode == MODE_REGISTRY)
             {   //@todo should we check here if we have another node??
                 m_eMode = MODE_P2P;
@@ -526,7 +576,7 @@ void ClientApiImpl::HandleInstanceRemoved()
         }
         else if(m_pInstance->sService == "_nmos-node._tcp" && m_eMode == MODE_P2P)
         {
-            Log::Get(Log::LOG_INFO) << "Nmos node Removed: " << m_pInstance->sName << endl;
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "node Removed: " << m_pInstance->sName ;
             for(list<shared_ptr<dnsInstance> >::iterator itInstance = m_lstResolve.begin(); itInstance != m_lstResolve.end(); ++itInstance)
             {
                 if(*itInstance == m_pInstance)
@@ -590,124 +640,101 @@ void ClientApiImpl::HandleCurlDone()
 void ClientApiImpl::HandleCurlDoneTarget()
 {
     //don't need to check for m_pPoster as check in HandleCurlDon
-    Json::Value jsData;
-    Json::Reader jsReader;
-    if(jsReader.parse(m_sCurlResponse, jsData))
+    Json::Value jsData = ConvertToJson(m_sCurlResponse);
+    if(202 == m_nCurlResult && jsData["id"].isString())
     {
-        if(202 == m_nCurlResult && jsData["id"].isString())
-        {
-            Log::Get(Log::LOG_DEBUG) << m_nCurlResult << ": " << jsData["id"].asString() << endl;
-            m_pPoster->_RequestTargetResult(202, jsData["id"].asString(), m_sCurlResourceId);
-            return;
-        }
-
-        if(jsData["error"].isString())
-        {
-            Log::Get(Log::LOG_DEBUG) << m_nCurlResult << ": " << jsData["error"].asString() << endl;
-            m_pPoster->_RequestTargetResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
-            return;
-        }
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << m_nCurlResult << ": " << jsData["id"].asString() ;
+        m_pPoster->_RequestTargetResult(202, jsData["id"].asString(), m_sCurlResourceId);
+        return;
     }
-    Log::Get(Log::LOG_DEBUG) << m_nCurlResult << ": " << m_sCurlResponse << endl;
+
+    if(jsData["error"].isString())
+    {
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << m_nCurlResult << ": " << jsData["error"].asString() ;
+        m_pPoster->_RequestTargetResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
+        return;
+    }
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << m_nCurlResult << ": " << m_sCurlResponse ;
     m_pPoster->_RequestTargetResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
 }
 
 void ClientApiImpl::HandleCurlDonePatchSender()
 {
-    Json::Value jsData;
-    Json::Reader jsReader;
-    if(jsReader.parse(m_sCurlResponse, jsData))
+    Json::Value jsData = ConvertToJson(m_sCurlResponse);
+
+    //don't need to check for m_pPoster as check in HandleCurlDon
+    if(m_nCurlResult != 200 && m_nCurlResult != 202 && jsData["error"].isString())
     {
-        //don't need to check for m_pPoster as check in HandleCurlDon
-        if(m_nCurlResult != 200 && m_nCurlResult != 202 && jsData["error"].isString())
-        {
-            m_pPoster->_RequestPatchSenderResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
-        }
-        else
-        {
-            m_pPoster->_RequestPatchSenderResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
-        }
+        m_pPoster->_RequestPatchSenderResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
+    }
+    else
+    {
+        m_pPoster->_RequestPatchSenderResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
     }
 }
 
 void ClientApiImpl::HandleCurlDonePatchReceiver()
 {
     //don't need to check for m_pPoster as check in HandleCurlDon
-    Json::Value jsData;
-    Json::Reader jsReader;
-    if(jsReader.parse(m_sCurlResponse, jsData))
+    Json::Value jsData = ConvertToJson(m_sCurlResponse);
+    if(m_nCurlResult != 200 && m_nCurlResult != 202 && jsData["error"].isString())
     {
-        if(m_nCurlResult != 200 && m_nCurlResult != 202 && jsData["error"].isString())
-        {
-            m_pPoster->_RequestPatchReceiverResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
-        }
-        else
-        {
-            m_pPoster->_RequestPatchReceiverResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
-        }
+        m_pPoster->_RequestPatchReceiverResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
+    }
+    else
+    {
+        m_pPoster->_RequestPatchReceiverResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
     }
 }
 
 void ClientApiImpl::HandleCurlDoneGetSenderStaged()
 {
     //don't need to check for m_pPoster as check in HandleCurlDon
-    Json::Value jsData;
-    Json::Reader jsReader;
-    if(jsReader.parse(m_sCurlResponse, jsData))
+    Json::Value jsData = ConvertToJson(m_sCurlResponse);
+
+    if(m_nCurlResult != 200 && jsData["error"].isString())
     {
-        if(m_nCurlResult != 200 && jsData["error"].isString())
-        {
-            m_pPoster->_RequestGetSenderStagedResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
-        }
-        else
-        {
-            m_pPoster->_RequestGetSenderStagedResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
-        }
+        m_pPoster->_RequestGetSenderStagedResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
+    }
+    else
+    {
+        m_pPoster->_RequestGetSenderStagedResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
     }
 }
 
 void ClientApiImpl::HandleCurlDoneGetSenderActive()
 {
     //don't need to check for m_pPoster as check in HandleCurlDon
-    Json::Value jsData;
-    Json::Reader jsReader;
-    if(jsReader.parse(m_sCurlResponse, jsData))
+    Json::Value jsData = ConvertToJson(m_sCurlResponse);
+    if(m_nCurlResult != 200 && jsData["error"].isString())
     {
-        if(m_nCurlResult != 200 && jsData["error"].isString())
-        {
-            m_pPoster->_RequestGetSenderActiveResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
-        }
-        else
-        {
-            m_pPoster->_RequestGetSenderActiveResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
-        }
+        m_pPoster->_RequestGetSenderActiveResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
     }
+    else
+    {
+        m_pPoster->_RequestGetSenderActiveResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+    }
+
 }
 
 void ClientApiImpl::HandlCurlDoneGetSenderTransportFile()
 {
     //don't need to check for m_pPoster as check in HandleCurlDon
-    Json::Value jsData;
-    Json::Reader jsReader;
-    if(jsReader.parse(m_sCurlResponse, jsData))
+    Json::Value jsData = ConvertToJson(m_sCurlResponse);
+    if(m_nCurlResult != 200 && jsData["error"].isString())
     {
-        if(m_nCurlResult != 200 && jsData["error"].isString())
-        {
-            m_pPoster->_RequestGetSenderTransportFileResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
-        }
-        else
-        {
-            m_pPoster->_RequestGetSenderTransportFileResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
-        }
+        m_pPoster->_RequestGetSenderTransportFileResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
+    }
+    else
+    {
+        m_pPoster->_RequestGetSenderTransportFileResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
     }
 }
 
 void ClientApiImpl::HandleCurlDoneGetReceiverStaged()
 {
     //don't need to check for m_pPoster as check in HandleCurlDon
-    Json::Value jsData;
-    Json::Reader jsReader;
-    if(jsReader.parse(m_sCurlResponse, jsData))
+    Json::Value jsData = ConvertToJson(m_sCurlResponse);
     {
         if(m_nCurlResult != 200 && jsData["error"].isString())
         {
@@ -723,9 +750,7 @@ void ClientApiImpl::HandleCurlDoneGetReceiverStaged()
 void ClientApiImpl::HandleCurlDoneGetReceiverActive()
 {
     //don't need to check for m_pPoster as check in HandleCurlDon
-    Json::Value jsData;
-    Json::Reader jsReader;
-    if(jsReader.parse(m_sCurlResponse, jsData))
+    Json::Value jsData = ConvertToJson(m_sCurlResponse);
     {
         if(m_nCurlResult != 200 && jsData["error"].isString())
         {
@@ -745,9 +770,10 @@ void ClientApiImpl::ConnectToQueryServer()
 
 void ClientApiImpl::GetNodeDetails()
 {
-
     if(m_lstResolve.empty() == false && m_nCurlThreadCount < 4)
     {
+        pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApiImpl::GetNodeDetails" ;
+
         m_nCurlThreadCount++;
         //need to get all the node details.
         //lets launch a thread that will ask for self, devices, sources, flows, senders, receivers
@@ -769,41 +795,34 @@ void ClientApiImpl::AddNode(std::list<std::shared_ptr<Self> >& lstAdded, std::li
 {
     lock_guard<mutex> lg(m_mutex);
 
-    Json::Value jsData;
-    Json::Reader jsReader;
-    if(jsReader.parse(sData, jsData))
-    {
-        if(jsData["id"].isString())
-        {
-            shared_ptr<Self> pSelf = m_nodes.UpdateResource(jsData);
-            if(!pSelf)
-            {
-                pSelf = make_shared<Self>();
-                if(pSelf->UpdateFromJson(jsData))
-                {
-                    m_nodes.AddResource(sIpAddress, pSelf);
-                    lstAdded.push_back(pSelf);
+    Json::Value jsData = ConvertToJson(sData);
 
-                    Log::Get() << "Node: " << pSelf->GetId() << " found at " << sIpAddress << endl;
-                }
-                else
-                {
-                    Log::Get() << "Found node but json data incorrect: " << pSelf->GetJsonParseError() << endl;
-                }
+    if(jsData["id"].isString())
+    {
+        shared_ptr<Self> pSelf = m_nodes.UpdateResource(jsData);
+        if(!pSelf)
+        {
+            pSelf = make_shared<Self>();
+            if(pSelf->UpdateFromJson(jsData))
+            {
+                m_nodes.AddResource(sIpAddress, pSelf);
+                lstAdded.push_back(pSelf);
+
+                pmlLog(pml::LOG_INFO) << "NMOS: " << "Node: " << pSelf->GetId() << " found at " << sIpAddress ;
             }
             else
             {
-                lstUpdated.push_back(pSelf);
+                pmlLog(pml::LOG_INFO) << "NMOS: " << "Found node but json data incorrect: " << pSelf->GetJsonParseError() ;
             }
         }
         else
         {
-            Log::Get() << "Reply from " << sIpAddress << "but not valid JSON - id not correct" << endl;
+            lstUpdated.push_back(pSelf);
         }
     }
     else
     {
-        Log::Get() << "Reply from " << sIpAddress << "but not valid JSON" << endl;
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "Reply from " << sIpAddress << "but not valid JSON - id not correct" ;
     }
 }
 
@@ -811,358 +830,366 @@ void ClientApiImpl::AddDevices(list<shared_ptr<Device> >& lstAdded, list<shared_
 {
     lock_guard<mutex> lg(m_mutex);
 
-    Json::Value jsData;
-    Json::Reader jsReader;
-    if(jsReader.parse(sData, jsData))
+    Json::Value jsData = ConvertToJson(sData);
+    if(jsData.isArray())
     {
-        if(jsData.isArray())
+        for(Json::ArrayIndex ai = 0; ai < jsData.size(); ++ai)
         {
-            for(Json::ArrayIndex ai = 0; ai < jsData.size(); ++ai)
+            if(jsData[ai].isObject() && jsData[ai]["id"].isString())
             {
-                if(jsData[ai].isObject() && jsData[ai]["id"].isString())
+                shared_ptr<Device> pResource = m_devices.UpdateResource(jsData[ai]);
+                if(!pResource)
                 {
-                    shared_ptr<Device> pResource = m_devices.UpdateResource(jsData[ai]);
-                    if(!pResource)
+                    pResource = make_shared<Device>();
+                    if(pResource->UpdateFromJson(jsData[ai]))
                     {
-                        pResource = make_shared<Device>();
-                        if(pResource->UpdateFromJson(jsData[ai]))
-                        {
-                            m_devices.AddResource(sIpAddress, pResource);
-                            lstAdded.push_back(pResource);
-                            Log::Get() << "Device: " << pResource->GetId() << " found at " << sIpAddress << endl;
-                        }
-                        else
-                        {
-                            Log::Get() << "Found device but json data incorrect: " << pResource->GetJsonParseError() << endl;
-                        }
+                        m_devices.AddResource(sIpAddress, pResource);
+                        lstAdded.push_back(pResource);
+                        pmlLog(pml::LOG_INFO) << "NMOS: " << "Device: " << pResource->GetId() << " found at " << sIpAddress ;
                     }
                     else
                     {
-                        lstUpdated.push_back(pResource);
+                        pmlLog(pml::LOG_INFO) << "NMOS: " << "Found device but json data incorrect: " << pResource->GetJsonParseError() ;
                     }
                 }
                 else
                 {
-                    Log::Get() << "Reply from " << sIpAddress << "but not JSON is not an array of objects" << endl;
+                    lstUpdated.push_back(pResource);
                 }
             }
-        }
-        else
-        {
-            Log::Get() << "Reply from " << sIpAddress << "but not JSON is not array" << endl;
+            else
+            {
+                pmlLog(pml::LOG_INFO) << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not an array of objects" ;
+            }
         }
     }
     else
     {
-        Log::Get() << "Reply from " << sIpAddress << "but not valid JSON" << endl;
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not array" ;
     }
 }
 
 void ClientApiImpl::AddSources(list<shared_ptr<Source> >& lstAdded, list<shared_ptr<Source> >& lstUpdated, const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
-    Json::Value jsData;
-    Json::Reader jsReader;
-    if(jsReader.parse(sData, jsData))
+    Json::Value jsData = ConvertToJson(sData);
+    if(jsData.isArray())
     {
-        if(jsData.isArray())
+        for(Json::ArrayIndex ai = 0; ai < jsData.size(); ++ai)
         {
-            for(Json::ArrayIndex ai = 0; ai < jsData.size(); ++ai)
+            if(jsData[ai].isObject() && jsData[ai]["format"].isString() && jsData[ai]["id"].isString())
             {
-                if(jsData[ai].isObject() && jsData[ai]["format"].isString() && jsData[ai]["id"].isString())
+                shared_ptr<Source> pSourceCore = m_sources.UpdateResource(jsData[ai]);
+                if(!pSourceCore)
                 {
-                    shared_ptr<Source> pSourceCore = m_sources.UpdateResource(jsData[ai]);
-                    if(!pSourceCore)
-                    {
-                        if(jsData[ai]["format"].asString().find("urn:x-nmos:format:audio") != string::npos)
-                        {   //Audio
-                            shared_ptr<SourceAudio> pResource = make_shared<SourceAudio>();
-                            if(pResource->UpdateFromJson(jsData[ai]))
-                            {
-                                m_sources.AddResource(sIpAddress, pResource);
-                                lstAdded.push_back(pResource);
-                                Log::Get() << "SourceAudio: " << pResource->GetId() << " found at " << sIpAddress << endl;
-                            }
-                            else
-                            {
-                                Log::Get() << "Found Source but json data incorrect: " << pResource->GetJsonParseError() << endl;
-                            }
+                    if(jsData[ai]["format"].asString().find("urn:x-nmos:format:audio") != string::npos)
+                    {   //Audio
+                        shared_ptr<SourceAudio> pResource = make_shared<SourceAudio>();
+                        if(pResource->UpdateFromJson(jsData[ai]))
+                        {
+                            m_sources.AddResource(sIpAddress, pResource);
+                            lstAdded.push_back(pResource);
+                            pmlLog(pml::LOG_INFO) << "NMOS: " << "SourceAudio: " << pResource->GetId() << " found at " << sIpAddress ;
                         }
                         else
-                        {   //Generic
-                            shared_ptr<SourceGeneric> pResource = make_shared<SourceGeneric>();
-                            if(pResource->UpdateFromJson(jsData[ai]))
-                            {
-                                m_sources.AddResource(sIpAddress, pResource);
-
-                                lstAdded.push_back(pResource);
-                                Log::Get() << "SourceGeneric: " << pResource->GetId() << " found at " << sIpAddress << endl;
-                            }
-                            else
-                            {
-                                Log::Get() << "Found Source but json data incorrect: " << pResource->GetJsonParseError() << endl;
-                            }
+                        {
+                            pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Source but json data incorrect: " << pResource->GetJsonParseError() ;
                         }
                     }
                     else
-                    {
-                        lstUpdated.push_back(pSourceCore);
+                    {   //Generic
+                        shared_ptr<SourceGeneric> pResource = make_shared<SourceGeneric>();
+                        if(pResource->UpdateFromJson(jsData[ai]))
+                        {
+                            m_sources.AddResource(sIpAddress, pResource);
+
+                            lstAdded.push_back(pResource);
+                            pmlLog(pml::LOG_INFO) << "NMOS: " << "SourceGeneric: " << pResource->GetId() << " found at " << sIpAddress ;
+                        }
+                        else
+                        {
+                            pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Source but json data incorrect: " << pResource->GetJsonParseError() ;
+                        }
                     }
                 }
                 else
                 {
-                    Log::Get() << "Reply from " << sIpAddress << "but not JSON 'format' is ill defined" << endl;
+                    lstUpdated.push_back(pSourceCore);
                 }
             }
-        }
-        else
-        {
-            Log::Get() << "Reply from " << sIpAddress << "but not JSON is not array" << endl;
+            else
+            {
+                pmlLog(pml::LOG_INFO) << "NMOS: " << "Reply from " << sIpAddress << "but not JSON 'format' is ill defined" ;
+            }
         }
     }
     else
     {
-        Log::Get() << "Reply from " << sIpAddress << "but not valid JSON" << endl;
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not array" ;
     }
 }
 
 void ClientApiImpl::AddFlows(list<shared_ptr<Flow> >& lstAdded, list<shared_ptr<Flow> >& lstUpdated, const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
-    Json::Value jsData;
-    Json::Reader jsReader;
-    if(jsReader.parse(sData, jsData))
+    Json::Value jsData = ConvertToJson(sData);
+
+    if(jsData.isArray())
     {
-        if(jsData.isArray())
+        for(Json::ArrayIndex ai = 0; ai < jsData.size(); ++ai)
         {
-            for(Json::ArrayIndex ai = 0; ai < jsData.size(); ++ai)
+            if(jsData[ai].isObject() && jsData[ai]["format"].isString() && jsData[ai]["id"].isString())
             {
-                if(jsData[ai].isObject() && jsData[ai]["format"].isString() && jsData[ai]["id"].isString())
+                shared_ptr<Flow> pFlowCore = m_flows.UpdateResource(jsData[ai]);
+                if(!pFlowCore)
                 {
-                    shared_ptr<Flow> pFlowCore = m_flows.UpdateResource(jsData[ai]);
-                    if(!pFlowCore)
-                    {
-                        if(jsData[ai]["format"].asString().find("urn:x-nmos:format:audio") != string::npos)
-                        {
-                            if(jsData[ai]["media_type"].isString())
-                            {
-                                if(jsData[ai]["media_type"].asString() == "audio/L24" || jsData[ai]["media_type"].asString() == "audio/L20" || jsData[ai]["media_type"].asString() == "audio/L16" || jsData[ai]["media_type"].asString() == "audio/L8")
-                                {   //Raw Audio
-                                    shared_ptr<FlowAudioRaw> pResource = make_shared<FlowAudioRaw>();
-                                    if(pResource->UpdateFromJson(jsData[ai]))
-                                    {
-                                        m_flows.AddResource(sIpAddress, pResource);
-                                        lstAdded.push_back(pResource);
-                                        Log::Get() << "FlowAudioRaw: " << pResource->GetId() << " found at " << sIpAddress << endl;
-                                    }
-                                    else
-                                    {
-                                        Log::Get() << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() << endl;
-                                    }
-                                }
-                                else
-                                {   //Code audio
-                                    shared_ptr<FlowAudioCoded> pResource = make_shared<FlowAudioCoded>();
-                                    if(pResource->UpdateFromJson(jsData[ai]))
-                                    {
-                                        m_flows.AddResource(sIpAddress, pResource);
-                                        lstAdded.push_back(pResource);
-                                        Log::Get() << "FlowAudioCoded: " << pResource->GetId() << " found at " << sIpAddress << endl;
-                                    }
-                                    else
-                                    {
-                                        Log::Get() << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() << endl;
-                                    }
-                                }
-                            }
-                        }
-                        else if(jsData[ai]["format"].asString().find("urn:x-nmos:format:video") != string::npos)
-                        {
-                            if(jsData[ai]["media_type"].isString())
-                            {//Coded vidoe
-                                if(jsData[ai]["media_type"].asString() == "vidoe/raw")
-                                {
-                                    shared_ptr<FlowVideoRaw> pResource = make_shared<FlowVideoRaw>();
-                                    if(pResource->UpdateFromJson(jsData[ai]))
-                                    {
-                                        m_flows.AddResource(sIpAddress, pResource);
-                                        lstAdded.push_back(pResource);
-                                        Log::Get() << "FlowVideoRaw: " << pResource->GetId() << " found at " << sIpAddress << endl;
-                                    }
-                                    else
-                                    {
-                                        Log::Get() << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() << endl;
-                                    }
-                                }
-                                else
-                                {
-                                    shared_ptr<FlowVideoCoded> pResource = make_shared<FlowVideoCoded>(jsData[ai]["media_type"].asString());
-                                    if(pResource->UpdateFromJson(jsData[ai]))
-                                    {
-                                        m_flows.AddResource(sIpAddress, pResource);
-                                        lstAdded.push_back(pResource);
-                                        Log::Get() << "FlowVideoCoded: " << pResource->GetId() << " found at " << sIpAddress << endl;
-                                    }
-                                    else
-                                    {
-                                        Log::Get() << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() << endl;
-                                    }
-                                }
-                            }
-                        }
-                        else if(jsData[ai]["format"].asString().find("urn:x-nmos:format:data") != string::npos)
-                        {
-                            if(jsData[ai]["media_type"] == "video/smpte291")
-                            {
-                                shared_ptr<FlowDataSdiAnc> pResource = make_shared<FlowDataSdiAnc>();
-                                if(pResource->UpdateFromJson(jsData[ai]))
-                                {
-                                    m_flows.AddResource(sIpAddress, pResource);
-                                    lstAdded.push_back(pResource);
-                                    Log::Get() << "FlowDataSdiAnc: " << pResource->GetId() << " found at " << sIpAddress << endl;
-                                }
-                                else
-                                {
-                                    Log::Get() << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() << endl;
-                                }
-                            }
-                            //SDIAncData only at the moment
-                        }
-                        else if(jsData[ai]["format"].asString().find("urn:x-nmos:format:mux") != string::npos)
-                        {
-                            //Mux only at the momemnt
-                            shared_ptr<FlowMux> pResource = make_shared<FlowMux>();
-                            if(pResource->UpdateFromJson(jsData[ai]))
-                            {
-                                m_flows.AddResource(sIpAddress, pResource);
-                                lstAdded.push_back(pResource);
-                                Log::Get() << "FlowMux: " << pResource->GetId() << " found at " << sIpAddress << endl;
-                            }
-                            else
-                            {
-                                Log::Get() << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() << endl;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        lstUpdated.push_back(pFlowCore);
-                    }
+                    CreateFlow(lstAdded, jsData[ai], sIpAddress);
                 }
                 else
                 {
-                    Log::Get() << "Reply from " << sIpAddress << "but not JSON 'format' is ill defined" << endl;
+                    lstUpdated.push_back(pFlowCore);
                 }
             }
-        }
-        else
-        {
-            Log::Get() << "Reply from " << sIpAddress << "but not JSON is not array" << endl;
+            else
+            {
+                pmlLog(pml::LOG_INFO) << "NMOS: " << "Reply from " << sIpAddress << "but not JSON 'format' is ill defined" ;
+            }
         }
     }
     else
     {
-        Log::Get() << "Reply from " << sIpAddress << "but not valid JSON" << endl;
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not array" ;
     }
 }
+
+
+void ClientApiImpl::CreateFlow(list<shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const string& sIpAddress)
+{
+    if(jsData["format"].asString().find("urn:x-nmos:format:audio") != string::npos)
+    {
+        CreateFlowAudio(lstAdded, jsData, sIpAddress);
+    }
+    else if(jsData["format"].asString().find("urn:x-nmos:format:video") != string::npos)
+    {
+        CreateFlowVideo(lstAdded, jsData, sIpAddress);
+    }
+    else if(jsData["format"].asString().find("urn:x-nmos:format:data") != string::npos)
+    {
+        CreateFlowData(lstAdded, jsData, sIpAddress);
+    }
+    else if(jsData["format"].asString().find("urn:x-nmos:format:mux") != string::npos)
+    {
+        CreateFlowMux(lstAdded, jsData, sIpAddress);
+    }
+}
+
+void ClientApiImpl::CreateFlowAudio(list<shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const string& sIpAddress)
+{
+    if(jsData["media_type"].isString())
+    {
+        if(jsData["media_type"].asString() == "audio/L24" || jsData["media_type"].asString() == "audio/L20" || jsData["media_type"].asString() == "audio/L16" || jsData["media_type"].asString() == "audio/L8")
+        {   //Raw Audio
+            CreateFlowAudioRaw(lstAdded, jsData, sIpAddress);
+        }
+        else
+        {   //Code audio
+            CreateFlowAudioCoded(lstAdded, jsData, sIpAddress);
+        }
+    }
+}
+
+void ClientApiImpl::CreateFlowAudioCoded(list<shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const string& sIpAddress)
+{
+    shared_ptr<FlowAudioCoded> pResource = make_shared<FlowAudioCoded>();
+    if(pResource->UpdateFromJson(jsData))
+    {
+        m_flows.AddResource(sIpAddress, pResource);
+        lstAdded.push_back(pResource);
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "FlowAudioCoded: " << pResource->GetId() << " found at " << sIpAddress ;
+    }
+    else
+    {
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() ;
+    }
+}
+void ClientApiImpl::CreateFlowAudioRaw(list<shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const string& sIpAddress)
+{
+    shared_ptr<FlowAudioRaw> pResource = make_shared<FlowAudioRaw>();
+    if(pResource->UpdateFromJson(jsData))
+    {
+        m_flows.AddResource(sIpAddress, pResource);
+        lstAdded.push_back(pResource);
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "FlowAudioRaw: " << pResource->GetId() << " found at " << sIpAddress ;
+    }
+    else
+    {
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() ;
+    }
+
+}
+
+void ClientApiImpl::CreateFlowVideo(list<shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const string& sIpAddress)
+{
+    if(jsData["media_type"].isString())
+    {//Coded vidoe
+        if(jsData["media_type"].asString() == "vidoe/raw")
+        {
+            CreateFlowVideoRaw(lstAdded, jsData, sIpAddress);
+        }
+        else
+        {
+            CreateFlowVideoCoded(lstAdded, jsData, sIpAddress);
+        }
+    }
+}
+
+void ClientApiImpl::CreateFlowVideoRaw(list<shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const string& sIpAddress)
+{
+    shared_ptr<FlowVideoRaw> pResource = make_shared<FlowVideoRaw>();
+    if(pResource->UpdateFromJson(jsData))
+    {
+        m_flows.AddResource(sIpAddress, pResource);
+        lstAdded.push_back(pResource);
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "FlowVideoRaw: " << pResource->GetId() << " found at " << sIpAddress ;
+    }
+    else
+    {
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() ;
+    }
+}
+
+void ClientApiImpl::CreateFlowVideoCoded(list<shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const string& sIpAddress)
+{
+    shared_ptr<FlowVideoCoded> pResource = make_shared<FlowVideoCoded>(jsData["media_type"].asString());
+    if(pResource->UpdateFromJson(jsData))
+    {
+        m_flows.AddResource(sIpAddress, pResource);
+        lstAdded.push_back(pResource);
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "FlowVideoCoded: " << pResource->GetId() << " found at " << sIpAddress ;
+    }
+    else
+    {
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() ;
+    }
+}
+
+void ClientApiImpl::CreateFlowData(list<shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const string& sIpAddress)
+{
+    if(jsData["media_type"] == "video/smpte291")
+    {
+        shared_ptr<FlowDataSdiAnc> pResource = make_shared<FlowDataSdiAnc>();
+        if(pResource->UpdateFromJson(jsData))
+        {
+            m_flows.AddResource(sIpAddress, pResource);
+            lstAdded.push_back(pResource);
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "FlowDataSdiAnc: " << pResource->GetId() << " found at " << sIpAddress ;
+        }
+        else
+        {
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() ;
+        }
+    }
+    //SDIAncData only at the moment
+}
+
+void ClientApiImpl::CreateFlowMux(list<shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const string& sIpAddress)
+{
+    //Mux only at the momemnt
+    shared_ptr<FlowMux> pResource = make_shared<FlowMux>();
+    if(pResource->UpdateFromJson(jsData))
+    {
+        m_flows.AddResource(sIpAddress, pResource);
+        lstAdded.push_back(pResource);
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "FlowMux: " << pResource->GetId() << " found at " << sIpAddress ;
+    }
+    else
+    {
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() ;
+    }
+}
+
 
 void ClientApiImpl::AddSenders(list<shared_ptr<Sender> >& lstAdded, list<shared_ptr<Sender> >& lstUpdated, const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
-    Json::Value jsData;
-    Json::Reader jsReader;
-    if(jsReader.parse(sData, jsData))
+    Json::Value jsData = ConvertToJson(sData);
+    if(jsData.isArray())
     {
-        if(jsData.isArray())
+        for(Json::ArrayIndex ai = 0; ai < jsData.size(); ++ai)
         {
-            for(Json::ArrayIndex ai = 0; ai < jsData.size(); ++ai)
+            if(jsData[ai].isObject() && jsData[ai]["id"].isString())
             {
-                if(jsData[ai].isObject() && jsData[ai]["id"].isString())
+                shared_ptr<Sender> pResource = m_senders.UpdateResource(jsData[ai]);
+                if(!pResource)
                 {
-                    shared_ptr<Sender> pResource = m_senders.UpdateResource(jsData[ai]);
-                    if(!pResource)
+                    pResource = make_shared<Sender>();
+                    if(pResource->UpdateFromJson(jsData[ai]))
                     {
-                        pResource = make_shared<Sender>();
-                        if(pResource->UpdateFromJson(jsData[ai]))
-                        {
-                            m_senders.AddResource(sIpAddress, pResource);
-                            lstAdded.push_back(pResource);
-                            Log::Get() << "Sender: " << pResource->GetId() << " found at " << sIpAddress << endl;
-                        }
-                        else
-                        {
-                            Log::Get() << "Found Sender but json data incorrect: " << pResource->GetJsonParseError() << endl;
-                        }
+                        m_senders.AddResource(sIpAddress, pResource);
+                        lstAdded.push_back(pResource);
+                        pmlLog(pml::LOG_INFO) << "NMOS: " << "Sender: " << pResource->GetId() << " found at " << sIpAddress ;
                     }
                     else
                     {
-                        lstUpdated.push_back(pResource);
+                        pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Sender but json data incorrect: " << pResource->GetJsonParseError() ;
                     }
                 }
                 else
                 {
-                    Log::Get() << "Reply from " << sIpAddress << "but not JSON is not an array of objects" << endl;
+                    lstUpdated.push_back(pResource);
                 }
             }
-        }
-        else
-        {
-            Log::Get() << "Reply from " << sIpAddress << "but not JSON is not array" << endl;
+            else
+            {
+                pmlLog(pml::LOG_INFO) << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not an array of objects" ;
+            }
         }
     }
     else
     {
-        Log::Get() << "Reply from " << sIpAddress << "but not valid JSON" << endl;
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not array" ;
     }
 }
 
 void ClientApiImpl::AddReceivers(list<shared_ptr<Receiver> >& lstAdded, list<shared_ptr<Receiver> >& lstUpdated, const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
-    Json::Value jsData;
-    Json::Reader jsReader;
-    if(jsReader.parse(sData, jsData))
+    Json::Value jsData = ConvertToJson(sData);
+    if(jsData.isArray())
     {
-        if(jsData.isArray())
+        for(Json::ArrayIndex ai = 0; ai < jsData.size(); ++ai)
         {
-            for(Json::ArrayIndex ai = 0; ai < jsData.size(); ++ai)
+            if(jsData[ai].isObject() && jsData[ai]["id"].isString())
             {
-                if(jsData[ai].isObject() && jsData[ai]["id"].isString())
+                shared_ptr<Receiver> pResource = m_receivers.UpdateResource(jsData[ai]);
+                if(!pResource)
                 {
-                    shared_ptr<Receiver> pResource = m_receivers.UpdateResource(jsData[ai]);
-                    if(!pResource)
+                    pResource = make_shared<Receiver>();
+                    if(pResource->UpdateFromJson(jsData[ai]))
                     {
-                        pResource = make_shared<Receiver>();
-                        if(pResource->UpdateFromJson(jsData[ai]))
-                        {
-                            m_receivers.AddResource(sIpAddress, pResource);
-                            lstAdded.push_back(pResource);
-                            Log::Get() << "Receiver: " << pResource->GetId() << " found at " << sIpAddress << endl;
-                        }
-                        else
-                        {
-                            Log::Get() << "Found Receiver but json data incorrect: " << pResource->GetJsonParseError() << endl;
-                        }
+                        m_receivers.AddResource(sIpAddress, pResource);
+                        lstAdded.push_back(pResource);
+                        pmlLog(pml::LOG_INFO) << "NMOS: " << "Receiver: " << pResource->GetId() << " found at " << sIpAddress ;
                     }
                     else
                     {
-                        lstUpdated.push_back(pResource);
+                        pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Receiver but json data incorrect: " << pResource->GetJsonParseError() ;
                     }
                 }
                 else
                 {
-                    Log::Get() << "Reply from " << sIpAddress << "but not JSON is not an array of objects" << endl;
+                    lstUpdated.push_back(pResource);
                 }
             }
-        }
-        else
-        {
-            Log::Get() << "Reply from " << sIpAddress << "but not JSON is not array" << endl;
+            else
+            {
+                pmlLog(pml::LOG_INFO) << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not an array of objects" ;
+            }
         }
     }
     else
     {
-        Log::Get() << "Reply from " << sIpAddress << "but not valid JSON" << endl;
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not array" ;
     }
 }
 
@@ -1341,13 +1368,12 @@ bool ClientApiImpl::Subscribe(const string& sSenderId, const string& sReceiverId
     if(sUrl.empty() == false)
     {
         //do a PUT to the correct place on the URL
-        Json::FastWriter sw;
-        string sJson(sw.write(pSender->GetJson(version)));
-        m_pCurl->PutPatch(sUrl, sJson, ClientPoster::CURLTYPE_TARGET, true, pReceiver->GetId());
-        Log::Get(Log::LOG_DEBUG) << "TARGET: " << sUrl << endl;
+
+        m_pCurl->PutPatch(sUrl, ConvertFromJson(pSender->GetJson(version)), ClientPoster::CURLTYPE_TARGET, true, pReceiver->GetId());
+        pmlLog(pml::LOG_DEBUG) << "TARGET: " << sUrl ;
         return true;
     }
-    Log::Get(Log::LOG_ERROR) << "Couldn't create target url" << endl;
+    pmlLog(pml::LOG_ERROR) << "NMOS: " << "Couldn't create target url" ;
     return false;
 }
 
@@ -1364,7 +1390,7 @@ bool ClientApiImpl::Unsubscribe(const string& sReceiverId)
     string sUrl(GetTargetUrl(pReceiver, version));
     if(sUrl.empty() == false)
     {
-        Log::Get(Log::LOG_DEBUG) << "TARGET: " << sUrl << endl;
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "TARGET: " << sUrl ;
         //do a PUT to the correct place on the URL
         m_pCurl->PutPatch(sUrl, "{}", ClientPoster::CURLTYPE_TARGET, true, pReceiver->GetId());
 
@@ -1379,14 +1405,14 @@ string ClientApiImpl::GetTargetUrl(shared_ptr<Receiver> pReceiver, ApiVersion& v
     map<string, shared_ptr<Device> >::const_iterator itDevice =  m_devices.FindNmosResource(pReceiver->GetParentResourceId());
     if(itDevice == m_devices.GetResourceEnd())
     {
-        Log::Get(Log::LOG_ERROR) << "Device: " << pReceiver->GetParentResourceId() << " not found" << endl;
+        pmlLog(pml::LOG_ERROR) << "NMOS: " << "Device: " << pReceiver->GetParentResourceId() << " not found" ;
         return string();
     }
 
     map<string, shared_ptr<Self> >::const_iterator itNode =  m_nodes.FindNmosResource(itDevice->second->GetParentResourceId());
     if(itNode == m_nodes.GetResourceEnd())
     {
-        Log::Get(Log::LOG_ERROR) << "Node: " << itDevice->second->GetParentResourceId() << " not found" << endl;
+        pmlLog(pml::LOG_ERROR) << "NMOS: " << "Node: " << itDevice->second->GetParentResourceId() << " not found" ;
         return string();
     }
 
@@ -1395,7 +1421,7 @@ string ClientApiImpl::GetTargetUrl(shared_ptr<Receiver> pReceiver, ApiVersion& v
 
     for(set<ApiVersion>::const_iterator itVersion = itNode->second->GetApiVersionBegin(); itVersion != itNode->second->GetApiVersionEnd(); ++itVersion)
     {
-        Log::Get(Log::LOG_DEBUG) << itVersion->GetVersionAsString() << endl;
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << itVersion->GetVersionAsString() ;
         if((*itVersion).GetMajor() == 1)
         {
             version = (*itVersion);
@@ -1407,21 +1433,22 @@ string ClientApiImpl::GetTargetUrl(shared_ptr<Receiver> pReceiver, ApiVersion& v
     }
     if(version.GetMajor() == 0)
     {
-        Log::Get(Log::LOG_ERROR) << "Version 1.x not found" << endl;
+        pmlLog(pml::LOG_ERROR) << "NMOS: " << "Version 1.x not found" ;
         return string();
     }
     //get the endpoint to use... for now the first non https one @todo deciding on endpoint should probably work in a better way
-    set<endpoint>::const_iterator itEndpoint = itNode->second->GetEndpointsBegin();
-    for(; itEndpoint != itNode->second->GetEndpointsEnd(); ++itEndpoint)
-    {
-        if(itEndpoint->bSecure == false)
-        {
-            break;
-        }
-    }
+    auto itEndpoint = std::find_if(itNode->second->GetEndpointsBegin(), itNode->second->GetEndpointsEnd(), [](const ifendpoint& apoint) { return apoint.bSecure==false;});
+//    set<ifendpoint>::const_iterator itEndpoint = itNode->second->GetEndpointsBegin();
+//    for(; itEndpoint != itNode->second->GetEndpointsEnd(); ++itEndpoint)
+//    {
+//        if(itEndpoint->bSecure == false)
+//        {
+//            break;
+//        }
+//    }
     if(itEndpoint == itNode->second->GetEndpointsEnd())
     {
-        Log::Get(Log::LOG_ERROR) << "Non-secure endpoint not found" << endl;
+        pmlLog(pml::LOG_ERROR) << "NMOS: " << "Non-secure endpoint not found" ;
         return string();
     }
 
@@ -1440,7 +1467,7 @@ string ClientApiImpl::GetConnectionUrlSingle(shared_ptr<Resource> pResource, con
     map<string, shared_ptr<Device> >::const_iterator itDevice =  m_devices.FindNmosResource(pResource->GetParentResourceId());
     if(itDevice == m_devices.GetResourceEnd())
     {
-        Log::Get(Log::LOG_ERROR) << "Device: " << pResource->GetParentResourceId() << " not found" << endl;
+        pmlLog(pml::LOG_ERROR) << "NMOS: " << "Device: " << pResource->GetParentResourceId() << " not found" ;
         return string();
     }
 
@@ -1540,10 +1567,7 @@ bool ClientApiImpl::PatchSenderStaged(const string& sSenderId, const connectionS
         return false;
     }
 
-    Json::FastWriter sw;
-    string sJson = sw.write(aConnection.GetJson(version));
-    Log::Get(Log::LOG_DEBUG) << sJson << endl;
-    m_pCurl->PutPatch(sConnectionUrl, sJson, ClientPoster::CURLTYPE_SENDER_PATCH, false, sSenderId);
+    m_pCurl->PutPatch(sConnectionUrl, ConvertFromJson(aConnection.GetJson(version)), ClientPoster::CURLTYPE_SENDER_PATCH, false, sSenderId);
 
     return true;
 }
@@ -1564,9 +1588,7 @@ bool ClientApiImpl::PatchReceiverStaged(const string& sReceiverId, const connect
         return false;
     }
 
-    Json::FastWriter sw;
-    string sJson = sw.write(aConnection.GetJson(version));
-    m_pCurl->PutPatch(sConnectionUrl, sJson, ClientPoster::CURLTYPE_RECEIVER_PATCH, false, sReceiverId);
+    m_pCurl->PutPatch(sConnectionUrl, ConvertFromJson(aConnection.GetJson(version)), ClientPoster::CURLTYPE_RECEIVER_PATCH, false, sReceiverId);
 
     return true;
 }
@@ -1577,7 +1599,7 @@ shared_ptr<Sender> ClientApiImpl::GetSender(const string& sSenderId)
     map<string, shared_ptr<Sender> >::const_iterator itSender = m_senders.FindNmosResource(sSenderId);
     if(itSender == m_senders.GetResourceEnd())
     {
-        Log::Get(Log::LOG_ERROR) << "Sender: " << sSenderId << " not found." << endl;
+        pmlLog(pml::LOG_ERROR) << "NMOS: " << "Sender: " << sSenderId << " not found." ;
         return 0;
     }
     return itSender->second;
@@ -1588,7 +1610,7 @@ shared_ptr<Receiver> ClientApiImpl::GetReceiver(const string& sReceiverId)
     map<string, shared_ptr<Receiver> >::const_iterator itReceiver = m_receivers.FindNmosResource(sReceiverId);
     if(itReceiver == m_receivers.GetResourceEnd())
     {
-        Log::Get(Log::LOG_ERROR) << "Receiver: " << sReceiverId << " not found." << endl;
+        pmlLog(pml::LOG_ERROR) << "NMOS: " << "Receiver: " << sReceiverId << " not found." ;
         return 0;
     }
     return itReceiver->second;
@@ -1677,17 +1699,17 @@ bool ClientApiImpl::Connect(const std::string& sSenderId, const std::string& sRe
 bool ClientApiImpl::Disconnect( const std::string& sReceiverId)
 {
     lock_guard<mutex> lg(m_mutex);
-    Log::Get(Log::LOG_DEBUG) << "ClientApiImpl::Disconnect " << sReceiverId << endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ClientApiImpl::Disconnect " << sReceiverId ;
     shared_ptr<Receiver> pReceiver = GetReceiver(sReceiverId);
     if(!pReceiver)
     {
-        Log::Get(Log::LOG_DEBUG) << "ClientApiImpl::Disconnect No Receiver" << endl;
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ClientApiImpl::Disconnect No Receiver" ;
         return false;
     }
     shared_ptr<Sender> pSender = GetSender(pReceiver->GetSender());
     if(!pSender)
     {
-        Log::Get(Log::LOG_DEBUG) << "ClientApiImpl::Disconnect No Sender" << endl;
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ClientApiImpl::Disconnect No Sender" ;
         return false;
     }
 
@@ -1699,7 +1721,7 @@ bool ClientApiImpl::Disconnect( const std::string& sReceiverId)
 
     if(sSenderStageUrl.empty() || sSenderTransportUrl.empty() || sReceiverStageUrl.empty())
     {
-        Log::Get(Log::LOG_DEBUG) << "ClientApiImpl::Disconnect No URLS" << endl;
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ClientApiImpl::Disconnect No URLS" ;
         return false;
     }
 
@@ -1857,7 +1879,7 @@ template<class T> bool ClientApiImpl::RunQuery(std::list<std::shared_ptr<T> >& l
 {
     if(m_pPoster)
     {
-        for(typename list<shared_ptr<T> >::iterator itResource = lstCheck.begin(); itResource != lstCheck.end(); )
+        for(auto itResource = lstCheck.begin(); itResource != lstCheck.end(); )
         {
             if(MeetsQuery(sQuery, (*itResource)))
             {
@@ -1870,20 +1892,37 @@ template<class T> bool ClientApiImpl::RunQuery(std::list<std::shared_ptr<T> >& l
         }
         return (lstCheck.empty() == false);
     }
+    else
+    {
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ClientApiImpl::RunQuery - No poster" ;
+    }
     return false;
 }
 
 template<class T> bool ClientApiImpl::RunQuery(std::list<shared_ptr<T> >& lstCheck, int nResource)
 {
-    for(typename list<shared_ptr<T> >::iterator itResource = lstCheck.begin(); itResource != lstCheck.end(); )
+    if(lstCheck.empty())
+    {
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ClientApiImpl::RunQuery - lstcheck empty" ;
+    }
+
+    if(m_mmQuery.empty())
+    {
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ClientApiImpl::RunQuery - m_mmQuery empty" ;
+    }
+
+    for(auto itResource = lstCheck.begin(); itResource != lstCheck.end(); )
     {
         bool bKeep(false);
-        for(multimap<int, query>::iterator itQuery = m_mmQuery.lower_bound(nResource); itQuery != m_mmQuery.upper_bound(nResource); ++itQuery)
+        for(auto pairQuery : m_mmQuery)
         {
-            if(MeetsQuery(itQuery->second.sQuery, (*itResource)))
+            if((pairQuery.first & nResource))
             {
-                bKeep = true;
-                break;
+                if(MeetsQuery(pairQuery.second.sQuery, (*itResource)))
+                {
+                    bKeep = true;
+                    break;
+                }
             }
         }
 
@@ -1910,12 +1949,14 @@ template<class T> bool ClientApiImpl::RunQuery(list<shared_ptr<T> >& lstAdded, l
 
 bool ClientApiImpl::MeetsQuery(const std::string& sQuery, shared_ptr<Resource> pResource)
 {
-    if(sQuery.empty())
-    {
-        return true;
-    }
+    return true;
+
+    //if(sQuery.empty())
+   // {
+    //    return true;
+    //}
     // @todo run the query properly
-    return false;
+    //return false;
 }
 
 void ClientApiImpl::SubscribeToQueryServer()
@@ -1926,18 +1967,17 @@ void ClientApiImpl::SubscribeToQueryServer()
         stringstream ssUrl;
         ssUrl <<  m_mmQueryNodes.begin()->second->sHostIP << ":" << m_mmQueryNodes.begin()->second->nPort << "/x-nmos/query/v1.2/subscriptions";
 
-        Log::Get(Log::LOG_DEBUG) << "QUERY URL: " << ssUrl.str() << endl;
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "QUERY URL: " << ssUrl.str() ;
 
-        Json::FastWriter stw;
         //we run through all our queries and post them to the query server asking for the websocket
-        for(multimap<int, query>::const_iterator itQuery = m_mmQuery.begin(); itQuery != m_mmQuery.end(); ++itQuery)
+        for(auto pairQuery : m_mmQuery)
         {
             //create our json query
             Json::Value jsQuery;
-            jsQuery["max_update_rate_ms"] = (int)itQuery->second.nRefreshRate;
+            jsQuery["max_update_rate_ms"] = (int)pairQuery.second.nRefreshRate;
             stringstream ssRes;
-            ssRes << "/" << STR_RESOURCE[itQuery->second.nResource] << "s";
-            jsQuery["resource_path"] = "/" + STR_RESOURCE[itQuery->second.nResource] + "s";//ssRes.str();
+            ssRes << "/" << STR_RESOURCE[pairQuery.second.nResource] << "s";
+            jsQuery["resource_path"] = "/" + STR_RESOURCE[pairQuery.second.nResource] + "s";//ssRes.str();
             jsQuery["persist"] = false;
             jsQuery["secure"] = false;
 
@@ -1946,7 +1986,7 @@ void ClientApiImpl::SubscribeToQueryServer()
             jsQuery["params"] = jsParams;
 
             string sResponse;
-            unsigned long nCode = CurlRegister::Post(ssUrl.str(), stw.write(jsQuery), sResponse);
+            unsigned long nCode = CurlRegister::Post(ssUrl.str(), ConvertFromJson(jsQuery), sResponse);
         }
     }
 }

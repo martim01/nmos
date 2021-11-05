@@ -25,7 +25,7 @@ void ServicePublisher::EntryGroupCallback(AvahiEntryGroup *pGroup, AvahiEntryGro
     {
     case AVAHI_ENTRY_GROUP_ESTABLISHED :
         /* The entry group has been established successfully */
-        Log::Get() << "ServicePublisher: Service '" << m_psName << "' successfully established." << endl;
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "ServicePublisher: Service '" << m_psName << "' successfully established." ;
         break;
     case AVAHI_ENTRY_GROUP_COLLISION :
     {
@@ -33,7 +33,7 @@ void ServicePublisher::EntryGroupCallback(AvahiEntryGroup *pGroup, AvahiEntryGro
         break;
     }
     case AVAHI_ENTRY_GROUP_FAILURE :
-        Log::Get(Log::LOG_ERROR) << "ServicePublisher: Entry group failure: " << avahi_strerror(avahi_client_errno(avahi_entry_group_get_client(m_pGroup))) << endl;
+        pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServicePublisher: Entry group failure: " << avahi_strerror(avahi_client_errno(avahi_entry_group_get_client(m_pGroup))) ;
         /* Some kind of failure happened while we were registering our services */
         ThreadQuit();
         break;
@@ -55,7 +55,7 @@ void ServicePublisher::CreateServices()
         {
             if (!(m_pGroup = avahi_entry_group_new(m_pClient, entry_group_callback, reinterpret_cast<void*>(this))))
             {
-                Log::Get(Log::LOG_ERROR) << "ServicePublisher: avahi_entry_group_new() failed: " << avahi_strerror(avahi_client_errno(m_pClient)) << endl;
+                pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServicePublisher: avahi_entry_group_new() failed: " << avahi_strerror(avahi_client_errno(m_pClient)) ;
                 ThreadQuit();
                 return;
             }
@@ -65,12 +65,12 @@ void ServicePublisher::CreateServices()
          * because it was reset previously, add our entries.  */
         if (avahi_entry_group_is_empty(m_pGroup))
         {
-            Log::Get(Log::LOG_DEBUG) << "ServicePublisher: Adding service " << m_psName << endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServicePublisher: Adding service " << m_psName ;
 
             AvahiStringList* pList = GetTxtList();
             if(!pList)
             {
-                Log::Get(Log::LOG_ERROR) << "ServicePublisher: Failed to create list" << endl;
+                pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServicePublisher: Failed to create list" ;
             }
             else
             {
@@ -83,7 +83,7 @@ void ServicePublisher::CreateServices()
                     }
                     else
                     {
-                        Log::Get(Log::LOG_ERROR) << "ServicePublisher: Failed to add '" << m_sService << "' service: " << avahi_strerror(ret) << endl;
+                        pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServicePublisher: Failed to add '" << m_sService << "' service: " << avahi_strerror(ret) ;
                         ThreadQuit();
                         return;
                     }
@@ -94,7 +94,7 @@ void ServicePublisher::CreateServices()
             /* Tell the server to register the service */
             if ((ret = avahi_entry_group_commit(m_pGroup)) < 0)
             {
-                Log::Get(Log::LOG_ERROR) << "ServicePublisher: Failed to commit entry group: " << avahi_strerror(ret);
+                pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServicePublisher: Failed to commit entry group: " << avahi_strerror(ret);
                 ThreadQuit();
                 return;
             }
@@ -110,7 +110,7 @@ void ServicePublisher::Collision()
     char *n = avahi_alternative_service_name(m_psName);
     avahi_free(m_psName);
     m_psName = n;
-    Log::Get(Log::LOG_DEBUG) << "ServicePublisher: Service name collision, renaming service to " << m_psName << endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServicePublisher: Service name collision, renaming service to " << m_psName ;
     avahi_entry_group_reset(m_pGroup);
     CreateServices();
 }
@@ -154,14 +154,14 @@ void ServicePublisher::ClientCallback(AvahiClient* pClient, AvahiClientState sta
         switch (state)
         {
         case AVAHI_CLIENT_S_RUNNING:
-            Log::Get(Log::LOG_DEBUG) << "ServicePublisher: Client: Running" << endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServicePublisher: Client: Running" ;
             /* The server has startup successfully and registered its host
              * name on the network, so it's time to create our services */
              m_pClient = pClient;
             CreateServices();
             break;
         case AVAHI_CLIENT_FAILURE:
-            Log::Get(Log::LOG_ERROR) << "ServicePublisher: Client failure: " <<  avahi_strerror(avahi_client_errno(pClient)) << endl;
+            pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServicePublisher: Client failure: " <<  avahi_strerror(avahi_client_errno(pClient)) ;
             ThreadQuit();
             break;
         case AVAHI_CLIENT_S_COLLISION:
@@ -173,14 +173,14 @@ void ServicePublisher::ClientCallback(AvahiClient* pClient, AvahiClientState sta
              * might be caused by a host name change. We need to wait
              * for our own records to register until the host name is
              * properly esatblished. */
-             Log::Get(Log::LOG_DEBUG) << "ServicePublisher: Client: Collison or registering" << endl;
+             pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServicePublisher: Client: Collison or registering" ;
             if (m_pGroup)
             {
                 avahi_entry_group_reset(m_pGroup);
             }
             break;
         case AVAHI_CLIENT_CONNECTING:
-            Log::Get(Log::LOG_DEBUG) << "ServicePublisher: Client: Connecting" << endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServicePublisher: Client: Connecting" ;
         }
     }
 }
@@ -195,7 +195,7 @@ bool ServicePublisher::Start()
     /* Allocate main loop object */
     if (!(m_pThreadedPoll = avahi_threaded_poll_new()))
     {
-        Log::Get(Log::LOG_ERROR) << "ServicePublisher: Failed to create thread poll object." << endl;
+        pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServicePublisher: Failed to create thread poll object." ;
         Stop();
         return false;
     }
@@ -206,11 +206,11 @@ bool ServicePublisher::Start()
     /* Check wether creating the client object succeeded */
     if (!m_pClient)
     {
-        Log::Get(Log::LOG_ERROR) << "ServicePublisher: Failed to create client: " << avahi_strerror(error) << endl;
+        pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServicePublisher: Failed to create client: " << avahi_strerror(error) ;
         Stop();
         return false;
     }
-    Log::Get(Log::LOG_DEBUG) << "ServicePublisher: Started" << endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServicePublisher: Started" ;
     /* After 10s do some weird modification to the service */
     //avahi_thread_poll_get(thread_poll)->timeout_new(avahi_thread_poll_get(thread_poll),avahi_elapse_time(&tv, 1000*10, 0),modify_callback,client);
     /* Run the main loop */
@@ -228,7 +228,7 @@ ServicePublisher::ServicePublisher(const std::string& sName, const std::string& 
     m_sHostname(sHostname),
     m_psName(0)
 {
-    Log::Get(Log::LOG_DEBUG) << m_sHostname;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << m_sHostname;
 
 }
 
@@ -260,11 +260,11 @@ void ServicePublisher::RemoveTxt(const std::string& sKey, bool bModify)
 
 AvahiStringList* ServicePublisher::GetTxtList()
 {
-    Log::Get(Log::LOG_DEBUG) << "ServicePublisher: Create string list" << endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServicePublisher: Create string list" ;
     AvahiStringList* pList = NULL;
     for(map<string, string>::iterator itTxt = m_mTxt.begin(); itTxt != m_mTxt.end(); ++itTxt)
     {
-        Log::Get(Log::LOG_DEBUG) << itTxt->first << "=" << itTxt->second << endl;
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << itTxt->first << "=" << itTxt->second ;
         if(pList == NULL)
         {
             std::string sPair(itTxt->first);
@@ -282,13 +282,13 @@ AvahiStringList* ServicePublisher::GetTxtList()
 
 void ServicePublisher::Modify()
 {
-    Log::Get(Log::LOG_DEBUG) << "Modify" << endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Modify" ;
     if(m_pThreadedPoll)
     {
         AvahiStringList* pList = GetTxtList();
         if(!pList)
         {
-            Log::Get(Log::LOG_ERROR) << "ServicePublisher: Failed to create list" << endl;
+            pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServicePublisher: Failed to create list" ;
         }
         else
         {
@@ -301,7 +301,7 @@ void ServicePublisher::Modify()
                 }
                 else
                 {
-                    Log::Get(Log::LOG_ERROR) << "ServicePublisher: Failed to update '" << m_sService << "' service: " << avahi_strerror(ret) << endl;
+                    pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServicePublisher: Failed to update '" << m_sService << "' service: " << avahi_strerror(ret) ;
                     ThreadQuit();
                     return;
                 }

@@ -18,7 +18,7 @@ void NodeThread::Main()
 
     NodeApi::Get().BrowseForRegistrationNode();
     bool bDoneOnce(false);
-    int nBackoff = 1000;
+    int nBackoff = 5000;
     do
     {
         if(NodeApi::Get().Wait(nBackoff))
@@ -44,7 +44,7 @@ bool NodeThread::FindRegisterNode()
     //try to find the registartion node
     while(NodeApi::Get().FindRegistrationNode())
     {
-        //remove the ver_ txt from our publisher
+        //remove the ver_ txt from our p9ublisher
         NodeApi::Get().ModifyTxtRecords();
 
         //Run the registered operation loop
@@ -55,6 +55,7 @@ bool NodeThread::FindRegisterNode()
         }
 
     }
+    return false;
 
 }
 
@@ -77,7 +78,7 @@ bool NodeThread::RegisteredOperation(const ApiVersion& version)
                         NodeApi::Get().UpdateRegisterSimple(version);
                         break;
                     case NodeApi::SIG_INSTANCE_REMOVED: //this means our reg node has gone
-                        Log::Get() << "Registration server gone" << endl;
+                        pmlLog(pml::LOG_INFO) << "NMOS: " << "Registration server gone" ;
                         return false;
                         break;
                     default:
@@ -103,12 +104,12 @@ bool NodeThread::HandleHeartbeatResponse(unsigned int nResponse, const ApiVersio
     bool bRegistryOk(true);
     if(nResponse == 0 || nResponse >= 500)
     {   //registry error
-        Log::Get(Log::LOG_WARN) << "Registration server gone" << endl;
+        pmlLog(pml::LOG_WARN) << "NMOS: " << "Registration server gone" ;
         bRegistryOk = false;
     }
     else if(nResponse == 404)
     { //not known about re-register
-        Log::Get(Log::LOG_WARN) << "Registration server forgotten node. Reregister" << endl;
+        pmlLog(pml::LOG_WARN) << "NMOS: " << "Registration server forgotten node. Reregister" ;
         if(NodeApi::Get().RegisterSimple(version) != NodeApi::REG_DONE)
         {
             bRegistryOk = false;
@@ -116,7 +117,7 @@ bool NodeThread::HandleHeartbeatResponse(unsigned int nResponse, const ApiVersio
     }
     else if(nResponse == 409)
     {  //already registered with different version - deregister and re-register
-       Log::Get(Log::LOG_WARN) << "Registered with different version. Deregister and reregister." << endl;
+       pmlLog(pml::LOG_WARN) << "NMOS: " << "Registered with different version. Deregister and reregister." ;
        NodeApi::Get().UnregisterSimple();
        if(NodeApi::Get().RegisterSimple(version) != NodeApi::REG_DONE)
        {
@@ -125,7 +126,7 @@ bool NodeThread::HandleHeartbeatResponse(unsigned int nResponse, const ApiVersio
     }
     else if(nResponse >= 400)
     { //probably validation failure
-        Log::Get(Log::LOG_ERROR) << "Registry validation error!";
+        pmlLog(pml::LOG_ERROR) << "NMOS: " << "Registry validation error!";
         bRegistryOk = false;
     }
     return bRegistryOk;

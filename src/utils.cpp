@@ -14,7 +14,7 @@
 #endif // __GNU__
 #include <chrono>
 #include <sstream>
-
+#include "log.h"
 #include "guid.h"
 #include <array>
 
@@ -42,6 +42,14 @@ void SplitString(vector<string>& vSplit, const std::string& str, char cSplit)
         }
     }
 }
+
+vector<string> SplitString(const std::string& str, char cSplit)
+{
+    std::vector<std::string> vSplit;
+    SplitString(vSplit, str, cSplit);
+    return vSplit;
+}
+
 
 
 string GetIpAddress(const string& sInterface)
@@ -139,3 +147,28 @@ bool JsonMemberExistsAndIsNotNull(const Json::Value& jsObject, const std::string
 }
 
 
+Json::Value ConvertToJson(const std::string& str)
+{
+    Json::Value jsData;
+    try
+    {
+        std::stringstream ss;
+        ss.str(str);
+
+        ss >> jsData;
+
+    }
+    catch(const Json::RuntimeError& e)
+    {
+        pmlLog(pml::LOG_ERROR) << "NMOS: " << "Unable to convert '" << str << "' to JSON: " << e.what();
+    }
+
+    return jsData;
+}
+
+std::string ConvertFromJson(const Json::Value& jsValue)
+{
+    std::stringstream ssJson;
+    ssJson << jsValue;
+    return ssJson.str();
+}

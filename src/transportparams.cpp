@@ -42,7 +42,6 @@ TransportParamsRTP::TransportParamsRTP(const TransportParamsRTP& tp) :
     eRTCP(tp.eRTCP),
     eMulticast(tp.eMulticast)
 {
-    Log::Get(Log::LOG_DEBUG) << "CC Destination Port = " << nDestinationPort << std::endl;
 }
 
 
@@ -60,7 +59,6 @@ TransportParamsRTP& TransportParamsRTP::operator=(const TransportParamsRTP& othe
     nRtcpDestinationPort = other.nRtcpDestinationPort;
     bRtpEnabled = other.bRtpEnabled;
 
-    Log::Get(Log::LOG_DEBUG) << "Op= Destination Port = " << nDestinationPort << std::endl;
     return *this;
 }
 
@@ -69,7 +67,6 @@ bool TransportParamsRTP::Patch(const Json::Value& jsData)
     bool bIsOk(true);
     if(jsData.isObject())
     {
-        Log::Get(Log::LOG_DEBUG) << "Patch: transport_params is an object" << std::endl;
 
         if(jsData["source_ip"].isString())
         {
@@ -85,11 +82,10 @@ bool TransportParamsRTP::Patch(const Json::Value& jsData)
         else if(jsData["source_ip"].empty()== false)
         {
             bIsOk = false;
-            Log::Get(Log::LOG_DEBUG) << "Patch: source_ip incorrect type" << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: source_ip incorrect type" ;
         }
 
         bIsOk &= DecodePort(jsData, "destination_port", nDestinationPort);
-        Log::Get(Log::LOG_DEBUG) << "Destination Port = " << nDestinationPort << std::endl;
 
         if(jsData["fec_enabled"].isBool())
         {
@@ -98,7 +94,7 @@ bool TransportParamsRTP::Patch(const Json::Value& jsData)
         else if(jsData["fec_enabled"].empty() == false)
         {
             bIsOk = false;
-            Log::Get(Log::LOG_DEBUG) << "Patch: fec_enabled incorrect type" << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: fec_enabled incorrect type" ;
         }
 
         if(jsData["fec_destination_ip"].isString())
@@ -108,7 +104,7 @@ bool TransportParamsRTP::Patch(const Json::Value& jsData)
         else if(jsData["fec_destination_ip"].empty() == false)
         {
             bIsOk = false;
-            Log::Get(Log::LOG_DEBUG) << "Patch: fec_destination_ip incorrect type" << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: fec_destination_ip incorrect type" ;
         }
 
         if(jsData["fec_mode"].isString())
@@ -123,14 +119,14 @@ bool TransportParamsRTP::Patch(const Json::Value& jsData)
             }
             else
             {
-                Log::Get(Log::LOG_DEBUG) << "Patch: fec_mode not found" << std::endl;
+                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: fec_mode not found" ;
                 bIsOk = false;
             }
         }
         else if(jsData["fec_mode"].empty() == false)
         {
             bIsOk = false;
-            Log::Get(Log::LOG_DEBUG) << "Patch: fec_mode incorrect type" << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: fec_mode incorrect type" ;
         }
 
         bIsOk &= DecodePort(jsData, "fec1D_destination_port", nFec1DDestinationPort);
@@ -143,7 +139,7 @@ bool TransportParamsRTP::Patch(const Json::Value& jsData)
         else if(jsData["rtcp_enabled"].empty() == false)
         {
             bIsOk = false;
-            Log::Get(Log::LOG_DEBUG) << "Patch: rtcp_enabled incorrect type" << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: rtcp_enabled incorrect type" ;
         }
 
         if(jsData["rtcp_destination_ip"].isString())
@@ -153,7 +149,7 @@ bool TransportParamsRTP::Patch(const Json::Value& jsData)
         else if(jsData["rtcp_destination_ip"].empty() == false)
         {
             bIsOk = false;
-            Log::Get(Log::LOG_DEBUG) << "Patch: rtcp_destination_ip incorrect type" << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: rtcp_destination_ip incorrect type" ;
         }
 
         bIsOk &= DecodePort(jsData, "rtcp_destination_port", nRtcpDestinationPort);
@@ -163,23 +159,23 @@ bool TransportParamsRTP::Patch(const Json::Value& jsData)
 
             bRtpEnabled = jsData["rtp_enabled"].asBool();
 
-            Log::Get(Log::LOG_DEBUG) << "Patch: transport_params rtp_enabled " << bRtpEnabled << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: transport_params rtp_enabled " << bRtpEnabled ;
         }
         else if(jsData["rtp_enabled"].empty() == false)
         {
             bIsOk = false;
-            Log::Get(Log::LOG_DEBUG) << "Patch: rtp_enabled incorrect type" << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: rtp_enabled incorrect type" ;
         }
     }
     else if(jsData.empty() == false)
     {
-        Log::Get(Log::LOG_DEBUG) << "Patch: transport_params is not an object" << std::endl;
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: transport_params is not an object" ;
         bIsOk = false;
     }
-    Log::Get(Log::LOG_DEBUG) << "Patch: TransportParamsRTP: " << bIsOk << std::endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: TransportParamsRTP: " << bIsOk ;
     //else
     //{
-    //    Log::Get(Log::LOG_DEBUG) << "Patch: transport_params is not an object" << endl;
+    //    pmlLog(pml::LOG_DEBUG) << "Patch: transport_params is not an object" ;
     //    bIsOk = false;
    // }
     return bIsOk;
@@ -254,7 +250,7 @@ bool TransportParamsRTP::DecodePort(const Json::Value& jsData, const std::string
     }
     else
     {
-        Log::Get(Log::LOG_DEBUG) << "Patch: " << sPort << " not valid" << std::endl;
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: " << sPort << " not valid" ;
     }
     return bOk;
 }
@@ -307,7 +303,7 @@ void TransportParamsRTP::Actualize()
         nDestinationPort = 5004;
     }
 
-    Log::Get(Log::LOG_DEBUG) << "Actualize Destination Port = " << nDestinationPort << std::endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Actualize Destination Port = " << nDestinationPort ;
 
     if(bFecEnabled && (TP_SUPPORTED == eFec))
     {
@@ -350,7 +346,7 @@ bool TransportParamsRTPSender::Patch(const Json::Value& jsData)
         else if(jsData["destination_ip"].empty() == false)
         {
             bIsOk = false;
-            Log::Get(Log::LOG_DEBUG) << "Patch: destination_ip incorrect type" << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: destination_ip incorrect type" ;
         }
 
         bIsOk &= DecodePort(jsData, "source_port", nSourcePort);
@@ -371,13 +367,13 @@ bool TransportParamsRTPSender::Patch(const Json::Value& jsData)
                 else
                 {
                     bIsOk = false;
-                    Log::Get(Log::LOG_DEBUG) << "Patch: fec_type not found" << std::endl;
+                    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: fec_type not found" ;
                 }
             }
             else if(jsData["fec_type"].empty() == false)
             {
                 bIsOk = false;
-                Log::Get(Log::LOG_DEBUG) << "Patch: fec_type incorrect type" << std::endl;
+                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: fec_type incorrect type" ;
             }
 
             if(jsData["fec_block_width"].isInt())
@@ -389,7 +385,7 @@ bool TransportParamsRTPSender::Patch(const Json::Value& jsData)
             else if(jsData["fec_block_width"].empty() == false)
             {
                 bIsOk = false;
-                Log::Get(Log::LOG_DEBUG) << "Patch: fec_block_width incorrect type" << std::endl;
+                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: fec_block_width incorrect type" ;
             }
 
             if(jsData["fec_block_height"].isInt())
@@ -401,7 +397,7 @@ bool TransportParamsRTPSender::Patch(const Json::Value& jsData)
             else if(jsData["fec_block_height"].empty() == false)
             {
                 bIsOk = false;
-                Log::Get(Log::LOG_DEBUG) << "Patch: fec_block_height incorrect type" << std::endl;
+                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: fec_block_height incorrect type" ;
             }
 
             if(DecodePort(jsData, "fec1D_source_port", nFec1DSourcePort) && DecodePort(jsData, "fec2D_source_port", nFec2DSourcePort))
@@ -426,7 +422,7 @@ bool TransportParamsRTPSender::Patch(const Json::Value& jsData)
         }
     }
 
-    Log::Get(Log::LOG_DEBUG) << "Patch: TransportParamsRTPSender: " << bIsOk << std::endl;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: TransportParamsRTPSender: " << bIsOk ;
     return bIsOk;
 }
 
@@ -546,20 +542,20 @@ bool TransportParamsRTPReceiver::Patch(const Json::Value& jsData)
                 eMulticast = TP_SUPPORTED;
                 if(jsData["multicast_ip"].asString() != "auto")
                 {
-                    Log::Get(Log::LOG_DEBUG) << "TransportParamsRTPReceiver::Patch: Multicast=" << jsData["multicast_ip"].asString() << std::endl;
+                    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "TransportParamsRTPReceiver::Patch: Multicast=" << jsData["multicast_ip"].asString() ;
                     sMulticastIp = jsData["multicast_ip"].asString();
                 }
             }
             else if(JsonMemberExistsAndIsNull(jsData, "multicast_ip"))
             {
-                Log::Get(Log::LOG_DEBUG) << "TransportParamsRTPReceiver::Patch: Multicast=null" << std::endl;
+                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "TransportParamsRTPReceiver::Patch: Multicast=null" ;
                 eMulticast = TP_SUPPORTED;
                 sMulticastIp.clear();
             }
             else if(jsData["multicast_ip"].empty() == false)
             {
                 bIsOk = false;
-                Log::Get(Log::LOG_DEBUG) << "Patch: multicast_ip incorrect type" << std::endl;
+                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: multicast_ip incorrect type" ;
             }
         }
         if(jsData["interface_ip"].isString())
@@ -572,7 +568,7 @@ bool TransportParamsRTPReceiver::Patch(const Json::Value& jsData)
         else if(jsData["interface_ip"].empty() == false)
         {
             bIsOk = false;
-            Log::Get(Log::LOG_DEBUG) << "Patch: interface_ip incorrect type" << std::endl;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: interface_ip incorrect type" ;
         }
     }
     return bIsOk;

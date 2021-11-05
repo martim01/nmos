@@ -27,11 +27,11 @@ static void  RegisterCallBack(DNSServiceRef service,  DNSServiceFlags flags,  DN
 {
     if (errorCode != kDNSServiceErr_NoError)
     {
-        Log::Get(Log::LOG_ERROR) << "RegisterCallBack returned "<< errorCode << endl;
+        pmlLog(pml::LOG_ERROR) << "RegisterCallBack returned "<< errorCode ;
     }
     else
     {
-        Log::Get(Log::LOG_INFO) << name << "." << type << "." << domain << "REGISTER" << endl;
+        pmlLog(pml::LOG_INFO) << name << "." << type << "." << domain << "REGISTER" ;
     }
 }
 
@@ -40,7 +40,7 @@ bool ServicePublisher::Start()
 {
 
     m_sdRef = 0;
-    Log::Get(Log::LOG_DEBUG) << "BojourPubliser: Start" << endl;
+    pmlLog(pml::LOG_DEBUG) << "BojourPubliser: Start" ;
 
 
     DNSServiceErrorType error;
@@ -63,7 +63,7 @@ bool ServicePublisher::Start()
 
     if (error == kDNSServiceErr_NoError)
     {
-        Log::Get(Log::LOG_DEBUG) << "BojourPubliser: Started" << endl;
+        pmlLog(pml::LOG_DEBUG) << "BojourPubliser: Started" ;
         m_mClientToFd[m_sdRef] = DNSServiceRefSockFD(m_sdRef);;
 
         thread th(RunSelect, this);
@@ -71,7 +71,7 @@ bool ServicePublisher::Start()
 
         return true;
     }
-    Log::Get(Log::LOG_ERROR) << "BojourPubliser: Failed to start: " << error << endl;
+    pmlLog(pml::LOG_ERROR) << "BojourPubliser: Failed to start: " << error ;
     return false;
 
 
@@ -150,7 +150,7 @@ void ServicePublisher::RunSelect(ServicePublisher* pPublisher)
 		{
             //if(pPublisher->m_pPoster)
             //{
-            //    Log::Get(Log::LOG_DEBUG) << "BonjourBrowser: Finished" << endl;
+            //    pmlLog(pml::LOG_DEBUG) << "BonjourBrowser: Finished" ;
             //    pBrowser->m_pPoster->_Finished();
             //}
             break;
@@ -165,7 +165,7 @@ void ServicePublisher::RunSelect(ServicePublisher* pPublisher)
 		}
 
 
-		Log::Get(Log::LOG_DEBUG) << "BonjourPublisher: Start select: fd =" << pPublisher->m_mClientToFd.size() << " nfds =" << nfds << endl;
+		pmlLog(pml::LOG_DEBUG) << "BonjourPublisher: Start select: fd =" << pPublisher->m_mClientToFd.size() << " nfds =" << nfds ;
 		struct timeval tv = { 0, 1000 };
 
 		//mDNSPosixGetFDSet(m, &nfds, &readfds, &tv);
@@ -173,7 +173,7 @@ void ServicePublisher::RunSelect(ServicePublisher* pPublisher)
 
 		if ( result > 0 )
 		{
-		    Log::Get(Log::LOG_DEBUG) << "BonjourPublisher: Select done"  << endl;
+		    pmlLog(pml::LOG_DEBUG) << "BonjourPublisher: Select done"  ;
 		    lock_guard<mutex> lock(pPublisher->m_mutex);
             //
             // While iterating through the loop, the callback functions might delete
@@ -195,7 +195,7 @@ void ServicePublisher::RunSelect(ServicePublisher* pPublisher)
 		}
 		else
 		{
-		    Log::Get(Log::LOG_DEBUG) << "Result = " << result << endl;
+		    pmlLog(pml::LOG_DEBUG) << "Result = " << result ;
 			break;
 		}
         if ( count > 10 )

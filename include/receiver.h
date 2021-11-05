@@ -53,9 +53,12 @@ class NMOS_EXPOSE Receiver : public IOResource
         void Activate(bool bImmediate=false);
 
         bool IsMasterEnabled() const;
+        void MasterEnable(bool bEnable);
 
         bool IsActivateAllowed() const;
         void CommitActivation();
+
+        const std::string& GetTransportType() const { return STR_TRANSPORT[m_eTransport]; }
 
     private:
 

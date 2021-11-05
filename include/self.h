@@ -8,14 +8,14 @@
 #include "version.h"
 
 
-struct endpoint
+struct ifendpoint
 {
-    endpoint(const std::string& sH, unsigned int nP, bool bP) : sHost(sH), nPort(nP), bSecure(bP){}
-    bool operator<(const endpoint& endp) const
+    ifendpoint(const std::string& sH, unsigned int nP, bool bP) : sHost(sH), nPort(nP), bSecure(bP){}
+    bool operator<(const ifendpoint& endp) const
     {
         return (sHost < endp.sHost || (sHost == endp.sHost && nPort < endp.nPort));
     }
-    bool operator==(const endpoint& endp) const
+    bool operator==(const ifendpoint& endp) const
     {
         return (sHost==endp.sHost && nPort == endp.nPort);
     }
@@ -89,8 +89,8 @@ class NMOS_EXPOSE Self : public Resource
 
         std::string CreateClockSdp(const std::string& sClockName, const std::string& sInterface) const;
 
-        std::set<endpoint>::const_iterator GetEndpointsBegin() const;
-        std::set<endpoint>::const_iterator GetEndpointsEnd() const;
+        std::set<ifendpoint>::const_iterator GetEndpointsBegin() const;
+        std::set<ifendpoint>::const_iterator GetEndpointsEnd() const;
 
         std::map<std::string, nodeinterface>::const_iterator GetInterfaceBegin() const;
         std::map<std::string, nodeinterface>::const_iterator GetInterfaceEnd() const;
@@ -153,7 +153,7 @@ class NMOS_EXPOSE Self : public Resource
         };
 
         std::set<ApiVersion> m_setVersion;
-        std::set<endpoint> m_setEndpoint;
+        std::set<ifendpoint> m_setEndpoint;
         std::map<std::string, std::string> m_mService;
         std::map<std::string, nodeinterface> m_mInterface;
         std::map<std::string, clock> m_mClock;

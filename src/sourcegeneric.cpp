@@ -17,7 +17,7 @@ bool SourceGeneric::UpdateFromJson(const Json::Value& jsData)
     if(jsData["format"].isString() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'format' is not a string" << std::endl;
+        m_ssJsonError << "'format' is not a string" ;
     }
 
     if(m_bIsOk)
@@ -37,7 +37,7 @@ bool SourceGeneric::UpdateFromJson(const Json::Value& jsData)
         else
         {
             m_bIsOk = false;
-            m_ssJsonError << "'format' " <<jsData["format"].asString() <<" incorrect" << std::endl;
+            m_ssJsonError << "'format' " <<jsData["format"].asString() <<" incorrect" ;
         }
     }
     return m_bIsOk;
