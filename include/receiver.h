@@ -16,8 +16,9 @@ class NMOS_EXPOSE Receiver : public IOResource
         enum enumTransport {RTP, RPT_UCAST, RTP_MCAST, DASH};
         enum enumType {AUDIO, VIDEO, DATA, MUX};
         Receiver(const std::string& sLabel, const std::string& sDescription, enumTransport eTransport, const std::string& sDeviceId, enumType eType, int flagsTransport=TransportParamsRTP::CORE);
-        ~Receiver();
+        virtual ~Receiver();
         Receiver();
+
         virtual bool UpdateFromJson(const Json::Value& jsData);
 
         void SetTransport(enumTransport eTransport);
@@ -46,21 +47,19 @@ class NMOS_EXPOSE Receiver : public IOResource
 
         bool CheckConstraints(const connectionReceiver& conRequest);
         bool IsLocked() const;
-        bool Stage(const connectionReceiver& conRequest);
         connectionReceiver GetStaged() const;
 
         void SetupActivation(const std::string& sInterfaceIp);
-        void Activate(bool bImmediate=false);
 
         bool IsMasterEnabled() const;
         void MasterEnable(bool bEnable);
 
         bool IsActivateAllowed() const;
-        void CommitActivation();
+
 
         const std::string& GetTransportType() const { return STR_TRANSPORT[m_eTransport]; }
 
-    private:
+    protected:
 
 
         enumTransport m_eTransport;

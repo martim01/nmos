@@ -2,7 +2,6 @@
 //#include "json/json.h"
 #include <iostream>
 #include <fstream>
-#include "log.h"
 #include "clientapi.h"
 #include "self.h"
 #include "receiver.h"

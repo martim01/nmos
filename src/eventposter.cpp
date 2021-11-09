@@ -1,5 +1,4 @@
 #include "eventposter.h"
-#include "nodeapi.h"
 #include "sender.h"
 #include "receiver.h"
 

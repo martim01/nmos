@@ -84,18 +84,15 @@
 					<Add option="-std=c++14" />
 					<Add option="-pthread" />
 					<Add option="-D__GNU__" />
-					<Add directory="$(#microhttp.include)" />
 				</Compiler>
 				<Linker>
-					<Add option="`pkg-config --libs libmicrohttpd`" />
 					<Add option="`pkg-config --libs avahi-client`" />
 					<Add option="`pkg-config --libs libcurl`" />
 					<Add option="`pkg-config --libs uuid`" />
-					<Add library="nmos" />
+					<Add library="nmos_node" />
 					<Add library="pthread" />
 					<Add library="restgoose" />
 					<Add library="pml_log" />
-					<Add directory="$(#microhttp.lib)" />
 					<Add directory="../../lib" />
 					<Add directory="../../../Restgoose/lib" />
 					<Add directory="../../../log/lib" />

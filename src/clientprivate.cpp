@@ -103,17 +103,16 @@ static void NodeBrowser(ClientApiImpl* pApi, shared_ptr<dnsInstance> pInstance)
             {   //@todo allow choosing of version I guess
                 stringstream ss;
                 ss << pInstance->sHostIP << ":" << pInstance->nPort << "/x-nmos/node/v1.2/";
-                string sResponse;
 
                 if(VersionChanged(pInstance, "ver_slf"))
                 {
                     pmlLog(pml::LOG_DEBUG) << "NMOS: NodeBrowser ver_slf changed" ;
 
-                    CurlRegister::Get(string(ss.str()+"self"), sResponse, true);
+                    auto curlresp = CurlRegister::Get(string(ss.str()+"self"), true);
                     list<shared_ptr<Self> > lstAdded;
                     list<shared_ptr<Self> > lstUpdated;
                     list<shared_ptr<Self> > lstRemoved;
-                    pApi->AddNode(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
+                    pApi->AddNode(lstAdded, lstUpdated, pInstance->sHostIP, curlresp.sResponse);
 
                     if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::NODES))
                     {
@@ -131,7 +130,7 @@ static void NodeBrowser(ClientApiImpl* pApi, shared_ptr<dnsInstance> pInstance)
                 {
                     pmlLog(pml::LOG_DEBUG) << "NMOS: NodeBrowser ver_dvc changed" ;
 
-                    CurlRegister::Get(string(ss.str()+"devices"), sResponse, true);
+                    auto curlresp = CurlRegister::Get(string(ss.str()+"devices"), true);
 
                     list<shared_ptr<Device> > lstAdded;
                     list<shared_ptr<Device> > lstUpdated;
@@ -139,7 +138,7 @@ static void NodeBrowser(ClientApiImpl* pApi, shared_ptr<dnsInstance> pInstance)
                     //store the devices this ip address currently provides
                     pApi->StoreDevices(pInstance->sHostIP);
                     //add or update all devices on this ip address
-                    pApi->AddDevices(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
+                    pApi->AddDevices(lstAdded, lstUpdated, pInstance->sHostIP, curlresp.sResponse);
                     //remove any devices that we previously stored but didn;t update. i.e. ones that no longer exist
                     pApi->RemoveStaleDevices(lstRemoved);
 
@@ -159,14 +158,14 @@ static void NodeBrowser(ClientApiImpl* pApi, shared_ptr<dnsInstance> pInstance)
                 {
                     pmlLog(pml::LOG_DEBUG) << "NMOS: NodeBrowser ver_src changed" ;
 
-                    CurlRegister::Get(string(ss.str()+"sources"), sResponse, true);
+                    auto curlresp = CurlRegister::Get(string(ss.str()+"sources"), true);
 
                     list<shared_ptr<Source> > lstAdded;
                     list<shared_ptr<Source> > lstUpdated;
                     list<shared_ptr<Source> > lstRemoved;
 
                     pApi->StoreSources(pInstance->sHostIP);
-                    pApi->AddSources(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
+                    pApi->AddSources(lstAdded, lstUpdated, pInstance->sHostIP, curlresp.sResponse);
                     pApi->RemoveStaleSources(lstRemoved);
 
                     if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::SOURCES))
@@ -185,14 +184,14 @@ static void NodeBrowser(ClientApiImpl* pApi, shared_ptr<dnsInstance> pInstance)
                 {
                     pmlLog(pml::LOG_DEBUG) << "NMOS: NodeBrowser ver_flw changed" ;
 
-                    CurlRegister::Get(string(ss.str()+"flows"), sResponse, true);
+                    auto curlresp = CurlRegister::Get(string(ss.str()+"flows"), true);
 
                     list<shared_ptr<Flow> > lstAdded;
                     list<shared_ptr<Flow> > lstUpdated;
                     list<shared_ptr<Flow> > lstRemoved;
 
                     pApi->StoreFlows(pInstance->sHostIP);
-                    pApi->AddFlows(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
+                    pApi->AddFlows(lstAdded, lstUpdated, pInstance->sHostIP, curlresp.sResponse);
                     pApi->RemoveStaleFlows(lstRemoved);
 
                     if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::FLOWS))
@@ -211,14 +210,14 @@ static void NodeBrowser(ClientApiImpl* pApi, shared_ptr<dnsInstance> pInstance)
                 {
                     pmlLog(pml::LOG_DEBUG) << "NMOS: NodeBrowser ver_snd changed" ;
 
-                    CurlRegister::Get(string(ss.str()+"senders"), sResponse, true);
+                    auto curlresp = CurlRegister::Get(string(ss.str()+"senders"), true);
 
                     list<shared_ptr<Sender> > lstAdded;
                     list<shared_ptr<Sender> > lstUpdated;
                     list<shared_ptr<Sender> > lstRemoved;
 
                     pApi->StoreSenders(pInstance->sHostIP);
-                    pApi->AddSenders(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
+                    pApi->AddSenders(lstAdded, lstUpdated, pInstance->sHostIP, curlresp.sResponse);
                     pApi->RemoveStaleSenders(lstRemoved);
 
                     if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::SENDERS))
@@ -237,13 +236,13 @@ static void NodeBrowser(ClientApiImpl* pApi, shared_ptr<dnsInstance> pInstance)
                 {
                     pmlLog(pml::LOG_DEBUG) << "NMOS: NodeBrowser ver_rcv changed" ;
 
-                    CurlRegister::Get(string(ss.str()+"receivers"), sResponse, true);
+                    auto curlresp = CurlRegister::Get(string(ss.str()+"receivers"), true);
 
                     list<shared_ptr<Receiver> > lstAdded;
                     list<shared_ptr<Receiver> > lstUpdated;
                     list<shared_ptr<Receiver> > lstRemoved;
                     pApi->StoreReceivers(pInstance->sHostIP);
-                    pApi->AddReceivers(lstAdded, lstUpdated, pInstance->sHostIP, sResponse);
+                    pApi->AddReceivers(lstAdded, lstUpdated, pInstance->sHostIP, curlresp.sResponse);
                     pApi->RemoveStaleReceivers(lstRemoved);
 
                     if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::RECEIVERS))
@@ -270,17 +269,16 @@ void ConnectThread(ClientApiImpl* pApi, const string& sSenderId, const string& s
 {
     // @todo ConnectThread - if a unicast stream then tell the sender where it should be sending stuff
 
-    string sResponse;
     connectionSender aCon(connection::FP_ACTIVATION | connection::FP_ENABLE | connection::FP_TRANSPORT_PARAMS);
     aCon.eActivate = connection::ACT_NOW;
     aCon.bMasterEnable = true;
     aCon.tpSender.bRtpEnabled = true;
 
 
-    int nResult = CurlRegister::PutPatch(sSenderStage, ConvertFromJson(aCon.GetJson(ApiVersion(1,0))), sResponse, false, "");
-    if(nResult != 200)
+    auto curlresp = CurlRegister::PutPatch(sSenderStage, ConvertFromJson(aCon.GetJson(ApiVersion(1,0))), false, "");
+    if(curlresp.nCode != 200)
     {
-        pApi->HandleConnect(sSenderId, sReceiverId, false, sResponse);
+        pApi->HandleConnect(sSenderId, sReceiverId, false, curlresp.sResponse);
     }
     else
     {
@@ -292,23 +290,25 @@ void ConnectThread(ClientApiImpl* pApi, const string& sSenderId, const string& s
         aConR.sSenderId = sSenderId;
 
 
-        nResult = CurlRegister::Get(sSenderTransport, aConR.sTransportFileData, false);
-        if(nResult != 200)
+        auto curlresp = CurlRegister::Get(sSenderTransport, false);
+        if(curlresp.nCode != 200)
         {
-            pApi->HandleConnect(sSenderId, sReceiverId, false, aConR.sTransportFileData);
+            pApi->HandleConnect(sSenderId, sReceiverId, false, curlresp.sResponse);
         }
         else
         {
+            aConR.sTransportFileData = curlresp.sResponse;
+
             string sData(ConvertFromJson(aConR.GetJson(ApiVersion(1,0))));
 
-            nResult = CurlRegister::PutPatch(sReceiverStage, sData, sResponse, false, "");
-            if(nResult != 200)
+            auto curlresp = CurlRegister::PutPatch(sReceiverStage, sData, false, "");
+            if(curlresp.nCode != 200)
             {
-                pApi->HandleConnect(sSenderId, sReceiverId, false, sResponse);
+                pApi->HandleConnect(sSenderId, sReceiverId, false, curlresp.sResponse);
             }
             else
             {
-                pApi->HandleConnect(sSenderId, sReceiverId, true, sResponse);
+                pApi->HandleConnect(sSenderId, sReceiverId, true, curlresp.sResponse);
             }
         }
     }
@@ -318,7 +318,6 @@ void ConnectThread(ClientApiImpl* pApi, const string& sSenderId, const string& s
 //DisconnectThread - called from main program thread
 void DisconnectThread(ClientApiImpl* pApi, const string& sSenderId, const string& sReceiverId, const string& sSenderStage, const string& sSenderTransport, const string& sReceiverStage)
 {
-    string sResponse;
     int nResult(200);
     if(false)
     {// @todo ConnectThread - if a unicast stream then tell the sender to stop sending stuff
@@ -327,10 +326,10 @@ void DisconnectThread(ClientApiImpl* pApi, const string& sSenderId, const string
         aCon.bMasterEnable = true;
         aCon.tpSender.bRtpEnabled = true;
 
-        nResult = CurlRegister::PutPatch(sSenderStage, ConvertFromJson(aCon.GetJson(ApiVersion(1,0))), sResponse, false, "");
-        if(nResult != 200)
+        auto curlresp = CurlRegister::PutPatch(sSenderStage, ConvertFromJson(aCon.GetJson(ApiVersion(1,0))), false, "");
+        if(curlresp.nCode != 200)
         {
-            pApi->HandleConnect(sSenderId, sReceiverId, false, sResponse);
+            pApi->HandleConnect(sSenderId, sReceiverId, false, curlresp.sResponse);
             return;
         }
     }
@@ -343,14 +342,14 @@ void DisconnectThread(ClientApiImpl* pApi, const string& sSenderId, const string
     aConR.sTransportFileData = "";
     aConR.sSenderId = "";
 
-    nResult = CurlRegister::PutPatch(sReceiverStage, ConvertFromJson(aConR.GetJson(ApiVersion(1,0))), sResponse, false, "");
-    if(nResult != 200)
+    auto curlresp = CurlRegister::PutPatch(sReceiverStage, ConvertFromJson(aConR.GetJson(ApiVersion(1,0))), false, "");
+    if(curlresp.nCode != 200)
     {
-        pApi->HandleConnect("", sReceiverId, false, sResponse);
+        pApi->HandleConnect("", sReceiverId, false, curlresp.sResponse);
     }
     else
     {
-        pApi->HandleConnect(sSenderId, sReceiverId, true, sResponse);
+        pApi->HandleConnect(sSenderId, sReceiverId, true, curlresp.sResponse);
     }
 }
 
@@ -1501,7 +1500,7 @@ bool ClientApiImpl::RequestSender(const string& sSenderId, ClientPoster::enumCur
         return false;
     }
 
-    m_pCurl->Get(sConnectionUrl, eType);
+    m_pCurl->Get(sConnectionUrl, (long)eType);
     return true;
 }
 
@@ -1521,7 +1520,7 @@ bool ClientApiImpl::RequestReceiver(const string& sReceiverId, ClientPoster::enu
         return false;
     }
 
-    m_pCurl->Get(sConnectionUrl, eType);
+    m_pCurl->Get(sConnectionUrl, (long)eType);
     return true;
 }
 
@@ -1985,8 +1984,7 @@ void ClientApiImpl::SubscribeToQueryServer()
             Json::Value jsParams(Json::objectValue);
             jsQuery["params"] = jsParams;
 
-            string sResponse;
-            unsigned long nCode = CurlRegister::Post(ssUrl.str(), ConvertFromJson(jsQuery), sResponse);
+            auto curlresp = CurlRegister::Post(ssUrl.str(), ConvertFromJson(jsQuery));
         }
     }
 }

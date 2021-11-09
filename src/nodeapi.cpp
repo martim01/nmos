@@ -31,8 +31,8 @@
 #include "device.h"
 #include "source.h"
 #include "flow.h"
-#include "receiver.h"
-#include "sender.h"
+#include "receivernode.h"
+#include "sendernode.h"
 #include "is04server.h"
 #include "is05server.h"
 #include "nmosthread.h"
@@ -104,20 +104,20 @@ m_receivers("receiver"),
 m_sources("source"),
 m_flows("flow"),
 m_nRegistrationStatus(REG_START),
+m_pThread(nullptr),
 m_bRun(true),
 m_bBrowsing(false),
 m_pPoster(0),
-m_nConnectionPort(0),
 m_pZCPoster(make_shared<NodeZCPoster>()),
+m_nConnectionPort(0),
+m_nDiscoveryPort(0),
 m_nHeartbeatTime(5000)
 {
 }
 
 NodeApi::~NodeApi()
 {
-    StopHttpServers();
-    StopmDNSServer();
-    StopRegistrationBrowser();
+    StopServices();
 }
 
 
@@ -318,11 +318,9 @@ void NodeApi::StopmDNSServer()
 
 bool NodeApi::StartServices()
 {
-
     m_pRegisterCurl.reset(new CurlRegister(m_pPoster));
 
-    thread thMain(NodeThread::Main);
-    thMain.detach();
+    m_pThread = std::make_unique<std::thread>(NodeThread::Main);
 
     return true;
 }
@@ -357,12 +355,12 @@ const ResourceHolder<Flow>& NodeApi::GetFlows()
     return m_flows;
 }
 
-const ResourceHolder<Receiver>& NodeApi::GetReceivers()
+const ResourceHolder<ReceiverNode>& NodeApi::GetReceivers()
 {
     return m_receivers;
 }
 
-const ResourceHolder<Sender>& NodeApi::GetSenders()
+const ResourceHolder<SenderNode>& NodeApi::GetSenders()
 {
     return m_senders;
 }
@@ -522,7 +520,7 @@ void NodeApi::SenderPatchAllowed(unsigned short nPort, bool bOk, const std::stri
 {
     if(bOk)
     {
-        shared_ptr<Sender> pSender(GetSender(sId));
+        shared_ptr<SenderNode> pSender(GetSender(sId));
         if(pSender)
         {
             pSender->SetupActivation(sSourceIp, sDestinationIp, sSDP);
@@ -540,7 +538,7 @@ void NodeApi::ReceiverPatchAllowed(unsigned short nPort, bool bOk,const std::str
 {
     if(bOk)
     {
-        shared_ptr<Receiver> pReceiver(GetReceiver(sId));
+        shared_ptr<ReceiverNode> pReceiver(GetReceiver(sId));
         if(pReceiver)
         {
             pReceiver->SetupActivation(sInterfaceIp);
@@ -758,39 +756,30 @@ long NodeApi::RegisterResource(const string& sType, const Json::Value& json)
     jsonRegister["data"] = json;
     string sPost(ConvertFromJson(jsonRegister));
 
-    string sResponse;
 
-    if(m_pRegisterCurl)
+    auto resp =  CurlRegister::Post(m_sRegistrationNode+"/resource", sPost);
+    pmlLog(pml::LOG_INFO) << "NMOS: " << "RegisterApi: Register returned [" << resp.nCode << "] " << resp.sResponse ;
+    if(resp.nCode == 500)
     {
-        long  nResponse = m_pRegisterCurl->Post(m_sRegistrationNode+"/resource", sPost, sResponse);
-        pmlLog(pml::LOG_INFO) << "NMOS: " << "RegisterApi: Register returned [" << nResponse << "] " << sResponse ;
-        if(nResponse == 500)
-        {
-            MarkRegNodeAsBad();
-        }
-        return nResponse;
+        MarkRegNodeAsBad();
     }
-    return 500;
+    return resp.nCode;
+
 }
 
 long NodeApi::RegistrationHeartbeat()
 {
     m_tpHeartbeat = chrono::system_clock::now() + chrono::milliseconds(m_nHeartbeatTime);
 
-    string sResponse;
-    if(m_pRegisterCurl)
-    {
-        string sResponse;
-        long nResponse = m_pRegisterCurl->Post(m_sRegistrationNode+"/health/nodes/"+m_self.GetId(), "", sResponse);
-        pmlLog(pml::LOG_INFO) << "NMOS: " << "RegisterApi: Heartbeat: returned [" << nResponse << "] " << sResponse ;
+    auto resp = CurlRegister::Post(m_sRegistrationNode+"/health/nodes/"+m_self.GetId(), "");
+    pmlLog(pml::LOG_INFO) << "NMOS: " << "RegisterApi: Heartbeat: returned [" << resp.nCode << "] " << resp.sResponse ;
 
-        if(nResponse == 500 || nResponse == 0)
-        {
-            MarkRegNodeAsBad();
-        }
-        return nResponse;
+    if(resp.nCode == 500 || resp.nCode == 0)
+    {
+        MarkRegNodeAsBad();
     }
-    return 500;
+    return resp.nCode;
+
 }
 
 void NodeApi::MarkRegNodeAsBad()
@@ -832,19 +821,15 @@ int NodeApi::UnregisterSimple()
 
 bool NodeApi::UnregisterResource(const string& sType, const std::string& sId)
 {
-    if(m_pRegisterCurl)
+    auto resp = CurlRegister::Delete(m_sRegistrationNode+"/resource", sType, sId);
+    pmlLog(pml::LOG_INFO) << "NMOS: " << "RegisterApi:Unregister returned [" << resp.nCode << "] " << resp.sResponse ;
+    if(resp.nCode == 500)
     {
-        string sResponse;
-        long nResponse = m_pRegisterCurl->Delete(m_sRegistrationNode+"/resource", sType, sId, sResponse);
-        pmlLog(pml::LOG_INFO) << "NMOS: " << "RegisterApi:Unregister returned [" << nResponse << "] " << sResponse ;
-        if(nResponse == 500)
-        {
-            MarkRegNodeAsBad();
-            return false;
-        }
-        return true;
+        MarkRegNodeAsBad();
+        return false;
     }
-    return false;
+    return true;
+
 }
 
 
@@ -924,7 +909,8 @@ void NodeApi::StopRun()
 {
     lock_guard<mutex> lg(m_mutex);
     m_bRun = false;
-
+    m_pThread->join();
+    m_pThread = nullptr;
 }
 
 
@@ -1019,7 +1005,7 @@ bool NodeApi::AddFlow(shared_ptr<Flow> pResource)
     return false;
 }
 
-bool NodeApi::AddReceiver(shared_ptr<Receiver> pResource)
+bool NodeApi::AddReceiver(shared_ptr<ReceiverNode> pResource)
 {
     if(m_devices.ResourceExists(pResource->GetParentResourceId()))
     {
@@ -1040,7 +1026,7 @@ bool NodeApi::AddReceiver(shared_ptr<Receiver> pResource)
     return false;
 }
 
-bool NodeApi::AddSender(shared_ptr<Sender> pResource)
+bool NodeApi::AddSender(shared_ptr<SenderNode> pResource)
 {
 
     if(m_devices.ResourceExists(pResource->GetParentResourceId()))
@@ -1109,9 +1095,9 @@ unsigned short NodeApi::GetDiscoveryPort() const
 }
 
 
-shared_ptr<Receiver> NodeApi::GetReceiver(const std::string& sId)
+shared_ptr<ReceiverNode> NodeApi::GetReceiver(const std::string& sId)
 {
-    map<string, shared_ptr<Receiver> >::iterator itResource = m_receivers.GetResource(sId);
+    auto itResource = m_receivers.GetResource(sId);
     if(itResource != m_receivers.GetResourceEnd())
     {
         return itResource->second;
@@ -1119,9 +1105,9 @@ shared_ptr<Receiver> NodeApi::GetReceiver(const std::string& sId)
     return NULL;
 }
 
-shared_ptr<Sender> NodeApi::GetSender(const std::string& sId)
+shared_ptr<SenderNode> NodeApi::GetSender(const std::string& sId)
 {
-    map<string, shared_ptr<Sender> >::iterator itResource = m_senders.GetResource(sId);
+    auto itResource = m_senders.GetResource(sId);
     if(itResource != m_senders.GetResourceEnd())
     {
         return itResource->second;

@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="libnmos_client" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Option virtualFolders="nmos/;" />
+		<Build>
+			<Target title="Linux Debug">
+				<Option platforms="Unix;" />
+				<Option output="lib/nmos_clientd" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-std=c++14" />
+					<Add option="-g" />
+					<Add option="-D__GNU__" />
+				</Compiler>
+				<Linker>
+					<Add option="`pkg-config --libs avahi-client`" />
+					<Add option="`pkg-config --libs uuid`" />
+					<Add option="`pkg-config --libs libcurl`" />
+					<Add library="pml_logd" />
+					<Add library="atomic" />
+					<Add library="restgoosed" />
+					<Add library="pthread" />
+				</Linker>
+			</Target>
+			<Target title="Linux Release">
+				<Option platforms="Unix;" />
+				<Option output="lib/nmos_client" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-O3" />
+					<Add option="-std=c++14" />
+					<Add option="-pthread" />
+					<Add option="-D__GNU__" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="`pkg-config --libs avahi-client`" />
+					<Add option="`pkg-config --libs libcurl`" />
+					<Add library="atomic" />
+					<Add library="restgoose" />
+					<Add library="pthread" />
+					<Add library="pml_log" />
+				</Linker>
+			</Target>
+			<Target title="Windows Debug">
+				<Option platforms="Windows;" />
+				<Option output="lib/libnmosd" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="3" />
+				<Option compiler="new_gnu_gcc_compiler" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-O3" />
+					<Add option="-std=c++14" />
+					<Add option="-pthread" />
+					<Add option="-D__GNU__" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="`pkg-config --libs avahi-client`" />
+					<Add option="`pkg-config --libs libcurl`" />
+					<Add library="atomic" />
+					<Add library="restgoose" />
+					<Add library="pthread" />
+				</Linker>
+			</Target>
+			<Target title="Windows Release">
+				<Option platforms="Windows;" />
+				<Option output="lib/libnmos" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="3" />
+				<Option compiler="new_gnu_gcc_compiler" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Option projectCompilerOptionsRelation="-1" />
+				<Option projectLinkerOptionsRelation="-1" />
+				<Option projectIncludeDirsRelation="-1" />
+				<Option projectLibDirsRelation="-1" />
+				<MakeCommands>
+					<Build command="" />
+					<CompileFile command="" />
+					<Clean command="" />
+					<DistClean command="" />
+					<AskRebuildNeeded command="" />
+					<SilentBuild command=" &gt; $(CMD_NULL)" />
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-std=c++1z" />
+			<Add option="-fexceptions" />
+			<Add option="-DNMOS_EXPORT" />
+			<Add option="-DMG_ENABLE_HTTP_STREAMING_MULTIPART" />
+			<Add directory="external/jsoncpp" />
+			<Add directory="include" />
+			<Add directory="external/uuid" />
+			<Add directory="external/mongoose" />
+			<Add directory="../Restgoose" />
+			<Add directory="../log/include" />
+		</Compiler>
+		<Linker>
+			<Add directory="../Restgoose/lib" />
+			<Add directory="../log/lib" />
+		</Linker>
+		<Unit filename="external/jsoncpp/jsoncpp.cpp" />
+		<Unit filename="external/uuid/guid.cpp" />
+		<Unit filename="external/uuid/guid.h" />
+		<Unit filename="external/uuid/md5.cpp" />
+		<Unit filename="external/uuid/md5.h" />
+		<Unit filename="include/activator.h" />
+		<Unit filename="include/avahibrowser.h">
+			<Option target="Linux Debug" />
+			<Option target="Linux Release" />
+		</Unit>
+		<Unit filename="include/avahipublisher.h">
+			<Option target="Linux Debug" />
+			<Option target="Linux Release" />
+		</Unit>
+		<Unit filename="include/bonjourbrowser.h">
+			<Option target="Windows Debug" />
+			<Option target="Windows Release" />
+		</Unit>
+		<Unit filename="include/bonjourpublisher.h">
+			<Option target="Windows Debug" />
+			<Option target="Windows Release" />
+		</Unit>
+		<Unit filename="include/clientapi.h" />
+		<Unit filename="include/clientapiposter.h" />
+		<Unit filename="include/clientholder.h" />
+		<Unit filename="include/clientposter.h" />
+		<Unit filename="include/clientprivate.h" />
+		<Unit filename="include/connection.h" />
+		<Unit filename="include/constraint.h" />
+		<Unit filename="include/curlregister.h" />
+		<Unit filename="include/device.h" />
+		<Unit filename="include/eventposter.h">
+			<Option virtualFolder="nmos/" />
+		</Unit>
+		<Unit filename="include/flow.h" />
+		<Unit filename="include/flowaudio.h" />
+		<Unit filename="include/flowaudiocoded.h" />
+		<Unit filename="include/flowaudioraw.h" />
+		<Unit filename="include/flowdata.h" />
+		<Unit filename="include/flowdatasdianc.h" />
+		<Unit filename="include/flowmux.h" />
+		<Unit filename="include/flowvideo.h" />
+		<Unit filename="include/flowvideocoded.h" />
+		<Unit filename="include/flowvideoraw.h" />
+		<Unit filename="include/ioresource.h" />
+		<Unit filename="include/mdns.h" />
+		<Unit filename="include/nmosdlldefine.h" />
+		<Unit filename="include/receiver.h" />
+		<Unit filename="include/resource.h" />
+		<Unit filename="include/resourceholder.h" />
+		<Unit filename="include/sdp.h" />
+		<Unit filename="include/self.h" />
+		<Unit filename="include/sender.h" />
+		<Unit filename="include/source.h" />
+		<Unit filename="include/sourceaudio.h" />
+		<Unit filename="include/sourcegeneric.h" />
+		<Unit filename="include/transportparams.h" />
+		<Unit filename="include/utils.h" />
+		<Unit filename="include/version.h" />
+		<Unit filename="include/zcposter.h" />
+		<Unit filename="src/activator.cpp" />
+		<Unit filename="src/clientapi.cpp" />
+		<Unit filename="src/clientapiposter.cpp" />
+		<Unit filename="src/clientholder.cpp" />
+		<Unit filename="src/clientposter.cpp" />
+		<Unit filename="src/clientprivate.cpp" />
+		<Unit filename="src/connection.cpp" />
+		<Unit filename="src/constraint.cpp" />
+		<Unit filename="src/curlregister.cpp" />
+		<Unit filename="src/device.cpp" />
+		<Unit filename="src/eventposter.cpp" />
+		<Unit filename="src/flow.cpp" />
+		<Unit filename="src/flowaudio.cpp" />
+		<Unit filename="src/flowaudiocoded.cpp" />
+		<Unit filename="src/flowaudioraw.cpp" />
+		<Unit filename="src/flowdata.cpp" />
+		<Unit filename="src/flowdatasdianc.cpp" />
+		<Unit filename="src/flowmux.cpp" />
+		<Unit filename="src/flowvideo.cpp" />
+		<Unit filename="src/flowvideocoded.cpp" />
+		<Unit filename="src/flowvideoraw.cpp" />
+		<Unit filename="src/gnu/avahibrowser.cpp">
+			<Option target="Linux Debug" />
+			<Option target="Linux Release" />
+		</Unit>
+		<Unit filename="src/gnu/avahipublisher.cpp">
+			<Option target="Linux Debug" />
+			<Option target="Linux Release" />
+		</Unit>
+		<Unit filename="src/ioresource.cpp" />
+		<Unit filename="src/receiver.cpp" />
+		<Unit filename="src/resource.cpp" />
+		<Unit filename="src/resourceholder.cpp" />
+		<Unit filename="src/sdp.cpp" />
+		<Unit filename="src/self.cpp" />
+		<Unit filename="src/sender.cpp" />
+		<Unit filename="src/source.cpp" />
+		<Unit filename="src/sourceaudio.cpp" />
+		<Unit filename="src/sourcegeneric.cpp" />
+		<Unit filename="src/transportparams.cpp" />
+		<Unit filename="src/utils.cpp" />
+		<Unit filename="src/version.cpp" />
+		<Unit filename="src/windows/bonjourbrowser.cpp">
+			<Option target="Windows Debug" />
+			<Option target="Windows Release" />
+		</Unit>
+		<Unit filename="src/windows/bonjourpublisher.cpp">
+			<Option target="Windows Debug" />
+			<Option target="Windows Release" />
+		</Unit>
+		<Unit filename="src/zcposter.cpp" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

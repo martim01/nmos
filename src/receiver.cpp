@@ -6,8 +6,6 @@
 
 #include "log.h"
 #include "utils.h"
-#include "nodeapi.h"
-#include "activator.h"
 
 const std::string Receiver::STR_TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash"};
 const std::string Receiver::STR_TYPE[4] = {"urn:x-nmos:format:audio", "urn:x-nmos:format:video", "urn:x-nmos:format:data", "urn:x-nmos:format:mux"};
@@ -454,79 +452,6 @@ bool Receiver::IsLocked() const
     return (m_Staged.eActivate == connection::ACT_ABSOLUTE || m_Staged.eActivate == connection::ACT_RELATIVE);
 }
 
-bool Receiver::Stage(const connectionReceiver& conRequest)
-{
-    bool bOk(true);
-    m_mutex.lock();
-
-    m_Staged = conRequest;
-
-    m_mutex.unlock();
-
-    switch(m_Staged.eActivate)
-    {
-        case connection::ACT_NULL:
-            if(m_Staged.sActivationTime.empty() == false)
-            {
-                Activator::Get().RemoveActivationReceiver(m_Staged.tpActivation, GetId());
-                m_Staged.sActivationTime.clear();
-                m_Staged.tpActivation = std::chrono::time_point<std::chrono::high_resolution_clock>();
-            }
-            m_bActivateAllowed = false;
-            break;
-        case connection::ACT_NOW:
-            m_Staged.sActivationTime = GetCurrentTaiTime();
-            m_bActivateAllowed = true;
-            Activate(true);
-            break;
-        case connection::ACT_ABSOLUTE:
-            {
-                std::chrono::time_point<std::chrono::high_resolution_clock> tp;
-                if(ConvertTaiStringToTimePoint(m_Staged.sRequestedTime, tp))
-                {
-                    m_bActivateAllowed = true;
-                    m_Staged.sActivationTime = m_Staged.sRequestedTime;
-                    m_Staged.tpActivation = tp;
-                    Activator::Get().AddActivationReceiver(tp, GetId());
-                }
-                else
-                {
-                    bOk = false;
-                }
-            }
-            break;
-        case connection::ACT_RELATIVE:
-            try
-            {
-                std::chrono::time_point<std::chrono::high_resolution_clock> tp(std::chrono::high_resolution_clock::now().time_since_epoch());
-                std::vector<std::string> vTime;
-                SplitString(vTime, m_Staged.sRequestedTime, ':');
-                if(vTime.size() != 2)
-                {
-                    throw std::invalid_argument("invalid time");
-                }
-
-                m_bActivateAllowed = true;
-                std::chrono::nanoseconds nano((static_cast<long long int>(std::stoul(vTime[0]))*1000000000)+stoul(vTime[1]));
-                std::chrono::time_point<std::chrono::high_resolution_clock> tpAbs(tp+nano-LEAP_SECONDS);
-
-
-                m_Staged.sActivationTime = ConvertTimeToString(tpAbs, true);
-                m_Staged.tpActivation = tpAbs;
-                Activator::Get().AddActivationReceiver(tpAbs, GetId());
-            }
-            catch(std::invalid_argument& ia)
-            {
-                m_bActivateAllowed = false;
-                bOk = false;
-            }
-            break;
-        default:
-            pmlLog(pml::LOG_ERROR) << "Unexpected patch" ;
-    }
-    return bOk;
-}
-
 
 connectionReceiver Receiver::GetStaged() const
 {
@@ -539,45 +464,6 @@ void Receiver::SetupActivation(const std::string& sInterfaceIp)
     m_sInterfaceIp = sInterfaceIp;
 }
 
-void Receiver::Activate(bool bImmediate)
-{
-    m_bActivateAllowed = false;
-    //move the staged parameters to active parameters
-    m_Active = m_Staged;
-
-
-    //Change auto settings to what they actually are
-    m_Active.tpReceiver.Actualize(m_sInterfaceIp);
-
-    //activeate - set subscription, receiverId and active on master_enable. Commit afterwards
-    if(m_Active.bMasterEnable)
-    {
-        m_sSenderId = m_Staged.sSenderId;
-        m_bSenderActive = m_Staged.bMasterEnable;
-    }
-    else
-    {
-        m_sSenderId.clear();
-        m_bSenderActive = false;
-    }
-
-    if(!bImmediate)
-    {
-        CommitActivation();
-    }
-}
-
-void Receiver::CommitActivation()
-{
-    //reset the staged activation
-    m_Staged.eActivate = connection::ACT_NULL;
-    m_Staged.sActivationTime.clear();
-    m_Staged.sRequestedTime.clear();
-
-    UpdateVersionTime();
-
-    NodeApi::Get().ReceiverActivated(GetId());
-}
 
 bool Receiver::IsMasterEnabled() const
 {

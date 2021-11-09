@@ -1,7 +1,7 @@
 #include "activator.h"
 #include "nodeapi.h"
-#include "sender.h"
-#include "receiver.h"
+#include "sendernode.h"
+#include "receivernode.h"
 #include "utils.h"
 
 static void ActivationThread()
@@ -55,8 +55,7 @@ void Activator::AddActivation(const std::chrono::time_point<std::chrono::high_re
         m_mmActivations.insert(make_pair(tp,pResource));
 
         //create the thread
-        std::thread th(ActivationThread);
-        th.detach();
+        m_lstThreads.push_back(std::make_unique<std::thread>(ActivationThread));
     }
 }
 
@@ -98,6 +97,12 @@ Activator::~Activator()
     m_bRunning = false;
     m_bWait = false;
     m_cvSync.notify_one();
+
+    for(const auto& pThread : m_lstThreads)
+    {
+        pThread->join();
+    }
+    m_lstThreads.clear();
 }
 
 

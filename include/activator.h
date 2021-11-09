@@ -41,5 +41,7 @@ class Activator
         std::condition_variable m_cvSync;
 
         std::map<std::chrono::time_point<std::chrono::high_resolution_clock>, std::shared_ptr<IOResource> > m_mmActivations;
+
+        std::list<std::unique_ptr<std::thread>> m_lstThreads;
 };
 

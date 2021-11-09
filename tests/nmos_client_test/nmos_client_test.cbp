@@ -40,7 +40,6 @@
 				<Option projectCompilerOptionsRelation="-1" />
 				<Option projectLinkerOptionsRelation="-1" />
 				<Option projectIncludeDirsRelation="-1" />
-				<Option projectResourceIncludeDirsRelation="-1" />
 				<Option projectLibDirsRelation="-1" />
 				<MakeCommands>
 					<Build command="" />
@@ -65,11 +64,10 @@
 					<Add directory="$(#microhttp.include)" />
 				</Compiler>
 				<Linker>
-					<Add option="`pkg-config --libs libmicrohttpd`" />
 					<Add option="`pkg-config --libs avahi-client`" />
 					<Add option="`pkg-config --libs uuid`" />
 					<Add option="`pkg-config --libs libcurl`" />
-					<Add library="../../lib/libnmosd.so" />
+					<Add library="libnmos_clientd" />
 					<Add library="pthread" />
 					<Add directory="$(#microhttp.lib)" />
 				</Linker>
@@ -88,11 +86,10 @@
 					<Add directory="../../lib" />
 				</Compiler>
 				<Linker>
-					<Add option="`pkg-config --libs libmicrohttpd`" />
 					<Add option="`pkg-config --libs avahi-client`" />
 					<Add option="`pkg-config --libs uuid`" />
 					<Add option="`pkg-config --libs libcurl`" />
-					<Add library="libnmos" />
+					<Add library="libnmos_client" />
 					<Add library="pthread" />
 					<Add directory="$(#microhttp.lib)" />
 				</Linker>

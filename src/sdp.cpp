@@ -141,6 +141,8 @@ bool SdpManager::ParseOriginIp4(const std::string& sAddress, TransportParamsRTPR
         case IP4_UNI:
             tpReceiver.sSourceIp = sAddress;
             return true;
+        default:
+            return false;
     }
     return false;
 }
@@ -155,6 +157,9 @@ bool SdpManager::ParseOriginIp6(const std::string& sAddress, TransportParamsRTPR
         case IP6_UNI:
             tpReceiver.sSourceIp = sAddress;
             return true;
+        default:
+            return false;
+
     }
     return false;
 }

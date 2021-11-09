@@ -7,8 +7,8 @@
 #include <mutex>
 #include <condition_variable>
 #include "version.h"
-#include "clientapi.h"
 #include <chrono>
+#include <thread>
 class NmosServer;
 
 class ServiceBrowser;
@@ -22,8 +22,8 @@ class ClientPoster;
 class Device;
 class Source;
 class Flow;
-class Receiver;
-class Sender;
+class ReceiverNode;
+class SenderNode;
 class NodeThread;
 class Server;
 class NodeZCPoster;
@@ -110,7 +110,7 @@ class NMOS_EXPOSE NodeApi
         *   @note NodeApi takes ownership of the resource and will delete it on exit.
         *   @note You need to call Commit in order to publish the resource to the outside world
         **/
-        bool AddReceiver(std::shared_ptr<Receiver> pResource);
+        bool AddReceiver(std::shared_ptr<ReceiverNode> pResource);
 
         /** @brief Adds a sender to the model.
         *   @param pResource a pointer to the sender
@@ -118,7 +118,7 @@ class NMOS_EXPOSE NodeApi
         *   @note NodeApi takes ownership of the resource and will delete it on exit.
         *   @note You need to call Commit in order to publish the resource to the outside world
         **/
-        bool AddSender(std::shared_ptr<Sender> pResource);
+        bool AddSender(std::shared_ptr<SenderNode> pResource);
 
         /** @brief Returns a reference to the Node /self
         *   @return <i>Self&</i>
@@ -143,12 +143,12 @@ class NMOS_EXPOSE NodeApi
         /** @brief Returns a const reference to the ResourceHolder that contains all the receivers
         *   @return </i>const ResourceHolder&</i>
         **/
-        const ResourceHolder<Receiver>& GetReceivers();
+        const ResourceHolder<ReceiverNode>& GetReceivers();
 
         /** @brief Returns a const reference to the ResourceHolder that contains all the senders
         *   @return </i>const ResourceHolder&</i>
         **/
-        const ResourceHolder<Sender>& GetSenders();
+        const ResourceHolder<SenderNode>& GetSenders();
 
 
         void RemoveSender(const std::string& sId);
@@ -159,13 +159,13 @@ class NMOS_EXPOSE NodeApi
         *   @param sId the uuid of the receiver
         *   @return <i>Receiver*</i> pointer to the given receiver or null
         **/
-        std::shared_ptr<Receiver> GetReceiver(const std::string& sId);
+        std::shared_ptr<ReceiverNode> GetReceiver(const std::string& sId);
 
         /** @brief Returns a pointer to the Sender with the given id if one exists or null.
         *   @param sId the uuid of the Sender
         *   @return <i>Sender*</i> pointer to the given Sender or null
         **/
-        std::shared_ptr<Sender> GetSender(const std::string& sId);
+        std::shared_ptr<SenderNode> GetSender(const std::string& sId);
 
 
         /** @brief To be called by the main thread when an IS-04 connection is made. The server tread will have called Target
@@ -321,8 +321,8 @@ class NMOS_EXPOSE NodeApi
 
         Self m_self;
         ResourceHolder<Device> m_devices;
-        ResourceHolder<Sender> m_senders;
-        ResourceHolder<Receiver> m_receivers;
+        ResourceHolder<SenderNode> m_senders;
+        ResourceHolder<ReceiverNode> m_receivers;
         ResourceHolder<Source> m_sources;
         ResourceHolder<Flow> m_flows;
 
@@ -345,6 +345,7 @@ class NMOS_EXPOSE NodeApi
         std::condition_variable m_cvBrowse; //sync between nmos thread and ServiceBrowser thread
         std::condition_variable m_cvCommit; //sync between nmos thread and main thread (used to sleep until a Commit is called)
 
+        std::unique_ptr<std::thread> m_pThread;
 
         bool m_bRun;
         bool m_bBrowsing;

@@ -17,7 +17,7 @@ void NodeThread::Main()
     //browse for an registry server this will now wait until all services have been browsed for,
 
     NodeApi::Get().BrowseForRegistrationNode();
-    bool bDoneOnce(false);
+//    bool bDoneOnce(false);
     int nBackoff = 5000;
     do
     {
@@ -28,6 +28,8 @@ void NodeThread::Main()
                 case NodeApi::SIG_BROWSE_DONE:
                     FindRegisterNode();
                     break;
+                default:
+                break;
             }
         }
         else

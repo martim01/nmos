@@ -17,11 +17,10 @@ class NMOS_EXPOSE Sender : public IOResource
 
         Sender(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId, const std::string& sInterface, TransportParamsRTP::flagsTP flagsTransport=TransportParamsRTP::CORE);
         Sender();
+        virtual ~Sender(){}
 
         /** @brief Set the active destination details to create an SDP. This will be overwritten by IS-05
         **/
-        void SetDestinationDetails(const std::string& sDestinationIp, unsigned short nDestinationPort);
-
         virtual bool UpdateFromJson(const Json::Value& jsData);
 
         void AddInterfaceBinding(const std::string& sInterface);
@@ -32,7 +31,7 @@ class NMOS_EXPOSE Sender : public IOResource
         const std::string& GetManifestHref() const;
 
         void SetReceiverId(const std::string& sReceiverId, bool bActive);
-        virtual bool Commit(const ApiVersion& version);
+
 
         std::string GetParentResourceId() const
         {
@@ -53,28 +52,18 @@ class NMOS_EXPOSE Sender : public IOResource
         bool CheckConstraints(const connectionSender& conRequest);
         bool IsLocked();
 
-        bool Stage(const connectionSender& conRequest, std::shared_ptr<EventPoster> pPoster);
         connectionSender GetStaged();
         connectionSender GetActive();
 
         // called by the main thread as a reply to the eventposter
-        void SetupActivation(const std::string& sSourceIp="", const std::string& sDestinationIp="", const std::string& sSDP="");
-        void Activate(bool bImmediate=false);
-
-        void MasterEnable(bool bEnable);
-
 
         const std::string& GetTransportFile() const;
 
-        void CreateSDP() { CreateSDP(m_Active); }
         bool IsActivateAllowed() const;
-        void CommitActivation();
+
 
         const std::string GetDestinationIp() const {return m_sDestinationIp;}
-    private:
-
-        void CreateSDP(const connectionSender& state);
-
+    protected:
 
         std::string m_sFlowId;
         enumTransport m_eTransport;

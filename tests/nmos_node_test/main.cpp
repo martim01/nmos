@@ -9,7 +9,6 @@
 #include "device.h"
 #include "sender.h"
 #include "receiver.h"
-#include "log.h"
 #include "../../log/include/log.h"
 
 using namespace std;
@@ -19,7 +18,6 @@ using namespace std;
 int main()
 {
 
-    LogStream::AddOutput(make_unique<LogOutput>());
     pml::LogStream::AddOutput(make_unique<pml::LogOutput>());
 
     std::shared_ptr<ThreadPoster> pPoster = std::make_shared<ThreadPoster>();

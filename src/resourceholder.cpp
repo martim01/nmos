@@ -5,9 +5,9 @@
 #include "self.h"
 #include "device.h"
 #include "source.h"
-#include "sender.h"
+#include "sendernode.h"
 #include "flow.h"
-#include "receiver.h"
+#include "receivernode.h"
 
 
 using namespace std;
@@ -174,8 +174,8 @@ template<class T> bool ResourceHolder<T>::ResourceExists(const string& sUuid) co
 
 
 template class ResourceHolder<Self>;
-template class ResourceHolder<Sender>;
+template class ResourceHolder<SenderNode>;
 template class ResourceHolder<Device>;
 template class ResourceHolder<Source>;
-template class ResourceHolder<Receiver>;
+template class ResourceHolder<ReceiverNode>;
 template class ResourceHolder<Flow>;

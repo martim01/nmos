@@ -8,8 +8,8 @@
 #include "device.h"
 #include "source.h"
 #include "flow.h"
-#include "receiver.h"
-#include "sender.h"
+#include "receivernode.h"
+#include "sendernode.h"
 #include "log.h"
 #include "eventposter.h"
 #include "utils.h"
@@ -392,7 +392,7 @@ response IS05Server::PatchNmosSingleReceiverStaged(const query& theQuery, const 
 
 
 
-response IS05Server::PatchSender(std::shared_ptr<Sender> pSender, const Json::Value& jsRequest)
+response IS05Server::PatchSender(std::shared_ptr<SenderNode> pSender, const Json::Value& jsRequest)
 {
     pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchSender: " << pSender->GetId() ;
     response resp;
@@ -468,7 +468,7 @@ response IS05Server::PatchSender(std::shared_ptr<Sender> pSender, const Json::Va
 }
 
 
-response IS05Server::PatchReceiver(std::shared_ptr<Receiver> pReceiver, const Json::Value& jsRequest)
+response IS05Server::PatchReceiver(std::shared_ptr<ReceiverNode> pReceiver, const Json::Value& jsRequest)
 {
     response resp;
 
@@ -560,7 +560,7 @@ response IS05Server::PostJsonSenders(const Json::Value& jsRequest)
             Json::Value jsResponse(Json::objectValue);
             jsResponse["id"] = jsRequest[ai]["id"];
 
-            std::shared_ptr<Sender> pSender = NodeApi::Get().GetSender(jsRequest[ai]["id"].asString());
+            std::shared_ptr<SenderNode> pSender = NodeApi::Get().GetSender(jsRequest[ai]["id"].asString());
             if(!pSender)
             {
                 jsResponse["code"] = 404;
@@ -608,7 +608,7 @@ response IS05Server::PostJsonReceivers(const Json::Value& jsRequest)
             Json::Value jsResponse(Json::objectValue);
             jsResponse["id"] = jsRequest[ai]["id"];
 
-            std::shared_ptr<Receiver> pReceiver = NodeApi::Get().GetReceiver(jsRequest[ai]["id"].asString());
+            std::shared_ptr<ReceiverNode> pReceiver = NodeApi::Get().GetReceiver(jsRequest[ai]["id"].asString());
             if(!pReceiver)
             {
                 jsResponse["code"] = 404;
@@ -632,7 +632,7 @@ response IS05Server::PostJsonReceivers(const Json::Value& jsRequest)
 }
 
 
-std::shared_ptr<Sender> IS05Server::GetSender(const url& theUrl)
+std::shared_ptr<SenderNode> IS05Server::GetSender(const url& theUrl)
 {
     auto vPath = SplitUrl(theUrl);
     if(vPath.size() > RESOURCE_ID)
@@ -645,7 +645,7 @@ std::shared_ptr<Sender> IS05Server::GetSender(const url& theUrl)
     }
 }
 
-std::shared_ptr<Receiver> IS05Server::GetReceiver(const url& theUrl)
+std::shared_ptr<ReceiverNode> IS05Server::GetReceiver(const url& theUrl)
 {
     auto vPath = SplitUrl(theUrl);
     if(vPath.size() > RESOURCE_ID)
