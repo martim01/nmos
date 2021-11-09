@@ -105,6 +105,7 @@
 			<Add option="-fexceptions" />
 			<Add option="-DNMOS_EXPORT" />
 			<Add option="-DMG_ENABLE_HTTP_STREAMING_MULTIPART" />
+			<Add option="-DNMOS_NODE_API" />
 			<Add directory="external/jsoncpp" />
 			<Add directory="include" />
 			<Add directory="external/uuid" />
@@ -152,6 +153,8 @@
 		<Unit filename="include/flowdata.h" />
 		<Unit filename="include/flowdatasdianc.h" />
 		<Unit filename="include/flowmux.h" />
+		<Unit filename="include/flowsdpcreator.h" />
+		<Unit filename="include/flowsdpcreatornode.h" />
 		<Unit filename="include/flowvideo.h" />
 		<Unit filename="include/flowvideocoded.h" />
 		<Unit filename="include/flowvideoraw.h" />
@@ -193,6 +196,7 @@
 		<Unit filename="src/flowdata.cpp" />
 		<Unit filename="src/flowdatasdianc.cpp" />
 		<Unit filename="src/flowmux.cpp" />
+		<Unit filename="src/flowsdpcreatornode.cpp" />
 		<Unit filename="src/flowvideo.cpp" />
 		<Unit filename="src/flowvideocoded.cpp" />
 		<Unit filename="src/flowvideoraw.cpp" />

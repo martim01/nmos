@@ -64,11 +64,11 @@
 					<Add directory="$(#microhttp.include)" />
 				</Compiler>
 				<Linker>
-					<Add option="`pkg-config --libs libmicrohttpd`" />
 					<Add option="`pkg-config --libs avahi-client`" />
 					<Add option="`pkg-config --libs libcurl`" />
-					<Add library="nmosd" />
+					<Add library="nmos_noded" />
 					<Add library="pthread" />
+					<Add library="pml_logd" />
 					<Add directory="$(#microhttp.lib)" />
 					<Add directory="../../lib" />
 				</Linker>

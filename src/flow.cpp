@@ -4,11 +4,10 @@
 Flow::Flow(const std::string& sLabel, const std::string& sDescription, const std::string& sFormat, const std::string& sSourceId, const std::string& sDeviceId) :
     Resource("flow", sLabel, sDescription),
     m_nMediaClkOffset(0),
+    m_pSdpCreator(nullptr),
     m_sFormat(sFormat),
     m_sSourceId(sSourceId),
-    m_sDeviceId(sDeviceId),
-    m_pSdpCreator(nullptr)
-
+    m_sDeviceId(sDeviceId)
 {
 
 }
@@ -105,5 +104,9 @@ std::string Flow::CreateSDPLines(unsigned short nRtpPort) const
     if(m_pSdpCreator)
     {
         return m_pSdpCreator->CreateLines(nRtpPort);
+    }
+    else
+    {
+        return "";
     }
 }
