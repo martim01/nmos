@@ -8,6 +8,7 @@
 #include "flow.h"
 #include "source.h"
 
+
 SenderNode::SenderNode(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId, const std::string& sInterface, TransportParamsRTP::flagsTP flagsTransport) :
    Sender(sLabel, sDescription, sFlowId, eTransport, sDeviceId, sInterface, flagsTransport)
 {
@@ -17,6 +18,11 @@ SenderNode::SenderNode(const std::string& sLabel, const std::string& sDescriptio
 
 SenderNode::SenderNode() : Sender()
 {
+}
+
+void SenderNode::CreateSDP()
+{
+    CreateSDP(m_Active);
 }
 
 void SenderNode::CreateSDP(const connectionSender& state)

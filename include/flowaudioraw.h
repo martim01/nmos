@@ -16,8 +16,8 @@ class NMOS_EXPOSE FlowAudioRaw : public FlowAudio
         void SetFormat(enumFormat eFormat);
         void SetPacketTime(enumPacket ePacketTime);
 
-        virtual std::string CreateSDPLines(unsigned short nRtpPort) const;
-
+        enumFormat GetFormat() const { return m_eFormat;}
+        enumPacket GetPacketTime() const { return m_ePacketTime;}
     private:
         enumFormat m_eFormat;
         enumPacket m_ePacketTime;

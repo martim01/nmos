@@ -3,6 +3,8 @@
 #include <set>
 #include "nmosdlldefine.h"
 
+#include "flowsdpcreator.h"
+
 class NMOS_EXPOSE Flow : public Resource
 {
     public:
@@ -25,12 +27,14 @@ class NMOS_EXPOSE Flow : public Resource
             return m_sSourceId;
         }
 
+        unsigned long GetMediaClkOffset() const { return m_nMediaClkOffset;}
         void SetMediaClkOffset(unsigned long nOffset);
 
-        virtual std::string CreateSDPLines(unsigned short nRtpPort) const=0;
+        std::string CreateSDPLines(unsigned short nRtpPort) const;
 
     protected:
         unsigned long m_nMediaClkOffset;
+        std::unique_ptr<FlowSdpCreator> m_pSdpCreator;
 
     private:
         std::string m_sFormat;

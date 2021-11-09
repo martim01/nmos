@@ -13,8 +13,6 @@ class NMOS_EXPOSE FlowAudioCoded : public FlowAudio
         virtual bool UpdateFromJson(const Json::Value& jsData);
         void SetMediaType(const std::string& sMediaType);
 
-        std::string CreateSDPLines(unsigned short nRtpPort) const;
-
     private:
         unsigned int m_nSampleRate;
         std::string m_sMediaType;

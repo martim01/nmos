@@ -7,8 +7,8 @@
 #include "sourceaudio.h"
 #include "flowaudioraw.h"
 #include "device.h"
-#include "sender.h"
-#include "receiver.h"
+#include "sendernode.h"
+#include "receivernode.h"
 #include "../../log/include/log.h"
 
 using namespace std;
@@ -20,7 +20,7 @@ int main()
 
     pml::LogStream::AddOutput(make_unique<pml::LogOutput>());
 
-    std::shared_ptr<ThreadPoster> pPoster = std::make_shared<ThreadPoster>();
+    auto pPoster = std::make_shared<ThreadPoster>();
 
     NodeApi::Get().Init(pPoster, 8080, 8080, "host Label", "host Description");
     NodeApi::Get().SetHeartbeatTime(5000);
@@ -31,18 +31,18 @@ int main()
     NodeApi::Get().GetSelf().AddTag("location", "MCR1");
     NodeApi::Get().GetSelf().AddTag("Author", "Matt");
 
-    shared_ptr<Device> pDevice = make_shared<Device>("TestDevice", "TestDescription", Device::GENERIC,NodeApi::Get().GetSelf().GetId());
+    auto pDevice = make_shared<Device>("TestDevice", "TestDescription", Device::GENERIC,NodeApi::Get().GetSelf().GetId());
 
-    shared_ptr<SourceAudio> pSource = make_shared<SourceAudio>("TestAudio", "TestDescription", pDevice->GetId());
+    auto pSource = make_shared<SourceAudio>("TestAudio", "TestDescription", pDevice->GetId());
     pSource->AddChannel("Left", "L");
     pSource->AddChannel("Right", "R");
 
-    shared_ptr<FlowAudioRaw> pFlow = make_shared<FlowAudioRaw>("TestFlow", "TestDescription", pSource->GetId(), pDevice->GetId(),48000, FlowAudioRaw::L24);
+    auto pFlow = make_shared<FlowAudioRaw>("TestFlow", "TestDescription", pSource->GetId(), pDevice->GetId(),48000, FlowAudioRaw::L24);
     pFlow->SetPacketTime(FlowAudioRaw::US_125);
     pFlow->SetMediaClkOffset(0);
 
-    shared_ptr<Sender> pSender = make_shared<Sender>("TestSender", "Description", pFlow->GetId(), Sender::RTP_MCAST, pDevice->GetId(), "eth0");
-    shared_ptr<Receiver> pReceiver = make_shared<Receiver>("Test Receiver", "TestDescription", Receiver::RTP_MCAST, pDevice->GetId(), Receiver::AUDIO, TransportParamsRTP::CORE | TransportParamsRTP::MULTICAST);
+    auto pSender = make_shared<SenderNode>("TestSender", "Description", pFlow->GetId(), Sender::RTP_MCAST, pDevice->GetId(), "eth0");
+    auto pReceiver = make_shared<ReceiverNode>("Test Receiver", "TestDescription", Receiver::RTP_MCAST, pDevice->GetId(), Receiver::AUDIO, TransportParamsRTP::CORE | TransportParamsRTP::MULTICAST);
 
     pSender->CreateSDP();
     pSender->MasterEnable(true);

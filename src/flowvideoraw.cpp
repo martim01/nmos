@@ -118,8 +118,3 @@ bool FlowVideoRaw::Commit(const ApiVersion& version)
 }
 
 
-std::string FlowVideoRaw::CreateSDPLines(unsigned short nRtpPort) const
-{
-    // @todo create VideoRaw SDP information
-    return "";
-}

@@ -46,8 +46,3 @@ void FlowMux::SetMediaType(const std::string& sMediaType)
 }
 
 
-std::string FlowMux::CreateSDPLines(unsigned short nRtpPort) const
-{
-    // @todo create FlowMux SDP information
-    return "";
-}

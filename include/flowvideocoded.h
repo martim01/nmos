@@ -11,7 +11,5 @@ class NMOS_EXPOSE FlowVideoCoded : public FlowVideo
         virtual bool UpdateFromJson(const Json::Value& jsData);
         virtual bool Commit(const ApiVersion& version);
 
-        std::string CreateSDPLines(unsigned short nRtpPort) const;
-
     private:
 };

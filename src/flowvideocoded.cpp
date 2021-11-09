@@ -28,8 +28,3 @@ bool FlowVideoCoded::Commit(const ApiVersion& version)
 
 
 
-std::string FlowVideoCoded::CreateSDPLines(unsigned short nRtpPort) const
-{
-    // @todo create VideoCoded SDP information
-    return "";
-}

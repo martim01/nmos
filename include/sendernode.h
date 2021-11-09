@@ -6,7 +6,8 @@ class SenderNode : public Sender
         SenderNode(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId, const std::string& sInterface, TransportParamsRTP::flagsTP flagsTransport=TransportParamsRTP::CORE);
         SenderNode();
         virtual ~SenderNode(){}
-        void CreateSDP(const connectionSender& state);
+
+        void CreateSDP();
 
         void Activate(bool bImmediate=false);
         void CommitActivation();
@@ -18,4 +19,7 @@ class SenderNode : public Sender
         void MasterEnable(bool bEnable);
 
         bool Stage(const connectionSender& conRequest, std::shared_ptr<EventPoster> pPoster);
+
+    protected:
+        void CreateSDP(const connectionSender& state);
 };

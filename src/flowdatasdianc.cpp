@@ -67,8 +67,3 @@ bool FlowDataSdiAnc::Commit(const ApiVersion& version)
 }
 
 
-std::string FlowDataSdiAnc::CreateSDPLines(unsigned short nRtpPort) const
-{
-    // @todo create FlowDataSdiAnc SDP information
-    return "";
-}

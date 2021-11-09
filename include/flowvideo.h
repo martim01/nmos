@@ -20,8 +20,6 @@ class NMOS_EXPOSE FlowVideo : public Flow
         void SetInterlace(enumInterlace eInterlace);
         void SetTransfer(enumTransfer eTransfer);
 
-        virtual std::string CreateSDPLines(unsigned short nRtpPort) const=0;
-
     private:
         std::string m_sMediaType;
         unsigned int m_nFrameWidth;

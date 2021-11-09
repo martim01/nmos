@@ -12,8 +12,8 @@ class NMOS_EXPOSE FlowAudio : public Flow
         virtual bool UpdateFromJson(const Json::Value& jsData);
 
         void SetSampleRate(unsigned int nSampleRate);
-
-        virtual std::string CreateSDPLines(unsigned short nRtpPort) const=0;
+        unsigned int GetSampleRateNumerator() const { return m_nSampleRateNumerator;}
+        unsigned int GetSampleRateDenominator() const { return m_nSampleRateDenominator;}
 
     protected:
         unsigned int m_nSampleRateNumerator;

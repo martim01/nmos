@@ -995,6 +995,7 @@ bool NodeApi::AddFlow(shared_ptr<Flow> pResource)
     if(m_devices.ResourceExists(pResource->GetParentResourceId()) && m_sources.ResourceExists(pResource->GetSourceId()))
     {
         m_flows.AddResource(pResource);
+
         //add the discovery endpoints
         for(const auto& pairServer : m_mDiscoveryServers)
         {

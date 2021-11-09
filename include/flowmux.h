@@ -11,8 +11,6 @@ class NMOS_EXPOSE FlowMux : public Flow
         virtual bool Commit(const ApiVersion& version);
         void SetMediaType(const std::string& sMediaType);
 
-        virtual std::string CreateSDPLines(unsigned short nRtpPort) const;
-
     private:
         std::string m_sMediaType;
 };
