@@ -91,6 +91,7 @@
 					<Add option="`pkg-config --libs libcurl`" />
 					<Add library="libnmos_client" />
 					<Add library="pthread" />
+					<Add library="libnmos_base" />
 					<Add directory="$(#microhttp.lib)" />
 				</Linker>
 			</Target>

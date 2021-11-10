@@ -5,7 +5,6 @@
 		<Option title="libnmos_node" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
-		<Option virtualFolders="nmos/;" />
 		<Build>
 			<Target title="Linux Debug">
 				<Option platforms="Unix;" />
@@ -128,8 +127,9 @@
 		<Unit filename="include/nmosthread.h" />
 		<Unit filename="include/nodeapi.h" />
 		<Unit filename="include/nodezcposter.h" />
-		<Unit filename="include/receivernode.h" />
-		<Unit filename="include/sendernode.h" />
+		<Unit filename="include/receiver.h" />
+		<Unit filename="include/resourceholder.h" />
+		<Unit filename="include/sender.h" />
 		<Unit filename="src/activator.cpp" />
 		<Unit filename="src/flowsdpcreatornode.cpp" />
 		<Unit filename="src/is04server.cpp" />
@@ -138,8 +138,9 @@
 		<Unit filename="src/nmosthread.cpp" />
 		<Unit filename="src/nodeapi.cpp" />
 		<Unit filename="src/nodezcposter.cpp" />
-		<Unit filename="src/receivernode.cpp" />
-		<Unit filename="src/sendernode.cpp" />
+		<Unit filename="src/receiver.cpp" />
+		<Unit filename="src/resourceholder.cpp" />
+		<Unit filename="src/sender.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />
