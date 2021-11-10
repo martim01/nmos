@@ -31,8 +31,8 @@
 #include "device.h"
 #include "source.h"
 #include "flow.h"
-#include "receivernode.h"
-#include "sendernode.h"
+#include "receiver.h"
+#include "sender.h"
 #include "is04server.h"
 #include "is05server.h"
 #include "nmosthread.h"
@@ -355,12 +355,12 @@ const ResourceHolder<Flow>& NodeApi::GetFlows()
     return m_flows;
 }
 
-const ResourceHolder<ReceiverNode>& NodeApi::GetReceivers()
+const ResourceHolder<Receiver>& NodeApi::GetReceivers()
 {
     return m_receivers;
 }
 
-const ResourceHolder<SenderNode>& NodeApi::GetSenders()
+const ResourceHolder<Sender>& NodeApi::GetSenders()
 {
     return m_senders;
 }
@@ -520,7 +520,7 @@ void NodeApi::SenderPatchAllowed(unsigned short nPort, bool bOk, const std::stri
 {
     if(bOk)
     {
-        shared_ptr<SenderNode> pSender(GetSender(sId));
+        auto pSender = GetSender(sId);
         if(pSender)
         {
             pSender->SetupActivation(sSourceIp, sDestinationIp, sSDP);
@@ -538,7 +538,7 @@ void NodeApi::ReceiverPatchAllowed(unsigned short nPort, bool bOk,const std::str
 {
     if(bOk)
     {
-        shared_ptr<ReceiverNode> pReceiver(GetReceiver(sId));
+        auto pReceiver = GetReceiver(sId);
         if(pReceiver)
         {
             pReceiver->SetupActivation(sInterfaceIp);
@@ -784,7 +784,7 @@ long NodeApi::RegistrationHeartbeat()
 
 void NodeApi::MarkRegNodeAsBad()
 {
-    map<string, regnode>::iterator itNode = m_mRegNode.find(m_sRegistrationNode);
+    auto itNode = m_mRegNode.find(m_sRegistrationNode);
     if(itNode != m_mRegNode.end())
     {
         itNode->second.bGood = false;
@@ -1006,7 +1006,7 @@ bool NodeApi::AddFlow(shared_ptr<Flow> pResource)
     return false;
 }
 
-bool NodeApi::AddReceiver(shared_ptr<ReceiverNode> pResource)
+bool NodeApi::AddReceiver(shared_ptr<Receiver> pResource)
 {
     if(m_devices.ResourceExists(pResource->GetParentResourceId()))
     {
@@ -1027,7 +1027,7 @@ bool NodeApi::AddReceiver(shared_ptr<ReceiverNode> pResource)
     return false;
 }
 
-bool NodeApi::AddSender(shared_ptr<SenderNode> pResource)
+bool NodeApi::AddSender(shared_ptr<Sender> pResource)
 {
 
     if(m_devices.ResourceExists(pResource->GetParentResourceId()))
@@ -1096,7 +1096,7 @@ unsigned short NodeApi::GetDiscoveryPort() const
 }
 
 
-shared_ptr<ReceiverNode> NodeApi::GetReceiver(const std::string& sId)
+shared_ptr<Receiver> NodeApi::GetReceiver(const std::string& sId)
 {
     auto itResource = m_receivers.GetResource(sId);
     if(itResource != m_receivers.GetResourceEnd())
@@ -1106,7 +1106,7 @@ shared_ptr<ReceiverNode> NodeApi::GetReceiver(const std::string& sId)
     return NULL;
 }
 
-shared_ptr<SenderNode> NodeApi::GetSender(const std::string& sId)
+shared_ptr<Sender> NodeApi::GetSender(const std::string& sId)
 {
     auto itResource = m_senders.GetResource(sId);
     if(itResource != m_senders.GetResourceEnd())

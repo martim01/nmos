@@ -1,7 +1,7 @@
 #include "activator.h"
 #include "nodeapi.h"
-#include "sendernode.h"
-#include "receivernode.h"
+#include "sender.h"
+#include "receiver.h"
 #include "utils.h"
 
 static void ActivationThread()

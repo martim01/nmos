@@ -124,25 +124,25 @@ void TestPoster::FlowChanged(const std::list<std::shared_ptr<Flow> >& lstFlowsAd
     cout << "++++++++++++++++++++++++" << endl;
 }
 
-void TestPoster::SenderChanged(const std::list<std::shared_ptr<Sender> >& lstSendersAdded, const std::list<std::shared_ptr<Sender> >& lstSendersUpdated, const std::list<std::shared_ptr<Sender> >& lstSendersRemoved)
+void TestPoster::SenderChanged(const std::list<std::shared_ptr<SenderBase> >& lstSendersAdded, const std::list<std::shared_ptr<SenderBase> >& lstSendersUpdated, const std::list<std::shared_ptr<SenderBase> >& lstSendersRemoved)
 {
     Json::FastWriter sw;
 
     cout << "++++++SENDERS ADDED++++++" << endl;
-    for(std::list<std::shared_ptr<Sender> >::const_iterator itResource = lstSendersAdded.begin(); itResource != lstSendersAdded.end(); ++itResource)
+    for(std::list<std::shared_ptr<SenderBase> >::const_iterator itResource = lstSendersAdded.begin(); itResource != lstSendersAdded.end(); ++itResource)
     {
         cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
     }
     cout << "++++++++++++++++++++++++" << endl;
 
     cout << "++++++SENDERS UPDATED++++++" << endl;
-    for(std::list<std::shared_ptr<Sender> >::const_iterator itResource = lstSendersUpdated.begin(); itResource != lstSendersUpdated.end(); ++itResource)
+    for(std::list<std::shared_ptr<SenderBase> >::const_iterator itResource = lstSendersUpdated.begin(); itResource != lstSendersUpdated.end(); ++itResource)
     {
         cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
     }
 
     cout << "++++++SENDERS REMOVE++++++" << endl;
-    for(std::list<std::shared_ptr<Sender> >::const_iterator itResource = lstSendersRemoved.begin(); itResource != lstSendersRemoved.end(); ++itResource)
+    for(std::list<std::shared_ptr<SenderBase> >::const_iterator itResource = lstSendersRemoved.begin(); itResource != lstSendersRemoved.end(); ++itResource)
     {
         cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
     }
@@ -150,25 +150,25 @@ void TestPoster::SenderChanged(const std::list<std::shared_ptr<Sender> >& lstSen
     cout << "++++++++++++++++++++++++" << endl;
 }
 
-void TestPoster::ReceiverChanged(const std::list<std::shared_ptr<Receiver> >& lstReceiversAdded, const std::list<std::shared_ptr<Receiver> >& lstReceiversUpdated, const std::list<std::shared_ptr<Receiver> >& lstReceiversRemoved)
+void TestPoster::ReceiverChanged(const std::list<std::shared_ptr<ReceiverBase> >& lstReceiversAdded, const std::list<std::shared_ptr<ReceiverBase> >& lstReceiversUpdated, const std::list<std::shared_ptr<ReceiverBase> >& lstReceiversRemoved)
 {
     Json::FastWriter sw;
 
     cout << "++++++RECEIVERS ADDED++++++" << endl;
-    for(std::list<std::shared_ptr<Receiver> >::const_iterator itResource = lstReceiversAdded.begin(); itResource != lstReceiversAdded.end(); ++itResource)
+    for(std::list<std::shared_ptr<ReceiverBase> >::const_iterator itResource = lstReceiversAdded.begin(); itResource != lstReceiversAdded.end(); ++itResource)
     {
         cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
     }
     cout << "++++++++++++++++++++++++" << endl;
 
     cout << "++++++RECEIVERS UPDATED++++++" << endl;
-    for(std::list<std::shared_ptr<Receiver> >::const_iterator itResource = lstReceiversUpdated.begin(); itResource != lstReceiversUpdated.end(); ++itResource)
+    for(std::list<std::shared_ptr<ReceiverBase> >::const_iterator itResource = lstReceiversUpdated.begin(); itResource != lstReceiversUpdated.end(); ++itResource)
     {
         cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
     }
 
     cout << "++++++RECEIVERS REMOVE++++++" << endl;
-    for(std::list<std::shared_ptr<Receiver> >::const_iterator itResource = lstReceiversRemoved.begin(); itResource != lstReceiversRemoved.end(); ++itResource)
+    for(std::list<std::shared_ptr<ReceiverBase> >::const_iterator itResource = lstReceiversRemoved.begin(); itResource != lstReceiversRemoved.end(); ++itResource)
     {
         cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
     }

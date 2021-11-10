@@ -22,9 +22,8 @@
 #include "flowvideoraw.h"
 #include "flowdatasdianc.h"
 #include "flowmux.h"
-#include "sender.h"
-#include "receiver.h"
-#include "receiver.h"
+#include "senderbase.h"
+#include "receiverbase.h"
 #include "clientapiposter.h"
 #include "utils.h"
 #include <algorithm>
@@ -212,9 +211,9 @@ static void NodeBrowser(ClientApiImpl* pApi, shared_ptr<dnsInstance> pInstance)
 
                     auto curlresp = CurlRegister::Get(string(ss.str()+"senders"), true);
 
-                    list<shared_ptr<Sender> > lstAdded;
-                    list<shared_ptr<Sender> > lstUpdated;
-                    list<shared_ptr<Sender> > lstRemoved;
+                    list<shared_ptr<SenderBase> > lstAdded;
+                    list<shared_ptr<SenderBase> > lstUpdated;
+                    list<shared_ptr<SenderBase> > lstRemoved;
 
                     pApi->StoreSenders(pInstance->sHostIP);
                     pApi->AddSenders(lstAdded, lstUpdated, pInstance->sHostIP, curlresp.sResponse);
@@ -238,9 +237,9 @@ static void NodeBrowser(ClientApiImpl* pApi, shared_ptr<dnsInstance> pInstance)
 
                     auto curlresp = CurlRegister::Get(string(ss.str()+"receivers"), true);
 
-                    list<shared_ptr<Receiver> > lstAdded;
-                    list<shared_ptr<Receiver> > lstUpdated;
-                    list<shared_ptr<Receiver> > lstRemoved;
+                    list<shared_ptr<ReceiverBase> > lstAdded;
+                    list<shared_ptr<ReceiverBase> > lstUpdated;
+                    list<shared_ptr<ReceiverBase> > lstRemoved;
                     pApi->StoreReceivers(pInstance->sHostIP);
                     pApi->AddReceivers(lstAdded, lstUpdated, pInstance->sHostIP, curlresp.sResponse);
                     pApi->RemoveStaleReceivers(lstRemoved);
@@ -1108,7 +1107,7 @@ void ClientApiImpl::CreateFlowMux(list<shared_ptr<Flow>>& lstAdded, const Json::
 }
 
 
-void ClientApiImpl::AddSenders(list<shared_ptr<Sender> >& lstAdded, list<shared_ptr<Sender> >& lstUpdated, const string& sIpAddress, const string& sData)
+void ClientApiImpl::AddSenders(list<shared_ptr<SenderBase> >& lstAdded, list<shared_ptr<SenderBase> >& lstUpdated, const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
     Json::Value jsData = ConvertToJson(sData);
@@ -1118,10 +1117,10 @@ void ClientApiImpl::AddSenders(list<shared_ptr<Sender> >& lstAdded, list<shared_
         {
             if(jsData[ai].isObject() && jsData[ai]["id"].isString())
             {
-                shared_ptr<Sender> pResource = m_senders.UpdateResource(jsData[ai]);
+                shared_ptr<SenderBase> pResource = m_senders.UpdateResource(jsData[ai]);
                 if(!pResource)
                 {
-                    pResource = make_shared<Sender>();
+                    pResource = make_shared<SenderBase>();
                     if(pResource->UpdateFromJson(jsData[ai]))
                     {
                         m_senders.AddResource(sIpAddress, pResource);
@@ -1150,7 +1149,7 @@ void ClientApiImpl::AddSenders(list<shared_ptr<Sender> >& lstAdded, list<shared_
     }
 }
 
-void ClientApiImpl::AddReceivers(list<shared_ptr<Receiver> >& lstAdded, list<shared_ptr<Receiver> >& lstUpdated, const string& sIpAddress, const string& sData)
+void ClientApiImpl::AddReceivers(list<shared_ptr<ReceiverBase> >& lstAdded, list<shared_ptr<ReceiverBase> >& lstUpdated, const string& sIpAddress, const string& sData)
 {
     lock_guard<mutex> lg(m_mutex);
     Json::Value jsData = ConvertToJson(sData);
@@ -1160,10 +1159,10 @@ void ClientApiImpl::AddReceivers(list<shared_ptr<Receiver> >& lstAdded, list<sha
         {
             if(jsData[ai].isObject() && jsData[ai]["id"].isString())
             {
-                shared_ptr<Receiver> pResource = m_receivers.UpdateResource(jsData[ai]);
+                auto pResource = m_receivers.UpdateResource(jsData[ai]);
                 if(!pResource)
                 {
-                    pResource = make_shared<Receiver>();
+                    pResource = make_shared<ReceiverBase>();
                     if(pResource->UpdateFromJson(jsData[ai]))
                     {
                         m_receivers.AddResource(sIpAddress, pResource);
@@ -1199,8 +1198,8 @@ void ClientApiImpl::RemoveResources(const string& sIpAddress)
     list<shared_ptr<Device> > lstDevice;
     list<shared_ptr<Source> > lstSource;
     list<shared_ptr<Flow> > lstFlow;
-    list<shared_ptr<Sender> > lstSender;
-    list<shared_ptr<Receiver> > lstReceiver;
+    list<shared_ptr<SenderBase> > lstSender;
+    list<shared_ptr<ReceiverBase> > lstReceiver;
 
     m_nodes.RemoveResources(sIpAddress, lstSelf);
     m_devices.RemoveResources(sIpAddress, lstDevice);
@@ -1231,12 +1230,12 @@ void ClientApiImpl::RemoveResources(const string& sIpAddress)
 
     if(RunQuery(lstSender, ClientApiImpl::SENDERS))
     {
-        m_pPoster->_SenderChanged(list<shared_ptr<Sender> >(), list<shared_ptr<Sender> >(), lstSender);
+        m_pPoster->_SenderChanged(list<shared_ptr<SenderBase> >(), list<shared_ptr<SenderBase> >(), lstSender);
     }
 
     if(RunQuery(lstReceiver, ClientApiImpl::RECEIVERS))
     {
-        m_pPoster->_ReceiverChanged(list<shared_ptr<Receiver> >(), list<shared_ptr<Receiver> >(), lstReceiver);
+        m_pPoster->_ReceiverChanged(list<shared_ptr<ReceiverBase> >(), list<shared_ptr<ReceiverBase> >(), lstReceiver);
     }
 }
 
@@ -1318,34 +1317,34 @@ map<string, shared_ptr<Flow> >::const_iterator ClientApiImpl::FindFlow(const str
 
 
 
-map<string, shared_ptr<Sender> >::const_iterator ClientApiImpl::GetSenderBegin()
+map<string, shared_ptr<SenderBase> >::const_iterator ClientApiImpl::GetSenderBegin()
 {
     return m_senders.GetResourceBegin();
 }
 
-map<string, shared_ptr<Sender> >::const_iterator ClientApiImpl::GetSenderEnd()
+map<string, shared_ptr<SenderBase> >::const_iterator ClientApiImpl::GetSenderEnd()
 {
     return m_senders.GetResourceEnd();
 }
 
-map<string, shared_ptr<Sender> >::const_iterator ClientApiImpl::FindSender(const string& sUid)
+map<string, shared_ptr<SenderBase> >::const_iterator ClientApiImpl::FindSender(const string& sUid)
 {
     return m_senders.FindNmosResource(sUid);
 }
 
 
 
-map<string, shared_ptr<Receiver> >::const_iterator ClientApiImpl::GetReceiverBegin()
+map<string, shared_ptr<ReceiverBase> >::const_iterator ClientApiImpl::GetReceiverBegin()
 {
     return m_receivers.GetResourceBegin();
 }
 
-map<string, shared_ptr<Receiver> >::const_iterator ClientApiImpl::GetReceiverEnd()
+map<string, shared_ptr<ReceiverBase> >::const_iterator ClientApiImpl::GetReceiverEnd()
 {
     return m_receivers.GetResourceEnd();
 }
 
-map<string, shared_ptr<Receiver> >::const_iterator ClientApiImpl::FindReceiver(const string& sUid)
+map<string, shared_ptr<ReceiverBase> >::const_iterator ClientApiImpl::FindReceiver(const string& sUid)
 {
     return m_receivers.FindNmosResource(sUid);
 }
@@ -1355,8 +1354,8 @@ bool ClientApiImpl::Subscribe(const string& sSenderId, const string& sReceiverId
 {
     lock_guard<mutex> lg(m_mutex);
 
-    shared_ptr<Sender> pSender = GetSender(sSenderId);
-    shared_ptr<Receiver> pReceiver = GetReceiver(sReceiverId);
+    auto pSender = GetSender(sSenderId);
+    auto pReceiver = GetReceiver(sReceiverId);
     if(!pSender || !pReceiver)
     {
         return false;
@@ -1379,7 +1378,7 @@ bool ClientApiImpl::Subscribe(const string& sSenderId, const string& sReceiverId
 bool ClientApiImpl::Unsubscribe(const string& sReceiverId)
 {
     lock_guard<mutex> lg(m_mutex);
-    shared_ptr<Receiver> pReceiver = GetReceiver(sReceiverId);
+    auto pReceiver = GetReceiver(sReceiverId);
     if(!pReceiver)
     {
         return false;
@@ -1398,7 +1397,7 @@ bool ClientApiImpl::Unsubscribe(const string& sReceiverId)
     return false;
 }
 
-string ClientApiImpl::GetTargetUrl(shared_ptr<Receiver> pReceiver, ApiVersion& version)
+string ClientApiImpl::GetTargetUrl(shared_ptr<ReceiverBase> pReceiver, ApiVersion& version)
 {
     //get the device id
     map<string, shared_ptr<Device> >::const_iterator itDevice =  m_devices.FindNmosResource(pReceiver->GetParentResourceId());
@@ -1487,7 +1486,7 @@ string ClientApiImpl::GetConnectionUrlSingle(shared_ptr<Resource> pResource, con
 bool ClientApiImpl::RequestSender(const string& sSenderId, ClientPoster::enumCurlType eType)
 {
     lock_guard<mutex> lg(m_mutex);
-    shared_ptr<Sender> pSender = GetSender(sSenderId);
+    auto pSender = GetSender(sSenderId);
     if(!pSender)
     {
         return false;
@@ -1507,7 +1506,7 @@ bool ClientApiImpl::RequestSender(const string& sSenderId, ClientPoster::enumCur
 bool ClientApiImpl::RequestReceiver(const string& sReceiverId, ClientPoster::enumCurlType eType)
 {
     lock_guard<mutex> lg(m_mutex);
-    shared_ptr<Receiver> pReceiver = GetReceiver(sReceiverId);
+    auto pReceiver = GetReceiver(sReceiverId);
     if(!pReceiver)
     {
         return false;
@@ -1553,7 +1552,7 @@ bool ClientApiImpl::RequestReceiverActive(const string& sReceiverId)
 bool ClientApiImpl::PatchSenderStaged(const string& sSenderId, const connectionSender& aConnection)
 {
     lock_guard<mutex> lg(m_mutex);
-    shared_ptr<Sender> pSender = GetSender(sSenderId);
+    auto pSender = GetSender(sSenderId);
     if(!pSender)
     {
         return false;
@@ -1574,7 +1573,7 @@ bool ClientApiImpl::PatchSenderStaged(const string& sSenderId, const connectionS
 bool ClientApiImpl::PatchReceiverStaged(const string& sReceiverId, const connectionReceiver& aConnection)
 {
     lock_guard<mutex> lg(m_mutex);
-    shared_ptr<Receiver> pReceiver = GetReceiver(sReceiverId);
+    auto pReceiver = GetReceiver(sReceiverId);
     if(!pReceiver)
     {
         return false;
@@ -1593,9 +1592,9 @@ bool ClientApiImpl::PatchReceiverStaged(const string& sReceiverId, const connect
 }
 
 
-shared_ptr<Sender> ClientApiImpl::GetSender(const string& sSenderId)
+shared_ptr<SenderBase> ClientApiImpl::GetSender(const string& sSenderId)
 {
-    map<string, shared_ptr<Sender> >::const_iterator itSender = m_senders.FindNmosResource(sSenderId);
+    auto itSender = m_senders.FindNmosResource(sSenderId);
     if(itSender == m_senders.GetResourceEnd())
     {
         pmlLog(pml::LOG_ERROR) << "NMOS: " << "Sender: " << sSenderId << " not found." ;
@@ -1604,9 +1603,9 @@ shared_ptr<Sender> ClientApiImpl::GetSender(const string& sSenderId)
     return itSender->second;
 }
 
-shared_ptr<Receiver> ClientApiImpl::GetReceiver(const string& sReceiverId)
+shared_ptr<ReceiverBase> ClientApiImpl::GetReceiver(const string& sReceiverId)
 {
-    map<string, shared_ptr<Receiver> >::const_iterator itReceiver = m_receivers.FindNmosResource(sReceiverId);
+    auto itReceiver = m_receivers.FindNmosResource(sReceiverId);
     if(itReceiver == m_receivers.GetResourceEnd())
     {
         pmlLog(pml::LOG_ERROR) << "NMOS: " << "Receiver: " << sReceiverId << " not found." ;
@@ -1657,12 +1656,12 @@ void ClientApiImpl::RemoveStaleFlows(std::list<std::shared_ptr<Flow> >& lstRemov
     m_flows.RemoveStaleResources(lstRemoved);
 }
 
-void ClientApiImpl::RemoveStaleSenders(std::list<std::shared_ptr<Sender> >& lstRemoved)
+void ClientApiImpl::RemoveStaleSenders(std::list<std::shared_ptr<SenderBase> >& lstRemoved)
 {
     m_senders.RemoveStaleResources(lstRemoved);
 }
 
-void ClientApiImpl::RemoveStaleReceivers(std::list<std::shared_ptr<Receiver> >& lstRemoved)
+void ClientApiImpl::RemoveStaleReceivers(std::list<std::shared_ptr<ReceiverBase> >& lstRemoved)
 {
     m_receivers.RemoveStaleResources(lstRemoved);
 }
@@ -1670,8 +1669,8 @@ void ClientApiImpl::RemoveStaleReceivers(std::list<std::shared_ptr<Receiver> >& 
 bool ClientApiImpl::Connect(const std::string& sSenderId, const std::string& sReceiverId)
 {
     lock_guard<mutex> lg(m_mutex);
-    shared_ptr<Sender> pSender = GetSender(sSenderId);
-    shared_ptr<Receiver> pReceiver = GetReceiver(sReceiverId);
+    auto pSender = GetSender(sSenderId);
+    auto pReceiver = GetReceiver(sReceiverId);
     if(!pSender || !pReceiver)
     {
         return false;
@@ -1699,13 +1698,13 @@ bool ClientApiImpl::Disconnect( const std::string& sReceiverId)
 {
     lock_guard<mutex> lg(m_mutex);
     pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ClientApiImpl::Disconnect " << sReceiverId ;
-    shared_ptr<Receiver> pReceiver = GetReceiver(sReceiverId);
+    auto pReceiver = GetReceiver(sReceiverId);
     if(!pReceiver)
     {
         pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ClientApiImpl::Disconnect No Receiver" ;
         return false;
     }
-    shared_ptr<Sender> pSender = GetSender(pReceiver->GetSender());
+    auto pSender = GetSender(pReceiver->GetSender());
     if(!pSender)
     {
         pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ClientApiImpl::Disconnect No Sender" ;
@@ -1835,21 +1834,21 @@ bool ClientApiImpl::AddQuerySubscriptionP2P(int nResource, const std::string& sQ
         break;
     case SENDERS:
         {
-            list<shared_ptr<Sender> > lstResources;
+            list<shared_ptr<SenderBase> > lstResources;
             m_senders.GetResourcesAsList(lstResources);
             if(RunQuery(lstResources, sQuery))
             {
-                m_pPoster->_SenderChanged(lstResources, list<shared_ptr<Sender> >(), list<shared_ptr<Sender> >());
+                m_pPoster->_SenderChanged(lstResources, list<shared_ptr<SenderBase> >(), list<shared_ptr<SenderBase> >());
             }
         }
         break;
     case RECEIVERS:
         {
-            list<shared_ptr<Receiver> > lstResources;
+            list<shared_ptr<ReceiverBase> > lstResources;
             m_receivers.GetResourcesAsList(lstResources);
             if(RunQuery(lstResources, sQuery))
             {
-                m_pPoster->_ReceiverChanged(lstResources, list<shared_ptr<Receiver> >(), list<shared_ptr<Receiver> >());
+                m_pPoster->_ReceiverChanged(lstResources, list<shared_ptr<ReceiverBase> >(), list<shared_ptr<ReceiverBase> >());
             }
         }
         break;

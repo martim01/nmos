@@ -1,288 +1,371 @@
 #include "sender.h"
-#include "eventposter.h"
-#include <thread>
-
-#include "flow.h"
-#include "device.h"
+#include "nodeapi.h"
 #include "utils.h"
 #include "log.h"
-#include <algorithm>
-#include <vector>
+#include "activator.h"
+#include "sdp.h"
+#include "device.h"
+#include "flow.h"
 #include "source.h"
-
-const std::string Sender::STR_TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash"};
 
 
 Sender::Sender(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId, const std::string& sInterface, TransportParamsRTP::flagsTP flagsTransport) :
-    IOResource("sender", sLabel, sDescription),
-    m_sFlowId(sFlowId),
-    m_eTransport(eTransport),
-    m_sDeviceId(sDeviceId),
-    m_sReceiverId(""),
-    m_bReceiverActive(false),
-    m_bActivateAllowed(false)
+   SenderBase(sLabel, sDescription, sFlowId, eTransport, sDeviceId, sInterface, flagsTransport)
 {
-    AddInterfaceBinding(sInterface);
-
-    if(flagsTransport & TransportParamsRTP::FEC)
-    {
-        m_Staged.tpSender.eFec = TransportParamsRTP::TP_SUPPORTED;
-        m_Active.tpSender.eFec = TransportParamsRTP::TP_SUPPORTED;
-    }
-    else
-    {
-        m_Staged.tpSender.eFec = TransportParamsRTP::TP_NOT_SUPPORTED;
-        m_Active.tpSender.eFec = TransportParamsRTP::TP_NOT_SUPPORTED;
-    }
-
-    if(flagsTransport & TransportParamsRTP::RTCP)
-    {
-        m_Staged.tpSender.eRTCP = TransportParamsRTP::TP_SUPPORTED;
-        m_Active.tpSender.eRTCP = TransportParamsRTP::TP_SUPPORTED;
-    }
-    else
-    {
-        m_Staged.tpSender.eRTCP = TransportParamsRTP::TP_NOT_SUPPORTED;
-        m_Active.tpSender.eRTCP = TransportParamsRTP::TP_NOT_SUPPORTED;
-    }
-    if(flagsTransport & TransportParamsRTP::MULTICAST)
-    {
-        m_Staged.tpSender.eMulticast = TransportParamsRTP::TP_SUPPORTED;
-        m_Active.tpSender.eMulticast = TransportParamsRTP::TP_SUPPORTED;
-    }
-    else
-    {
-        m_Staged.tpSender.eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
-        m_Active.tpSender.eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
-    }
-
-    m_constraints.nParamsSupported = flagsTransport;
-
-
-
+    SetupActivation("", "239.220.1.1","");  // @todo choose some defaults - get the ori
+    Activate();
 }
 
-Sender::Sender() : IOResource("sender")
+Sender::Sender() : SenderBase()
 {
-
 }
 
-bool Sender::UpdateFromJson(const Json::Value& jsData)
+void Sender::CreateSDP()
 {
-    Resource::UpdateFromJson(jsData);
-    if(jsData["flow_id"].isString() == false && JsonMemberExistsAndIsNotNull(jsData, "flow_id"))
-    {
-        m_bIsOk = false;
-        m_ssJsonError << "'flow_id' neither a string or null" ;
-    }
-    if(jsData["device_id"].isString() == false)
-    {
-        m_bIsOk = false;
-        m_ssJsonError << "'device_id' is not a string" ;
-    }
-    if(jsData["manifest_href"].isString() == false)
-    {
-        m_bIsOk = false;
-        m_ssJsonError << "'manifest_href' is not a string" ;
-    }
-    if(jsData["transport"].isString() == false)
-    {
-        m_bIsOk = false;
-        m_ssJsonError << "'transport' is not a string" ;
-    }
-    if(jsData["interface_bindings"].isArray() == false)
-    {
-        m_bIsOk = false;
-        m_ssJsonError << "'interface_bindings' is not an array" ;
-    }
-    if(jsData["subscription"].isObject() == false)
-    {
-        m_bIsOk = false;
-        m_ssJsonError << "'subscription' is not an object" ;
-    }
-    if(jsData["subscription"]["receiver_id"].isString() ==false && JsonMemberExistsAndIsNotNull(jsData["subscription"], "receiver_id"))
-    {
-        m_bIsOk = false;
-        m_ssJsonError << "'subscription' 'receiver_id' is not a string and not null" ;
-    }
-    if(jsData["subscription"]["active"].isBool() == false)
-    {
-        m_bIsOk = false;
-        m_ssJsonError << "'subscription' 'active' is not a bool" ;
-    }
+    CreateSDP(m_Active);
+}
 
-    if(m_bIsOk)
+void Sender::CreateSDP(const connectionSender& state)
+{
+    std::stringstream ssSDP;
+    ssSDP << "v=0\r\n";
+    ssSDP << "o=- " << GetCurrentTaiTime(false) << " " << GetCurrentTaiTime(false) << " IN IP";
+    switch(SdpManager::CheckIpAddress(state.tpSender.sSourceIp))
     {
-        if(jsData["flow_id"].isString())
-        {
-            m_sFlowId = jsData["flow_id"].asString();
-        }
-        m_sDeviceId = jsData["device_id"].asString();
-        m_sManifest = jsData["manifest_href"].asString();
+        case SdpManager::IP4_UNI:
+        case SdpManager::IP4_MULTI:
+            ssSDP << "4 ";
+            break;
+        case SdpManager::IP6_UNI:
+        case SdpManager::IP6_MULTI:
+            ssSDP << "6 ";
+            break;
+        case SdpManager::IP_INVALID:
+            ssSDP << " ";
+            break;
+    }
+    ssSDP << state.tpSender.sSourceIp << "\r\n";    // @todo should check here if sSourceIp is not set to auto
+    ssSDP << "t=0 0 \r\n";
+
+    std::map<std::string, std::shared_ptr<Device> >::const_iterator itDevice = NodeApi::Get().GetDevices().FindNmosResource(m_sDeviceId);
+    if(itDevice != NodeApi::Get().GetDevices().GetResourceEnd())
+    {
+        ssSDP << "s=" << itDevice->second->GetLabel() << ":";
+    }
+    else
+    {
+        ssSDP << "s=-:";
+    }
+    ssSDP << GetLabel() << "\r\n";
 
 
-        if(jsData["transport"].asString().find(STR_TRANSPORT[RTP_MCAST]) != std::string::npos)
-        {
-            m_eTransport = RTP_MCAST;
-        }
-        else if(jsData["transport"].asString().find(STR_TRANSPORT[RTP_UCAST]) != std::string::npos)
-        {
-            m_eTransport = RTP_UCAST;
-        }
+    std::stringstream ssc;
+    //put in the destination unicast/multicast block
+    switch(SdpManager::CheckIpAddress(state.tpSender.sDestinationIp))
+    {
+        case SdpManager::IP4_UNI:
+            ssc << "c=IN IP4 " << state.tpSender.sDestinationIp << "\r\n";
+            ssSDP << ssc.str();
+            ssSDP << "a=type:unicast\r\n";
+            break;
+        case SdpManager::IP4_MULTI:
+            ssc << "c=IN IP4 " << state.tpSender.sDestinationIp << "/32\r\n";
+            ssSDP << ssc.str();
+            ssSDP << "a=source-filter:incl IN IP4 " << state.tpSender.sDestinationIp << " " << state.tpSender.sSourceIp << "\r\n";
+            ssSDP << "a=type:multicast\r\n";
+            break;
+        case SdpManager::IP6_UNI:
+            ssc << "c=IN IP6 " << state.tpSender.sDestinationIp << "\r\n";
+            ssSDP << ssc.str();
+            ssSDP << "a=type:unicast\r\n";
+            break;
+        case SdpManager::IP6_MULTI:
+            ssc << "c=IN IP6 " << state.tpSender.sDestinationIp << "\r\n";
+            ssSDP << ssc.str();
+            ssSDP << "a=source-filter:incl IN IP6 " << state.tpSender.sDestinationIp << " " << state.tpSender.sSourceIp << "\r\n";
+            ssSDP << "a=type:multicast\r\n";
+            break;
+        case SdpManager::SdpManager::IP_INVALID:
+            pmlLog(pml::LOG_WARN) << "NMOS: Sender can't create SDP - destination IP invalid '" << state.tpSender.sDestinationIp << "'";
+            break;
+    }
 
-        else if(jsData["transport"].asString().find(STR_TRANSPORT[RTP]) != std::string::npos)
+
+    //now put in the flow media information
+    auto itFlow = NodeApi::Get().GetFlows().FindNmosResource(m_sFlowId);
+    if(itFlow != NodeApi::Get().GetFlows().GetResourceEnd())
+    {
+        auto pFlow = std::dynamic_pointer_cast<Flow>(itFlow->second);
+        if(pFlow)
         {
-            m_eTransport = RTP;
-        }
-        else if(jsData["transport"].asString().find(STR_TRANSPORT[DASH]) != std::string::npos)
-        {
-            m_eTransport = DASH;
-        }
-        else
-        {
-            m_bIsOk = false;
-            m_ssJsonError << "'transport' " <<jsData["transport"].asString() <<" incorrect" ;
-        }
-        for(Json::ArrayIndex n = 0; n < jsData["interface_bindings"].size(); n++)
-        {
-            if(jsData["interface_bindings"][n].isString())
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "CreateSDP Destination Port = " << state.tpSender.nDestinationPort ;
+            unsigned short nPort(state.tpSender.nDestinationPort);
+            if(nPort == 0)
             {
-                m_setInterfaces.insert(jsData["interface_bindings"][n].asString());
+                nPort = 5004;
             }
-            else
+            ssSDP << pFlow->CreateSDPLines(nPort);
+            ssSDP << ssc.str();
+
+            //get clock name from source
+            auto itSource = NodeApi::Get().GetSources().FindNmosResource(pFlow->GetSourceId());
+            if(itSource != NodeApi::Get().GetSources().GetResourceEnd())
             {
-                m_bIsOk = false;
-                m_ssJsonError << "'interface_bindings' #" << n <<" not a string" ;
+                auto pSource = std::dynamic_pointer_cast<Source>(itSource->second);
+                auto sClock = pSource->GetClock();
+
+                //clock information is probably at the media level
+                if(m_setInterfaces.empty() || sClock.empty())
+                {
+                    ssSDP << NodeApi::Get().GetSelf().CreateClockSdp(sClock, "");
+                }
+                else
+                {
+                    ssSDP << NodeApi::Get().GetSelf().CreateClockSdp(sClock, *(m_setInterfaces.begin())); // @todo should we check all the intefaces for the clock mac address??
+                }
+            }
+        }
+    }
+    //now put in the RTCP info if we've got any
+    if(state.tpSender.bRtcpEnabled)
+    {
+        switch(SdpManager::CheckIpAddress(state.tpSender.sRtcpDestinationIp))
+        {
+            case SdpManager::IP4_UNI:
+            case SdpManager::IP4_MULTI:
+                ssSDP << "a=rtcp:" << state.tpSender.nRtcpDestinationPort << " IN IP4 " << state.tpSender.sRtcpDestinationIp << "\r\n";
+                break;
+            case SdpManager::IP6_UNI:
+            case SdpManager::IP6_MULTI:
+                ssSDP << "a=rtcp:" << state.tpSender.nRtcpDestinationPort << " IN IP6 " << state.tpSender.sRtcpDestinationIp << "\r\n";
+                break;
+            default:
+                break;
+        }
+    }
+    m_sTransportFile = ssSDP.str();
+
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "CreateSDP= " << m_sTransportFile ;
+}
+
+
+void Sender::Activate(bool bImmediate)
+{
+    std::lock_guard<std::mutex> lg(m_mutex);
+
+    m_bActivateAllowed = false;
+    //move the staged parameters to active parameters
+    m_Active = m_Staged;
+
+    if(m_sSourceIp.empty())
+    {
+        //get the bound to interface source address
+        for(std::set<std::string>::iterator itInteface = m_setInterfaces.begin(); itInteface != m_setInterfaces.end(); ++itInteface)
+        {
+            std::map<std::string, nodeinterface>::const_iterator itDetails = NodeApi::Get().GetSelf().FindInterface((*itInteface));
+            if(itDetails != NodeApi::Get().GetSelf().GetInterfaceEnd())
+            {
+                m_sSourceIp = itDetails->second.sMainIpAddress;
                 break;
             }
         }
-
-        if(jsData["subscription"]["receiver_id"].isString())
-        {
-            m_sReceiverId = jsData["subscription"]["receiver_id"].asString();
-        }
-        m_bReceiverActive = jsData["subscription"]["active"].asBool();
     }
-    return m_bIsOk;
+
+    //Change auto settings to what they actually are
+    m_Active.tpSender.Actualize(m_sSourceIp, m_sDestinationIp);
+
+
+    // create the SDP
+    if(m_Active.bMasterEnable)
+    {
+        CreateSDP(m_Active);    // @TODO need to update SDP but keep stuff
+        if(m_sSDP.empty())
+        {
+            CreateSDP(m_Active);
+        }
+        else
+        {
+            m_sTransportFile = m_sSDP;
+        }
+    }
+    else
+    {
+        m_sTransportFile.clear();
+    }
+    //@todo Set the flow to be whatever the flow is...
+
+    //activate - set subscription, receiverId and active on master_enable.
+    if(m_Staged.bMasterEnable)
+    {
+        m_sReceiverId = m_Staged.sReceiverId;
+    }
+    else
+    {
+        m_sReceiverId.clear();
+    }
+    m_bReceiverActive = m_Staged.bMasterEnable;
+
+    if(!bImmediate)
+    {
+        CommitActivation();
+    }
 }
 
-void Sender::AddInterfaceBinding(const std::string& sInterface)
+void Sender::CommitActivation()
 {
-    m_setInterfaces.insert(sInterface);
+    //reset the staged activation
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ActivateSender: Reset Staged activation parameters..." ;
+    m_Staged.eActivate = connection::ACT_NULL;
+    m_Staged.sActivationTime.clear();
+    m_Staged.sRequestedTime.clear();
+
+    UpdateVersionTime();
+
+    NodeApi::Get().SenderActivated(GetId());
 }
 
-void Sender::RemoveInterfaceBinding(const std::string& sInterface)
+bool Sender::Commit(const ApiVersion& version)
 {
-    m_setInterfaces.erase(sInterface);
+    if(Resource::Commit(version))
+    {
+        if(m_sFlowId.empty() == false)
+        {
+            m_json["flow_id"] = m_sFlowId;
+        }
+        else
+        {
+            m_json["flow_id"] = Json::nullValue;
+        }
+        m_json["device_id"] = m_sDeviceId;
+        m_json["manifest_href"] = m_sManifest;
+        m_json["transport"] = STR_TRANSPORT[m_eTransport];
+
+        m_json["interface_bindings"] = Json::Value(Json::arrayValue);
+        for(std::set<std::string>::iterator itInterface = m_setInterfaces.begin(); itInterface != m_setInterfaces.end(); ++itInterface)
+        {
+            m_json["interface_bindings"].append((*itInterface));
+        }
+
+        m_json["subscription"] = Json::Value(Json::objectValue);
+        if(m_sReceiverId.empty())
+        {
+             m_json["subscription"]["receiver_id"] = Json::nullValue;
+        }
+        else
+        {
+            m_json["subscription"]["receiver_id"] = m_sReceiverId;
+        }
+
+        if(m_bReceiverActive)
+        {
+            m_json["subscription"]["active"] = true;
+        }
+        else
+        {
+            m_json["subscription"]["active"] = false;
+        }
+        CreateSDP(m_Active);
+        return true;
+    }
+    return false;
 }
 
-void Sender::SetReceiverId(const std::string& sReceiverId, bool bActive)
+void Sender::SetupActivation(const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP)
 {
-    m_sReceiverId = sReceiverId;
-    m_bReceiverActive = bActive;
-
+    m_sSourceIp = sSourceIp;
+    m_sDestinationIp = sDestinationIp;
+    m_sSDP = sSDP;
 }
 
 
-
-void Sender::SetTransport(enumTransport eTransport)
-{
-    m_eTransport = eTransport;
-
-}
-
-
-
-Json::Value Sender::GetConnectionStagedJson(const ApiVersion& version) const
-{
-    return m_Staged.GetJson(version);
-}
-
-
-Json::Value Sender::GetConnectionActiveJson(const ApiVersion& version) const
-{
-    return m_Active.GetJson(version);
-}
-
-
-
-
-Json::Value Sender::GetConnectionConstraintsJson(const ApiVersion& version) const
-{
-    Json::Value jsArray(Json::arrayValue);
-    jsArray.append(m_constraints.GetJson(version));
-    return jsArray;
-}
-
-
-
-bool Sender::CheckConstraints(const connectionSender& conRequest)
-{
-    bool bMeets = m_constraints.destination_port.MeetsConstraint(conRequest.tpSender.nDestinationPort);
-    bMeets &= m_constraints.fec_destination_ip.MeetsConstraint(conRequest.tpSender.sFecDestinationIp);
-    bMeets &= m_constraints.fec_enabled.MeetsConstraint(conRequest.tpSender.bFecEnabled);
-    bMeets &= m_constraints.fec_mode.MeetsConstraint(TransportParamsRTP::STR_FEC_MODE[conRequest.tpSender.eFecMode]);
-    bMeets &= m_constraints.fec1D_destination_port.MeetsConstraint(conRequest.tpSender.nFec1DDestinationPort);
-    bMeets &= m_constraints.fec2D_destination_port.MeetsConstraint(conRequest.tpSender.nFec2DDestinationPort);
-    bMeets &= m_constraints.rtcp_destination_ip.MeetsConstraint(conRequest.tpSender.sRtcpDestinationIp);
-    bMeets &= m_constraints.rtcp_destination_port.MeetsConstraint(conRequest.tpSender.nRtcpDestinationPort);
-
-    bMeets &= m_constraints.destination_ip.MeetsConstraint(conRequest.tpSender.sDestinationIp);
-    bMeets &= m_constraints.source_ip.MeetsConstraint(conRequest.tpSender.sSourceIp);
-    bMeets &= m_constraints.source_port.MeetsConstraint(conRequest.tpSender.nSourcePort);
-    bMeets &= m_constraints.fec_type.MeetsConstraint(TransportParamsRTPSender::STR_FEC_TYPE[conRequest.tpSender.eFecType]);
-    bMeets &= m_constraints.fec_block_width.MeetsConstraint(conRequest.tpSender.nFecBlockWidth);
-    bMeets &= m_constraints.fec_block_height.MeetsConstraint(conRequest.tpSender.nFecBlockHeight);
-    bMeets &= m_constraints.fec1D_source_port.MeetsConstraint(conRequest.tpSender.nFec1DSourcePort);
-    bMeets &= m_constraints.fec2D_source_port.MeetsConstraint(conRequest.tpSender.nFec2DSourcePort);
-    bMeets &= m_constraints.rtcp_enabled.MeetsConstraint(conRequest.tpSender.bRtcpEnabled);
-    bMeets &= m_constraints.rtcp_source_port.MeetsConstraint(conRequest.tpSender.nRtcpSourcePort);
-    bMeets &= m_constraints.rtp_enabled.MeetsConstraint(conRequest.tpSender.bRtpEnabled);
-    return bMeets;
-}
-
-bool Sender::IsLocked()
-{
-    std::lock_guard<std::mutex> lg(m_mutex);
-    return (m_Staged.eActivate == connection::ACT_ABSOLUTE || m_Staged.eActivate == connection::ACT_RELATIVE);
-}
-
-
-connectionSender Sender::GetStaged()
-{
-    std::lock_guard<std::mutex> lg(m_mutex);
-    return m_Staged;
-}
-
-connectionSender Sender::GetActive()
-{
-    std::lock_guard<std::mutex> lg(m_mutex);
-    return m_Active;
-}
-
-
-
-
-const std::string& Sender::GetTransportFile() const
-{
-    return m_sTransportFile;
-}
-
-
-void Sender::SetManifestHref(const std::string& sHref)
-{
-    m_sManifest = sHref;
-}
-
-
-const std::string& Sender::GetManifestHref() const
-{
-    return m_sManifest;
-}
-
-
-bool Sender::IsActivateAllowed() const
+void Sender::SetDestinationDetails(const std::string& sDestinationIp, unsigned short nDestinationPort)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    return m_bActivateAllowed;
+    m_Active.tpSender.sDestinationIp = sDestinationIp;
+    m_Active.tpSender.nDestinationPort = nDestinationPort;
+    CreateSDP(m_Active);
+    UpdateVersionTime();
+}
+
+void Sender::MasterEnable(bool bEnable)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_Active.bMasterEnable = bEnable;
+    m_Active.tpSender.bRtpEnabled = bEnable;
+    m_Staged.bMasterEnable = bEnable;
+    m_Staged.tpSender.bRtpEnabled = bEnable;
+    UpdateVersionTime();
+}
+
+bool Sender::Stage(const connectionSender& conRequest, std::shared_ptr<EventPoster> pPoster)
+{
+    bool bOk(true);
+
+    {
+        std::lock_guard<std::mutex> lg(m_mutex);
+        m_Staged = conRequest;
+    }
+
+    switch(m_Staged.eActivate)
+    {
+        case connection::ACT_NULL:
+            if(m_Staged.sActivationTime.empty() == false)
+            {
+                Activator::Get().RemoveActivationSender(m_Staged.tpActivation, GetId());
+                m_Staged.sActivationTime.clear();
+                m_Staged.tpActivation = std::chrono::time_point<std::chrono::high_resolution_clock>();
+            }
+            m_bActivateAllowed = false;
+            break;
+        case connection::ACT_NOW:
+            m_Staged.sActivationTime = GetCurrentTaiTime();
+            m_bActivateAllowed = true;
+            Activate(true);
+            break;
+        case connection::ACT_ABSOLUTE:
+            {
+                std::chrono::time_point<std::chrono::high_resolution_clock> tp;
+                if(ConvertTaiStringToTimePoint(m_Staged.sRequestedTime, tp))
+                {
+                    m_bActivateAllowed = true;
+
+                    m_Staged.sActivationTime = m_Staged.sRequestedTime;
+                    m_Staged.tpActivation = tp;
+                    Activator::Get().AddActivationSender(tp, GetId());
+                }
+                else
+                {
+                    pmlLog(pml::LOG_ERROR) << "NMOS: " << "Stage Sender: Invalid absolute time" ;
+                    bOk = false;
+                }
+            }
+            break;
+        case connection::ACT_RELATIVE:
+            // start a thread that will sleep for the given time period and then tell the main thread to do its stuff
+            try
+            {
+                std::chrono::time_point<std::chrono::high_resolution_clock> tp(std::chrono::high_resolution_clock::now().time_since_epoch());
+                std::vector<std::string> vTime;
+                SplitString(vTime, m_Staged.sRequestedTime, ':');
+                if(vTime.size() != 2)
+                {
+                    throw std::invalid_argument("invalid time");
+                }
+                m_bActivateAllowed = true;
+
+                std::chrono::nanoseconds nano((static_cast<long long int>(std::stoul(vTime[0]))*1000000000)+stoul(vTime[1]));
+                std::chrono::time_point<std::chrono::high_resolution_clock> tpAbs(tp+nano-LEAP_SECONDS);
+
+                m_Staged.sActivationTime = ConvertTimeToString(tpAbs, true);
+                m_Staged.tpActivation = tpAbs;
+                Activator::Get().AddActivationSender(tpAbs, GetId());
+            }
+            catch(std::invalid_argument& ia)
+            {
+                pmlLog(pml::LOG_ERROR) << "NMOS: " << "Stage Sender: Invalid time" ;
+                bOk = false;
+            }
+            break;
+    }
+    return bOk;
 }

@@ -1,6 +1,4 @@
 #include "eventposter.h"
-#include "sender.h"
-#include "receiver.h"
 
 
 void EventPoster::_CurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId)

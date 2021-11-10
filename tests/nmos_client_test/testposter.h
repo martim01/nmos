@@ -16,8 +16,8 @@ class TestPoster : public ClientApiPoster
         virtual void DeviceChanged(const std::list<std::shared_ptr<Device> >& lstDevicesAdded, const std::list<std::shared_ptr<Device> >& lstDevicesUpdated, const std::list<std::shared_ptr<Device> >& lstDevicesRemoved);
         virtual void SourceChanged(const std::list<std::shared_ptr<Source> >& lstSourcesAdded, const std::list<std::shared_ptr<Source> >& lstSourcesUpdated, const std::list<std::shared_ptr<Source> >& lstSourcesRemoved);
         virtual void FlowChanged(const std::list<std::shared_ptr<Flow> >& lstFlowsAdded, const std::list<std::shared_ptr<Flow> >& lstFlowsUpdated, const std::list<std::shared_ptr<Flow> >& lstFlowsRemoved);
-        virtual void SenderChanged(const std::list<std::shared_ptr<Sender> >& lstSendersAdded, const std::list<std::shared_ptr<Sender> >& lstSendersUpdated, const std::list<std::shared_ptr<Sender> >& lstSendersRemoved);
-        virtual void ReceiverChanged(const std::list<std::shared_ptr<Receiver> >& lstReceiversAdded, const std::list<std::shared_ptr<Receiver> >& lstReceiversUpdated, const std::list<std::shared_ptr<Receiver> >& lstReceiversRemoved);
+        virtual void SenderChanged(const std::list<std::shared_ptr<SenderBase> >& lstSendersAdded, const std::list<std::shared_ptr<SenderBase> >& lstSendersUpdated, const std::list<std::shared_ptr<SenderBase> >& lstSendersRemoved);
+        virtual void ReceiverChanged(const std::list<std::shared_ptr<ReceiverBase> >& lstReceiversAdded, const std::list<std::shared_ptr<ReceiverBase> >& lstReceiversUpdated, const std::list<std::shared_ptr<ReceiverBase> >& lstReceiversRemoved);
 
         virtual void QuerySubscription(const std::string& sSubscriptionId, int nResource, const std::string& sQuery);
         virtual void QuerySubscriptionRemoved(const std::string& sSubscriptionId);

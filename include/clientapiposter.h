@@ -10,8 +10,8 @@ class Self;
 class Device;
 class Source;
 class Flow;
-class Sender;
-class Receiver;
+class SenderBase;
+class ReceiverBase;
 
 class NMOS_EXPOSE ClientApiPoster
 {
@@ -26,8 +26,8 @@ class NMOS_EXPOSE ClientApiPoster
         void _DeviceChanged(const std::list<std::shared_ptr<Device> >& lstDevicesAdded, const std::list<std::shared_ptr<Device> >& lstDevicesUpdated, const std::list<std::shared_ptr<Device> >& lstDevicesRemoved);
         void _SourceChanged(const std::list<std::shared_ptr<Source> >& lstSourcesAdded, const std::list<std::shared_ptr<Source> >& lstSourcesUpdated, const std::list<std::shared_ptr<Source> >& lstSourcesRemoved);
         void _FlowChanged(const std::list<std::shared_ptr<Flow> >& lstFlowsAdded, const std::list<std::shared_ptr<Flow> >& lstFlowsUpdated, const std::list<std::shared_ptr<Flow> >& lstFlowsRemoved);
-        void _SenderChanged(const std::list<std::shared_ptr<Sender> >& lstSendersAdded, const std::list<std::shared_ptr<Sender> >& lstSendersUpdated, const std::list<std::shared_ptr<Sender> >& lstSendersRemoved);
-        void _ReceiverChanged(const std::list<std::shared_ptr<Receiver> >& lstReceiversAdded, const std::list<std::shared_ptr<Receiver> >& lstReceiversUpdated, const std::list<std::shared_ptr<Receiver> >& lstReceiversRemoved);
+        void _SenderChanged(const std::list<std::shared_ptr<SenderBase> >& lstSendersAdded, const std::list<std::shared_ptr<SenderBase> >& lstSendersUpdated, const std::list<std::shared_ptr<SenderBase> >& lstSendersRemoved);
+        void _ReceiverChanged(const std::list<std::shared_ptr<ReceiverBase> >& lstReceiversAdded, const std::list<std::shared_ptr<ReceiverBase> >& lstReceiversUpdated, const std::list<std::shared_ptr<ReceiverBase> >& lstReceiversRemoved);
 
 
         void _RequestTargetResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
@@ -84,14 +84,14 @@ class NMOS_EXPOSE ClientApiPoster
         *   @param lstNodesUpdated a list of Senders that have been updated
         *   @param lstNodesRemoved a list of Senders that have been removed
         **/
-        virtual void SenderChanged(const std::list<std::shared_ptr<Sender> >& lstSendersAdded, const std::list<std::shared_ptr<Sender> >& lstSendersUpdated, const std::list<std::shared_ptr<Sender> >& lstSendersRemoved)=0;
+        virtual void SenderChanged(const std::list<std::shared_ptr<SenderBase> >& lstSendersAdded, const std::list<std::shared_ptr<SenderBase> >& lstSendersUpdated, const std::list<std::shared_ptr<SenderBase> >& lstSendersRemoved)=0;
 
         /** @brief called when one or more Receiver resources that match a subscribed query are added, updated or removed
         *   @param lstNodesAdded a list of Receivers that have been added
         *   @param lstNodesUpdated a list of Receivers that have been updated
         *   @param lstNodesRemoved a list of Receivers that have been removed
         **/
-        virtual void ReceiverChanged(const std::list<std::shared_ptr<Receiver> >& lstReceiversAdded, const std::list<std::shared_ptr<Receiver> >& lstReceiversUpdated, const std::list<std::shared_ptr<Receiver> >& lstReceiversRemoved)=0;
+        virtual void ReceiverChanged(const std::list<std::shared_ptr<ReceiverBase> >& lstReceiversAdded, const std::list<std::shared_ptr<ReceiverBase> >& lstReceiversUpdated, const std::list<std::shared_ptr<ReceiverBase> >& lstReceiversRemoved)=0;
 
         /** @brief Called when when a query is subscibed (either with the query node or in p2p mode)
         *   @param sSubscriptionId the return id of the subscription. On failure this will be an empty string

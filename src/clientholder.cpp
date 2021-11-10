@@ -4,9 +4,9 @@
 #include "self.h"
 #include "device.h"
 #include "source.h"
-#include "sender.h"
+#include "senderbase.h"
 #include "flow.h"
-#include "receiver.h"
+#include "receiverbase.h"
 
 using namespace std;
 
@@ -176,8 +176,8 @@ template<class T> void ClientHolder<T>::GetResourcesAsList(typename std::list<st
 
 
 template class ClientHolder<Self>;
-template class ClientHolder<Sender>;
+template class ClientHolder<SenderBase>;
 template class ClientHolder<Device>;
 template class ClientHolder<Source>;
-template class ClientHolder<Receiver>;
+template class ClientHolder<ReceiverBase>;
 template class ClientHolder<Flow>;

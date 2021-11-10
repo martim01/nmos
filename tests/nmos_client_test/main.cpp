@@ -23,8 +23,8 @@ int main()
     ClientApi::Get().Start();
     cout << "Press Key To Target" << endl;
     getchar();
-    map<string, shared_ptr<Sender> >::const_iterator itSender = ClientApi::Get().GetSenderBegin();
-    map<string, shared_ptr<Receiver> >::const_iterator itReceiver = ClientApi::Get().GetReceiverBegin();
+    auto itSender = ClientApi::Get().GetSenderBegin();
+    auto itReceiver = ClientApi::Get().GetReceiverBegin();
 
     if(itSender != ClientApi::Get().GetSenderEnd() && itReceiver != ClientApi::Get().GetReceiverEnd())
     {

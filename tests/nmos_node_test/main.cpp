@@ -7,8 +7,8 @@
 #include "sourceaudio.h"
 #include "flowaudioraw.h"
 #include "device.h"
-#include "sendernode.h"
-#include "receivernode.h"
+#include "sender.h"
+#include "receiver.h"
 #include "../../log/include/log.h"
 
 using namespace std;
@@ -41,8 +41,8 @@ int main()
     pFlow->SetPacketTime(FlowAudioRaw::US_125);
     pFlow->SetMediaClkOffset(0);
 
-    auto pSender = make_shared<SenderNode>("TestSender", "Description", pFlow->GetId(), Sender::RTP_MCAST, pDevice->GetId(), "eth0");
-    auto pReceiver = make_shared<ReceiverNode>("Test Receiver", "TestDescription", Receiver::RTP_MCAST, pDevice->GetId(), Receiver::AUDIO, TransportParamsRTP::CORE | TransportParamsRTP::MULTICAST);
+    auto pSender = make_shared<Sender>("TestSender", "Description", pFlow->GetId(), Sender::RTP_MCAST, pDevice->GetId(), "eth0");
+    auto pReceiver = make_shared<Receiver>("Test Receiver", "TestDescription", Receiver::RTP_MCAST, pDevice->GetId(), Receiver::AUDIO, TransportParamsRTP::CORE | TransportParamsRTP::MULTICAST);
 
     pSender->CreateSDP();
     pSender->MasterEnable(true);

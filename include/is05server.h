@@ -8,8 +8,8 @@
 #include "version.h"
 #include "nmosserver.h"
 
-class SenderNode;
-class ReceiverNode;
+class Sender;
+class Receiver;
 
 class IS05Server : public NmosServer
 {
@@ -55,13 +55,13 @@ class IS05Server : public NmosServer
     private:
         void AddBaseEndpoints();
 
-        std::shared_ptr<SenderNode> GetSender(const url& theUrl);
-        std::shared_ptr<ReceiverNode> GetReceiver(const url& theUrl);
+        std::shared_ptr<Sender> GetSender(const url& theUrl);
+        std::shared_ptr<Receiver> GetReceiver(const url& theUrl);
 
 
 
-        response PatchSender(std::shared_ptr<SenderNode> pSender, const Json::Value& jsRequest);
-        response PatchReceiver(std::shared_ptr<ReceiverNode> pReceiver, const Json::Value& jsRequest);
+        response PatchSender(std::shared_ptr<Sender> pSender, const Json::Value& jsRequest);
+        response PatchReceiver(std::shared_ptr<Receiver> pReceiver, const Json::Value& jsRequest);
         response PostJsonSenders(const Json::Value& jsRequest);
         response PostJsonReceivers(const Json::Value& jsRequest);
 

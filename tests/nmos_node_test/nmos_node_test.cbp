@@ -93,6 +93,7 @@
 					<Add library="pthread" />
 					<Add library="restgoose" />
 					<Add library="pml_log" />
+					<Add library="nmos_base" />
 					<Add directory="../../lib" />
 					<Add directory="../../../Restgoose/lib" />
 					<Add directory="../../../log/lib" />

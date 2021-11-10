@@ -7,8 +7,8 @@
 #include "device.h"
 #include "source.h"
 #include "flow.h"
-#include "receivernode.h"
-#include "sendernode.h"
+#include "receiver.h"
+#include "sender.h"
 #include "log.h"
 #include "eventposter.h"
 #include "utils.h"
@@ -251,11 +251,11 @@ response IS04Server::PutNmosReceiver(const query& theQuery, const postData& theD
     //does the sender have a manifest??
         std::string sSdp("");
         std::string sSenderId("");
-        std::shared_ptr<SenderNode> pRemoteSender(0);
+        std::shared_ptr<Sender> pRemoteSender(0);
         //Have we been sent a sender??
         if(jsRequest.isObject() && jsRequest["id"].isString())
         {
-            pRemoteSender = std::make_shared<SenderNode>();
+            pRemoteSender = std::make_shared<Sender>();
             pRemoteSender->UpdateFromJson(jsRequest);
 
             sSenderId = pRemoteSender->GetId();

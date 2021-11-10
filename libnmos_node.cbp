@@ -52,6 +52,7 @@
 					<Add library="restgoose" />
 					<Add library="pthread" />
 					<Add library="pml_log" />
+					<Add library="libnmos_base" />
 				</Linker>
 			</Target>
 			<Target title="Windows Debug">
@@ -117,127 +118,28 @@
 			<Add directory="../Restgoose/lib" />
 			<Add directory="../log/lib" />
 		</Linker>
-		<Unit filename="external/jsoncpp/jsoncpp.cpp" />
-		<Unit filename="external/uuid/guid.cpp" />
-		<Unit filename="external/uuid/guid.h" />
-		<Unit filename="external/uuid/md5.cpp" />
-		<Unit filename="external/uuid/md5.h" />
 		<Unit filename="include/activator.h" />
-		<Unit filename="include/avahibrowser.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="include/avahipublisher.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="include/bonjourbrowser.h">
-			<Option target="Windows Debug" />
-			<Option target="Windows Release" />
-		</Unit>
-		<Unit filename="include/bonjourpublisher.h">
-			<Option target="Windows Debug" />
-			<Option target="Windows Release" />
-		</Unit>
-		<Unit filename="include/connection.h" />
-		<Unit filename="include/constraint.h" />
-		<Unit filename="include/curlregister.h" />
-		<Unit filename="include/device.h" />
-		<Unit filename="include/eventposter.h">
-			<Option virtualFolder="nmos/" />
-		</Unit>
-		<Unit filename="include/flow.h" />
-		<Unit filename="include/flowaudio.h" />
-		<Unit filename="include/flowaudiocoded.h" />
-		<Unit filename="include/flowaudioraw.h" />
-		<Unit filename="include/flowdata.h" />
-		<Unit filename="include/flowdatasdianc.h" />
-		<Unit filename="include/flowmux.h" />
 		<Unit filename="include/flowsdpcreator.h" />
 		<Unit filename="include/flowsdpcreatornode.h" />
-		<Unit filename="include/flowvideo.h" />
-		<Unit filename="include/flowvideocoded.h" />
-		<Unit filename="include/flowvideoraw.h" />
-		<Unit filename="include/ioresource.h" />
 		<Unit filename="include/is04server.h" />
 		<Unit filename="include/is05server.h" />
-		<Unit filename="include/libnmos.h" />
-		<Unit filename="include/mdns.h" />
 		<Unit filename="include/nmosdlldefine.h" />
 		<Unit filename="include/nmosserver.h" />
 		<Unit filename="include/nmosthread.h" />
 		<Unit filename="include/nodeapi.h" />
 		<Unit filename="include/nodezcposter.h" />
-		<Unit filename="include/receiver.h" />
 		<Unit filename="include/receivernode.h" />
-		<Unit filename="include/resource.h" />
-		<Unit filename="include/resourceholder.h" />
-		<Unit filename="include/sdp.h" />
-		<Unit filename="include/self.h" />
-		<Unit filename="include/sender.h" />
 		<Unit filename="include/sendernode.h" />
-		<Unit filename="include/source.h" />
-		<Unit filename="include/sourceaudio.h" />
-		<Unit filename="include/sourcegeneric.h" />
-		<Unit filename="include/transportparams.h" />
-		<Unit filename="include/utils.h" />
-		<Unit filename="include/version.h" />
-		<Unit filename="include/zcposter.h" />
 		<Unit filename="src/activator.cpp" />
-		<Unit filename="src/connection.cpp" />
-		<Unit filename="src/constraint.cpp" />
-		<Unit filename="src/curlregister.cpp" />
-		<Unit filename="src/device.cpp" />
-		<Unit filename="src/eventposter.cpp" />
-		<Unit filename="src/flow.cpp" />
-		<Unit filename="src/flowaudio.cpp" />
-		<Unit filename="src/flowaudiocoded.cpp" />
-		<Unit filename="src/flowaudioraw.cpp" />
-		<Unit filename="src/flowdata.cpp" />
-		<Unit filename="src/flowdatasdianc.cpp" />
-		<Unit filename="src/flowmux.cpp" />
 		<Unit filename="src/flowsdpcreatornode.cpp" />
-		<Unit filename="src/flowvideo.cpp" />
-		<Unit filename="src/flowvideocoded.cpp" />
-		<Unit filename="src/flowvideoraw.cpp" />
-		<Unit filename="src/gnu/avahibrowser.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="src/gnu/avahipublisher.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="src/ioresource.cpp" />
 		<Unit filename="src/is04server.cpp" />
 		<Unit filename="src/is05server.cpp" />
 		<Unit filename="src/nmosserver.cpp" />
 		<Unit filename="src/nmosthread.cpp" />
 		<Unit filename="src/nodeapi.cpp" />
 		<Unit filename="src/nodezcposter.cpp" />
-		<Unit filename="src/receiver.cpp" />
 		<Unit filename="src/receivernode.cpp" />
-		<Unit filename="src/resource.cpp" />
-		<Unit filename="src/resourceholder.cpp" />
-		<Unit filename="src/sdp.cpp" />
-		<Unit filename="src/self.cpp" />
-		<Unit filename="src/sender.cpp" />
 		<Unit filename="src/sendernode.cpp" />
-		<Unit filename="src/source.cpp" />
-		<Unit filename="src/sourceaudio.cpp" />
-		<Unit filename="src/sourcegeneric.cpp" />
-		<Unit filename="src/transportparams.cpp" />
-		<Unit filename="src/utils.cpp" />
-		<Unit filename="src/version.cpp" />
-		<Unit filename="src/windows/bonjourbrowser.cpp">
-			<Option target="Windows Debug" />
-			<Option target="Windows Release" />
-		</Unit>
-		<Unit filename="src/windows/bonjourpublisher.cpp">
-			<Option target="Windows Debug" />
-			<Option target="Windows Release" />
-		</Unit>
-		<Unit filename="src/zcposter.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />

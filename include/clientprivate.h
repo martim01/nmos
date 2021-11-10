@@ -8,9 +8,9 @@
 #include "self.h"
 #include "device.h"
 #include "source.h"
-#include "sender.h"
+#include "senderbase.h"
 #include "flow.h"
-#include "receiver.h"
+#include "receiverbase.h"
 #include "clientposter.h"
 
 
@@ -43,8 +43,8 @@ class ClientApiImpl
         void AddDevices(std::list<std::shared_ptr<Device> >& lstAdded, std::list<std::shared_ptr<Device> >& lstUpdated, const std::string& sIpAddress, const std::string& sData);
         void AddSources(std::list<std::shared_ptr<Source> >& lstAdded, std::list<std::shared_ptr<Source> >& lstUpdated, const std::string& sIpAddress, const std::string& sData);
         void AddFlows(std::list<std::shared_ptr<Flow> >& lstAdded, std::list<std::shared_ptr<Flow> >& lstUpdated, const std::string& sIpAddress, const std::string& sData);
-        void AddSenders(std::list<std::shared_ptr<Sender> >& lstAdded, std::list<std::shared_ptr<Sender> >& lstUpdated, const std::string& sIpAddress, const std::string& sData);
-        void AddReceivers(std::list<std::shared_ptr<Receiver> >& lstAdded, std::list<std::shared_ptr<Receiver> >& lstUpdated, const std::string& sIpAddress, const std::string& sData);
+        void AddSenders(std::list<std::shared_ptr<SenderBase> >& lstAdded, std::list<std::shared_ptr<SenderBase> >& lstUpdated, const std::string& sIpAddress, const std::string& sData);
+        void AddReceivers(std::list<std::shared_ptr<ReceiverBase> >& lstAdded, std::list<std::shared_ptr<ReceiverBase> >& lstUpdated, const std::string& sIpAddress, const std::string& sData);
 
         void StoreDevices(const std::string& sIpAddress);
         void StoreSources(const std::string& sIpAddress);
@@ -55,8 +55,8 @@ class ClientApiImpl
         void RemoveStaleDevices(std::list<std::shared_ptr<Device> >& lstRemoved);
         void RemoveStaleSources(std::list<std::shared_ptr<Source> >& lstRemoved);
         void RemoveStaleFlows(std::list<std::shared_ptr<Flow> >& lstRemoved);
-        void RemoveStaleSenders(std::list<std::shared_ptr<Sender> >& lstRemoved);
-        void RemoveStaleReceivers(std::list<std::shared_ptr<Receiver> >& lstRemoved);
+        void RemoveStaleSenders(std::list<std::shared_ptr<SenderBase> >& lstRemoved);
+        void RemoveStaleReceivers(std::list<std::shared_ptr<ReceiverBase> >& lstRemoved);
 
         template<class T> bool RunQuery(std::list<std::shared_ptr<T> >& lstAdded, std::list<std::shared_ptr<T> >& lstUpdated, std::list<std::shared_ptr<T> >& lstRemoved, int nResourceType);
 
@@ -117,13 +117,13 @@ class ClientApiImpl
         std::map<std::string, std::shared_ptr<Flow> >::const_iterator GetFlowEnd();
         std::map<std::string, std::shared_ptr<Flow> >::const_iterator FindFlow(const std::string& sUid);
 
-        std::map<std::string, std::shared_ptr<Sender> >::const_iterator GetSenderBegin();
-        std::map<std::string, std::shared_ptr<Sender> >::const_iterator GetSenderEnd();
-        std::map<std::string, std::shared_ptr<Sender> >::const_iterator FindSender(const std::string& sUid);
+        std::map<std::string, std::shared_ptr<SenderBase> >::const_iterator GetSenderBegin();
+        std::map<std::string, std::shared_ptr<SenderBase> >::const_iterator GetSenderEnd();
+        std::map<std::string, std::shared_ptr<SenderBase> >::const_iterator FindSender(const std::string& sUid);
 
-        std::map<std::string, std::shared_ptr<Receiver> >::const_iterator GetReceiverBegin();
-        std::map<std::string, std::shared_ptr<Receiver> >::const_iterator GetReceiverEnd();
-        std::map<std::string, std::shared_ptr<Receiver> >::const_iterator FindReceiver(const std::string& sUid);
+        std::map<std::string, std::shared_ptr<ReceiverBase> >::const_iterator GetReceiverBegin();
+        std::map<std::string, std::shared_ptr<ReceiverBase> >::const_iterator GetReceiverEnd();
+        std::map<std::string, std::shared_ptr<ReceiverBase> >::const_iterator FindReceiver(const std::string& sUid);
 
 
         void HandleConnect(const std::string& sSenderId, const std::string& sReceiverId, bool bSuccess, const std::string& sResponse);
@@ -143,11 +143,11 @@ class ClientApiImpl
         void RemoveResources(const std::string& sIpAddress);
         void StoreNodeVersion(const std::string& sIpAddress, std::shared_ptr<dnsInstance> pInstance);
 
-        std::string GetTargetUrl(std::shared_ptr<Receiver> pReceiver, ApiVersion& version);
+        std::string GetTargetUrl(std::shared_ptr<ReceiverBase> pReceiver, ApiVersion& version);
         std::string GetConnectionUrlSingle(std::shared_ptr<Resource> pResource, const std::string& sDirection, const std::string& sEndpoint, ApiVersion& version);
 
-        std::shared_ptr<Sender> GetSender(const std::string& sSenderId);
-        std::shared_ptr<Receiver> GetReceiver(const std::string& sSenderId);
+        std::shared_ptr<SenderBase> GetSender(const std::string& sSenderId);
+        std::shared_ptr<ReceiverBase> GetReceiver(const std::string& sSenderId);
 
         bool RequestSender(const std::string& sSenderId, ClientPoster::enumCurlType eType);
         bool RequestReceiver(const std::string& sReceiverId, ClientPoster::enumCurlType eType);
@@ -192,8 +192,8 @@ class ClientApiImpl
         ClientHolder<Device> m_devices;
         ClientHolder<Source> m_sources;
         ClientHolder<Flow> m_flows;
-        ClientHolder<Sender> m_senders;
-        ClientHolder<Receiver> m_receivers;
+        ClientHolder<SenderBase> m_senders;
+        ClientHolder<ReceiverBase> m_receivers;
 
 
         bool m_bRun;

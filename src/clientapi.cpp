@@ -91,32 +91,32 @@ std::map<std::string, std::shared_ptr<Flow> >::const_iterator ClientApi::FindFlo
     return m_pApi->FindFlow(sUid);
 }
 
-std::map<std::string, std::shared_ptr<Sender> >::const_iterator ClientApi::GetSenderBegin()
+std::map<std::string, std::shared_ptr<SenderBase> >::const_iterator ClientApi::GetSenderBegin()
 {
     return m_pApi->GetSenderBegin();
 }
 
-std::map<std::string, std::shared_ptr<Sender> >::const_iterator ClientApi::GetSenderEnd()
+std::map<std::string, std::shared_ptr<SenderBase> >::const_iterator ClientApi::GetSenderEnd()
 {
     return m_pApi->GetSenderEnd();
 }
 
-std::map<std::string, std::shared_ptr<Sender> >::const_iterator ClientApi::FindSender(const std::string& sUid)
+std::map<std::string, std::shared_ptr<SenderBase> >::const_iterator ClientApi::FindSender(const std::string& sUid)
 {
     return m_pApi->FindSender(sUid);
 }
 
-std::map<std::string, std::shared_ptr<Receiver> >::const_iterator ClientApi::GetReceiverBegin()
+std::map<std::string, std::shared_ptr<ReceiverBase> >::const_iterator ClientApi::GetReceiverBegin()
 {
     return m_pApi->GetReceiverBegin();
 }
 
-std::map<std::string, std::shared_ptr<Receiver> >::const_iterator ClientApi::GetReceiverEnd()
+std::map<std::string, std::shared_ptr<ReceiverBase> >::const_iterator ClientApi::GetReceiverEnd()
 {
     return m_pApi->GetReceiverEnd();
 }
 
-std::map<std::string, std::shared_ptr<Receiver> >::const_iterator ClientApi::FindReceiver(const std::string& sUid)
+std::map<std::string, std::shared_ptr<ReceiverBase> >::const_iterator ClientApi::FindReceiver(const std::string& sUid)
 {
     return m_pApi->FindReceiver(sUid);
 }
