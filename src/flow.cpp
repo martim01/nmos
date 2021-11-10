@@ -111,3 +111,8 @@ std::string Flow::CreateSDPLines(unsigned short nRtpPort) const
         return "";
     }
 }
+
+void Flow::SetSdpCreator(std::unique_ptr<FlowSdpCreator> pCreator)
+{
+    m_pSdpCreator = std::move(pCreator);
+}

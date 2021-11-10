@@ -42,6 +42,13 @@
 #include <algorithm>
 #include <numeric>
 #include <memory>
+#include "flowaudiocoded.h"
+#include "flowaudioraw.h"
+#include "flowvideoraw.h"
+#include "flowvideocoded.h"
+#include "flowdatasdianc.h"
+#include "flowmux.h"
+#include "flowsdpcreatornode.h"
 
 using namespace pml::nmos;
 using namespace std::placeholders;
@@ -994,6 +1001,8 @@ bool NodeApi::AddFlow(shared_ptr<Flow> pResource)
 {
     if(m_devices.ResourceExists(pResource->GetParentResourceId()) && m_sources.ResourceExists(pResource->GetSourceId()))
     {
+        //add the sdp creatpr - @tod there must be a better way of doing this
+        SetSdpCreator(pResource);
         m_flows.AddResource(pResource);
 
         //add the discovery endpoints
@@ -1166,4 +1175,22 @@ Json::Value NodeApi::JsonConnectionVersions() const
         jsVersion.append(pairServer.first.GetVersionAsString()+"/");
     }
     return jsVersion;
+}
+
+
+void NodeApi::SetSdpCreator(std::shared_ptr<Flow> pFlow)
+{
+    auto pFlowAudioCoded = std::dynamic_pointer_cast<FlowAudioCoded>(pFlow);
+    if(pFlowAudioCoded)
+    {
+        pFlowAudioCoded->SetSdpCreator(std::make_unique<FlowAudioCodedSdpCreator>(pFlowAudioCoded));
+        return;
+    }
+
+    auto pFlowAudioRaw = std::dynamic_pointer_cast<FlowAudioRaw>(pFlow);
+    if(pFlowAudioRaw)
+    {
+        pFlowAudioRaw->SetSdpCreator(std::make_unique<FlowAudioRawSdpCreator>(pFlowAudioRaw));
+        return;
+    }
 }

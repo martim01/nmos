@@ -324,7 +324,7 @@ void DisconnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const s
         connectionSender aCon(connection::FP_ACTIVATION | connection::FP_ENABLE | connection::FP_TRANSPORT_PARAMS);
         aCon.eActivate = connection::ACT_NOW;
         aCon.bMasterEnable = true;
-        aCon.tpSender.bRtpEnabled = true;
+        aCon.tpSender.bRtpnabled = true;
 
         auto curlresp = CurlRegister::PutPatch(sSenderStage, ConvertFromJson(aCon.GetJson(ApiVersion(1,0))), false, "");
         if(curlresp.nCode != 200)

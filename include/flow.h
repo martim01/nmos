@@ -36,6 +36,8 @@ namespace pml
 
                 std::string CreateSDPLines(unsigned short nRtpPort) const;
 
+                void SetSdpCreator(std::unique_ptr<FlowSdpCreator> pCreator);
+
             protected:
                 unsigned long m_nMediaClkOffset;
                 std::unique_ptr<FlowSdpCreator> m_pSdpCreator;

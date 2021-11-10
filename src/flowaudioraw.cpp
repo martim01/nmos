@@ -4,19 +4,13 @@
 #include "sourceaudio.h"
 
 
-#ifdef NMOS_NODE_API
-#include "flowsdpcreatornode.h"
-#endif // NMOS_NODE_API
-
 using namespace pml::nmos;
 FlowAudioRaw::FlowAudioRaw(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId, unsigned int nSampleRate, enumFormat eFormat) :
     FlowAudio(sLabel, sDescription, sSourceId, sDeviceId, nSampleRate),
     m_eFormat(eFormat),
     m_ePacketTime(US_1000)
 {
-    #ifdef NMOS_NODE_API
-    m_pSdpCreator  = std::make_unique<FlowAudioRawSdpCreator>(this);
-    #endif // NMOS_NODE_API
+
 }
 
 FlowAudioRaw::FlowAudioRaw() : FlowAudio()

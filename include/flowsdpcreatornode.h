@@ -1,5 +1,7 @@
 #pragma once
 #include "flowsdpcreator.h"
+#include <memory>
+
 namespace pml
 {
     namespace nmos
@@ -14,22 +16,22 @@ namespace pml
         class FlowAudioCodedSdpCreator : public FlowSdpCreator
         {
             public:
-                FlowAudioCodedSdpCreator(FlowAudioCoded* pFlow) : FlowSdpCreator(), m_pFlow(pFlow){}
+                FlowAudioCodedSdpCreator(std::shared_ptr<FlowAudioCoded> pFlow) : FlowSdpCreator(), m_pFlow(pFlow){}
                 std::string CreateLines(unsigned short nRtpPort) override;
 
             private:
-                FlowAudioCoded* m_pFlow;
+                std::shared_ptr<FlowAudioCoded> m_pFlow;
 
         };
 
         class FlowAudioRawSdpCreator : public FlowSdpCreator
         {
             public:
-                FlowAudioRawSdpCreator(FlowAudioRaw* pFlow) : FlowSdpCreator(), m_pFlow(pFlow){}
+                FlowAudioRawSdpCreator(std::shared_ptr<FlowAudioRaw> pFlow) : FlowSdpCreator(), m_pFlow(pFlow){}
 
                 std::string CreateLines(unsigned short nRtpPort) override;
             private:
-                FlowAudioRaw* m_pFlow;
+                std::shared_ptr<FlowAudioRaw> m_pFlow;
 
         };
 

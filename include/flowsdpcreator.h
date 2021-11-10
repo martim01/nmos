@@ -8,10 +8,10 @@ namespace pml
         class FlowSdpCreator
         {
             public:
-                FlowSdpCreator(){}
-                virtual ~FlowSdpCreator(){}
+                FlowSdpCreator();
+                virtual ~FlowSdpCreator();
 
-                virtual std::string CreateLines(unsigned short nRtpPort)   { return ""; }
+                virtual std::string CreateLines(unsigned short nRtpPort) ;
         };
     };
 };

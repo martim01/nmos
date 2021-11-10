@@ -305,6 +305,8 @@ namespace pml
 
                 void StopRegistrationBrowser();
 
+                void SetSdpCreator(std::shared_ptr<Flow> pFlow);
+
 
                 template<class T> long RegisterResources(ResourceHolder<T>& holder, const ApiVersion& version);
                 template<class T> long ReregisterResources(ResourceHolder<T>& holder, const ApiVersion& version);
