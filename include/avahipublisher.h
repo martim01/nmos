@@ -14,42 +14,47 @@
 static void entry_group_callback(AvahiEntryGroup *g, AvahiEntryGroupState state, AVAHI_GCC_UNUSED void *userdata);
 static void client_callback(AvahiClient *c, AvahiClientState state, AVAHI_GCC_UNUSED void * userdata);
 
-class ServicePublisher
+namespace pml
 {
-    public:
-        ServicePublisher(const std::string& sName, const std::string& sService, unsigned short nPort, const std::string& sHostname);
-        ~ServicePublisher();
+    namespace nmos
+    {
+        class ServicePublisher
+        {
+            public:
+                ServicePublisher(const std::string& sName, const std::string& sService, unsigned short nPort, const std::string& sHostname);
+                ~ServicePublisher();
 
-        bool Start();
-        void Stop();
-        void Modify();
+                bool Start();
+                void Stop();
+                void Modify();
 
-        void AddTxt(const std::string& sKey, const std::string& sValue, bool bModify);
-        void RemoveTxt(const std::string& sKey,bool bModify);
+                void AddTxt(const std::string& sKey, const std::string& sValue, bool bModify);
+                void RemoveTxt(const std::string& sKey,bool bModify);
 
-        void EntryGroupCallback(AvahiEntryGroup* pGroup, AvahiEntryGroupState state);
-        void ClientCallback(AvahiClient* pClient, AvahiClientState state);
+                void EntryGroupCallback(AvahiEntryGroup* pGroup, AvahiEntryGroupState state);
+                void ClientCallback(AvahiClient* pClient, AvahiClientState state);
 
-    private:
+            private:
 
-        void CreateServices();
-        void Collision();
+                void CreateServices();
+                void Collision();
 
-        void ThreadQuit();
+                void ThreadQuit();
 
-        AvahiStringList* GetTxtList();
+                AvahiStringList* GetTxtList();
 
-        AvahiClient* m_pClient;
-        AvahiEntryGroup* m_pGroup;
-        AvahiThreadedPoll* m_pThreadedPoll;
+                AvahiClient* m_pClient;
+                AvahiEntryGroup* m_pGroup;
+                AvahiThreadedPoll* m_pThreadedPoll;
 
-        std::string m_sName;
-        std::string m_sService;
-        unsigned short m_nPort;
-        std::string m_sHostname;
-        char* m_psName;
+                std::string m_sName;
+                std::string m_sService;
+                unsigned short m_nPort;
+                std::string m_sHostname;
+                char* m_psName;
 
-        std::map<std::string, std::string> m_mTxt;
-        //"_nmos-node._tcp"
+                std::map<std::string, std::string> m_mTxt;
+                //"_nmos-node._tcp"
+        };
+    };
 };
-

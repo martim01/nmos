@@ -1,5 +1,6 @@
 #include "flow.h"
 
+using namespace pml::nmos;
 
 Flow::Flow(const std::string& sLabel, const std::string& sDescription, const std::string& sFormat, const std::string& sSourceId, const std::string& sDeviceId) :
     Resource("flow", sLabel, sDescription),

@@ -1,6 +1,7 @@
 #include "clientapi.h"
 #include "clientprivate.h"
 
+using namespace pml::nmos;
 ClientApi& ClientApi::Get()
 {
     static ClientApi api;
@@ -31,14 +32,9 @@ ClientApi::~ClientApi()
 
 }
 
-std::map<std::string, std::shared_ptr<Self> >::const_iterator ClientApi::GetNodeBegin()
+const std::map<std::string, std::shared_ptr<Self> >& ClientApi::GetNodes()
 {
-    return m_pApi->GetNodeBegin();
-}
-
-std::map<std::string, std::shared_ptr<Self> >::const_iterator ClientApi::GetNodeEnd()
-{
-    return m_pApi->GetNodeEnd();
+    return m_pApi->GetNodes();
 }
 
 std::map<std::string, std::shared_ptr<Self> >::const_iterator ClientApi::FindNode(const std::string& sUid)
@@ -46,14 +42,9 @@ std::map<std::string, std::shared_ptr<Self> >::const_iterator ClientApi::FindNod
     return m_pApi->FindNode(sUid);
 }
 
-std::map<std::string, std::shared_ptr<Device> >::const_iterator ClientApi::GetDeviceBegin()
+const std::map<std::string, std::shared_ptr<Device> >& ClientApi::GetDevices()
 {
-    return m_pApi->GetDeviceBegin();
-}
-
-std::map<std::string, std::shared_ptr<Device> >::const_iterator ClientApi::GetDeviceEnd()
-{
-    return m_pApi->GetDeviceEnd();
+    return m_pApi->GetDevices();
 }
 
 std::map<std::string, std::shared_ptr<Device> >::const_iterator ClientApi::FindDevice(const std::string& sUid)
@@ -61,59 +52,42 @@ std::map<std::string, std::shared_ptr<Device> >::const_iterator ClientApi::FindD
     return m_pApi->FindDevice(sUid);
 }
 
-std::map<std::string, std::shared_ptr<Source> >::const_iterator ClientApi::GetSourceBegin()
+const std::map<std::string, std::shared_ptr<Source> >& ClientApi::GetSources()
 {
-    return m_pApi->GetSourceBegin();
+    return m_pApi->GetSources();
 }
 
-std::map<std::string, std::shared_ptr<Source> >::const_iterator ClientApi::GetSourceEnd()
-{
-    return m_pApi->GetSourceEnd();
-}
 
 std::map<std::string, std::shared_ptr<Source> >::const_iterator ClientApi::FindSource(const std::string& sUid)
 {
     return m_pApi->FindSource(sUid);
 }
 
-std::map<std::string, std::shared_ptr<Flow> >::const_iterator ClientApi::GetFlowBegin()
+const std::map<std::string, std::shared_ptr<Flow> >& ClientApi::GetFlows()
 {
-    return m_pApi->GetFlowBegin();
+    return m_pApi->GetFlows();
 }
 
-std::map<std::string, std::shared_ptr<Flow> >::const_iterator ClientApi::GetFlowEnd()
-{
-    return m_pApi->GetFlowEnd();
-}
 
 std::map<std::string, std::shared_ptr<Flow> >::const_iterator ClientApi::FindFlow(const std::string& sUid)
 {
     return m_pApi->FindFlow(sUid);
 }
 
-std::map<std::string, std::shared_ptr<SenderBase> >::const_iterator ClientApi::GetSenderBegin()
+const std::map<std::string, std::shared_ptr<SenderBase> >& ClientApi::GetSenders()
 {
-    return m_pApi->GetSenderBegin();
+    return m_pApi->GetSenders();
 }
 
-std::map<std::string, std::shared_ptr<SenderBase> >::const_iterator ClientApi::GetSenderEnd()
-{
-    return m_pApi->GetSenderEnd();
-}
 
 std::map<std::string, std::shared_ptr<SenderBase> >::const_iterator ClientApi::FindSender(const std::string& sUid)
 {
     return m_pApi->FindSender(sUid);
 }
 
-std::map<std::string, std::shared_ptr<ReceiverBase> >::const_iterator ClientApi::GetReceiverBegin()
+const std::map<std::string, std::shared_ptr<ReceiverBase> >& ClientApi::GetReceivers()
 {
-    return m_pApi->GetReceiverBegin();
-}
-
-std::map<std::string, std::shared_ptr<ReceiverBase> >::const_iterator ClientApi::GetReceiverEnd()
-{
-    return m_pApi->GetReceiverEnd();
+    return m_pApi->GetReceivers();
 }
 
 std::map<std::string, std::shared_ptr<ReceiverBase> >::const_iterator ClientApi::FindReceiver(const std::string& sUid)

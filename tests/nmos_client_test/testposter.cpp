@@ -20,157 +20,146 @@ void TestPoster::ModeChanged(bool bQueryApi)
         cout << "++++++P2P MODE++++++" << endl;
     }
 }
-void TestPoster::NodeChanged(const std::list<std::shared_ptr<Self> >& lstNodesAdded, const std::list<std::shared_ptr<Self> >& lstNodesUpdated, const std::list<std::shared_ptr<Self> >& lstNodesRemoved)
+void TestPoster::NodeChanged(const std::list<std::shared_ptr<pml::nmos::Self> >& lstNodesAdded, const std::list<std::shared_ptr<pml::nmos::Self> >& lstNodesUpdated, const std::list<std::shared_ptr<pml::nmos::Self> >& lstNodesRemoved)
 {
-    Json::FastWriter sw;
-
     cout << "++++++NODES ADDED++++++" << endl;
-    for(std::list<std::shared_ptr<Self> >::const_iterator itResource = lstNodesAdded.begin(); itResource != lstNodesAdded.end(); ++itResource)
+    for(auto pResource : lstNodesAdded)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        cout << pResource->GetJson(pml::nmos::ApiVersion(1,2)) << endl;
     }
     cout << "++++++++++++++++++++++++" << endl;
 
     cout << "++++++NODES UPDATED++++++" << endl;
-    for(std::list<std::shared_ptr<Self> >::const_iterator itResource = lstNodesUpdated.begin(); itResource != lstNodesUpdated.end(); ++itResource)
+    for(auto pResource :lstNodesUpdated)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        cout << pResource->GetJson(pml::nmos::ApiVersion(1,2)) << endl;
     }
 
     cout << "++++++NODES REMOVE++++++" << endl;
-    for(std::list<std::shared_ptr<Self> >::const_iterator itResource = lstNodesRemoved.begin(); itResource != lstNodesRemoved.end(); ++itResource)
+    for(auto pResource : lstNodesRemoved)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        cout << pResource->GetJson(pml::nmos::ApiVersion(1,2)) << endl;
     }
 
     cout << "++++++++++++++++++++++++" << endl;
 }
 
-void TestPoster::DeviceChanged(const std::list<std::shared_ptr<Device> >& lstDevicesAdded, const std::list<std::shared_ptr<Device> >& lstDevicesUpdated, const std::list<std::shared_ptr<Device> >& lstDevicesRemoved)
+void TestPoster::DeviceChanged(const std::list<std::shared_ptr<pml::nmos::Device> >& lstDevicesAdded, const std::list<std::shared_ptr<pml::nmos::Device> >& lstDevicesUpdated, const std::list<std::shared_ptr<pml::nmos::Device> >& lstDevicesRemoved)
 {
-    Json::FastWriter sw;
 
     cout << "++++++DEVICES ADDED++++++" << endl;
-    for(std::list<std::shared_ptr<Device> >::const_iterator itResource = lstDevicesAdded.begin(); itResource != lstDevicesAdded.end(); ++itResource)
+    for(auto pResource : lstDevicesAdded)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        cout << pResource->GetJson(pml::nmos::ApiVersion(1,2)) << endl;
     }
     cout << "++++++++++++++++++++++++" << endl;
 
     cout << "++++++DEVICES UPDATED++++++" << endl;
-    for(std::list<std::shared_ptr<Device> >::const_iterator itResource = lstDevicesUpdated.begin(); itResource != lstDevicesUpdated.end(); ++itResource)
+    for(auto pResource : lstDevicesUpdated)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        cout << pResource->GetJson(pml::nmos::ApiVersion(1,2)) << endl;
     }
 
     cout << "++++++DEVICES REMOVE++++++" << endl;
-    for(std::list<std::shared_ptr<Device> >::const_iterator itResource = lstDevicesRemoved.begin(); itResource != lstDevicesRemoved.end(); ++itResource)
+    for(auto pResource : lstDevicesRemoved)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        cout << pResource->GetJson(pml::nmos::ApiVersion(1,2)) << endl;
     }
 
     cout << "++++++++++++++++++++++++" << endl;
 }
 
-void TestPoster::SourceChanged(const std::list<std::shared_ptr<Source> >& lstSourcesAdded, const std::list<std::shared_ptr<Source> >& lstSourcesUpdated, const std::list<std::shared_ptr<Source> >& lstSourcesRemoved)
+void TestPoster::SourceChanged(const std::list<std::shared_ptr<pml::nmos::Source> >& lstSourcesAdded, const std::list<std::shared_ptr<pml::nmos::Source> >& lstSourcesUpdated, const std::list<std::shared_ptr<pml::nmos::Source> >& lstSourcesRemoved)
 {
-    Json::FastWriter sw;
-
     cout << "++++++SOURCES ADDED++++++" << endl;
-    for(std::list<std::shared_ptr<Source> >::const_iterator itResource = lstSourcesAdded.begin(); itResource != lstSourcesAdded.end(); ++itResource)
+    for(auto pResource : lstSourcesAdded)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        cout << pResource->GetJson(pml::nmos::ApiVersion(1,2)) << endl;
     }
     cout << "++++++++++++++++++++++++" << endl;
 
     cout << "++++++SOURCES UPDATED++++++" << endl;
-    for(std::list<std::shared_ptr<Source> >::const_iterator itResource = lstSourcesUpdated.begin(); itResource != lstSourcesUpdated.end(); ++itResource)
+    for(auto pResource : lstSourcesUpdated)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        cout << pResource->GetJson(pml::nmos::ApiVersion(1,2)) << endl;
     }
 
     cout << "++++++SOURCES REMOVE++++++" << endl;
-    for(std::list<std::shared_ptr<Source> >::const_iterator itResource = lstSourcesRemoved.begin(); itResource != lstSourcesRemoved.end(); ++itResource)
+    for(auto pResource : lstSourcesRemoved)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        cout << pResource->GetJson(pml::nmos::ApiVersion(1,2)) << endl;
     }
 
     cout << "++++++++++++++++++++++++" << endl;
 }
 
-void TestPoster::FlowChanged(const std::list<std::shared_ptr<Flow> >& lstFlowsAdded, const std::list<std::shared_ptr<Flow> >& lstFlowsUpdated, const std::list<std::shared_ptr<Flow> >& lstFlowsRemoved)
+void TestPoster::FlowChanged(const std::list<std::shared_ptr<pml::nmos::Flow> >& lstFlowsAdded, const std::list<std::shared_ptr<pml::nmos::Flow> >& lstFlowsUpdated, const std::list<std::shared_ptr<pml::nmos::Flow> >& lstFlowsRemoved)
 {
-    Json::FastWriter sw;
-
     cout << "++++++FLOWS ADDED++++++" << endl;
-    for(std::list<std::shared_ptr<Flow> >::const_iterator itResource = lstFlowsAdded.begin(); itResource != lstFlowsAdded.end(); ++itResource)
+    for(auto pResource : lstFlowsAdded)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        cout << pResource->GetJson(pml::nmos::ApiVersion(1,2)) << endl;
     }
     cout << "++++++++++++++++++++++++" << endl;
 
     cout << "++++++FLOWS UPDATED++++++" << endl;
-    for(std::list<std::shared_ptr<Flow> >::const_iterator itResource = lstFlowsUpdated.begin(); itResource != lstFlowsUpdated.end(); ++itResource)
+    for(auto pResource : lstFlowsUpdated)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        cout << pResource->GetJson(pml::nmos::ApiVersion(1,2)) << endl;
     }
 
     cout << "++++++FLOWS REMOVE++++++" << endl;
-    for(std::list<std::shared_ptr<Flow> >::const_iterator itResource = lstFlowsRemoved.begin(); itResource != lstFlowsRemoved.end(); ++itResource)
+    for(auto pResource : lstFlowsRemoved)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        cout << pResource->GetJson(pml::nmos::ApiVersion(1,2)) << endl;
     }
 
     cout << "++++++++++++++++++++++++" << endl;
 }
 
-void TestPoster::SenderChanged(const std::list<std::shared_ptr<SenderBase> >& lstSendersAdded, const std::list<std::shared_ptr<SenderBase> >& lstSendersUpdated, const std::list<std::shared_ptr<SenderBase> >& lstSendersRemoved)
+void TestPoster::SenderChanged(const std::list<std::shared_ptr<pml::nmos::SenderBase> >& lstSendersAdded, const std::list<std::shared_ptr<pml::nmos::SenderBase> >& lstSendersUpdated, const std::list<std::shared_ptr<pml::nmos::SenderBase> >& lstSendersRemoved)
 {
-    Json::FastWriter sw;
-
     cout << "++++++SENDERS ADDED++++++" << endl;
-    for(std::list<std::shared_ptr<SenderBase> >::const_iterator itResource = lstSendersAdded.begin(); itResource != lstSendersAdded.end(); ++itResource)
+    for(auto pResource : lstSendersAdded)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        cout << pResource->GetJson(pml::nmos::ApiVersion(1,2)) << endl;
     }
     cout << "++++++++++++++++++++++++" << endl;
 
     cout << "++++++SENDERS UPDATED++++++" << endl;
-    for(std::list<std::shared_ptr<SenderBase> >::const_iterator itResource = lstSendersUpdated.begin(); itResource != lstSendersUpdated.end(); ++itResource)
+    for(auto pResource : lstSendersUpdated)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        cout << pResource->GetJson(pml::nmos::ApiVersion(1,2)) << endl;
     }
 
     cout << "++++++SENDERS REMOVE++++++" << endl;
-    for(std::list<std::shared_ptr<SenderBase> >::const_iterator itResource = lstSendersRemoved.begin(); itResource != lstSendersRemoved.end(); ++itResource)
+    for(auto pResource : lstSendersRemoved)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        cout << pResource->GetJson(pml::nmos::ApiVersion(1,2)) << endl;
     }
 
     cout << "++++++++++++++++++++++++" << endl;
 }
 
-void TestPoster::ReceiverChanged(const std::list<std::shared_ptr<ReceiverBase> >& lstReceiversAdded, const std::list<std::shared_ptr<ReceiverBase> >& lstReceiversUpdated, const std::list<std::shared_ptr<ReceiverBase> >& lstReceiversRemoved)
+void TestPoster::ReceiverChanged(const std::list<std::shared_ptr<pml::nmos::ReceiverBase> >& lstReceiversAdded, const std::list<std::shared_ptr<pml::nmos::ReceiverBase> >& lstReceiversUpdated, const std::list<std::shared_ptr<pml::nmos::ReceiverBase> >& lstReceiversRemoved)
 {
-    Json::FastWriter sw;
-
     cout << "++++++RECEIVERS ADDED++++++" << endl;
-    for(std::list<std::shared_ptr<ReceiverBase> >::const_iterator itResource = lstReceiversAdded.begin(); itResource != lstReceiversAdded.end(); ++itResource)
+    for(auto pResource : lstReceiversAdded)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        cout << pResource->GetJson(pml::nmos::ApiVersion(1,2)) << endl;
     }
     cout << "++++++++++++++++++++++++" << endl;
 
     cout << "++++++RECEIVERS UPDATED++++++" << endl;
-    for(std::list<std::shared_ptr<ReceiverBase> >::const_iterator itResource = lstReceiversUpdated.begin(); itResource != lstReceiversUpdated.end(); ++itResource)
+    for(auto pResource : lstReceiversUpdated)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        cout << pResource->GetJson(pml::nmos::ApiVersion(1,2)) << endl;
     }
 
     cout << "++++++RECEIVERS REMOVE++++++" << endl;
-    for(std::list<std::shared_ptr<ReceiverBase> >::const_iterator itResource = lstReceiversRemoved.begin(); itResource != lstReceiversRemoved.end(); ++itResource)
+    for(auto pResource : lstReceiversRemoved)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        cout << pResource->GetJson(pml::nmos::ApiVersion(1,2)) << endl;
     }
 
     cout << "++++++++++++++++++++++++" << endl;

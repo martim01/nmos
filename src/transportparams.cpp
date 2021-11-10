@@ -2,6 +2,7 @@
 #include "log.h"
 #include "utils.h"
 
+using namespace pml::nmos;
 
 const std::string TransportParamsRTP::STR_FEC_MODE[2] = {"1D", "2D"};
 const std::string TransportParamsRTPSender::STR_FEC_TYPE[2] = {"XOR", "Reed-Solomon"};

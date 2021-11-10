@@ -8,7 +8,7 @@
 #include "log.h"
 
 using namespace std;
-
+using namespace pml::nmos;
 
 
 void DNSSD_API IterateServiceTypes( DNSServiceRef sdRef, DNSServiceFlags flags, uint32_t interfaceIndex, DNSServiceErrorType errorCode, const char *serviceName, const char *regtype, const char *replyDomain, void *context )

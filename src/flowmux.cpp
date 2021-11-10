@@ -1,4 +1,5 @@
 #include "flowmux.h"
+using namespace pml::nmos;
 
 FlowMux::FlowMux(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId, const std::string& sMediaType) :
     Flow(sLabel, sDescription, "urn:x-nmos:format:mux", sSourceId, sDeviceId),

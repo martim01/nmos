@@ -1,11 +1,17 @@
 #pragma once
 #include <string>
 
-class FlowSdpCreator
+namespace pml
 {
-    public:
-        FlowSdpCreator(){}
-        virtual ~FlowSdpCreator(){}
+    namespace nmos
+    {
+        class FlowSdpCreator
+        {
+            public:
+                FlowSdpCreator(){}
+                virtual ~FlowSdpCreator(){}
 
-        virtual std::string CreateLines(unsigned short nRtpPort)   { return ""; }
+                virtual std::string CreateLines(unsigned short nRtpPort)   { return ""; }
+        };
+    };
 };

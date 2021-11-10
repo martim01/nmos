@@ -5,6 +5,8 @@
 #include <thread>
 #include "eventposter.h"
 
+using namespace pml::nmos;
+
 const std::string CurlRegister::STR_RESOURCE[7] = {"nodes", "devices", "sources", "flows", "senders", "receivers", "subscriptions"};
 
 static size_t WriteCallback(void* pContents, size_t nSize, size_t nmemb, std::string* pData)

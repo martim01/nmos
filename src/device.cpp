@@ -1,5 +1,7 @@
 #include "device.h"
 
+using namespace pml::nmos;
+
 const std::string Device::STR_TYPE[2] = {"urn:x-nmos:device:generic", "urn:x-nmos:device:pipeline"};
 
 Device::Device(const std::string& sLabel, const std::string& sDescription, enumType eType, const std::string& sNodeId) :

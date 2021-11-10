@@ -10,6 +10,7 @@
 #include <vector>
 #include "source.h"
 
+using namespace pml::nmos;
 const std::string SenderBase::STR_TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash"};
 
 

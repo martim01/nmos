@@ -1,5 +1,7 @@
 #include "flowdata.h"
 
+using namespace pml::nmos;
+
 FlowData::FlowData(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId, const std::string& sMediaType) :
     Flow(sLabel, sDescription, "urn:x-nmos:format:data", sSourceId, sDeviceId),
     m_sMediaType(sMediaType)

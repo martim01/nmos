@@ -3,18 +3,23 @@
 #include "nmosdlldefine.h"
 #include <list>
 
-class NMOS_EXPOSE FlowDataSdiAnc : public FlowData
+namespace pml
 {
-    public:
-        FlowDataSdiAnc(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId);
-        FlowDataSdiAnc();
-        virtual bool UpdateFromJson(const Json::Value& jsData);
-        virtual bool Commit(const ApiVersion& version);
+    namespace nmos
+    {
+        class NMOS_EXPOSE FlowDataSdiAnc : public FlowData
+        {
+            public:
+                FlowDataSdiAnc(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId);
+                FlowDataSdiAnc();
+                virtual bool UpdateFromJson(const Json::Value& jsData);
+                virtual bool Commit(const ApiVersion& version);
 
-    private:
-        //@TODO identification words
-        std::list<std::pair<std::string, std::string> > m_lstWords;
+            private:
+                //@TODO identification words
+                std::list<std::pair<std::string, std::string> > m_lstWords;
+        };
+    };
 };
-
 
 

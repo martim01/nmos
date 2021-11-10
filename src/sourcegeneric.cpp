@@ -1,5 +1,7 @@
 #include "sourcegeneric.h"
 
+using namespace pml::nmos;
+
 SourceGeneric::SourceGeneric(const std::string& sLabel, const std::string& sDescription, const std::string& sDeviceId, enumFormat eFormat) :
     Source(sLabel, sDescription, sDeviceId, eFormat)
 {

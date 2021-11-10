@@ -3,6 +3,7 @@
 #include "transportparams.h"
 
 using namespace std;
+using namespace pml::nmos;
 
 constraint::constraint(const std::string& sParam, const std::string& sDescription) :
     m_sParam(sParam),

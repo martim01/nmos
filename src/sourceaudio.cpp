@@ -1,5 +1,6 @@
 #include "sourceaudio.h"
 
+using namespace pml::nmos;
 
 SourceAudio::SourceAudio(const std::string& sLabel, const std::string& sDescription, const std::string& sDeviceId) :
     Source(sLabel, sDescription, sDeviceId, Source::AUDIO),

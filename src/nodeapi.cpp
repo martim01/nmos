@@ -43,7 +43,7 @@
 #include <numeric>
 #include <memory>
 
-
+using namespace pml::nmos;
 using namespace std::placeholders;
 
 response GetRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)

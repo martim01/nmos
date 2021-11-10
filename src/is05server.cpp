@@ -16,6 +16,7 @@
 #include "curlregister.h"
 
 using namespace std::placeholders;
+using namespace pml::nmos;
 
 
 const std::string IS05Server::ROOT = "/x-nmos/connection/";

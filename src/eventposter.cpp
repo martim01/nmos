@@ -1,5 +1,5 @@
 #include "eventposter.h"
-
+using namespace pml::nmos;
 
 void EventPoster::_CurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId)
 {

@@ -4,6 +4,8 @@
 #include "utils.h"
 #include "log.h"
 
+using namespace pml::nmos;
+
 Receiver::Receiver(const std::string& sLabel, const std::string& sDescription, enumTransport eTransport, const std::string& sDeviceId, enumType eFormat, int flagsTransport) :
 ReceiverBase(sLabel, sDescription, eTransport, sDeviceId, eFormat, flagsTransport)
 {

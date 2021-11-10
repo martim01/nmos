@@ -8,7 +8,7 @@
 #include "flow.h"
 #include "receiverbase.h"
 
-using namespace std;
+using namespace pml::nmos;
 
 template<class T> ClientHolder<T>::ClientHolder()
 {
@@ -21,7 +21,7 @@ template<class T> ClientHolder<T>::~ClientHolder()
 }
 
 
-template<class T> bool ClientHolder<T>::AddResource(const string& sIpAddres, shared_ptr<T> pResource)
+template<class T> bool ClientHolder<T>::AddResource(const std::string& sIpAddres, std::shared_ptr<T> pResource)
 {
     if(pResource && m_mResource.insert(make_pair(pResource->GetId(), pResource)).second)
     {
@@ -32,7 +32,7 @@ template<class T> bool ClientHolder<T>::AddResource(const string& sIpAddres, sha
     return false;
 }
 
-template<class T> bool ClientHolder<T>::RemoveResource(shared_ptr<T> pResource)
+template<class T> bool ClientHolder<T>::RemoveResource(std::shared_ptr<T> pResource)
 {
     if(pResource)
     {
@@ -41,9 +41,9 @@ template<class T> bool ClientHolder<T>::RemoveResource(shared_ptr<T> pResource)
     return false;
 }
 
-template<class T> std::shared_ptr<T> ClientHolder<T>::RemoveResource(const string& sUuid)
+template<class T> std::shared_ptr<T> ClientHolder<T>::RemoveResource(const std::string& sUuid)
 {
-    shared_ptr<T> pResource(0);
+    std::shared_ptr<T> pResource(0);
     auto itAddress = m_mResourceIdAddress.find(sUuid);
     if(itAddress != m_mResourceIdAddress.end())
     {
@@ -61,9 +61,9 @@ template<class T> std::shared_ptr<T> ClientHolder<T>::RemoveResource(const strin
     return pResource;
 }
 
-template<class T> void ClientHolder<T>::RemoveResources(const string& sIpAddres, typename std::list<std::shared_ptr<T> >& lstRemoved)
+template<class T> void ClientHolder<T>::RemoveResources(const std::string& sIpAddres, typename std::list<std::shared_ptr<T> >& lstRemoved)
 {
-    set<string> setRemoved;
+    std::set<std::string> setRemoved;
 
     for(auto itResource = m_mmAddressResourceId.lower_bound(sIpAddres); itResource != m_mmAddressResourceId.upper_bound(sIpAddres); ++itResource)
     {
@@ -86,29 +86,29 @@ template<class T> void ClientHolder<T>::RemoveAllResources()
     m_mResource.clear();
 }
 
-template<class T> bool ClientHolder<T>::ResourceExists(const string& sUuid) const
+template<class T> bool ClientHolder<T>::ResourceExists(const std::string& sUuid) const
 {
     return (m_mResource.find(sUuid) != m_mResource.end());
 }
 
-template<class T> typename map<string, shared_ptr<T> >::const_iterator ClientHolder<T>::GetResourceBegin() const
+template<class T> const typename std::map<std::string, std::shared_ptr<T> >& ClientHolder<T>::GetResources() const
 {
-    return m_mResource.begin();
+    return m_mResource;
 }
 
-template<class T> typename map<string, shared_ptr<T> >::const_iterator ClientHolder<T>::GetResourceEnd() const
-{
-    return m_mResource.end();
-}
-
-template<class T> typename map<string, shared_ptr<T> >::const_iterator ClientHolder<T>::FindNmosResource(const string& sUuid) const
+template<class T> typename std::map<std::string, std::shared_ptr<T> >::const_iterator ClientHolder<T>::FindNmosResource(const std::string& sUuid) const
 {
     return m_mResource.find(sUuid);
 }
 
-template<class T> typename map<string, shared_ptr<T> >::iterator ClientHolder<T>::GetNmosResource(const string& sUuid)
+template<class T> typename std::shared_ptr<T> ClientHolder<T>::GetNmosResource(const std::string& sUuid)
 {
-    return m_mResource.find(sUuid);
+    auto itResource = m_mResource.find(sUuid);
+    if(itResource != m_mResource.end())
+    {
+        return itResource->second;
+    }
+    return nullptr;
 }
 
 template<class T> size_t ClientHolder<T>::GetResourceCount() const
@@ -116,30 +116,29 @@ template<class T> size_t ClientHolder<T>::GetResourceCount() const
     return m_mResource.size();
 }
 
-template<class T> shared_ptr<T> ClientHolder<T>::UpdateResource(const Json::Value& jsData)
+template<class T> std::shared_ptr<T> ClientHolder<T>::UpdateResource(const Json::Value& jsData)
 {
-    auto itResource = GetNmosResource(jsData["id"].asString());
-    if(itResource != GetResourceEnd())
+    auto pResource = GetNmosResource(jsData["id"].asString());
+    if(pResource)
     {
-        m_setStored.erase(itResource->first);   //resource still exists so make sure we don't remove it later
+        m_setStored.erase(jsData["id"].asString());   //resource still exists so make sure we don't remove it later
 
-        pmlLog(pml::LOG_INFO) << "NMOS: " << itResource->first << " found already " ;
-        if(itResource->second->UpdateFromJson(jsData))
+        pmlLog(pml::LOG_INFO) << "NMOS: " << jsData["id"].asString() << " found already " ;
+        if(pResource->UpdateFromJson(jsData))
         {
-            pmlLog(pml::LOG_INFO) <<  "NMOS: " << itResource->first << " updated " ;
+            pmlLog(pml::LOG_INFO) <<  "NMOS: " << jsData["id"].asString() << " updated " ;
         }
         else
         {
-            pmlLog(pml::LOG_INFO) << "NMOS: " << "Found node but json data incorrect: " << itResource->second->GetJsonParseError() ;
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "Found node but json data incorrect: " << pResource->GetJsonParseError() ;
         }
-        return itResource->second;
     }
-    return 0;
+    return pResource;
 }
 
 
 
-template<class T> string ClientHolder<T>::GetResourceIpAddress(const string& sUid)
+template<class T> std::string ClientHolder<T>::GetResourceIpAddress(const std::string& sUid)
 {
     auto itResource = m_mResourceIdAddress.find(sUid);
     if(itResource != m_mResourceIdAddress.end())
@@ -149,7 +148,7 @@ template<class T> string ClientHolder<T>::GetResourceIpAddress(const string& sUi
     return "";
 }
 
-template<class T> void ClientHolder<T>::StoreResources(const string& sIpAddress)
+template<class T> void ClientHolder<T>::StoreResources(const std::string& sIpAddress)
 {
     for(auto itResource = m_mmAddressResourceId.lower_bound(sIpAddress); itResource != m_mmAddressResourceId.upper_bound(sIpAddress); ++itResource)
     {

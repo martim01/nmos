@@ -9,7 +9,8 @@
 #include <sstream>
 #include "sourceaudio.h"
 
-std::string FlowAudioRawSdpCreator::CreateLines(unsigned short nRtpPort)
+
+std::string pml::nmos::FlowAudioRawSdpCreator::CreateLines(unsigned short nRtpPort)
 {
     if(!m_pFlow)
         return "";
@@ -21,16 +22,16 @@ std::string FlowAudioRawSdpCreator::CreateLines(unsigned short nRtpPort)
     sstr << "a=rtpmap:96 L";
     switch(m_pFlow->GetFormat())
     {
-    case FlowAudioRaw::L24:
+    case pml::nmos::FlowAudioRaw::L24:
         sstr << "24/";
         break;
-    case FlowAudioRaw::L20:
+    case pml::nmos::FlowAudioRaw::L20:
         sstr << "20/";
         break;
-    case FlowAudioRaw::L16:
+    case pml::nmos::FlowAudioRaw::L16:
         sstr << "16/";
         break;
-    case FlowAudioRaw::L8:
+    case pml::nmos::FlowAudioRaw::L8:
         sstr << "8/";
         break;
     }
@@ -41,7 +42,7 @@ std::string FlowAudioRawSdpCreator::CreateLines(unsigned short nRtpPort)
     auto itResource = NodeApi::Get().GetSources().FindNmosResource(m_pFlow->GetSourceId());
     if(itResource != NodeApi::Get().GetSources().GetResourceEnd())
     {
-        std::shared_ptr<SourceAudio> pSource = std::dynamic_pointer_cast<SourceAudio>(itResource->second);
+        auto pSource = std::dynamic_pointer_cast<pml::nmos::SourceAudio>(itResource->second);
         if(pSource)
         {
             sstr << pSource->GetNumberOfChannels();
@@ -63,19 +64,19 @@ std::string FlowAudioRawSdpCreator::CreateLines(unsigned short nRtpPort)
     //packet time
     switch(m_pFlow->GetPacketTime())
     {
-        case FlowAudioRaw::US_125:
+        case pml::nmos::FlowAudioRaw::US_125:
             sstr << "a=ptime:0.125\r\n";
             break;
-        case FlowAudioRaw::US_250:
+        case pml::nmos::FlowAudioRaw::US_250:
             sstr << "a=ptime:0.250\r\n";
             break;
-        case FlowAudioRaw::US_333:
+        case pml::nmos::FlowAudioRaw::US_333:
             sstr << "a=ptime:0.333\r\n";
             break;
-        case FlowAudioRaw::US_1000:
+        case pml::nmos::FlowAudioRaw::US_1000:
             sstr << "a=ptime:1\r\n";
             break;
-        case FlowAudioRaw::US_4000:
+        case pml::nmos::FlowAudioRaw::US_4000:
             sstr << "a=ptime:4\r\n";
             break;
     }
@@ -87,7 +88,7 @@ std::string FlowAudioRawSdpCreator::CreateLines(unsigned short nRtpPort)
 }
 
 
-std::string FlowAudioCodedSdpCreator::CreateLines(unsigned short nRtpPort)
+std::string pml::nmos::FlowAudioCodedSdpCreator::CreateLines(unsigned short nRtpPort)
 {
     if(!m_pFlow)
         return "";

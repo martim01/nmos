@@ -3,6 +3,7 @@
 #include "sdp.h"
 #include "utils.h"
 
+using namespace pml::nmos;
 const std::string connection::STR_ACTIVATE[4] = {"", "activate_immediate", "activate_scheduled_absolute", "activate_scheduled_relative"};
 
 connection::connection() :

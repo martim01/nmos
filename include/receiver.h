@@ -1,15 +1,21 @@
 #pragma once
 #include "receiverbase.h"
 
-class Receiver : public ReceiverBase
+namespace pml
 {
-    public:
-        Receiver(const std::string& sLabel, const std::string& sDescription, enumTransport eTransport, const std::string& sDeviceId, enumType eType, int flagsTransport=TransportParamsRTP::CORE);
+    namespace nmos
+    {
+        class Receiver : public ReceiverBase
+        {
+            public:
+                Receiver(const std::string& sLabel, const std::string& sDescription, enumTransport eTransport, const std::string& sDeviceId, enumType eType, int flagsTransport=TransportParamsRTP::CORE);
 
-        Receiver();
+                Receiver();
 
-        void Activate(bool bImmediate);
-        void CommitActivation();
+                void Activate(bool bImmediate);
+                void CommitActivation();
 
-        bool Stage(const connectionReceiver& conRequest);
+                bool Stage(const connectionReceiver& conRequest);
+        };
+    };
 };

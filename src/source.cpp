@@ -1,6 +1,6 @@
 #include "source.h"
 #include "utils.h"
-
+using namespace pml::nmos;
 
  Source::Source(const std::string& sLabel, const std::string& sDescription, const std::string& sDeviceId, enumFormat eFormat) : Resource("source", sLabel, sDescription)
  , m_sDeviceId(sDeviceId)

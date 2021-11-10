@@ -1,7 +1,6 @@
 #include "flowaudioraw.h"
 #include "flowaudio.h"
 #include <sstream>
-#include "nodeapi.h"
 #include "sourceaudio.h"
 
 
@@ -9,6 +8,7 @@
 #include "flowsdpcreatornode.h"
 #endif // NMOS_NODE_API
 
+using namespace pml::nmos;
 FlowAudioRaw::FlowAudioRaw(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId, unsigned int nSampleRate, enumFormat eFormat) :
     FlowAudio(sLabel, sDescription, sSourceId, sDeviceId, nSampleRate),
     m_eFormat(eFormat),

@@ -1,5 +1,7 @@
 #include "flowdatasdianc.h"
 
+using namespace pml::nmos;
+
 FlowDataSdiAnc::FlowDataSdiAnc(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId) :
     FlowData(sLabel, sDescription, sSourceId, sDeviceId, "video/smpte291")
 {

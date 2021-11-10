@@ -22,27 +22,28 @@ int main()
 
     auto pPoster = std::make_shared<ThreadPoster>();
 
-    NodeApi::Get().Init(pPoster, 8080, 8080, "host Label", "host Description");
-    NodeApi::Get().SetHeartbeatTime(5000);
-    NodeApi::Get().GetSelf().AddInternalClock("clk0");
-    NodeApi::Get().GetSelf().AddPTPClock("clk1", false, "IEEE1588-2008", "08-00-11-ff-fe-21-e1-b0", true);
-    NodeApi::Get().GetSelf().AddInterface("eth0");
-    NodeApi::Get().GetSelf().AddTag("location", "W1");
-    NodeApi::Get().GetSelf().AddTag("location", "MCR1");
-    NodeApi::Get().GetSelf().AddTag("Author", "Matt");
+    pml::nmos::NodeApi::Get().Init(pPoster, 8080, 8080, "host Label", "host Description");
+    pml::nmos::NodeApi::Get().SetHeartbeatTime(5000);
+    pml::nmos::NodeApi::Get().GetSelf().AddInternalClock("clk0");
+    pml::nmos::NodeApi::Get().GetSelf().AddPTPClock("clk1", false, "IEEE1588-2008", "08-00-11-ff-fe-21-e1-b0", true);
+    pml::nmos::NodeApi::Get().GetSelf().AddInterface("eth0");
+    pml::nmos::NodeApi::Get().GetSelf().AddTag("location", "W1");
+    pml::nmos::NodeApi::Get().GetSelf().AddTag("location", "MCR1");
+    pml::nmos::NodeApi::Get().GetSelf().AddTag("Author", "Matt");
 
-    auto pDevice = make_shared<Device>("TestDevice", "TestDescription", Device::GENERIC,NodeApi::Get().GetSelf().GetId());
+    auto pDevice = make_shared<pml::nmos::Device>("TestDevice", "TestDescription", pml::nmos::Device::GENERIC,pml::nmos::NodeApi::Get().GetSelf().GetId());
 
-    auto pSource = make_shared<SourceAudio>("TestAudio", "TestDescription", pDevice->GetId());
+    auto pSource = make_shared<pml::nmos::SourceAudio>("TestAudio", "TestDescription", pDevice->GetId());
     pSource->AddChannel("Left", "L");
     pSource->AddChannel("Right", "R");
 
-    auto pFlow = make_shared<FlowAudioRaw>("TestFlow", "TestDescription", pSource->GetId(), pDevice->GetId(),48000, FlowAudioRaw::L24);
-    pFlow->SetPacketTime(FlowAudioRaw::US_125);
+    auto pFlow = make_shared<pml::nmos::FlowAudioRaw>("TestFlow", "TestDescription", pSource->GetId(), pDevice->GetId(),48000, pml::nmos::FlowAudioRaw::L24);
+    pFlow->SetPacketTime(pml::nmos::FlowAudioRaw::US_125);
     pFlow->SetMediaClkOffset(0);
 
-    auto pSender = make_shared<Sender>("TestSender", "Description", pFlow->GetId(), Sender::RTP_MCAST, pDevice->GetId(), "eth0");
-    auto pReceiver = make_shared<Receiver>("Test Receiver", "TestDescription", Receiver::RTP_MCAST, pDevice->GetId(), Receiver::AUDIO, TransportParamsRTP::CORE | TransportParamsRTP::MULTICAST);
+    auto pSender = make_shared<pml::nmos::Sender>("TestSender", "Description", pFlow->GetId(), pml::nmos::Sender::RTP_MCAST, pDevice->GetId(), "eth0");
+    auto pReceiver = make_shared<pml::nmos::Receiver>("Test Receiver", "TestDescription", pml::nmos::Receiver::RTP_MCAST, pDevice->GetId(), pml::nmos::Receiver::AUDIO,
+    pml::nmos::TransportParamsRTP::CORE | pml::nmos::TransportParamsRTP::MULTICAST);
 
     pSender->CreateSDP();
     pSender->MasterEnable(true);
@@ -53,31 +54,31 @@ int main()
     pReceiver->AddCap("audio/L16");
     pReceiver->AddInterfaceBinding("eth0");
 
-    if(NodeApi::Get().AddDevice(pDevice) == false)
+    if(pml::nmos::NodeApi::Get().AddDevice(pDevice) == false)
     {
         cout << "FAILED TO ADD DEVICE" << endl;
     }
-    if(NodeApi::Get().AddSource(pSource) == false)
+    if(pml::nmos::NodeApi::Get().AddSource(pSource) == false)
     {
         cout << "FAILED TO ADD SOURCE" << endl;
     }
-    if(NodeApi::Get().AddFlow(pFlow) == false)
+    if(pml::nmos::NodeApi::Get().AddFlow(pFlow) == false)
     {
         cout << "FAILED TO ADD FLOW" << endl;
     }
-    if(NodeApi::Get().AddReceiver(pReceiver) == false)
+    if(pml::nmos::NodeApi::Get().AddReceiver(pReceiver) == false)
     {
         cout << "FAILED TO ADD RECEIVER" << endl;
     }
-    if(NodeApi::Get().AddSender(pSender) == false)
+    if(pml::nmos::NodeApi::Get().AddSender(pSender) == false)
     {
         cout << "FAILED TO ADD SENDER" << endl;
     }
-    NodeApi::Get().Commit();
+    pml::nmos::NodeApi::Get().Commit();
 
 
 
-    NodeApi::Get().StartServices();
+    pml::nmos::NodeApi::Get().StartServices();
 
     int nCount(0);
     while(true)
@@ -121,19 +122,19 @@ int main()
                     cout << "NMOS Target: " << pPoster->GetString() << " [" << pPoster->GetSDP() << "]" << endl;
                     cout << "----------------------------------------" << endl;
                     //getchar();
-                    NodeApi::Get().TargetTaken("192.168.1.113", pPoster->GetPort(), true);
+                    pml::nmos::NodeApi::Get().TargetTaken("192.168.1.113", pPoster->GetPort(), true);
                     break;
                 case ThreadPoster::PATCH_SENDER:
                     cout << "----------------------------------------" << endl;
                     cout << "NMOS Patch Sender: " << pPoster->GetString() << endl;
                     cout << "----------------------------------------" << endl;
-                    NodeApi::Get().SenderPatchAllowed(pPoster->GetPort(), true, pPoster->GetString(),"","239.192.55.101");
+                    pml::nmos::NodeApi::Get().SenderPatchAllowed(pPoster->GetPort(), true, pPoster->GetString(),"","239.192.55.101");
                     break;
                 case ThreadPoster::PATCH_RECEIVER:
                     cout << "----------------------------------------" << endl;
                     cout << "NMOS Patch Receiver: " << pPoster->GetString() << endl;
                     cout << "----------------------------------------" << endl;
-                    NodeApi::Get().ReceiverPatchAllowed(pPoster->GetPort(), true, pPoster->GetString(), "192.168.1.113");
+                    pml::nmos::NodeApi::Get().ReceiverPatchAllowed(pPoster->GetPort(), true, pPoster->GetString(), "192.168.1.113");
                     break;
                 case ThreadPoster::ACTIVATE_SENDER:
                     cout << "----------------------------------------" << endl;
@@ -161,7 +162,7 @@ int main()
 //            NodeApi::Get().Commit();
 //        }
     }
-    NodeApi::Get().StopServices();
+    pml::nmos::NodeApi::Get().StopServices();
     return 0;
     return 0;
 }

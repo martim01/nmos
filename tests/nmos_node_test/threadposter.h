@@ -3,7 +3,7 @@
 #include <condition_variable>
 
 
-class ThreadPoster : public EventPoster
+class ThreadPoster : public pml::nmos::EventPoster
 {
     public:
         ThreadPoster(){}
@@ -26,14 +26,14 @@ class ThreadPoster : public EventPoster
     protected:
 
         void CurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId);
-        void InstanceResolved(std::shared_ptr<dnsInstance> pInstance);
+        void InstanceResolved(std::shared_ptr<pml::nmos::dnsInstance> pInstance);
         void AllForNow(const std::string& sService);
         void Finished();
         void RegistrationNodeError();
-        void InstanceRemoved(std::shared_ptr<dnsInstance> pInstance);
+        void InstanceRemoved(std::shared_ptr<pml::nmos::dnsInstance> pInstance);
         void Target(const std::string& sReceiverId, const std::string& sTransportFile, unsigned short nPort);
-        void PatchSender(const std::string& sSenderId, const connectionSender& conPatch, unsigned short nPort);
-        void PatchReceiver(const std::string& sReceiverId, const connectionReceiver& conPatch, unsigned short nPort);
+        void PatchSender(const std::string& sSenderId, const pml::nmos::connectionSender& conPatch, unsigned short nPort);
+        void PatchReceiver(const std::string& sReceiverId, const pml::nmos::connectionReceiver& conPatch, unsigned short nPort);
         void SenderActivated(const std::string& sSenderId);
         void ReceiverActivated(const std::string& sReceiverId);
 
@@ -50,7 +50,7 @@ class ThreadPoster : public EventPoster
         std::string m_sSDP;
 
         unsigned int m_nReason;
-        std::shared_ptr<Sender> m_pSender;
+        std::shared_ptr<pml::nmos::Sender> m_pSender;
 
 };
 

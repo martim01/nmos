@@ -2,6 +2,7 @@
 #include "nodeapi.h"
 
 
+using namespace pml::nmos;
 
 void NodeZCPoster::InstanceResolved(std::shared_ptr<dnsInstance> pInstance)
 {

@@ -120,7 +120,6 @@
 			<Add directory="lib" />
 		</Linker>
 		<Unit filename="include/activator.h" />
-		<Unit filename="include/flowsdpcreator.h" />
 		<Unit filename="include/flowsdpcreatornode.h" />
 		<Unit filename="include/is04server.h" />
 		<Unit filename="include/is05server.h" />

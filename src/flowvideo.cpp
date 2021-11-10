@@ -1,6 +1,7 @@
 #include "flowvideo.h"
 
 using namespace std;
+using namespace pml::nmos;
 
 const string FlowVideo::STR_INTERLACE[4] = {"progressive", "interlaced_tff", "interlaced_bff", "interlaced_psf" };
 const string FlowVideo::STR_COLOUR[4] = {"BT601", "BT709", "BT2020", "BT2100" };

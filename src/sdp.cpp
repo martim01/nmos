@@ -4,6 +4,7 @@
 #include "log.h"
 
 using namespace std;
+using namespace pml::nmos;
 
 const string SdpManager::STR_FILTER = "a=source-filter:";
 const string SdpManager::STR_RTCP = "a=rtcp:";

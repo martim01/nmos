@@ -5,43 +5,48 @@
 
 #include "flowsdpcreator.h"
 
-class NMOS_EXPOSE Flow : public Resource
+namespace pml
 {
-    public:
-        Flow(const std::string& sLabel, const std::string& sDescription, const std::string& sFormat, const std::string& sSourceId, const std::string& sDeviceId);
-        virtual ~Flow(){}
-        Flow(const std::string& sFormat);
-        virtual bool UpdateFromJson(const Json::Value& jsData);
-        void AddParentId(const std::string& sId);
-        void RemoveParentId(const std::string& sId);
-        const std::string& GetFormat() const;
-
-        virtual bool Commit(const ApiVersion& version);
-
-        std::string GetParentResourceId() const
+    namespace nmos
+    {
+        class NMOS_EXPOSE Flow : public Resource
         {
-            return m_sDeviceId;
-        }
-        const std::string& GetSourceId() const
-        {
-            return m_sSourceId;
-        }
+            public:
+                Flow(const std::string& sLabel, const std::string& sDescription, const std::string& sFormat, const std::string& sSourceId, const std::string& sDeviceId);
+                virtual ~Flow(){}
+                Flow(const std::string& sFormat);
+                virtual bool UpdateFromJson(const Json::Value& jsData);
+                void AddParentId(const std::string& sId);
+                void RemoveParentId(const std::string& sId);
+                const std::string& GetFormat() const;
 
-        unsigned long GetMediaClkOffset() const { return m_nMediaClkOffset;}
-        void SetMediaClkOffset(unsigned long nOffset);
+                virtual bool Commit(const ApiVersion& version);
 
-        std::string CreateSDPLines(unsigned short nRtpPort) const;
+                std::string GetParentResourceId() const
+                {
+                    return m_sDeviceId;
+                }
+                const std::string& GetSourceId() const
+                {
+                    return m_sSourceId;
+                }
 
-    protected:
-        unsigned long m_nMediaClkOffset;
-        std::unique_ptr<FlowSdpCreator> m_pSdpCreator;
+                unsigned long GetMediaClkOffset() const { return m_nMediaClkOffset;}
+                void SetMediaClkOffset(unsigned long nOffset);
 
-    private:
-        std::string m_sFormat;
-        std::string m_sSourceId;
-        std::string m_sDeviceId;
-        std::set<std::string> m_setParent;
+                std::string CreateSDPLines(unsigned short nRtpPort) const;
+
+            protected:
+                unsigned long m_nMediaClkOffset;
+                std::unique_ptr<FlowSdpCreator> m_pSdpCreator;
+
+            private:
+                std::string m_sFormat;
+                std::string m_sSourceId;
+                std::string m_sDeviceId;
+                std::set<std::string> m_setParent;
 
 
+        };
+    };
 };
-

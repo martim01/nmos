@@ -100,7 +100,7 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
-			<Add option="-std=c++1z" />
+			<Add option="-std=c++14" />
 			<Add option="-fexceptions" />
 			<Add option="-DNMOS_EXPORT" />
 			<Add option="-DMG_ENABLE_HTTP_STREAMING_MULTIPART" />
@@ -149,6 +149,7 @@
 		<Unit filename="include/flowdata.h" />
 		<Unit filename="include/flowdatasdianc.h" />
 		<Unit filename="include/flowmux.h" />
+		<Unit filename="include/flowsdpcreator.h" />
 		<Unit filename="include/flowvideo.h" />
 		<Unit filename="include/flowvideocoded.h" />
 		<Unit filename="include/flowvideoraw.h" />

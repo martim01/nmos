@@ -2,6 +2,8 @@
 #include <algorithm>
 #include "utils.h"
 
+using namespace pml::nmos;
+
 NmosServer::NmosServer(std::shared_ptr<RestGoose> pServer, const ApiVersion& version, std::shared_ptr<EventPoster> pPoster) :
     m_pServer(pServer),
     m_version(version),

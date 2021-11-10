@@ -1,17 +1,22 @@
 #include "zcposter.h"
 
-class NodeZCPoster : public ZCPoster
+namespace pml
 {
-    public:
-        NodeZCPoster(){}
+    namespace nmos
+    {
+        class NodeZCPoster : public ZCPoster
+        {
+            public:
+                NodeZCPoster(){}
 
-    protected:
+            protected:
 
-        virtual void InstanceResolved(std::shared_ptr<dnsInstance> pInstance);
-        virtual void AllForNow(const std::string& sService);
-        virtual void Finished();
-        virtual void RegistrationNodeError();
-        virtual void InstanceRemoved(std::shared_ptr<dnsInstance> pInstance);
+                virtual void InstanceResolved(std::shared_ptr<dnsInstance> pInstance);
+                virtual void AllForNow(const std::string& sService);
+                virtual void Finished();
+                virtual void RegistrationNodeError();
+                virtual void InstanceRemoved(std::shared_ptr<dnsInstance> pInstance);
 
+        };
+    };
 };
-

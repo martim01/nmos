@@ -1,5 +1,6 @@
 #include "zcposter.h"
 
+using namespace pml::nmos;
 
 void ZCPoster::_InstanceResolved(std::shared_ptr<dnsInstance> pInstance)
 {

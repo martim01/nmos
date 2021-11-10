@@ -10,9 +10,9 @@
 #include "receiver.h"
 
 
-using namespace std;
+using namespace pml::nmos;
 
-template<class T> ResourceHolder<T>::ResourceHolder(const string& sType) :
+template<class T> ResourceHolder<T>::ResourceHolder(const std::string& sType) :
     m_sType(sType),
     m_nVersion(0),
     m_json(Json::arrayValue)
@@ -43,7 +43,7 @@ template<class T> unsigned char ResourceHolder<T>::GetVersion() const
 }
 
 
-template<class T> bool ResourceHolder<T>::AddResource(shared_ptr<T> pResource)
+template<class T> bool ResourceHolder<T>::AddResource(std::shared_ptr<T> pResource)
 {
     if(pResource)
     {
@@ -52,7 +52,7 @@ template<class T> bool ResourceHolder<T>::AddResource(shared_ptr<T> pResource)
     return false;
 }
 
-template<class T> void ResourceHolder<T>::RemoveResource(shared_ptr<T> pResource)
+template<class T> void ResourceHolder<T>::RemoveResource(std::shared_ptr<T> pResource)
 {
     if(pResource)
     {
@@ -60,12 +60,12 @@ template<class T> void ResourceHolder<T>::RemoveResource(shared_ptr<T> pResource
     }
 }
 
-template<class T> void ResourceHolder<T>::RemoveResource(string sUuid)
+template<class T> void ResourceHolder<T>::RemoveResource(std::string sUuid)
 {
     m_mResourceStaging.erase(sUuid);
 }
 
-template<class T> bool ResourceHolder<T>::Commit(const set<ApiVersion>& setVersion)
+template<class T> bool ResourceHolder<T>::Commit(const std::set<ApiVersion>& setVersion)
 {
     m_mResource = m_mResourceStaging;
     m_mResourceChanged.clear();
@@ -106,22 +106,22 @@ template<class T> Json::Value ResourceHolder<T>::GetConnectionJson(const ApiVers
     return jsArray;
 }
 
-template<class T> typename map<string, shared_ptr<T> >::const_iterator ResourceHolder<T>::GetResourceBegin() const
+template<class T> typename std::map<std::string, std::shared_ptr<T> >::const_iterator ResourceHolder<T>::GetResourceBegin() const
 {
     return m_mResource.begin();
 }
 
-template<class T> typename map<string, shared_ptr<T> >::const_iterator ResourceHolder<T>::GetResourceEnd() const
+template<class T> typename std::map<std::string, std::shared_ptr<T> >::const_iterator ResourceHolder<T>::GetResourceEnd() const
 {
     return m_mResource.end();
 }
 
-template<class T> typename map<string, shared_ptr<T> >::const_iterator ResourceHolder<T>::FindNmosResource(string sUuid) const
+template<class T> typename std::map<std::string, std::shared_ptr<T> >::const_iterator ResourceHolder<T>::FindNmosResource(std::string sUuid) const
 {
     return m_mResource.find(sUuid);
 }
 
-template<class T> typename map<string, shared_ptr<T> >::iterator ResourceHolder<T>::GetResource(string sUuid, bool bCommited)
+template<class T> typename std::map<std::string, std::shared_ptr<T> >::iterator ResourceHolder<T>::GetResource(std::string sUuid, bool bCommited)
 {
     if(bCommited)
     {
@@ -130,27 +130,27 @@ template<class T> typename map<string, shared_ptr<T> >::iterator ResourceHolder<
     return m_mResourceStaging.find(sUuid);
 }
 
-template<class T> typename map<string, shared_ptr<T> >::const_iterator ResourceHolder<T>::GetStagedResourceBegin() const
+template<class T> typename std::map<std::string, std::shared_ptr<T> >::const_iterator ResourceHolder<T>::GetStagedResourceBegin() const
 {
     return m_mResourceStaging.begin();
 }
 
-template<class T> typename map<string, shared_ptr<T> >::const_iterator ResourceHolder<T>::GetStagedResourceEnd() const
+template<class T> typename std::map<std::string, std::shared_ptr<T> >::const_iterator ResourceHolder<T>::GetStagedResourceEnd() const
 {
     return m_mResourceStaging.end();
 }
 
-template<class T> typename map<string, shared_ptr<T> >::const_iterator ResourceHolder<T>::FindStagedResource(string sUuid) const
+template<class T> typename std::map<std::string, std::shared_ptr<T> >::const_iterator ResourceHolder<T>::FindStagedResource(std::string sUuid) const
 {
     return m_mResourceStaging.find(sUuid);
 }
 
-template<class T> typename map<string, shared_ptr<T> >::const_iterator ResourceHolder<T>::GetChangedResourceBegin() const
+template<class T> typename std::map<std::string, std::shared_ptr<T> >::const_iterator ResourceHolder<T>::GetChangedResourceBegin() const
 {
     return m_mResourceChanged.begin();
 }
 
-template<class T> typename map<string, shared_ptr<T> >::const_iterator ResourceHolder<T>::GetChangedResourceEnd() const
+template<class T> typename std::map<std::string, std::shared_ptr<T> >::const_iterator ResourceHolder<T>::GetChangedResourceEnd() const
 {
     return m_mResourceChanged.end();
 }
@@ -167,7 +167,7 @@ template<class T> size_t ResourceHolder<T>::GetResourceCount() const
 }
 
 
-template<class T> bool ResourceHolder<T>::ResourceExists(const string& sUuid) const
+template<class T> bool ResourceHolder<T>::ResourceExists(const std::string& sUuid) const
 {
     return (m_mResource.find(sUuid) != m_mResource.end() || m_mResourceStaging.find(sUuid) != m_mResourceStaging.end());
 }

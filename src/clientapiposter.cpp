@@ -1,7 +1,7 @@
 #include "clientapiposter.h"
 #include "log.h"
 
-
+using namespace pml::nmos;
 void ClientApiPoster::_ModeChanged(bool bQueryApi)
 {
     ModeChanged(bQueryApi);

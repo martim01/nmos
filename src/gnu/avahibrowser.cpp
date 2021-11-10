@@ -4,32 +4,32 @@
 #include "zcposter.h"
 #include "mdns.h"
 #include <mutex>
-#include "nodeapi.h"
 
 
 using namespace std;
+using namespace pml::nmos;
 
 void client_callback(AvahiClient * pClient, AvahiClientState state, AVAHI_GCC_UNUSED void * userdata)
 {
-    ServiceBrowser* pBrowser = reinterpret_cast<ServiceBrowser*>(userdata);
+    auto pBrowser = reinterpret_cast<pml::nmos::ServiceBrowser*>(userdata);
     pBrowser->ClientCallback(pClient, state);
 }
 
 void type_callback(AvahiServiceTypeBrowser* stb, AvahiIfIndex interface, AvahiProtocol protocol, AvahiBrowserEvent event, const char* type, const char* domain, AvahiLookupResultFlags flags, void* userdata)
 {
-    ServiceBrowser* pBrowser = reinterpret_cast<ServiceBrowser*>(userdata);
+    auto pBrowser = reinterpret_cast<pml::nmos::ServiceBrowser*>(userdata);
     pBrowser->TypeCallback(interface, protocol, event, type, domain);
 }
 
 void browse_callback(AvahiServiceBrowser *b, AvahiIfIndex interface, AvahiProtocol protocol, AvahiBrowserEvent event, const char *name, const char *type, const char *domain, AVAHI_GCC_UNUSED AvahiLookupResultFlags flags, void* userdata)
 {
-    ServiceBrowser* pBrowser = reinterpret_cast<ServiceBrowser*>(userdata);
+    auto pBrowser = reinterpret_cast<ServiceBrowser*>(userdata);
     pBrowser->BrowseCallback(b, interface, protocol, event, name, type, domain);
 }
 
 void resolve_callback(AvahiServiceResolver *r, AVAHI_GCC_UNUSED AvahiIfIndex interface, AVAHI_GCC_UNUSED AvahiProtocol protocol, AvahiResolverEvent event,const char *name, const char *type, const char *domain, const char *host_name, const AvahiAddress *address, uint16_t port, AvahiStringList *txt,AvahiLookupResultFlags flags,AVAHI_GCC_UNUSED void* userdata)
 {
-    ServiceBrowser* pBrowser = reinterpret_cast<ServiceBrowser*>(userdata);
+    auto pBrowser = reinterpret_cast<ServiceBrowser*>(userdata);
     pBrowser->ResolveCallback(r, event, name, type, domain,host_name, address,port,txt);
 
 }
@@ -123,11 +123,11 @@ void ServiceBrowser::Stop()
         m_pThreadedPoll = 0;
 
         set<shared_ptr<ZCPoster> > setPoster;
-        for(map<string, shared_ptr<ZCPoster> >::iterator itPoster = m_mServiceBrowse.begin(); itPoster != m_mServiceBrowse.end(); ++itPoster)
+        for(auto& pairPoster : m_mServiceBrowse)
         {
-            if(setPoster.insert(itPoster->second).second)
+            if(setPoster.insert(pairPoster.second).second)
             {
-                itPoster->second->_Finished();
+                pairPoster.second->_Finished();
             }
         }
     }
@@ -152,19 +152,19 @@ void ServiceBrowser::Browse()
 {
     pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser:Browse" ;
 
-    for(map<string, shared_ptr<ZCPoster> >::iterator itService = m_mServiceBrowse.begin(); itService != m_mServiceBrowse.end(); ++itService)
+    for(auto pairService : m_mServiceBrowse)
     {
-        if(m_mServices.insert(make_pair((itService->first), make_shared<dnsService>(dnsService((itService->first))))).second)
+        if(m_mServices.insert(make_pair((pairService.first), make_shared<dnsService>(dnsService((pairService.first))))).second)
         {
             AvahiServiceBrowser* psb = NULL;
             /* Create the service browser */
-            if (!(psb = avahi_service_browser_new(m_pClient, AVAHI_IF_UNSPEC, AVAHI_PROTO_INET, (itService->first).c_str(), NULL, (AvahiLookupFlags)0, browse_callback, reinterpret_cast<void*>(this))))
+            if (!(psb = avahi_service_browser_new(m_pClient, AVAHI_IF_UNSPEC, AVAHI_PROTO_INET, (pairService.first).c_str(), NULL, (AvahiLookupFlags)0, browse_callback, reinterpret_cast<void*>(this))))
             {
                 pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServiceBrowser: Failed to create service browser" ;
             }
             else
             {
-                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser: Service '" << itService->first << "' browse" ;
+                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser: Service '" << pairService.first << "' browse" ;
                 m_setBrowser.insert(psb);
                 m_nWaitingOn++;
             }
@@ -229,10 +229,9 @@ void ServiceBrowser::TypeCallback(AvahiIfIndex interface, AvahiProtocol protocol
             {
                 string sService(type);
                 pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser: Service '" << type << "' found in domain '" << domain << "'" ;
-                map<string, shared_ptr<ZCPoster> >::iterator itServiceBrowse = m_mServiceBrowse.find(sService);
+                auto itServiceBrowse = m_mServiceBrowse.find(sService);
                 if(itServiceBrowse != m_mServiceBrowse.end())
                 {
-
                     m_mutex.lock();
                     if(m_mServices.insert(make_pair(sService, make_shared<dnsService>(dnsService(sService)))).second)
                     {
@@ -307,7 +306,7 @@ void ServiceBrowser::BrowseCallback(AvahiServiceBrowser* pBrowser, AvahiIfIndex 
         case AVAHI_BROWSER_ALL_FOR_NOW:
             {
                 pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser: (Browser) '" << type << "' in domain '" << domain << "' ALL_FOR_NOW" ;
-                shared_ptr<ZCPoster> pPoster(GetPoster(type));
+                auto pPoster = GetPoster(type);
                 if(pPoster)
                 {
                     pPoster->_AllForNow(type);
@@ -315,7 +314,7 @@ void ServiceBrowser::BrowseCallback(AvahiServiceBrowser* pBrowser, AvahiIfIndex 
 
                 if(m_bFree)
                 {
-                   set<AvahiServiceBrowser*>::iterator itBrowser = m_setBrowser.find(pBrowser);
+                   auto itBrowser = m_setBrowser.find(pBrowser);
                     if(itBrowser != m_setBrowser.end())
                     {
                         avahi_service_browser_free((*itBrowser));
@@ -356,10 +355,10 @@ void ServiceBrowser::ResolveCallback(AvahiServiceResolver* pResolver, AvahiResol
                 char a[AVAHI_ADDRESS_STR_MAX];
                 avahi_address_snprint(a, sizeof(a), address);
                 m_mutex.lock();
-                map<string, shared_ptr<dnsService> >::iterator itService = m_mServices.find(sService);
+                auto itService = m_mServices.find(sService);
                 if(itService != m_mServices.end())
                 {
-                    map<string, shared_ptr<dnsInstance> >::iterator itInstance = itService->second->mInstances.find(sName);
+                    auto itInstance = itService->second->mInstances.find(sName);
                     if(itInstance == itService->second->mInstances.end())
                     {
                         itInstance = itService->second->mInstances.insert(make_pair(sName, make_shared<dnsInstance>(dnsInstance(sName)))).first;
@@ -385,7 +384,7 @@ void ServiceBrowser::ResolveCallback(AvahiServiceResolver* pResolver, AvahiResol
                             itInstance->second->mTxt[sPair.substr(0,nFind)] = sPair.substr(nFind+1);
                         }
                     }
-                    shared_ptr<ZCPoster> pPoster(GetPoster(sService));
+                    auto pPoster = GetPoster(sService);
                     if(pPoster)
                     {
                         pPoster->_InstanceResolved(itInstance->second);
@@ -418,7 +417,7 @@ void ServiceBrowser::RemoveServiceInstance(const std::string& sService, const st
 {
     lock_guard<mutex> lock(m_mutex);
 
-    map<string, AvahiServiceResolver*>::iterator itResolver = m_mResolvers.find((sInstance+"__"+sService));
+    auto itResolver = m_mResolvers.find((sInstance+"__"+sService));
     if(itResolver != m_mResolvers.end())
     {
         avahi_service_resolver_free(itResolver->second);
@@ -426,12 +425,12 @@ void ServiceBrowser::RemoveServiceInstance(const std::string& sService, const st
     }
 
 
-    map<string, shared_ptr<dnsService> >::iterator itService = m_mServices.find(sService);
+    auto itService = m_mServices.find(sService);
     if(itService != m_mServices.end())
     {
-        shared_ptr<ZCPoster> pPoster(GetPoster(sService));
+        auto pPoster = GetPoster(sService);
 
-        map<string, shared_ptr<dnsInstance> >::iterator itInstance = itService->second->mInstances.find(sInstance);
+        auto itInstance = itService->second->mInstances.find(sInstance);
         if(itInstance != itService->second->mInstances.end())
         {
             if(pPoster)
@@ -474,12 +473,12 @@ map<string, shared_ptr<dnsService> >::const_iterator ServiceBrowser::FindService
 
 std::shared_ptr<ZCPoster> ServiceBrowser::GetPoster(const std::string& sService)
 {
-    map<string, shared_ptr<ZCPoster> >::iterator itPoster = m_mServiceBrowse.find(sService);
+    auto itPoster = m_mServiceBrowse.find(sService);
     if(itPoster != m_mServiceBrowse.end())
     {
         return itPoster->second;
     }
-    return 0;
+    return nullptr;
 }
 
 

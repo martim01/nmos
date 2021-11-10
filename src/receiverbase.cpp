@@ -7,6 +7,8 @@
 #include "log.h"
 #include "utils.h"
 
+using namespace pml::nmos;
+
 const std::string ReceiverBase::STR_TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash"};
 const std::string ReceiverBase::STR_TYPE[4] = {"urn:x-nmos:format:audio", "urn:x-nmos:format:video", "urn:x-nmos:format:data", "urn:x-nmos:format:mux"};
 

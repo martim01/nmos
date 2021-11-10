@@ -5,7 +5,7 @@
 #include "eventposter.h"
 #include "log.h"
 
-using namespace std;
+using namespace pml::nmos;
 
 void NodeThread::Main()
 {

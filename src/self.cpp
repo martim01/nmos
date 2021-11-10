@@ -15,6 +15,8 @@
 
 
 using namespace std;
+using namespace pml::nmos;
+
 
 
 Self::Self(const string& sHostname, const string& sUrl,const string& sLabel, const string& sDescription) : Resource("self", sLabel, sDescription),

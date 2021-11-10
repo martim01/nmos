@@ -1,6 +1,7 @@
 #include "flowvideoraw.h"
 
 using namespace std;
+using namespace pml::nmos;
 
 
 const string FlowVideoRaw::STR_COMPONENT[11] = { "Y", "Cb", "Cr", "I", "Ct", "Cp", "A", "R", "G", "B", "DepthMap"};

@@ -34,7 +34,7 @@ void ThreadPoster::CurlDone(unsigned long nResult, const std::string& sResponse,
     LaunchThread();
 }
 
-void ThreadPoster::InstanceResolved(std::shared_ptr<dnsInstance> pInstance)
+void ThreadPoster::InstanceResolved(std::shared_ptr<pml::nmos::dnsInstance> pInstance)
 {
     SetReason(INSTANCE_RESOLVED);
     LaunchThread();
@@ -59,7 +59,7 @@ void ThreadPoster::RegistrationNodeError()
     LaunchThread();
 }
 
-void ThreadPoster::InstanceRemoved(std::shared_ptr<dnsInstance> pInstance)
+void ThreadPoster::InstanceRemoved(std::shared_ptr<pml::nmos::dnsInstance> pInstance)
 {
     SetReason(INSTANCE_REMOVED);
     LaunchThread();
@@ -74,7 +74,7 @@ void ThreadPoster::Target(const std::string& sReceiverId, const std::string& sTr
     LaunchThread();
 }
 
-void ThreadPoster::PatchSender(const std::string& sSenderId, const connectionSender& conPatch, unsigned short nPort)
+void ThreadPoster::PatchSender(const std::string& sSenderId, const pml::nmos::connectionSender& conPatch, unsigned short nPort)
 {
     SetReason(PATCH_SENDER);
     m_sString = sSenderId;
@@ -83,7 +83,7 @@ void ThreadPoster::PatchSender(const std::string& sSenderId, const connectionSen
     LaunchThread();
 }
 
-void ThreadPoster::PatchReceiver(const std::string& sReceiverId, const connectionReceiver& conPatch, unsigned short nPort)
+void ThreadPoster::PatchReceiver(const std::string& sReceiverId, const pml::nmos::connectionReceiver& conPatch, unsigned short nPort)
 {
     SetReason(PATCH_RECEIVER);
     m_sString = sReceiverId;

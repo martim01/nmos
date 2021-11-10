@@ -4,99 +4,105 @@
 #include <vector>
 #include "version.h"
 
-class constraint
+namespace pml
 {
-    public:
-
-        enum enumConstraint {CON_BOOL, CON_INTEGER, CON_NULL, CON_NUMBER, CON_STRING};
-        typedef std::pair<enumConstraint, std::string> pairEnum_t;
-
-        constraint(const std::string& sParam, const std::string& sDescription="");
-
-        bool MeetsConstraint(const std::string& sValue);
-        bool MeetsConstraint(int nValue);
-        bool MeetsConstraint(double dValue);
-        bool MeetsConstraint(bool bValue);
-
-        void SetMinimum(int nMinimum);
-        void SetMaximum(int nMaximum);
-        void SetEnum(const std::vector<pairEnum_t>& vConstraints);
-        void SetPattern(const std::string& sPattern);
-
-        void RemoveMinimum();
-        void RemoveMaximum();
-        void RemoveEnum();
-        void RemovePattern();
-
-        std::string GetParam() const
+    namespace nmos
+    {
+        class constraint
         {
-            return m_sParam;
-        }
+            public:
 
-        Json::Value GetJson(const ApiVersion& version) const;
+                enum enumConstraint {CON_BOOL, CON_INTEGER, CON_NULL, CON_NUMBER, CON_STRING};
+                typedef std::pair<enumConstraint, std::string> pairEnum_t;
 
-    private:
-        std::string m_sParam;
+                constraint(const std::string& sParam, const std::string& sDescription="");
 
-        std::pair<bool, int> m_pairMinimum;     // @todo min constraint can be a double as well
-        std::pair<bool, int> m_pairMaximum;     // @todo max constraint can be a double as well
-        std::vector<pairEnum_t> m_vEnum;
-        std::pair<bool, std::string> m_pairPattern;
+                bool MeetsConstraint(const std::string& sValue);
+                bool MeetsConstraint(int nValue);
+                bool MeetsConstraint(double dValue);
+                bool MeetsConstraint(bool bValue);
 
-        std::string m_sDescription;
-};
+                void SetMinimum(int nMinimum);
+                void SetMaximum(int nMaximum);
+                void SetEnum(const std::vector<pairEnum_t>& vConstraints);
+                void SetPattern(const std::string& sPattern);
 
+                void RemoveMinimum();
+                void RemoveMaximum();
+                void RemoveEnum();
+                void RemovePattern();
 
-struct constraints
-{
-    constraints();
+                std::string GetParam() const
+                {
+                    return m_sParam;
+                }
 
-    virtual Json::Value GetJson(const ApiVersion& version) const;
+                Json::Value GetJson(const ApiVersion& version) const;
 
-    int nParamsSupported;
+            private:
+                std::string m_sParam;
 
-    constraint source_ip;
-    constraint destination_port;
+                std::pair<bool, int> m_pairMinimum;     // @todo min constraint can be a double as well
+                std::pair<bool, int> m_pairMaximum;     // @todo max constraint can be a double as well
+                std::vector<pairEnum_t> m_vEnum;
+                std::pair<bool, std::string> m_pairPattern;
 
-    constraint fec_destination_ip;
-    constraint fec_enabled;
-    constraint fec_mode;
-    constraint fec1D_destination_port;
-    constraint fec2D_destination_port;
-
-    constraint rtcp_enabled;
-    constraint rtcp_destination_ip;
-    constraint rtcp_destination_port;
-
-    constraint rtp_enabled;
-};
-
-struct constraintsSender : public constraints
-{
-    constraintsSender();
-    virtual Json::Value GetJson(const ApiVersion& version) const;
+                std::string m_sDescription;
+        };
 
 
+        struct constraints
+        {
+            constraints();
 
-    constraint destination_ip;
+            virtual Json::Value GetJson(const ApiVersion& version) const;
 
-    constraint source_port;
-    constraint fec_type;
-    constraint fec_block_width;
-    constraint fec_block_height;
-    constraint fec1D_source_port;
-    constraint fec2D_source_port;
-        constraint rtcp_source_port;
+            int nParamsSupported;
 
-};
+            constraint source_ip;
+            constraint destination_port;
+
+            constraint fec_destination_ip;
+            constraint fec_enabled;
+            constraint fec_mode;
+            constraint fec1D_destination_port;
+            constraint fec2D_destination_port;
+
+            constraint rtcp_enabled;
+            constraint rtcp_destination_ip;
+            constraint rtcp_destination_port;
+
+            constraint rtp_enabled;
+        };
+
+        struct constraintsSender : public constraints
+        {
+            constraintsSender();
+            virtual Json::Value GetJson(const ApiVersion& version) const;
 
 
-struct constraintsReceiver : public constraints
-{
-    constraintsReceiver();
 
-    virtual Json::Value GetJson(const ApiVersion& version) const;
+            constraint destination_ip;
 
-    constraint interface_ip;
-    constraint multicast_ip;
+            constraint source_port;
+            constraint fec_type;
+            constraint fec_block_width;
+            constraint fec_block_height;
+            constraint fec1D_source_port;
+            constraint fec2D_source_port;
+                constraint rtcp_source_port;
+
+        };
+
+
+        struct constraintsReceiver : public constraints
+        {
+            constraintsReceiver();
+
+            virtual Json::Value GetJson(const ApiVersion& version) const;
+
+            constraint interface_ip;
+            constraint multicast_ip;
+        };
+    };
 };

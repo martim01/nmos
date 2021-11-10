@@ -5,6 +5,7 @@
 
 #include "log.h"
 using namespace std;
+using   namespace pml::nmos;
 
 ServicePublisher::ServicePublisher(string sName, string sService, unsigned short nPort, string sHostname) :
     m_sName(sName),

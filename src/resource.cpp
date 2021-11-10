@@ -5,6 +5,8 @@
 #include "utils.h"
 #include <iostream>
 
+using namespace pml::nmos;
+
 std::string Resource::s_sBase("");
 
 

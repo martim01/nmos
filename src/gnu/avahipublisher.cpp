@@ -2,6 +2,7 @@
 #include "log.h"
 
 using namespace std;
+using namespace pml::nmos;
 
 void entry_group_callback(AvahiEntryGroup *g, AvahiEntryGroupState state, AVAHI_GCC_UNUSED void *userdata)
 {

@@ -1,6 +1,8 @@
 #include "version.h"
 #include "log.h"
 
+using namespace pml::nmos;
+
 ApiVersion::ApiVersion(std::string sVersion)
 {
     if(sVersion.empty() == false)

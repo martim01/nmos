@@ -15,8 +15,9 @@
 #include "curlregister.h"
 #include "utils.h"
 
-using namespace std;
+
 using namespace std::placeholders;
+using namespace pml::nmos;
 
 const std::string IS04Server::ROOT = "/x-nmos/node/";
 const std::string IS04Server::SELF = "/self";
