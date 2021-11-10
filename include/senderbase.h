@@ -17,11 +17,11 @@ class NMOS_EXPOSE SenderBase : public IOResource
 
         SenderBase(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId, const std::string& sInterface, TransportParamsRTP::flagsTP flagsTransport=TransportParamsRTP::CORE);
         SenderBase();
-        virtual ~SenderBase(){}
+        virtual ~SenderBase();
 
         /** @brief Set the active destination details to create an SDP. This will be overwritten by IS-05
         **/
-        virtual bool UpdateFromJson(const Json::Value& jsData);
+        bool UpdateFromJson(const Json::Value& jsData) override;
 
         void AddInterfaceBinding(const std::string& sInterface);
         void RemoveInterfaceBinding(const std::string& sInterface);

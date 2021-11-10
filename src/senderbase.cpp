@@ -67,6 +67,11 @@ SenderBase::SenderBase() : IOResource("sender")
 
 }
 
+SenderBase::~SenderBase()
+{
+
+}
+
 bool SenderBase::UpdateFromJson(const Json::Value& jsData)
 {
     Resource::UpdateFromJson(jsData);

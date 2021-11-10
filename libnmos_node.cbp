@@ -5,6 +5,7 @@
 		<Option title="libnmos_node" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
+		<Option virtualFolders="nmos/;" />
 		<Build>
 			<Target title="Linux Debug">
 				<Option platforms="Unix;" />
@@ -51,7 +52,7 @@
 					<Add library="restgoose" />
 					<Add library="pthread" />
 					<Add library="pml_log" />
-					<Add library="libnmos_base" />
+					<Add library="nmos_base" />
 				</Linker>
 			</Target>
 			<Target title="Windows Debug">
@@ -116,6 +117,7 @@
 		<Linker>
 			<Add directory="../Restgoose/lib" />
 			<Add directory="../log/lib" />
+			<Add directory="lib" />
 		</Linker>
 		<Unit filename="include/activator.h" />
 		<Unit filename="include/flowsdpcreator.h" />
