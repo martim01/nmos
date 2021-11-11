@@ -11,24 +11,28 @@ using namespace pml::nmos;
 
 void client_callback(AvahiClient * pClient, AvahiClientState state, AVAHI_GCC_UNUSED void * userdata)
 {
+    pmlLog(pml::LOG_TRACE) << "NMOS: avahi browser client_callback";
     auto pBrowser = reinterpret_cast<pml::nmos::ServiceBrowser*>(userdata);
     pBrowser->ClientCallback(pClient, state);
 }
 
 void type_callback(AvahiServiceTypeBrowser* stb, AvahiIfIndex interface, AvahiProtocol protocol, AvahiBrowserEvent event, const char* type, const char* domain, AvahiLookupResultFlags flags, void* userdata)
 {
+    pmlLog(pml::LOG_TRACE) << "NMOS: avahi browser type_callback";
     auto pBrowser = reinterpret_cast<pml::nmos::ServiceBrowser*>(userdata);
     pBrowser->TypeCallback(interface, protocol, event, type, domain);
 }
 
 void browse_callback(AvahiServiceBrowser *b, AvahiIfIndex interface, AvahiProtocol protocol, AvahiBrowserEvent event, const char *name, const char *type, const char *domain, AVAHI_GCC_UNUSED AvahiLookupResultFlags flags, void* userdata)
 {
+    pmlLog(pml::LOG_TRACE) << "NMOS: avahi browser browse_callback";
     auto pBrowser = reinterpret_cast<ServiceBrowser*>(userdata);
     pBrowser->BrowseCallback(b, interface, protocol, event, name, type, domain);
 }
 
 void resolve_callback(AvahiServiceResolver *r, AVAHI_GCC_UNUSED AvahiIfIndex interface, AVAHI_GCC_UNUSED AvahiProtocol protocol, AvahiResolverEvent event,const char *name, const char *type, const char *domain, const char *host_name, const AvahiAddress *address, uint16_t port, AvahiStringList *txt,AvahiLookupResultFlags flags,AVAHI_GCC_UNUSED void* userdata)
 {
+    pmlLog(pml::LOG_TRACE) << "NMOS: avahi browser reslove_callback";
     auto pBrowser = reinterpret_cast<ServiceBrowser*>(userdata);
     pBrowser->ResolveCallback(r, event, name, type, domain,host_name, address,port,txt);
 
@@ -97,6 +101,7 @@ bool ServiceBrowser::StartBrowser()
 
 void ServiceBrowser::Stop()
 {
+    pmlLog(pml::LOG_DEBUG) << "NMOS: ServiceBrowser - stop";
     if(m_pThreadedPoll)
     {
         avahi_threaded_poll_stop(m_pThreadedPoll);
@@ -132,6 +137,8 @@ void ServiceBrowser::Stop()
         }
     }
     m_nWaitingOn = 0;
+
+    pmlLog(pml::LOG_DEBUG) << "NMOS: ServiceBrowser - stop - done";
 }
 
 

@@ -5,7 +5,6 @@
 		<Option title="libnmos_node" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
-		<Option virtualFolders="nmos/;" />
 		<Build>
 			<Target title="Linux Debug">
 				<Option platforms="Unix;" />

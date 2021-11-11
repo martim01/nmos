@@ -9,6 +9,7 @@
 #include "version.h"
 #include <chrono>
 #include <thread>
+#include <atomic>
 
 class RestGoose;
 
@@ -267,7 +268,7 @@ namespace pml
 
                 void SignalServer(unsigned short nPort, bool bOk, const std::string& sExtra);
 
-                enum enumSignal{SIG_NONE=0, SIG_COMMIT=1, SIG_INSTANCE_FOUND, SIG_INSTANCE_REMOVED, SIG_BROWSE_DONE};
+                enum enumSignal{SIG_NONE=0, SIG_COMMIT=1, SIG_INSTANCE_FOUND, SIG_INSTANCE_REMOVED, SIG_BROWSE_DONE, SIG_EXIT};
 
                 void Signal(enumSignal eSignal);
                 enumSignal GetSignal() const;
@@ -355,7 +356,7 @@ namespace pml
 
                 std::unique_ptr<std::thread> m_pThread;
 
-                bool m_bRun;
+                std::atomic<bool> m_bRun;
                 bool m_bBrowsing;
                 std::shared_ptr<EventPoster> m_pPoster;
                 std::shared_ptr<NodeZCPoster> m_pZCPoster;

@@ -261,11 +261,11 @@ void ServicePublisher::RemoveTxt(const std::string& sKey, bool bModify)
 
 AvahiStringList* ServicePublisher::GetTxtList()
 {
-    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServicePublisher: Create string list" ;
+    pmlLog(pml::LOG_TRACE) << "NMOS: " << "ServicePublisher: Create string list" ;
     AvahiStringList* pList = NULL;
     for(map<string, string>::iterator itTxt = m_mTxt.begin(); itTxt != m_mTxt.end(); ++itTxt)
     {
-        pmlLog(pml::LOG_DEBUG) << "NMOS: " << itTxt->first << "=" << itTxt->second ;
+        pmlLog(pml::LOG_TRACE) << "NMOS: " << itTxt->first << "=" << itTxt->second ;
         if(pList == NULL)
         {
             std::string sPair(itTxt->first);
@@ -283,7 +283,7 @@ AvahiStringList* ServicePublisher::GetTxtList()
 
 void ServicePublisher::Modify()
 {
-    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Modify" ;
+    pmlLog(pml::LOG_TRACE) << "NMOS: " << "Modify" ;
     if(m_pThreadedPoll)
     {
         AvahiStringList* pList = GetTxtList();

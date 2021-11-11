@@ -268,6 +268,7 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<dnsInstance> pInsta
 void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std::string& sReceiverId, const std::string& sSenderStage, const std::string& sSenderTransport, const std::string& sReceiverStage)
 {
     // @todo ConnectThread - if a unicast stream then tell the sender where it should be sending stuff
+    // @todo ConnectTrhead = multiple versions of connecting
 
     connectionSender aCon(connection::FP_ACTIVATION | connection::FP_ENABLE | connection::FP_TRANSPORT_PARAMS);
     aCon.eActivate = connection::ACT_NOW;
@@ -300,7 +301,6 @@ void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std:
             aConR.sTransportFileData = curlresp.sResponse;
 
             std::string sData(ConvertFromJson(aConR.GetJson(ApiVersion(1,0))));
-
             auto curlresp = CurlRegister::PutPatch(sReceiverStage, sData, false, "");
             if(curlresp.nCode != 200)
             {
@@ -312,6 +312,7 @@ void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std:
             }
         }
     }
+
 }
 
 
@@ -324,7 +325,7 @@ void DisconnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const s
         connectionSender aCon(connection::FP_ACTIVATION | connection::FP_ENABLE | connection::FP_TRANSPORT_PARAMS);
         aCon.eActivate = connection::ACT_NOW;
         aCon.bMasterEnable = true;
-        aCon.tpSender.bRtpnabled = true;
+        aCon.tpSender.bRtpEnabled = true;
 
         auto curlresp = CurlRegister::PutPatch(sSenderStage, ConvertFromJson(aCon.GetJson(ApiVersion(1,0))), false, "");
         if(curlresp.nCode != 200)

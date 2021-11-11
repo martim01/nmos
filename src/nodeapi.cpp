@@ -292,10 +292,12 @@ bool NodeApi::StartHttpServers()
 
 void NodeApi::StopHttpServers()
 {
+    pmlLog(pml::LOG_DEBUG) << "NMOS: NodeApi - stop http servers";
     for(auto pServer : m_lstServers)
     {
         pServer->Stop();
     }
+    pmlLog(pml::LOG_DEBUG) << "NMOS: NodeApi - stop http servers - done";
 }
 
 bool NodeApi::StartmDNSServer()
@@ -315,11 +317,13 @@ bool NodeApi::StartmDNSServer()
 
 void NodeApi::StopmDNSServer()
 {
+    pmlLog(pml::LOG_DEBUG) << "NMOS: NodeApi - stop dns-sd";
     if(m_pNodeApiPublisher)
     {
         pmlLog(pml::LOG_INFO) << "NMOS: " << "Stop mDNS Publisher" ;
         m_pNodeApiPublisher->Stop();
     }
+    pmlLog(pml::LOG_DEBUG) << "NMOS: NodeApi - stop dns-sd - done";
 }
 
 
@@ -334,10 +338,13 @@ bool NodeApi::StartServices()
 
 void NodeApi::StopServices()
 {
-    StopRun();
-    StopHttpServers();
-    StopmDNSServer();
-    StopRegistrationBrowser();
+    if(m_pThread)
+    {
+        StopRun();
+        StopHttpServers();
+        StopmDNSServer();
+        StopRegistrationBrowser();
+    }
 }
 
 
@@ -404,6 +411,7 @@ bool NodeApi::Commit()
 
 void NodeApi::ModifyTxtRecords()
 {
+    pmlLog(pml::LOG_TRACE) << "Nmos: NodeApi - ModifyTxRecords";
     auto itEndpoint = m_self.GetEndpointsBegin();
     if(itEndpoint != m_self.GetEndpointsEnd())
     {
@@ -573,7 +581,10 @@ void NodeApi::SignalServer(unsigned short nPort, bool bOk, const std::string& sE
 
 void NodeApi::StopRegistrationBrowser()
 {
+    pmlLog(pml::LOG_DEBUG) << "NMOS: NodeApi - stop registration browser";
     ServiceBrowser::Get().RemoveService("_nmos-registration._tcp");
+
+    pmlLog(pml::LOG_DEBUG) << "NMOS: NodeApi - stop registration browser - done";
 }
 
 int NodeApi::RegisterSimple(const ApiVersion& version)
@@ -705,10 +716,10 @@ bool NodeApi::FindRegistrationNode()
         if(m_sRegistrationNode.empty() == false)
         {
             pmlLog(pml::LOG_INFO) << "NMOS: " << "NodeApi: Register: No nmos registration nodes found. Go peer-to-peer" ;
+            m_sRegistrationNode.clear();
+            ModifyTxtRecords();
         }
         m_nRegistrationStatus = REG_FAILED;
-        m_sRegistrationNode.clear();
-        ModifyTxtRecords();
         return false;
     }
     else
@@ -908,16 +919,20 @@ bool NodeApi::UnregisterResource(const string& sType, const std::string& sId)
 
 bool NodeApi::IsRunning()
 {
-    lock_guard<mutex> lg(m_mutex);
     return m_bRun;
 }
 
 void NodeApi::StopRun()
 {
-    lock_guard<mutex> lg(m_mutex);
-    m_bRun = false;
-    m_pThread->join();
-    m_pThread = nullptr;
+    if(m_pThread)
+    {
+        pmlLog(pml::LOG_DEBUG) << "NMOS: NodeApi - stop run";
+        m_bRun = false;
+        Signal(SIG_EXIT);
+        m_pThread->join();
+        m_pThread = nullptr;
+        pmlLog(pml::LOG_DEBUG) << "NMOS: NodeApi - stop done";
+    }
 }
 
 

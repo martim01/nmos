@@ -168,7 +168,11 @@ Json::Value ConvertToJson(const std::string& str)
 
 std::string ConvertFromJson(const Json::Value& jsValue)
 {
-    std::stringstream ssJson;
-    ssJson << jsValue;
-    return ssJson.str();
+    Json::StreamWriterBuilder builder;
+    builder["commentStyle"] = "None";
+    builder["indentation"] = "";
+    return Json::writeString(builder, jsValue);
+    //std::stringstream ssJson;
+    //ssJson << jsValue;
+    //return ssJson.str();
 }

@@ -16,6 +16,11 @@ static size_t WriteCallback(void* pContents, size_t nSize, size_t nmemb, std::st
     return nRealSize;
 }
 
+static int DebugCallback(CURL* pCurl, curl_infotype type, char* data, size_t nSize, std::string* pData)
+{
+    pData->append(data, nSize);
+    return 0;
+}
 
 static CURL* SetupCurl(const std::string& sUrl)
 {
@@ -28,7 +33,8 @@ static CURL* SetupCurl(const std::string& sUrl)
         curl_easy_setopt(pCurl, CURLOPT_HEADER, 0);
         curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteCallback);
         curl_easy_setopt(pCurl, CURLOPT_URL, sUrl.c_str());
-
+        curl_easy_setopt(pCurl, CURLOPT_DEBUGFUNCTION, DebugCallback);
+        curl_easy_setopt(pCurl, CURLOPT_FOLLOWLOCATION, 1L);
     }
     return pCurl;
 }
@@ -37,10 +43,12 @@ static curlResponse DoCurl(CURL* pCurl, curl_slist *pHeaders)
 {
     curlResponse resp;
     curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &resp.sResponse);
+    curl_easy_setopt(pCurl, CURLOPT_DEBUGDATA, &resp.sDebug);
 
     auto res = curl_easy_perform(pCurl);
     curl_easy_getinfo(pCurl, CURLINFO_RESPONSE_CODE, &resp.nCode);
 
+    pmlLog(pml::LOG_TRACE) << resp.sDebug;
     /* Check for errors */
     if(res != CURLE_OK)
     {

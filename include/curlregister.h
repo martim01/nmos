@@ -2,6 +2,7 @@
 #include <curl/curl.h>
 #include <string>
 #include <memory>
+#include <list>
 
 namespace pml
 {
@@ -15,6 +16,7 @@ namespace pml
             curlResponse() : nCode(500){}
             long nCode;
             std::string sResponse;
+            std::string sDebug;
         };
 
 
@@ -55,6 +57,7 @@ namespace pml
 
                 static const std::string STR_RESOURCE[7];
 
+                //std::list<std::shared_ptr<std::thread>> m_lstThread;
 
 
         };
