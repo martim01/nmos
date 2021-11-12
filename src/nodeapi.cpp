@@ -123,6 +123,7 @@ m_nConnectionPort(0),
 m_nDiscoveryPort(0),
 m_nHeartbeatTime(5000)
 {
+    m_mBrowser.insert(std::make_pair("local", std::make_unique<ServiceBrowser>()));
 }
 
 NodeApi::~NodeApi()
@@ -477,16 +478,22 @@ bool NodeApi::BrowseForRegistrationNode()
 {
     if(m_bBrowsing == false)
     {
-        if(m_mConnectionServers.begin()->first < ApiVersion(1,3))
+        for(const auto& pairBrowser : m_mBrowser)
         {
-            ServiceBrowser::Get().AddService("_nmos-registration._tcp", m_pZCPoster);
+            if(m_mConnectionServers.begin()->first < ApiVersion(1,3))
+            {
+                pairBrowser.second->AddService("_nmos-registration._tcp", m_pZCPoster);
+            }
+            if(m_mConnectionServers.rbegin()->first > ApiVersion(1,2))
+            {
+                pairBrowser.second->AddService("_nmos-register._tcp", m_pZCPoster);
+            }
+
+            pairBrowser.second->StartBrowser();
         }
-        if(m_mConnectionServers.rbegin()->first > ApiVersion(1,2))
-        {
-            ServiceBrowser::Get().AddService("_nmos-register._tcp", m_pZCPoster);
-        }
+
         pmlLog(pml::LOG_INFO) << "NMOS: " << "Browse for register nodes" ;
-        ServiceBrowser::Get().StartBrowser();
+
         m_bBrowsing = true;
     }
 
@@ -585,7 +592,10 @@ void NodeApi::SignalServer(unsigned short nPort, bool bOk, const std::string& sE
 void NodeApi::StopRegistrationBrowser()
 {
     pmlLog(pml::LOG_DEBUG) << "NMOS: NodeApi - stop registration browser";
-    ServiceBrowser::Get().RemoveService("_nmos-registration._tcp");
+    for(const auto& pairBrowser : m_mBrowser)
+    {
+        pairBrowser.second->RemoveService("_nmos-registration._tcp");
+    }
 
     pmlLog(pml::LOG_DEBUG) << "NMOS: NodeApi - stop registration browser - done";
 }
@@ -1248,3 +1258,21 @@ std::map<std::string, NodeApi::regnode> NodeApi::GetRegNodes()
      std::lock_guard<std::mutex> lg(m_mutex);
      return m_versionRegistration;
  }
+
+bool NodeApi::AddBrowseDomain(const std::string& sDomain)
+{
+    if(!m_bRun)
+    {
+        return m_mBrowser.insert(std::make_pair(sDomain, std::make_unique<ServiceBrowser>(sDomain))).second;
+    }
+    return false;
+}
+bool NodeApi::RemoveBrowseDomain(const std::string& sDomain)
+{
+    if(!m_bRun)
+    {
+        m_mBrowser.erase(sDomain);
+        return true;
+    }
+    return false;
+}

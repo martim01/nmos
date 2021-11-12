@@ -31,16 +31,14 @@ namespace pml
         // Construction
             public:
 
-                static ServiceBrowser& Get();
+                ServiceBrowser(const std::string& sDomain="");
+                virtual ~ServiceBrowser();
+
 
                 void AddService(const std::string& sService, std::shared_ptr<ZCPoster> pPoster);
                 void RemoveService(const std::string& sService);
 
-                bool StartBrowser(const std::string& sDomain="");
-
-
-
-
+                bool StartBrowser();
                 void ClientCallback(AvahiClient* pClient, AvahiClientState state);
                 void TypeCallback(AvahiIfIndex interface, AvahiProtocol protocol, AvahiBrowserEvent event, const char* type, const char* domain);
                 void BrowseCallback(AvahiServiceBrowser* pBrowser, AvahiIfIndex interface, AvahiProtocol protocol, AvahiBrowserEvent event, const char *name, const char *type, const char *domain);
@@ -54,8 +52,8 @@ namespace pml
 
 
             protected:
-                ServiceBrowser();
-                virtual ~ServiceBrowser();
+
+
 
                 void Browse();
                 void DeleteAllServices();
@@ -65,12 +63,11 @@ namespace pml
 
                 std::shared_ptr<ZCPoster> GetPoster(const std::string& sService);
 
-                bool m_bFree;
 
                 std::mutex m_mutex;
-        //        void OnStop(wxCommandEvent& event);
 
                 std::string m_sDomain;
+                bool m_bFree;
                 AvahiThreadedPoll* m_pThreadedPoll;
                 AvahiClient * m_pClient;
                 AvahiServiceTypeBrowser* m_pTypeBrowser;

@@ -235,6 +235,9 @@ namespace pml
                 void SenderActivated(const std::string& sId);
 
 
+                bool AddBrowseDomain(const std::string& sDomain);
+                bool RemoveBrowseDomain(const std::string& sDomain);
+
 
 
             protected:
@@ -328,11 +331,7 @@ namespace pml
                 ResourceHolder<Source> m_sources;
                 ResourceHolder<Flow> m_flows;
 
-                //ResourceHolder m_query;
-
-
-
-
+                std::map<std::string, std::unique_ptr<ServiceBrowser>> m_mBrowser;
 
 
                 std::string m_sRegistrationNode;

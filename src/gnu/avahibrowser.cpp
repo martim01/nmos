@@ -41,14 +41,9 @@ void resolve_callback(AvahiServiceResolver *r, AVAHI_GCC_UNUSED AvahiIfIndex int
 
 
 
-ServiceBrowser& ServiceBrowser::Get()
-{
-    static ServiceBrowser sb;
-    return sb;
-}
 
-
-ServiceBrowser::ServiceBrowser() :
+ServiceBrowser::ServiceBrowser(const std::string& sDomain) :
+    m_sDomain(sDomain),
     m_bFree(false),
     m_pThreadedPoll(0),
     m_pClient(0),
@@ -74,12 +69,12 @@ void ServiceBrowser::DeleteAllServices()
 }
 
 
-bool ServiceBrowser::StartBrowser(const std::string& sDomain)
+bool ServiceBrowser::StartBrowser()
 {
     lock_guard<mutex> lock(m_mutex);
     if(!m_bStarted)
     {
-        m_sDomain = sDomain;
+
         int error;
 
         pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser: Create Threaded poll object." ;
