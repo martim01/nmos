@@ -110,6 +110,9 @@ m_senders("sender"),
 m_receivers("receiver"),
 m_sources("source"),
 m_flows("flow"),
+m_versionRegistration(0,0),
+m_pNodeApiPublisher(nullptr),
+m_pRegisterCurl(nullptr),
 m_nRegistrationStatus(REG_START),
 m_pThread(nullptr),
 m_bRun(true),
@@ -636,31 +639,38 @@ int NodeApi::UpdateRegisterSimple(const ApiVersion& version)
 
 void NodeApi::HandleInstanceResolved(std::shared_ptr<dnsInstance> pInstance)
 {
-    map<string, string>::const_iterator itPriority = pInstance->mTxt.find("pri");
-    map<string, string>::const_iterator itVersion = pInstance->mTxt.find("api_ver");
-    map<string, string>::const_iterator itProto = pInstance->mTxt.find("api_proto");
+    auto itPriority = pInstance->mTxt.find("pri");
+    auto itVersion = pInstance->mTxt.find("api_ver");
+    auto itProto = pInstance->mTxt.find("api_proto");
     if(itPriority != pInstance->mTxt.end() && itVersion != pInstance->mTxt.end() && SdpManager::CheckIpAddress(pInstance->sHostIP) == SdpManager::IP4_UNI && itProto != pInstance->mTxt.end())
     {
         //check if the registration node can handle one of our versions...
-        bool bVersion(false);
+
+        ApiVersion version(0,0);
         for(const auto& pairServer : m_mDiscoveryServers)
         {
             if(itVersion->second.find(pairServer.first.GetVersionAsString()) != string::npos)
             {
-                bVersion = true;
+                if(version < pairServer.first)
+                {
+                    version = pairServer.first;
+                }
                 break;
             }
         }
-        if(bVersion)
+        if(version.GetMajor() != 0)
         {
             try
             {
                 unsigned short nPriority = stoul(itPriority->second);
                 stringstream ssUrl;
-                ssUrl <<  pInstance->sHostIP << ":" << pInstance->nPort << "/x-nmos/registration/v1.2";
+                ssUrl <<  pInstance->sHostIP << ":" << pInstance->nPort << "/x-nmos/registration/";
                 if(itProto->second == "http" || itProto->second == "https")
                 {
-                    m_mRegNode.insert(make_pair(ssUrl.str(), regnode(nPriority)));
+                    {
+                        std::lock_guard<std::mutex> lg(m_mutex);
+                        m_mRegNode.insert(make_pair(ssUrl.str(), regnode(nPriority, version)));
+                    }
                     pmlLog(pml::LOG_DEBUG) << "NMOS: " << "NodeApi: Found registration node" << ssUrl.str() << " proto=" << itProto->second << " ver=" << itVersion->second << " priority=" << itPriority->second ;
                 }
             }
@@ -684,8 +694,13 @@ void NodeApi::HandleInstanceResolved(std::shared_ptr<dnsInstance> pInstance)
 void NodeApi::HandleInstanceRemoved(std::shared_ptr<dnsInstance> pInstance)
 {
     stringstream ssUrl;
-    ssUrl <<  pInstance->sHostIP << ":" << pInstance->nPort << "/x-nmos/registration/v1.2";
-    m_mRegNode.erase(ssUrl.str());
+    ssUrl <<  pInstance->sHostIP << ":" << pInstance->nPort << "/x-nmos/registration/";
+
+    {
+        std::lock_guard<std::mutex> lg(m_mutex);
+        m_mRegNode.erase(ssUrl.str());
+    }
+
     if(ssUrl.str() == m_sRegistrationNode)
     {
         Signal(SIG_INSTANCE_REMOVED);
@@ -694,22 +709,25 @@ void NodeApi::HandleInstanceRemoved(std::shared_ptr<dnsInstance> pInstance)
 
 bool NodeApi::FindRegistrationNode()
 {
+    m_mutex.lock();
     string sRegNode;
-
+    ApiVersion version;
     unsigned long nPriority(200);
-    for(map<string, regnode >::const_iterator itNode = m_mRegNode.begin(); itNode != m_mRegNode.end(); ++itNode)
+    for(auto pairNode : m_mRegNode)
     {   //get the registration node with smallest priority number
 
-        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "NodeApi: Checkregistration node" << itNode->first ;
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "NodeApi: Checkregistration node" << pairNode.first ;
 
-        if(itNode->second.bGood && itNode->second.nPriority < nPriority)
+        if(pairNode.second.bGood && pairNode.second.nPriority < nPriority)
         {//for now only doing v1.2
-            nPriority = itNode->second.nPriority;
-            sRegNode = itNode->first;
+            nPriority = pairNode.second.nPriority;
+            sRegNode = pairNode.first;
+            version = pairNode.second.version;
             pmlLog(pml::LOG_INFO) << "NMOS: " << "NodeApi: Register. Found nmos registration node with v1.2 and lower priority: " << sRegNode << " " << nPriority ;
         }
 
     }
+    m_mutex.unlock();
 
     if(sRegNode.empty())
     {
@@ -717,6 +735,7 @@ bool NodeApi::FindRegistrationNode()
         {
             pmlLog(pml::LOG_INFO) << "NMOS: " << "NodeApi: Register: No nmos registration nodes found. Go peer-to-peer" ;
             m_sRegistrationNode.clear();
+            m_versionRegistration = ApiVersion(0,0);
             ModifyTxtRecords();
         }
         m_nRegistrationStatus = REG_FAILED;
@@ -733,6 +752,7 @@ bool NodeApi::FindRegistrationNode()
             m_nRegistrationStatus = REG_DONE;
         }
         m_sRegistrationNode = sRegNode;
+        m_versionRegistration = version;
         ModifyTxtRecords();
         return true;
     }
@@ -741,10 +761,10 @@ bool NodeApi::FindRegistrationNode()
 
 template<class T> long NodeApi::RegisterResources(ResourceHolder<T>& holder, const ApiVersion& version)
 {
-    for(typename map<string, shared_ptr<T> >::const_iterator itResource = holder.GetResourceBegin(); itResource != holder.GetResourceEnd(); ++itResource)
+    for(auto pairResource : holder.GetResources())
     {
-        pmlLog(pml::LOG_INFO) << "NMOS: " << "NodeApi: Register. " << holder.GetType() << " : " << itResource->first ;
-        long nResult = RegisterResource(holder.GetType(), itResource->second->GetJson(version));
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "NodeApi: Register. " << holder.GetType() << " : " << pairResource.first ;
+        long nResult = RegisterResource(holder.GetType(), pairResource.second->GetJson(version));
         if(nResult != 201 && nResult != 200)
         {
             return nResult;
@@ -755,10 +775,10 @@ template<class T> long NodeApi::RegisterResources(ResourceHolder<T>& holder, con
 
 template<class T> long NodeApi::ReregisterResources(ResourceHolder<T>& holder, const ApiVersion& version)
 {
-    for(typename map<string, shared_ptr<T> >::const_iterator itResource = holder.GetChangedResourceBegin(); itResource != holder.GetChangedResourceEnd(); ++itResource)
+    for(auto pairResource : holder.GetResources())
     {
-        pmlLog(pml::LOG_INFO) << "NMOS: " << "NodeApi: Register. " << holder.GetType() << " : " << itResource->first ;
-        long nResult = RegisterResource(holder.GetType(), itResource->second->GetJson(version));
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "NodeApi: Register. " << holder.GetType() << " : " << pairResource.first ;
+        long nResult = RegisterResource(holder.GetType(), pairResource.second->GetJson(version));
         if(nResult != 200 && nResult != 201)
         {
             return nResult;
@@ -775,7 +795,7 @@ long NodeApi::RegisterResource(const string& sType, const Json::Value& json)
     string sPost(ConvertFromJson(jsonRegister));
 
 
-    auto resp =  CurlRegister::Post(m_sRegistrationNode+"/resource", sPost);
+    auto resp =  CurlRegister::Post(m_sRegistrationNode+m_versionRegistration.GetVersionAsString()+"/resource", sPost);
     pmlLog(pml::LOG_INFO) << "NMOS: " << "RegisterApi: Register returned [" << resp.nCode << "] " << resp.sResponse ;
     if(resp.nCode == 500)
     {
@@ -789,7 +809,7 @@ long NodeApi::RegistrationHeartbeat()
 {
     m_tpHeartbeat = chrono::system_clock::now() + chrono::milliseconds(m_nHeartbeatTime);
 
-    auto resp = CurlRegister::Post(m_sRegistrationNode+"/health/nodes/"+m_self.GetId(), "");
+    auto resp = CurlRegister::Post(m_sRegistrationNode+m_versionRegistration.GetVersionAsString()+"/health/nodes/"+m_self.GetId(), "");
     pmlLog(pml::LOG_INFO) << "NMOS: " << "RegisterApi: Heartbeat: returned [" << resp.nCode << "] " << resp.sResponse ;
 
     if(resp.nCode == 500 || resp.nCode == 0)
@@ -802,6 +822,7 @@ long NodeApi::RegistrationHeartbeat()
 
 void NodeApi::MarkRegNodeAsBad()
 {
+    std::lock_guard<std::mutex> lg(m_mutex);
     auto itNode = m_mRegNode.find(m_sRegistrationNode);
     if(itNode != m_mRegNode.end())
     {
@@ -839,7 +860,7 @@ int NodeApi::UnregisterSimple()
 
 bool NodeApi::UnregisterResource(const string& sType, const std::string& sId)
 {
-    auto resp = CurlRegister::Delete(m_sRegistrationNode+"/resource", sType, sId);
+    auto resp = CurlRegister::Delete(m_sRegistrationNode+m_versionRegistration.GetVersionAsString()+"/resource", sType, sId);
     pmlLog(pml::LOG_INFO) << "NMOS: " << "RegisterApi:Unregister returned [" << resp.nCode << "] " << resp.sResponse ;
     if(resp.nCode == 500)
     {
@@ -1209,3 +1230,21 @@ void NodeApi::SetSdpCreator(std::shared_ptr<Flow> pFlow)
         return;
     }
 }
+
+std::map<std::string, NodeApi::regnode> NodeApi::GetRegNodes()
+{
+    std::lock_guard<std::mutex> lg(m_mutex);
+    return m_mRegNode;
+}
+
+ const std::string NodeApi::GetRegistrationNode() const
+ {
+    std::lock_guard<std::mutex> lg(m_mutex);
+    return m_sRegistrationNode;
+ }
+
+ ApiVersion NodeApi::GetRegistrationVersion() const
+ {
+     std::lock_guard<std::mutex> lg(m_mutex);
+     return m_versionRegistration;
+ }

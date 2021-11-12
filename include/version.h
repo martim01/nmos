@@ -9,7 +9,7 @@ namespace pml
         class ApiVersion
         {
             public:
-                ApiVersion(unsigned short nMaj, unsigned nMin) : m_nMajor(nMaj), m_nMinor(nMin){}
+                ApiVersion(unsigned short nMaj=0, unsigned nMin=0) : m_nMajor(nMaj), m_nMinor(nMin){}
                 ApiVersion(std::string sVersion);
 
                 unsigned short GetMajor() const;

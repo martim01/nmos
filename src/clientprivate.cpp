@@ -1931,7 +1931,7 @@ bool ClientApiImpl::MeetsQuery(const std::string& sQuery, std::shared_ptr<Resour
     //    return true;
     //}
     // @todo run the query properly
-    //return false;
+    //return false;9999
 }
 
 void ClientApiImpl::SubscribeToQueryServer()

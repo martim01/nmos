@@ -203,22 +203,6 @@ namespace pml
                 **/
                 void ReceiverPatchAllowed(unsigned short nPort, bool bOk, const std::string& sId, const std::string& sInterfaceIp);
 
-
-
-                /** @brief Returns a const reference to the ResourceHolder that contains all the resources returned from a query
-                *   @return </i>const ResourceHolder&</i>
-                **/
-                //const ResourceHolder& GetQueryResults();
-
-
-                /** @brief Attempts to query a query server. The query is performed in a separate thread and EventPoster::CurlDone is called when the query returns
-                *   @param eResource the type of resource to query for
-                *   @param sQuery the query to perform
-                *   @return <i>bool</i> Returns true if a query server has been found
-                **/
-                //bool Query(enumResource eResource, const std::string& sQuery);
-
-
                 /** @brief returns the port number used for the connection api
                 *   @return <i>unsigned short</i>
                 **/
@@ -230,6 +214,8 @@ namespace pml
                 Json::Value JsonConnectionVersions() const;
 
 
+                const std::string GetRegistrationNode() const;
+                ApiVersion GetRegistrationVersion() const;
 
 
                 /** @brief Sets the regularity that heartbeat messages are sent to a registry
@@ -290,7 +276,14 @@ namespace pml
                 long RegistrationHeartbeat();
                 int UpdateRegisterSimple(const ApiVersion& version);
 
-
+                struct regnode
+                {
+                    regnode(unsigned short np, const ApiVersion& ver) : bGood(true), nPriority(np), version(ver){}
+                    bool bGood;
+                    unsigned short nPriority;
+                    ApiVersion version;
+                };
+                std::map<std::string, regnode> GetRegNodes();
 
             private:
                 NodeApi();
@@ -343,6 +336,7 @@ namespace pml
 
 
                 std::string m_sRegistrationNode;
+                ApiVersion m_versionRegistration;
                 //std::string m_sQueryNode;
 
                 std::unique_ptr<ServicePublisher> m_pNodeApiPublisher;
@@ -350,7 +344,7 @@ namespace pml
                 std::unique_ptr<CurlRegister> m_pRegisterCurl;
                 unsigned int m_nRegistrationStatus;
 
-                std::mutex m_mutex;
+                mutable std::mutex m_mutex;
                 std::condition_variable m_cvBrowse; //sync between nmos thread and ServiceBrowser thread
                 std::condition_variable m_cvCommit; //sync between nmos thread and main thread (used to sleep until a Commit is called)
 
@@ -370,12 +364,7 @@ namespace pml
                 std::map<ApiVersion, std::unique_ptr<IS04Server>> m_mDiscoveryServers;
                 std::map<ApiVersion, std::unique_ptr<IS05Server>> m_mConnectionServers;
 
-                struct regnode
-                {
-                    regnode(unsigned short np) : bGood(true), nPriority(np){}
-                    bool bGood;
-                    unsigned short nPriority;
-                };
+
                 std::map<std::string, regnode> m_mRegNode;
 
                 unsigned long m_nHeartbeatTime;

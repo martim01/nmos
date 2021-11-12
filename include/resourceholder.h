@@ -41,6 +41,7 @@ namespace pml
 
                 bool ResourceExists(const std::string& sUuid) const;
 
+                const typename std::map<std::string, std::shared_ptr<T> >& GetResources() const { return m_mResource; }
                 typename std::map<std::string, std::shared_ptr<T> >::const_iterator GetResourceBegin() const;
                 typename std::map<std::string, std::shared_ptr<T> >::const_iterator GetResourceEnd() const;
                 typename std::map<std::string, std::shared_ptr<T> >::const_iterator FindNmosResource(std::string sUuid) const;

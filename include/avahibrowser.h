@@ -36,7 +36,7 @@ namespace pml
                 void AddService(const std::string& sService, std::shared_ptr<ZCPoster> pPoster);
                 void RemoveService(const std::string& sService);
 
-                bool StartBrowser();
+                bool StartBrowser(const std::string& sDomain="");
 
 
 
@@ -70,7 +70,7 @@ namespace pml
                 std::mutex m_mutex;
         //        void OnStop(wxCommandEvent& event);
 
-
+                std::string m_sDomain;
                 AvahiThreadedPoll* m_pThreadedPoll;
                 AvahiClient * m_pClient;
                 AvahiServiceTypeBrowser* m_pTypeBrowser;

@@ -74,11 +74,12 @@ void ServiceBrowser::DeleteAllServices()
 }
 
 
-bool ServiceBrowser::StartBrowser()
+bool ServiceBrowser::StartBrowser(const std::string& sDomain)
 {
     lock_guard<mutex> lock(m_mutex);
     if(!m_bStarted)
     {
+        m_sDomain = sDomain;
         int error;
 
         pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ServiceBrowser: Create Threaded poll object." ;
@@ -165,7 +166,7 @@ void ServiceBrowser::Browse()
         {
             AvahiServiceBrowser* psb = NULL;
             /* Create the service browser */
-            if (!(psb = avahi_service_browser_new(m_pClient, AVAHI_IF_UNSPEC, AVAHI_PROTO_INET, (pairService.first).c_str(), NULL, (AvahiLookupFlags)0, browse_callback, reinterpret_cast<void*>(this))))
+            if (!(psb = avahi_service_browser_new(m_pClient, AVAHI_IF_UNSPEC, AVAHI_PROTO_INET, (pairService.first).c_str(), m_sDomain.c_str(), (AvahiLookupFlags)0, browse_callback, reinterpret_cast<void*>(this))))
             {
                 pmlLog(pml::LOG_ERROR) << "NMOS: " << "ServiceBrowser: Failed to create service browser" ;
             }
