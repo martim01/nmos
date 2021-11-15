@@ -28,6 +28,8 @@
 #include "utils.h"
 #include <algorithm>
 #include <numeric>
+#include "websocketclient.h"
+
 
 using namespace pml::nmos;
 using namespace std::placeholders;
@@ -378,12 +380,12 @@ ClientApiImpl::ClientApiImpl() :
     m_pInstance(0),
     m_nCurlThreadCount(0),
     m_pPoster(0),
-    m_pClientPoster(std::make_shared<ClientPoster>()),
     m_pClientZCPoster(std::make_shared<ClientZCPoster>()),
     m_pCurl(new CurlRegister(std::bind(&ClientApiImpl::SetCurlDone, this, _1,_2,_3,_4))),
     m_pThread(nullptr),
     m_bStarted(false),
-    m_bDoneQueryBrowse(false)
+    m_bDoneQueryBrowse(false),
+    m_pWebSocket(std::make_unique<WebSocketClient>(std::bind(&ClientApiImpl::WebsocketConnected, this, _1), std::bind(&ClientApiImpl::WebsocketMessage, this, _1, _2)))
 {
     m_mBrowser.insert(std::make_pair("local", std::make_unique<ServiceBrowser>()));
 }
@@ -429,11 +431,6 @@ void ClientApiImpl::StopRun()
         m_pThread = nullptr;
     }
 
-}
-
-std::shared_ptr<EventPoster> ClientApiImpl::GetClientPoster()
-{
-    return m_pClientPoster;
 }
 
 std::shared_ptr<ZCPoster> ClientApiImpl::GetClientZCPoster()
@@ -1965,7 +1962,7 @@ void ClientApiImpl::SubscribeToQueryServer()
 
             auto curlresp = CurlRegister::Post(ssUrl.str(), ConvertFromJson(jsQuery));
 
-            HandleQuerySubscriptionResponse(curlResp.nCode, ConvertToJson(curlResponse.sResponse));
+            HandleQuerySubscriptionResponse(curlresp.nCode, ConvertToJson(curlresp.sResponse));
 
         }
     }
@@ -2040,4 +2037,16 @@ bool ClientApiImpl::RemoveBrowseDomain(const std::string& sDomain)
         return true;
     }
     return false;
+}
+
+
+bool ClientApiImpl::WebsocketConnected(const url& theUrl)
+{
+
+    return true;
+}
+
+bool ClientApiImpl::WebsocketMessage(const url& theUrl, const std::string& sMessage)
+{
+    return true;
 }

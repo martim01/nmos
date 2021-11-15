@@ -16,6 +16,7 @@ int main()
 {
 
     pml::LogStream::AddOutput(make_unique<pml::LogOutput>());
+    pml::LogStream::SetOutputLevel(pml::LOG_DEBUG);
 
     auto pPoster = std::make_shared<ThreadPoster>();
 

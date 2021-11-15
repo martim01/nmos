@@ -298,6 +298,8 @@ bool Sender::Stage(const connectionSender& conRequest, std::shared_ptr<EventPost
 
                     m_Staged.sActivationTime = m_Staged.sRequestedTime;
                     m_Staged.tpActivation = tp;
+
+                    pmlLog(pml::LOG_DEBUG) << "NMOS: Sender  - add absolute activation";
                     api.AddActivationSender(tp, GetId());
                 }
                 else
@@ -325,6 +327,7 @@ bool Sender::Stage(const connectionSender& conRequest, std::shared_ptr<EventPost
 
                 m_Staged.sActivationTime = ConvertTimeToString(tpAbs, true);
                 m_Staged.tpActivation = tpAbs;
+                pmlLog(pml::LOG_DEBUG) << "NMOS: Sender  - add relative activation";
                 api.AddActivationSender(tpAbs, GetId());
             }
             catch(std::invalid_argument& ia)

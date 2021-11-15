@@ -4,7 +4,7 @@
 #include "receiver.h"
 #include "utils.h"
 #include "ioresource.h"
-
+#include "log.h"
 
 static void ActivationThread(pml::nmos::Activator* pActivator)
 {
@@ -19,6 +19,7 @@ static void ActivationThread(pml::nmos::Activator* pActivator)
         else
         {
             //reset time
+            pmlLog(pml::LOG_DEBUG) << "NMOS: ActivationThread - reset time";
         }
     }
 
@@ -142,9 +143,12 @@ void pml::nmos::Activator::Activate()
     std::lock_guard<std::mutex> lock(m_mutex);
     if(m_mmActivations.empty() == false)
     {
+        pmlLog(pml::LOG_DEBUG) << "NMOS: Activator : Activate";
+
         for(auto itEvent = m_mmActivations.begin(); itEvent != m_mmActivations.upper_bound(m_mmActivations.begin()->first); ++itEvent)
         {
-            itEvent->second->Activate();
+
+            itEvent->second->Activate(false, m_api);
         }
         m_mmActivations.erase(m_mmActivations.begin()->first);
     }

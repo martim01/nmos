@@ -9,6 +9,11 @@ namespace pml
 
         class Sender : public SenderBase
         {
+            friend class IS04Server;
+            friend class IS05Server;
+            friend class NodeApiPrivate;
+
+
             public:
                 Sender(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId, const std::string& sInterface, TransportParamsRTP::flagsTP flagsTransport=TransportParamsRTP::CORE);
                 Sender();
@@ -21,18 +26,15 @@ namespace pml
 
                 bool Commit(const ApiVersion& version) override;
 
-                void CreateSDP(NodeApiPrivate& api);
 
-            protected:
-
-                void CreateSDP(NodeApiPrivate& api, const connectionSender& state);
 
             private:
-                friend class IS04Server;
-                friend class IS05Server;
+                void CreateSDP(NodeApiPrivate& api);
+                void CreateSDP(NodeApiPrivate& api, const connectionSender& state);
 
 
-                void Activate(bool bImmediate, NodeApiPrivate& api);
+
+                void Activate(bool bImmediate, NodeApiPrivate& api) override;
                 void CommitActivation(NodeApiPrivate& api);
                 bool Stage(const connectionSender& conRequest, std::shared_ptr<EventPoster> pPoster, NodeApiPrivate& api);
         };

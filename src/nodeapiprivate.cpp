@@ -1113,8 +1113,7 @@ bool NodeApiPrivate::AddSender(shared_ptr<Sender> pResource)
             {
                 pairServer.second->AddSenderEndpoint(pResource->GetId());
             }
-
-            pResource->CreateSDP(*this);
+            pResource->Activate(true, *this);
             return true;
         }
     }
@@ -1277,6 +1276,10 @@ bool NodeApiPrivate::AddActivationSender(const std::chrono::time_point<std::chro
     {
         m_activator.AddActivation(tp, pSender);
     }
+    else
+    {
+        pmlLog(pml::LOG_WARN) << "NMOS: AddActivationSender - sender not found";
+    }
 
     return (pSender != nullptr);
 }
@@ -1297,6 +1300,10 @@ bool NodeApiPrivate::AddActivationReceiver(const std::chrono::time_point<std::ch
     if(pReceiver)
     {
         m_activator.AddActivation(tp, pReceiver);
+    }
+    else
+    {
+        pmlLog(pml::LOG_WARN) << "NMOS: AddActivationReceiver - receiver not found";
     }
     return (pReceiver != nullptr);
 }

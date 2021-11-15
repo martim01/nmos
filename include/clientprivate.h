@@ -11,8 +11,9 @@
 #include "senderbase.h"
 #include "flow.h"
 #include "receiverbase.h"
-#include "clientposter.h"
+#include "namedtype.h"
 
+class WebSocketClient;
 namespace pml
 {
     namespace nmos
@@ -23,6 +24,7 @@ namespace pml
         class dnsInstance;
         class CurlRegister;
         class ClientApiPoster;
+        class ZCPoster;
 
         class ClientApiImpl
         {
@@ -138,6 +140,9 @@ namespace pml
                 bool AddBrowseDomain(const std::string& sDomain);
                 bool RemoveBrowseDomain(const std::string& sDomain);
 
+                bool WebsocketConnected(const url& theUrl);
+                bool WebsocketMessage(const url& theUrl, const std::string& sMessage);
+
             private:
                 friend class ClientPoster;
 
@@ -221,7 +226,6 @@ namespace pml
                 long m_nCurlType;
                 std::string m_sCurlResourceId;
 
-                std::shared_ptr<ClientPoster> m_pClientPoster;
                 std::shared_ptr<ClientZCPoster> m_pClientZCPoster;
                 std::unique_ptr<CurlRegister> m_pCurl;
                 std::multimap<unsigned short, std::shared_ptr<dnsInstance> > m_mmQueryNodes;
@@ -242,6 +246,9 @@ namespace pml
                 };
 
                 std::multimap<int, query> m_mmQuery;
+
+
+                std::unique_ptr<WebSocketClient> m_pWebSocket;
         };
     };
 };

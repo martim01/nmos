@@ -23,7 +23,7 @@ namespace pml
                 void SetSender(const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp, NodeApiPrivate& api);  //this is the IS-04 way of connecting
                 bool Stage(const connectionReceiver& conRequest, NodeApiPrivate& api);
                 void CommitActivation(NodeApiPrivate& api);
-                void Activate(bool bImmediate, NodeApiPrivate& api);
+                void Activate(bool bImmediate, NodeApiPrivate& api) override;
         };
     };
 };
