@@ -21,7 +21,7 @@ namespace pml
                 /** @brief Constructor - this is called in NodeApi::StartService
                 *   @param pPoster a sheared_ptr to an object of a class derived from EventPoster.
                 **/
-                IS04Server(std::shared_ptr<RestGoose> pServer, const ApiVersion& version, std::shared_ptr<EventPoster> pPoster);
+                IS04Server(std::shared_ptr<RestGoose> pServer, const ApiVersion& version, std::shared_ptr<EventPoster> pPoster, NodeApiPrivate& api);
                 virtual ~IS04Server();
 
 
@@ -61,6 +61,7 @@ namespace pml
                 Json::Value GetJsonFlows(const ApiVersion& version);
                 Json::Value GetJsonReceivers(const ApiVersion& version);
                 Json::Value GetJsonSenders(const ApiVersion& version);
+
 
 
 

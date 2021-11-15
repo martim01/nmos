@@ -37,16 +37,8 @@ namespace pml
                 void SetReceiverId(const std::string& sReceiverId, bool bActive);
 
 
-                std::string GetParentResourceId() const
-                {
-                    return m_sDeviceId;
-                }
-
-                const std::string& GetFlowId() const
-                {
-                    return m_sFlowId;
-                }
-
+                std::string GetParentResourceId() const {   return m_sDeviceId;  }
+                const std::string& GetFlowId() const    {   return m_sFlowId;   }
                 const std::string& GetTransportType() const { return STR_TRANSPORT[m_eTransport]; }
 
                 Json::Value GetConnectionStagedJson(const ApiVersion& version) const;
@@ -58,15 +50,12 @@ namespace pml
 
                 connectionSender GetStaged();
                 connectionSender GetActive();
-
-                // called by the main thread as a reply to the eventposter
-
                 const std::string& GetTransportFile() const;
 
                 bool IsActivateAllowed() const;
-
-
                 const std::string GetDestinationIp() const {return m_sDestinationIp;}
+
+
             protected:
 
                 std::string m_sFlowId;

@@ -3,6 +3,7 @@
 #include <string>
 #include <thread>
 #include <mutex>
+#include "version.h"
 
 namespace pml
 {
@@ -19,7 +20,12 @@ namespace pml
                 //EventPoster()=0;
                 //virtual ~EventPoster()=0;
 
-                void _CurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId=std::string());
+                void _RegistrationNodeFound(const std::string& sUrl, unsigned short nPriority, const ApiVersion& version);
+                void _RegistrationNodeRemoved(const std::string& sUrl);
+                void _RegistrationNodeChanged(const std::string& sUrl, unsigned short nPriority, bool bGood, const ApiVersion& version);
+                void _RegistrationNodeChosen(const std::string& sUrl, unsigned short nPriority, const ApiVersion& version);
+                void _RegistrationChanged(const std::string& sUrl, bool bRegistered);
+
                 void _Target(const std::string& sReceiverId, const std::string& sTransportFile, unsigned short nPort);
                 void _PatchSender(const std::string& sSenderId, const connectionSender& conPatch, unsigned short nPort);
                 void _PatchReceiver(const std::string& sReceiverId, const connectionReceiver& conPatch, unsigned short nPort);
@@ -28,15 +34,39 @@ namespace pml
 
             protected:
 
-                /** @brief Called by CurlRegister when a request to a webserver is complete
-                *   @param nResult the result of the request. 0 = means no connection, otherwise an HTTP header response code
-                *   @param sResonse contains the response from the server
-                *   @param nType the type of request made to the server
-                *   @param sResourceId is the id of the resource the request was made against if any
-                *   @note this is a non-blocking event
+                /** @brief Called by NodeApi when a new registration node is discovered
+                *   @param sUrl the url/ip address of the node
+                *   @param nPriority the priority of the register
+                *   @param version the highest ApiVersion that the registration node has in common with our node
                 **/
-                virtual void CurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId)=0;
+                virtual void RegistrationNodeFound(const std::string& sUrl, unsigned short nPriority, const ApiVersion& version)=0;
 
+                /** @brief Called by NodeApi when a new registration node is remoed
+                *   @param sUrl the url/ip address of the node
+                **/
+                virtual void RegistrationNodeRemoved(const std::string& sUrl)=0;
+
+                /** @brief Called by NodeApi whe a property of the registration node changes
+                *   @param sUrl the url/ip address of the node
+                *   @param nPriority the priority of the register
+                *   @param bGood whether the register is healthy or not
+                *   @param version the highest ApiVersion that the registration node has in common with our node
+                **/
+                virtual void RegistrationNodeChanged(const std::string& sUrl, unsigned short nPriority, bool bGood, const ApiVersion& version)=0;
+
+                /** @brief Called when a register is chosen
+                *   @param sUrl the url/ip address of the node - if empty then the node is in peer to peer mode
+                *   @param nPriority the priority of the register
+                *   @param version the highest ApiVersion that the registration node has in common with our node
+                **/
+                virtual void RegistrationNodeChosen(const std::string& sUrl, unsigned short nPriority, const ApiVersion& version)=0;
+
+
+                /** @brief called when the node has either completed registering with a register server of unregistered
+                *   @param sUrl the url/ip address of the registration node
+                *   @param bRegistered true if the node has registered successfully else false
+                **/
+                virtual void RegistrationChanged(const std::string& sUrl, bool bRegistered)=0;
 
                 /** @brief Called by Server when a IS-04 Target PUT is performed
                 *   @param sReceiverId the uuid of the Receiver to apply the PU to

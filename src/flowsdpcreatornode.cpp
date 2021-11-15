@@ -5,14 +5,33 @@
 #include "flowvideoraw.h"
 #include "flowdatasdianc.h"
 #include "flowmux.h"
-#include "nodeapi.h"
+#include "nodeapiprivate.h"
 #include <sstream>
 #include "sourceaudio.h"
 
+using namespace pml::nmos;
 
-std::string pml::nmos::FlowAudioRawSdpCreator::CreateLines(unsigned short nRtpPort)
+std::string CreateFlowSdpLines(NodeApiPrivate& api, std::shared_ptr<Flow> pFlow, unsigned short nRtpPort)
 {
-    if(!m_pFlow)
+    //@todo this feels a bodge
+    auto pfar = std::dynamic_pointer_cast<FlowAudioRaw>(pFlow);
+    if(pfar)
+    {
+        return CreateFlowSdpLines(api, pfar, nRtpPort);
+    }
+
+    auto pfac = std::dynamic_pointer_cast<FlowAudioCoded>(pFlow);
+    if(pfac)
+    {
+        return CreateFlowSdpLines(api, pfac, nRtpPort);
+    }
+
+    return std::string();
+}
+
+std::string CreateFlowSdpLines(NodeApiPrivate& api, std::shared_ptr<FlowAudioRaw> pFlow, unsigned short nRtpPort)
+{
+    if(!pFlow)
         return "";
 
     std::stringstream sstr;
@@ -20,7 +39,7 @@ std::string pml::nmos::FlowAudioRawSdpCreator::CreateLines(unsigned short nRtpPo
     sstr << "m=audio " << nRtpPort << " RTP/AVP 96\r\n";
 
     sstr << "a=rtpmap:96 L";
-    switch(m_pFlow->GetFormat())
+    switch(pFlow->GetFormat())
     {
     case pml::nmos::FlowAudioRaw::L24:
         sstr << "24/";
@@ -36,11 +55,11 @@ std::string pml::nmos::FlowAudioRawSdpCreator::CreateLines(unsigned short nRtpPo
         break;
     }
 
-    sstr << m_pFlow->GetSampleRateNumerator() << "/";
+    sstr << pFlow->GetSampleRateNumerator() << "/";
 
     //Get the number of channels from the associated source
-    auto itResource = NodeApi::Get().GetSources().FindNmosResource(m_pFlow->GetSourceId());
-    if(itResource != NodeApi::Get().GetSources().GetResourceEnd())
+    auto itResource = api.GetSources().FindNmosResource(pFlow->GetSourceId());
+    if(itResource != api.GetSources().GetResourceEnd())
     {
         auto pSource = std::dynamic_pointer_cast<pml::nmos::SourceAudio>(itResource->second);
         if(pSource)
@@ -62,7 +81,7 @@ std::string pml::nmos::FlowAudioRawSdpCreator::CreateLines(unsigned short nRtpPo
 
 
     //packet time
-    switch(m_pFlow->GetPacketTime())
+    switch(pFlow->GetPacketTime())
     {
         case pml::nmos::FlowAudioRaw::US_125:
             sstr << "a=ptime:0.125\r\n";
@@ -82,15 +101,15 @@ std::string pml::nmos::FlowAudioRawSdpCreator::CreateLines(unsigned short nRtpPo
     }
 
     //mediaclk:direct=
-    sstr << "a=mediaclk:direct=" << m_pFlow->GetMediaClkOffset() << "\r\n";
+    sstr << "a=mediaclk:direct=" << pFlow->GetMediaClkOffset() << "\r\n";
 
     return sstr.str();
 }
 
 
-std::string pml::nmos::FlowAudioCodedSdpCreator::CreateLines(unsigned short nRtpPort)
+std::string CreateFlowSdpLines(NodeApiPrivate& api, std::shared_ptr<FlowAudioCoded> pFlow, unsigned short nRtpPort)
 {
-    if(!m_pFlow)
+    if(!pFlow)
         return "";
 
     std::stringstream sstr;

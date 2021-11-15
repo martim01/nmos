@@ -1,20 +1,20 @@
 #include "activator.h"
-#include "nodeapi.h"
+#include "nodeapiprivate.h"
 #include "sender.h"
 #include "receiver.h"
 #include "utils.h"
 #include "ioresource.h"
 
 
-static void ActivationThread()
+static void ActivationThread(pml::nmos::Activator* pActivator)
 {
-    while(pml::nmos::Activator::Get().IsRunning() && pml::nmos::Activator::Get().ActivationsPending())
+    while(pActivator->IsRunning() && pActivator->ActivationsPending())
     {
-        pml::nmos::Activator::Get().PrimeWait();
-        if(pml::nmos::Activator::Get().Wait() == true)
+        pActivator->PrimeWait();
+        if(pActivator->Wait() == true)
         {
             //activate stuff
-            pml::nmos::Activator::Get().Activate();
+            pActivator->Activate();
         }
         else
         {
@@ -23,12 +23,6 @@ static void ActivationThread()
     }
 
 
-}
-
-pml::nmos::Activator& pml::nmos::Activator::Get()
-{
-    static pml::nmos::Activator act;
-    return act;
 }
 
 void pml::nmos::Activator::AddActivation(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, std::shared_ptr<pml::nmos::IOResource> pResource)
@@ -57,7 +51,7 @@ void pml::nmos::Activator::AddActivation(const std::chrono::time_point<std::chro
         m_mmActivations.insert(make_pair(tp,pResource));
 
         //create the thread
-        m_lstThreads.push_back(std::make_unique<std::thread>(ActivationThread));
+        m_lstThreads.push_back(std::make_unique<std::thread>(ActivationThread, this));
     }
 }
 
@@ -88,7 +82,7 @@ void pml::nmos::Activator::RemoveActivation(const std::chrono::time_point<std::c
     }
 }
 
-pml::nmos::Activator::Activator() : m_bRunning(true), m_bWait(true)
+pml::nmos::Activator::Activator(NodeApiPrivate& api) : m_api(api), m_bRunning(true), m_bWait(true)
 {
 
 }
@@ -154,50 +148,4 @@ void pml::nmos::Activator::Activate()
         }
         m_mmActivations.erase(m_mmActivations.begin()->first);
     }
-}
-
-
-bool pml::nmos::Activator::AddActivationSender(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId)
-{
-    auto pSender = NodeApi::Get().GetSender(sId);
-    if(pSender)
-    {
-        AddActivation(tp, std::static_pointer_cast<pml::nmos::IOResource>(pSender));
-        return true;
-    }
-    return false;
-}
-
-
-bool pml::nmos::Activator::RemoveActivationSender(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId)
-{
-    auto pSender = NodeApi::Get().GetSender(sId);
-    if(pSender)
-    {
-        RemoveActivation(tp,std::static_pointer_cast<pml::nmos::IOResource>(pSender));
-        return true;
-    }
-    return false;
-}
-
-bool pml::nmos::Activator::AddActivationReceiver(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId)
-{
-    auto pReceiver = NodeApi::Get().GetReceiver(sId);
-    if(pReceiver)
-    {
-        AddActivation(tp,std::static_pointer_cast<pml::nmos::IOResource>(pReceiver));
-        return true;
-    }
-    return false;
-}
-
-bool pml::nmos::Activator::RemoveActivationReceiver(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId)
-{
-    auto pReceiver = NodeApi::Get().GetReceiver(sId);
-    if(pReceiver)
-    {
-        RemoveActivation(tp,std::static_pointer_cast<pml::nmos::IOResource>(pReceiver));
-        return true;
-    }
-    return false;
 }

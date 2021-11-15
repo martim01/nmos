@@ -119,6 +119,7 @@
 			<Add directory="lib" />
 		</Linker>
 		<Unit filename="include/activator.h" />
+		<Unit filename="include/eventposter.h" />
 		<Unit filename="include/flowsdpcreatornode.h" />
 		<Unit filename="include/is04server.h" />
 		<Unit filename="include/is05server.h" />
@@ -126,17 +127,20 @@
 		<Unit filename="include/nmosserver.h" />
 		<Unit filename="include/nmosthread.h" />
 		<Unit filename="include/nodeapi.h" />
+		<Unit filename="include/nodeapiprivate.h" />
 		<Unit filename="include/nodezcposter.h" />
 		<Unit filename="include/receiver.h" />
 		<Unit filename="include/resourceholder.h" />
 		<Unit filename="include/sender.h" />
 		<Unit filename="src/activator.cpp" />
+		<Unit filename="src/eventposter.cpp" />
 		<Unit filename="src/flowsdpcreatornode.cpp" />
 		<Unit filename="src/is04server.cpp" />
 		<Unit filename="src/is05server.cpp" />
 		<Unit filename="src/nmosserver.cpp" />
 		<Unit filename="src/nmosthread.cpp" />
 		<Unit filename="src/nodeapi.cpp" />
+		<Unit filename="src/nodeapiprivate.cpp" />
 		<Unit filename="src/nodezcposter.cpp" />
 		<Unit filename="src/receiver.cpp" />
 		<Unit filename="src/resourceholder.cpp" />

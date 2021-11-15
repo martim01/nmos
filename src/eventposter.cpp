@@ -1,13 +1,36 @@
 #include "eventposter.h"
 using namespace pml::nmos;
 
-void EventPoster::_CurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId)
+
+void EventPoster::_RegistrationNodeFound(const std::string& sUrl, unsigned short nPriority, const ApiVersion& version)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
-    CurlDone(nResult, sResponse, nType, sResourceId);
+    RegistrationNodeFound(sUrl, nPriority,version);
 }
 
+void EventPoster::_RegistrationNodeRemoved(const std::string& sUrl)
+{
+    std::lock_guard<std::mutex> lg(m_mutex);
+    RegistrationNodeRemoved(sUrl);
+}
 
+void EventPoster::_RegistrationNodeChanged(const std::string& sUrl, unsigned short nPriority, bool bGood, const ApiVersion& version)
+{
+    std::lock_guard<std::mutex> lg(m_mutex);
+    RegistrationNodeChanged(sUrl, nPriority, bGood, version);
+}
+
+void EventPoster::_RegistrationNodeChosen(const std::string& sUrl, unsigned short nPriority, const ApiVersion& version)
+{
+    std::lock_guard<std::mutex> lg(m_mutex);
+    RegistrationNodeChosen(sUrl, nPriority,version);
+}
+
+void EventPoster::_RegistrationChanged(const std::string& sUrl, bool bRegistered)
+{
+    std::lock_guard<std::mutex> lg(m_mutex);
+    RegistrationChanged(sUrl, bRegistered);
+}
 
 void EventPoster::_Target(const std::string& sReceiverId, const std::string& sTransportFile, unsigned short nPort)
 {

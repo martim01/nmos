@@ -379,49 +379,8 @@ const std::string& ReceiverBase::GetSender() const
     return m_sSenderId;
 }
 
-void ReceiverBase::SetSender(const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp)
-{
-    if(sSenderId.empty() == false)
-    {
-        pmlLog(pml::LOG_INFO) << "Receiver subscribe to sender " << sSenderId ;
-        m_sSenderId = sSenderId;
 
-        // need to update the IS-05 stage and active connection settings to match
-        m_Staged.sSenderId = sSenderId;
-        m_Staged.bMasterEnable = true;
-        m_Staged.sTransportFileData = sSdp;
-        m_Staged.sTransportFileType = "application/sdp";
-        m_Staged.sActivationTime = GetCurrentTaiTime();
-        SetupActivation(sInterfaceIp);
-        Activate();
-    }
-    else
-    {   //this means unsubscribe
-        pmlLog(pml::LOG_INFO) << "Receiver unssubscribe " ;
-        m_sSenderId.clear();
 
-        // need to update the IS-05 stage and active connection settings to match
-        m_Staged.sSenderId.clear();
-        m_Staged.bMasterEnable = false;
-        m_Staged.sTransportFileData.clear();
-        m_Staged.sTransportFileType.clear();
-        m_Staged.sActivationTime = GetCurrentTaiTime();
-        SetupActivation(sInterfaceIp);
-        Activate();
-    }
-    UpdateVersionTime();
-
-}
-
-void ReceiverBase::MasterEnable(bool bEnable)
-{
-    std::lock_guard<std::mutex> lock(m_mutex);
-    m_Active.bMasterEnable = bEnable;
-    m_Active.tpReceiver.bRtpEnabled = bEnable;
-    m_Staged.bMasterEnable = bEnable;
-    m_Staged.tpReceiver.bRtpEnabled = bEnable;
-    UpdateVersionTime();
-}
 
 
 Json::Value ReceiverBase::GetConnectionConstraintsJson(const ApiVersion& version) const
@@ -461,10 +420,6 @@ connectionReceiver ReceiverBase::GetStaged() const
     return m_Staged;
 }
 
-void ReceiverBase::SetupActivation(const std::string& sInterfaceIp)
-{
-    m_sInterfaceIp = sInterfaceIp;
-}
 
 
 bool ReceiverBase::IsMasterEnabled() const

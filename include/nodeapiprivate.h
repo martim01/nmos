@@ -1,37 +1,54 @@
 #pragma once
-#include <string>
-#include <memory>
-#include "nmosdlldefine.h"
-#include "resourceholder.h"
-#include <chrono>
 #include "self.h"
-#include "device.h"
-#include "source.h"
-#include "flow.h"
-#include "receiver.h"
-#include "sender.h"
+#include "resourceholder.h"
+#include <vector>
+#include <string>
+#include "nmosdlldefine.h"
+#include <mutex>
+#include <condition_variable>
+#include "version.h"
+#include <chrono>
+#include <thread>
+#include <atomic>
+#include "activator.h"
+#include "RestGoose.h"
+
 
 namespace pml
 {
     namespace nmos
     {
-        class NodeApiPrivate;
+        class NmosServer;
+        class ServiceBrowser;
+        class ServicePublisher;
+        class ServiceBrowserEvent;
+        class CurlRegister;
+        class CurlEvent;
         class EventPoster;
-        class Self;
+        class ClientPoster;
+
         class Device;
         class Source;
         class Flow;
         class Receiver;
         class Sender;
-        class ApiVersion;
-        class NmosServer;
+        class NodeThread;
+        class Server;
+        class NodeZCPoster;
 
+        class dnsInstance;
+        class IS04Server;
+        class IS05Server;
+        struct connectionSender;
 
-        class NMOS_EXPOSE NodeApi
+        class NodeApiPrivate
         {
             public:
+                enum enumResource{NR_NODES, NR_DEVICES, NR_SOURCES, NR_FLOWS, NR_SENDERS, NR_RECEIVERS, NR_SUBSCRIPTIONS};
+                enum {CURL_REGISTER=1, CURL_HEARTBEAT, CURL_DELETE, CURL_QUERY};
 
-                static NodeApi& Get();
+                NodeApiPrivate();
+                ~NodeApiPrivate();
 
                 /** @brief sets the initial data the Node needs to run
                 *   @param pPoster pointer to an optional EventPoster class that can be used to update the main thread with events
@@ -191,19 +208,13 @@ namespace pml
                 **/
                 unsigned short GetConnectionPort() const;
 
-                /** @brief returns the port number used for the discovery api
-                *   @return <i>unsigned short</i>
-                **/
                 unsigned short GetDiscoveryPort() const;
 
-                /** @brief returns the name of the current registration node
-                *   @param std::string the url or empty if in peer-peer mode
-                **/
-                const std::string GetRegistrationNode() const;
 
-                /** @brief returns the version that the registration node is using
-                *   @param ApiVersion - will be 0.0 if in peer-peer mode
-                **/
+                Json::Value JsonConnectionVersions() const;
+
+
+                const std::string GetRegistrationNode() const;
                 ApiVersion GetRegistrationVersion() const;
 
 
@@ -218,28 +229,163 @@ namespace pml
                 const std::chrono::system_clock::time_point& GetHeartbeatTime();
 
 
-                //void ReceiverActivated(const std::string& sId);
-                //void SenderActivated(const std::string& sId);
-
-                /** @brief Adds a domain that the dns-sd browser should browse
-                *   @param sDomain the domain name
-                *   @return <i>bool</i> true if successful else false
-                *   @note this function cannot be called when the NodeApi service is running
+                /** @brief Called be a receiver when it is activated
                 **/
+                void ReceiverActivated(const std::string& sId);
+                void SenderActivated(const std::string& sId);
+
+
                 bool AddBrowseDomain(const std::string& sDomain);
-
-                /** @brief Removes a domain that the dns-sd browser should browse
-                *   @param sDomain the domain name
-                *   @return <i>bool</i> true if successful else false
-                *   @note this function cannot be called when the NodeApi service is running
-                **/
                 bool RemoveBrowseDomain(const std::string& sDomain);
 
+
+                response GetRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
+                response GetNmosDiscoveryRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
+                response GetNmosConnectionRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
+
+                std::string CreateFlowSdp(const std::string& sId, const connectionSender& state, const std::string& sConnection, const std::set<std::string>& setInterfaces);
+
+                bool AddActivationSender(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId);
+                bool RemoveActivationSender(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId);
+
+                bool AddActivationReceiver(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId);
+                bool RemoveActivationReceiver(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId);
+
+
+
+            protected:
+                friend class ServiceBrowser;
+                friend class Server;
+                friend class NodeZCPoster;
+
+                enum {REG_FAILED = 0, REG_START, REG_DEVICES, REG_SOURCES, REG_FLOWS, REG_SENDERS, REG_RECEIVERS, REG_DONE};
+
+                void Run();
+                bool RegisteredOperation();
+                bool FindRegisterNode();
+                bool HandleHeartbeatResponse(unsigned int nResponse);
+
+                bool StartHttpServers();
+                bool BrowseForRegistrationNode();
+                void SignalBrowse();
+
+                long RegisterResource(const std::string& sType, const Json::Value& json);
+
+                void SignalServer(unsigned short nPort, bool bOk, const std::string& sExtra);
+
+                enum enumSignal{SIG_NONE=0, SIG_COMMIT=1, SIG_INSTANCE_FOUND, SIG_INSTANCE_REMOVED, SIG_BROWSE_DONE, SIG_EXIT};
+
+                void Signal(enumSignal eSignal);
+                enumSignal GetSignal() const;
+
+
+                void HandleInstanceResolved(std::shared_ptr<dnsInstance> pInstance);
+                void HandleInstanceRemoved(std::shared_ptr<dnsInstance> pInstance);
+
+                bool Wait(unsigned long nMilliseconds);
+                bool WaitUntil(const std::chrono::system_clock::time_point& timeout_time);
+
+                bool FindRegistrationNode();
+                bool IsRunning();
+                void StopRun();
+                void ModifyTxtRecords();
+
+                int RegisterSimple();
+                int UnregisterSimple();
+                long RegistrationHeartbeat();
+                int UpdateRegisterSimple();
+
+                struct regnode
+                {
+                    regnode(unsigned short np, const ApiVersion& ver) : bGood(true), nPriority(np), version(ver){}
+                    bool bGood;
+                    unsigned short nPriority;
+                    ApiVersion version;
+                };
+                std::map<std::string, regnode> GetRegNodes();
+
+
+
             private:
-                NodeApi();
-                ~NodeApi();
-                std::unique_ptr<NodeApiPrivate> m_pImpl;
+
+
+
+                void StopHttpServers();
+
+                bool StartmDNSServer();
+                void StopmDNSServer();
+                void SetmDNSTxt(bool bSecure);
+
+
+                void StopRegistrationBrowser();
+
+
+                template<class T> long RegisterResources(ResourceHolder<T>& holder);
+                template<class T> long ReregisterResources(ResourceHolder<T>& holder);
+        //        template<class T> bool UnregisterResources(ResourceHolder<T>& holder);
+
+
+
+
+
+
+                bool StartUnregistration();
+
+                bool UnregisterResource(const std::string& sType, const std::string& sId);
+
+                //bool FindQueryNode();
+
+                bool CheckNodeApiPath();
+
+                void MarkRegNodeAsBad();
+
+                Self m_self;
+                ResourceHolder<Device> m_devices;
+                ResourceHolder<Sender> m_senders;
+                ResourceHolder<Receiver> m_receivers;
+                ResourceHolder<Source> m_sources;
+                ResourceHolder<Flow> m_flows;
+
+                std::map<std::string, std::unique_ptr<ServiceBrowser>> m_mBrowser;
+
+
+                std::string m_sRegistrationNode;
+                ApiVersion m_versionRegistration;
+                //std::string m_sQueryNode;
+
+                std::unique_ptr<ServicePublisher> m_pNodeApiPublisher;
+
+                unsigned int m_nRegistrationStatus;
+
+                mutable std::mutex m_mutex;
+                std::condition_variable m_cvBrowse; //sync between nmos thread and ServiceBrowser thread
+                std::condition_variable m_cvCommit; //sync between nmos thread and main thread (used to sleep until a Commit is called)
+
+                std::unique_ptr<std::thread> m_pThread;
+
+                std::atomic<bool> m_bRun;
+                bool m_bBrowsing;
+                std::shared_ptr<EventPoster> m_pPoster;
+                std::shared_ptr<NodeZCPoster> m_pZCPoster;
+                unsigned short m_nConnectionPort;
+                unsigned short m_nDiscoveryPort;
+
+                std::chrono::system_clock::time_point m_tpHeartbeat;
+
+
+                std::list<std::shared_ptr<RestGoose>> m_lstServers;
+                std::map<ApiVersion, std::unique_ptr<IS04Server>> m_mDiscoveryServers;
+                std::map<ApiVersion, std::unique_ptr<IS05Server>> m_mConnectionServers;
+
+
+                std::map<std::string, regnode> m_mRegNode;
+
+                unsigned long m_nHeartbeatTime;
+
+                enumSignal m_eSignal;
+
+                Activator m_activator;
+                static const std::string STR_RESOURCE[7];
         };
     };
 };
-

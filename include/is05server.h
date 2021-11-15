@@ -24,7 +24,7 @@ namespace pml
                 /** @brief Constructor - this is called in NodeApi::StartService
                 *   @param pPoster a sheared_ptr to an object of a class derived from EventPoster.
                 **/
-                IS05Server(std::shared_ptr<RestGoose> pServer, const ApiVersion& version, std::shared_ptr<EventPoster> pPoster);
+                IS05Server(std::shared_ptr<RestGoose> pServer, const ApiVersion& version, std::shared_ptr<EventPoster> pPoster, NodeApiPrivate& api);
                 virtual ~IS05Server();
 
 

@@ -166,6 +166,8 @@ namespace pml
                 ///< @brief Gets a const_iterator pointing to the receiver with the given id, or to the end of the map
                 std::map<std::string, std::shared_ptr<ReceiverBase> >::const_iterator FindReceiver(const std::string& sUid);
 
+                bool AddBrowseDomain(const std::string& sDomain);
+                bool RemoveBrowseDomain(const std::string& sDomain);
 
             private:
                 friend void NodeBrowser();

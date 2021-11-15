@@ -1,5 +1,5 @@
 #include "is04server.h"
-#include "nodeapi.h"
+#include "nodeapiprivate.h"
 #include <sstream>
 #include <algorithm>
 #include <iostream>
@@ -27,8 +27,8 @@ const std::string IS04Server::DEVICES = "/devices";
 const std::string IS04Server::SENDERS = "/senders";
 const std::string IS04Server::RECEIVERS = "/receivers";
 
-IS04Server::IS04Server(std::shared_ptr<RestGoose> pServer, const ApiVersion& version, std::shared_ptr<EventPoster> pPoster) :
-    NmosServer(pServer, version,pPoster)
+IS04Server::IS04Server(std::shared_ptr<RestGoose> pServer, const ApiVersion& version, std::shared_ptr<EventPoster> pPoster, NodeApiPrivate& api) :
+    NmosServer(pServer, version,pPoster, api)
 {
     AddBaseEndpoints();
 }
@@ -92,7 +92,7 @@ void IS04Server::RemoveReceiverEndpoint(const std::string& sId)
 response IS04Server::GetNmosRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
 {
     response resp;
-    resp.jsonData = NodeApi::Get().GetSelf().JsonVersions();
+    resp.jsonData = m_api.GetSelf().JsonVersions();
     return resp;
 }
 
@@ -112,42 +112,42 @@ response IS04Server::GetNmosVersion(const query& theQuery, const postData& theDa
 response IS04Server::GetNmosNode(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
 {
     response resp;
-    resp.jsonData = NodeApi::Get().GetSelf().GetJson(m_version);
+    resp.jsonData = m_api.GetSelf().GetJson(m_version);
     return resp;
 }
 
 response IS04Server::GetNmosSources(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
 {
     response resp;
-    resp.jsonData = NodeApi::Get().GetSources().GetJson(m_version);
+    resp.jsonData = m_api.GetSources().GetJson(m_version);
     return resp;
 }
 
 response IS04Server::GetNmosFlows(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
 {
     response resp;
-    resp.jsonData = NodeApi::Get().GetFlows().GetJson(m_version);
+    resp.jsonData = m_api.GetFlows().GetJson(m_version);
     return resp;
 }
 
 response IS04Server::GetNmosDevices(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
 {
     response resp;
-    resp.jsonData = NodeApi::Get().GetDevices().GetJson(m_version);
+    resp.jsonData = m_api.GetDevices().GetJson(m_version);
     return resp;
 }
 
 response IS04Server::GetNmosSenders(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
 {
     response resp;
-    resp.jsonData = NodeApi::Get().GetSenders().GetJson(m_version);
+    resp.jsonData = m_api.GetSenders().GetJson(m_version);
     return resp;
 }
 
 response IS04Server::GetNmosReceivers(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
 {
     response resp;
-    resp.jsonData = NodeApi::Get().GetReceivers().GetJson(m_version);
+    resp.jsonData = m_api.GetReceivers().GetJson(m_version);
     return resp;
 }
 
@@ -156,8 +156,8 @@ response IS04Server::GetNmosSource(const query& theQuery, const postData& theDat
 {
     response resp;
     auto vPath = SplitUrl(theUrl);
-    auto itResource = NodeApi::Get().GetSources().FindNmosResource(vPath[RESOURCE]);
-    if(itResource != NodeApi::Get().GetSources().GetResourceEnd())
+    auto itResource = m_api.GetSources().FindNmosResource(vPath[RESOURCE]);
+    if(itResource != m_api.GetSources().GetResourceEnd())
     {
         resp.jsonData =  itResource->second->GetJson(m_version);
     }
@@ -172,8 +172,8 @@ response IS04Server::GetNmosFlow(const query& theQuery, const postData& theData,
 {
     response resp;
     auto vPath = SplitUrl(theUrl);
-    auto itResource = NodeApi::Get().GetFlows().FindNmosResource(vPath[RESOURCE]);
-    if(itResource != NodeApi::Get().GetFlows().GetResourceEnd())
+    auto itResource = m_api.GetFlows().FindNmosResource(vPath[RESOURCE]);
+    if(itResource != m_api.GetFlows().GetResourceEnd())
     {
         resp.jsonData =  itResource->second->GetJson(m_version);
     }
@@ -188,8 +188,8 @@ response IS04Server::GetNmosDevice(const query& theQuery, const postData& theDat
 {
     response resp;
     auto vPath = SplitUrl(theUrl);
-    auto itResource = NodeApi::Get().GetDevices().FindNmosResource(vPath[RESOURCE]);
-    if(itResource != NodeApi::Get().GetDevices().GetResourceEnd())
+    auto itResource = m_api.GetDevices().FindNmosResource(vPath[RESOURCE]);
+    if(itResource != m_api.GetDevices().GetResourceEnd())
     {
         resp.jsonData =  itResource->second->GetJson(m_version);
     }
@@ -204,8 +204,8 @@ response IS04Server::GetNmosSender(const query& theQuery, const postData& theDat
 {
     response resp;
     auto vPath = SplitUrl(theUrl);
-    auto itResource = NodeApi::Get().GetSenders().FindNmosResource(vPath[RESOURCE]);
-    if(itResource != NodeApi::Get().GetSenders().GetResourceEnd())
+    auto itResource = m_api.GetSenders().FindNmosResource(vPath[RESOURCE]);
+    if(itResource != m_api.GetSenders().GetResourceEnd())
     {
         resp.jsonData =  itResource->second->GetJson(m_version);
     }
@@ -220,8 +220,8 @@ response IS04Server::GetNmosReceiver(const query& theQuery, const postData& theD
 {
     response resp;
     auto vPath = SplitUrl(theUrl);
-    auto itResource = NodeApi::Get().GetReceivers().FindNmosResource(vPath[RESOURCE]);
-    if(itResource != NodeApi::Get().GetReceivers().GetResourceEnd())
+    auto itResource = m_api.GetReceivers().FindNmosResource(vPath[RESOURCE]);
+    if(itResource != m_api.GetReceivers().GetResourceEnd())
     {
         resp.jsonData =  itResource->second->GetJson(m_version);
     }
@@ -241,7 +241,7 @@ response IS04Server::PutNmosReceiver(const query& theQuery, const postData& theD
     response resp;
     auto vPath = SplitUrl(theUrl);
     //does the receiver exist?
-    auto pReceiver  = NodeApi::Get().GetReceiver(vPath[RESOURCE]);
+    auto pReceiver  = m_api.GetReceiver(vPath[RESOURCE]);
     if(!pReceiver)
     {
         resp = JsonError(404, "Receiver "+vPath[RESOURCE]+" does not exist", theUrl.Get());
@@ -280,8 +280,8 @@ response IS04Server::PutNmosReceiver(const query& theQuery, const postData& theD
             if(m_pServer->IsOk())
             {   //this means the main thread has connected the receiver to the sender
                 resp.nHttpCode = 202;
-                pReceiver->SetSender(sSenderId, sSdp, m_pServer->GetSignalData());
-                NodeApi::Get().Commit();   //updates the registration node or txt records
+                pReceiver->SetSender(sSenderId, sSdp, m_pServer->GetSignalData(), m_api);
+                m_api.Commit();   //updates the registration node or txt records
 
                 if(pRemoteSender)
                 {
@@ -308,8 +308,8 @@ response IS04Server::PutNmosReceiver(const query& theQuery, const postData& theD
             {
                 resp.jsonData = Json::objectValue;
             }
-            pReceiver->SetSender(sSenderId, sSdp, "192.168.1.113"); //@todo work out ip address here
-            NodeApi::Get().Commit();   //updates the registration node or txt records
+            pReceiver->SetSender(sSenderId, sSdp, "192.168.1.113", m_api); //@todo work out ip address here
+            m_api.Commit();   //updates the registration node or txt records
         }
     }
     return resp;

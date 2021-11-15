@@ -10,8 +10,6 @@ const std::string ClientPoster::STR_TYPE[5] = {"staged", "active", "transportfil
 void ClientPoster::CurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId)
 {
     ClientApi::Get().m_pApi->SetCurlDone(nResult, sResponse, nType, sResourceId);
-
-
 }
 
 void ClientPoster::Target(const std::string& sReceiverId, const std::string& sTransportFile, unsigned short nPort)

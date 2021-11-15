@@ -169,3 +169,13 @@ bool ClientApi::RemoveQuerySubscription(const std::string& sSubscriptionId)
 {
     return m_pApi->RemoveQuerySubscription(sSubscriptionId);
 }
+
+bool ClientApi::AddBrowseDomain(const std::string& sDomain)
+{
+    return m_pApi->AddBrowseDomain(sDomain);
+}
+
+bool ClientApi::RemoveBrowseDomain(const std::string& sDomain)
+{
+    return m_pApi->RemoveBrowseDomain(sDomain);
+}

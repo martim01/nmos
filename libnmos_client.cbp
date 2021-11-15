@@ -121,12 +121,10 @@
 		<Unit filename="include/clientapi.h" />
 		<Unit filename="include/clientapiposter.h" />
 		<Unit filename="include/clientholder.h" />
-		<Unit filename="include/clientposter.h" />
 		<Unit filename="include/clientprivate.h" />
 		<Unit filename="src/clientapi.cpp" />
 		<Unit filename="src/clientapiposter.cpp" />
 		<Unit filename="src/clientholder.cpp" />
-		<Unit filename="src/clientposter.cpp" />
 		<Unit filename="src/clientprivate.cpp" />
 		<Extensions>
 			<code_completion />

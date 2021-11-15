@@ -1,6 +1,6 @@
 
 #include "is05server.h"
-#include "nodeapi.h"
+#include "nodeapiprivate.h"
 #include <sstream>
 #include <algorithm>
 #include <iostream>
@@ -30,8 +30,8 @@ const std::string IS05Server::ACTIVE = "/active";
 const std::string IS05Server::TRANSPORTFILE = "/transportfile";
 const std::string IS05Server::TRANSPORTTYPE = "/transporttype";
 
-IS05Server::IS05Server(std::shared_ptr<RestGoose> pServer, const ApiVersion& version, std::shared_ptr<EventPoster> pPoster) :
-    NmosServer(pServer, version, pPoster)
+IS05Server::IS05Server(std::shared_ptr<RestGoose> pServer, const ApiVersion& version, std::shared_ptr<EventPoster> pPoster, NodeApiPrivate& api) :
+    NmosServer(pServer, version, pPoster, api)
 {
     AddBaseEndpoints();
 }
@@ -113,7 +113,7 @@ void IS05Server::RemoveReceiverEndpoint(const std::string& sId)
 response IS05Server::GetNmosRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
 {
     response resp;
-    resp.jsonData = NodeApi::Get().JsonConnectionVersions();
+    resp.jsonData = m_api.JsonConnectionVersions();
     return resp;
 }
 
@@ -165,14 +165,14 @@ response IS05Server::GetNmosSingle(const query& theQuery, const postData& theDat
 response IS05Server::GetNmosSingleSenders(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
 {
     response resp;
-    resp.jsonData = NodeApi::Get().GetSenders().GetConnectionJson(m_version);
+    resp.jsonData = m_api.GetSenders().GetConnectionJson(m_version);
     return resp;
 }
 
 response IS05Server::GetNmosSingleReceivers(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
 {
     response resp;
-    resp.jsonData = NodeApi::Get().GetReceivers().GetConnectionJson(m_version);
+    resp.jsonData = m_api.GetReceivers().GetConnectionJson(m_version);
     return resp;
 }
 
@@ -429,7 +429,7 @@ response IS05Server::PatchSender(std::shared_ptr<Sender> pSender, const Json::Va
         m_pServer->Wait();
 
 
-        if(m_pServer->IsOk() && pSender->Stage(conRequest, m_pPoster)) //PATCH the sender
+        if(m_pServer->IsOk() && pSender->Stage(conRequest, m_pPoster,m_api)) //PATCH the sender
         {
             resp.nHttpCode = 202;
             resp.jsonData = pSender->GetConnectionStagedJson(m_version);
@@ -441,7 +441,7 @@ response IS05Server::PatchSender(std::shared_ptr<Sender> pSender, const Json::Va
             else if(conRequest.eActivate == connection::ACT_NOW)
             {
                 resp.nHttpCode = 200;
-                pSender->CommitActivation();
+                pSender->CommitActivation(m_api);
             }
             pmlLog(pml::LOG_DEBUG) << "NMOS: " << resp.jsonData ;
         }
@@ -453,7 +453,7 @@ response IS05Server::PatchSender(std::shared_ptr<Sender> pSender, const Json::Va
     }
     else
     {   //no way of telling main thread to do this so we'll simply assume it's been done
-        if(pSender->Stage(conRequest, m_pPoster)) //PATCH the sender
+        if(pSender->Stage(conRequest, m_pPoster,m_api)) //PATCH the sender
         {
             resp.nHttpCode = 200;
             resp.jsonData = pSender->GetConnectionStagedJson(m_version);
@@ -499,7 +499,7 @@ response IS05Server::PatchReceiver(std::shared_ptr<Receiver> pReceiver, const Js
         //Pause the HTTP thread
         m_pServer->Wait();
 
-        if(m_pServer->IsOk() && pReceiver->Stage(conRequest)) //PATCH the Receiver
+        if(m_pServer->IsOk() && pReceiver->Stage(conRequest, m_api)) //PATCH the Receiver
         {
             resp.nHttpCode = 202;
             resp.jsonData = pReceiver->GetConnectionStagedJson(m_version);
@@ -510,7 +510,7 @@ response IS05Server::PatchReceiver(std::shared_ptr<Receiver> pReceiver, const Js
             else if(conRequest.eActivate == connection::ACT_NOW)
             {
                 resp.nHttpCode = 200;
-                pReceiver->CommitActivation();
+                pReceiver->CommitActivation(m_api);
             }
             pmlLog(pml::LOG_DEBUG) << "NMOS: " << resp.jsonData ;
         }
@@ -522,7 +522,7 @@ response IS05Server::PatchReceiver(std::shared_ptr<Receiver> pReceiver, const Js
     }
     else
     {   //no way of telling main thread to do this so we'll simply assume it's been done
-        if(pReceiver->Stage(conRequest)) //PATCH the Receiver
+        if(pReceiver->Stage(conRequest, m_api)) //PATCH the Receiver
         {
             resp.jsonData = pReceiver->GetConnectionStagedJson(m_version);
             pmlLog(pml::LOG_DEBUG) << resp.jsonData ;
@@ -561,7 +561,7 @@ response IS05Server::PostJsonSenders(const Json::Value& jsRequest)
             Json::Value jsResponse(Json::objectValue);
             jsResponse["id"] = jsRequest[ai]["id"];
 
-            auto pSender = NodeApi::Get().GetSender(jsRequest[ai]["id"].asString());
+            auto pSender = m_api.GetSender(jsRequest[ai]["id"].asString());
             if(!pSender)
             {
                 jsResponse["code"] = 404;
@@ -609,7 +609,7 @@ response IS05Server::PostJsonReceivers(const Json::Value& jsRequest)
             Json::Value jsResponse(Json::objectValue);
             jsResponse["id"] = jsRequest[ai]["id"];
 
-            auto pReceiver = NodeApi::Get().GetReceiver(jsRequest[ai]["id"].asString());
+            auto pReceiver = m_api.GetReceiver(jsRequest[ai]["id"].asString());
             if(!pReceiver)
             {
                 jsResponse["code"] = 404;
@@ -638,7 +638,7 @@ std::shared_ptr<Sender> IS05Server::GetSender(const url& theUrl)
     auto vPath = SplitUrl(theUrl);
     if(vPath.size() > RESOURCE_ID)
     {
-        return NodeApi::Get().GetSender(vPath[RESOURCE_ID]);
+        return m_api.GetSender(vPath[RESOURCE_ID]);
     }
     else
     {
@@ -651,7 +651,7 @@ std::shared_ptr<Receiver> IS05Server::GetReceiver(const url& theUrl)
     auto vPath = SplitUrl(theUrl);
     if(vPath.size() > RESOURCE_ID)
     {
-        return NodeApi::Get().GetReceiver(vPath[RESOURCE_ID]);
+        return m_api.GetReceiver(vPath[RESOURCE_ID]);
     }
     else
     {

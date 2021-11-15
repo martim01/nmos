@@ -105,7 +105,7 @@ namespace pml
                 static void GetAddresses(const std::string& sInterface, nodeinterface& anInterface);
 
             protected:
-                friend class NodeApi;
+                friend class NodeApiPrivate;
 
                 void AddEndpoint(const std::string& sHost, unsigned int nPort, bool bSecure);
                 void RemoveEndpoint(const std::string& sHost, unsigned int nPort);

@@ -30,6 +30,7 @@
 #include <numeric>
 
 using namespace pml::nmos;
+using namespace std::placeholders;
 
 const std::string ClientApiImpl::STR_RESOURCE[6] = {"node", "device", "source", "flow", "sender", "receiver"};
 
@@ -38,9 +39,8 @@ const std::string ClientApiImpl::STR_RESOURCE[6] = {"node", "device", "source", 
 void ClientThread(ClientApiImpl* pApi)
 {
     //start the browser
-    ServiceBrowser::Get().AddService("_nmos-node._tcp", pApi->GetClientZCPoster());
-    ServiceBrowser::Get().AddService("_nmos-query._tcp", pApi->GetClientZCPoster());
-    ServiceBrowser::Get().StartBrowser();
+    pApi->AddBrowseServices();
+    pApi->StartBrowsers();
 
     while(pApi->IsRunning())
     {
@@ -264,7 +264,7 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<dnsInstance> pInsta
     }
 }
 
-//ConnectThread - called from main program thread
+//ConnectThread - called from main program
 void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std::string& sReceiverId, const std::string& sSenderStage, const std::string& sSenderTransport, const std::string& sReceiverStage)
 {
     // @todo ConnectThread - if a unicast stream then tell the sender where it should be sending stuff
@@ -361,11 +361,9 @@ Class Start
 
 void ClientApiImpl::Start()
 {
-    if(m_bStarted == false)
+    if(!m_pThread)
     {
-        m_bStarted = true;
-        std::thread th(ClientThread, this);
-        th.detach();
+        m_pThread = std::make_unique<std::thread>(ClientThread, this);
     }
 }
 
@@ -382,11 +380,12 @@ ClientApiImpl::ClientApiImpl() :
     m_pPoster(0),
     m_pClientPoster(std::make_shared<ClientPoster>()),
     m_pClientZCPoster(std::make_shared<ClientZCPoster>()),
-    m_pCurl(new CurlRegister(m_pClientPoster)),
+    m_pCurl(new CurlRegister(std::bind(&ClientApiImpl::SetCurlDone, this, _1,_2,_3,_4))),
+    m_pThread(nullptr),
     m_bStarted(false),
     m_bDoneQueryBrowse(false)
 {
-
+    m_mBrowser.insert(std::make_pair("local", std::make_unique<ServiceBrowser>()));
 }
 
 ClientApiImpl::~ClientApiImpl()
@@ -422,7 +421,13 @@ bool ClientApiImpl::IsRunning()
 
 void ClientApiImpl::StopRun()
 {
-    m_bRun = false;
+    if(m_pThread)
+    {
+        m_bRun = false;
+        Signal(THREAD_EXIT);
+        m_pThread->join();
+        m_pThread = nullptr;
+    }
 
 }
 
@@ -1950,17 +1955,89 @@ void ClientApiImpl::SubscribeToQueryServer()
             //create our json query
             Json::Value jsQuery;
             jsQuery["max_update_rate_ms"] = (int)pairQuery.second.nRefreshRate;
-            std::stringstream ssRes;
-            ssRes << "/" << STR_RESOURCE[pairQuery.second.nResource] << "s";
-            jsQuery["resource_path"] = "/" + STR_RESOURCE[pairQuery.second.nResource] + "s";//ssRes.str();
+            jsQuery["resource_path"] = "/" + STR_RESOURCE[pairQuery.second.nResource] + "s";
             jsQuery["persist"] = false;
             jsQuery["secure"] = false;
-
+            jsQuery["authorization"] = false;
             //@todo params
             Json::Value jsParams(Json::objectValue);
             jsQuery["params"] = jsParams;
 
             auto curlresp = CurlRegister::Post(ssUrl.str(), ConvertFromJson(jsQuery));
+
+            HandleQuerySubscriptionResponse(curlResp.nCode, ConvertToJson(curlResponse.sResponse));
+
         }
     }
+}
+
+void ClientApiImpl::HandleQuerySubscriptionResponse(unsigned short nCode, const Json::Value& jsResponse)
+{
+    if(nCode == 200 || nCode == 201)
+    {
+        HandleSuccessfulQuerySubscription(jsResponse);
+    }
+    else if(nCode == 400)
+    {
+        pmlLog(pml::LOG_ERROR) << "NMOS: Could not subscribe to query server " << jsResponse["error"].asString();
+    }
+    else if(nCode == 501)
+    {
+        pmlLog(pml::LOG_ERROR) << "NMOS: Query server does not suppory query " << jsResponse["error"].asString();
+    }
+    else
+    {
+        pmlLog(pml::LOG_ERROR) << "NMOS: Unknown error attempting to subscribe to query server";
+    }
+}
+
+void ClientApiImpl::HandleSuccessfulQuerySubscription(const Json::Value& jsResponse)
+{
+    pmlLog(pml::LOG_DEBUG) << "NMOS: Successful query subscription  - now create websocket connection";
+    /*create a websocket pointing at ws_ref and store it wht the id. Remember all the details
+    id
+    ws_href
+            max_update_rate_ms
+            params
+            persist
+            secure
+            resource_path
+
+    */
+
+}
+
+void ClientApiImpl::AddBrowseServices()
+{
+    for(const auto& pairBrowser : m_mBrowser)
+    {
+        pairBrowser.second->AddService("_nmos-node._tcp", m_pClientZCPoster);
+        pairBrowser.second->AddService("_nmos-query._tcp",m_pClientZCPoster);
+    }
+}
+
+void ClientApiImpl::StartBrowsers()
+{
+    for(const auto& pairBrowser : m_mBrowser)
+    {
+        pairBrowser.second->StartBrowser();
+    }
+}
+
+bool ClientApiImpl::AddBrowseDomain(const std::string& sDomain)
+{
+    if(!m_bRun)
+    {
+        return m_mBrowser.insert(std::make_pair(sDomain, std::make_unique<ServiceBrowser>(sDomain))).second;
+    }
+    return false;
+}
+bool ClientApiImpl::RemoveBrowseDomain(const std::string& sDomain)
+{
+    if(!m_bRun)
+    {
+        m_mBrowser.erase(sDomain);
+        return true;
+    }
+    return false;
 }

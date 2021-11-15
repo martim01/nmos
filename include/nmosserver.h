@@ -12,11 +12,12 @@ namespace pml
     namespace nmos
     {
         class EventPoster;
+        class NodeApiPrivate;
 
         class NmosServer
         {
             public:
-                NmosServer(std::shared_ptr<RestGoose> pServer, const ApiVersion& version, std::shared_ptr<EventPoster> pPoster);
+                NmosServer(std::shared_ptr<RestGoose> pServer, const ApiVersion& version, std::shared_ptr<EventPoster> pPoster, NodeApiPrivate& api);
                 virtual ~NmosServer();
 
 
@@ -31,7 +32,7 @@ namespace pml
                 std::shared_ptr<RestGoose> m_pServer;
                 ApiVersion m_version;
                 std::shared_ptr<EventPoster> m_pPoster;
-
+                NodeApiPrivate& m_api;
 
         };
     };

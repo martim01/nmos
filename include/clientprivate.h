@@ -28,7 +28,7 @@ namespace pml
         {
             public:
                 enum enumMode {MODE_P2P=0, MODE_REGISTRY};
-                enum enumSignal {CLIENT_SIG_NONE=0, CLIENT_SIG_INSTANCE_RESOLVED, CLIENT_SIG_INSTANCE_REMOVED, CLIENT_SIG_NODE_BROWSED, CLIENT_SIG_CURL_DONE, CLIENT_SIG_BROWSE_DONE};
+                enum enumSignal {CLIENT_SIG_NONE=0, CLIENT_SIG_INSTANCE_RESOLVED, CLIENT_SIG_INSTANCE_REMOVED, CLIENT_SIG_NODE_BROWSED, CLIENT_SIG_CURL_DONE, CLIENT_SIG_BROWSE_DONE, THREAD_EXIT};
                 enum flagResource {NONE=0, NODES=1, DEVICES=2, SOURCES=4, FLOWS=8, SENDERS=16, RECEIVERS=32, ALL=63};
 
 
@@ -132,6 +132,12 @@ namespace pml
                 bool AddQuerySubscription(int nResource, const std::string& sQuery, unsigned long nUpdateRate);
                 bool RemoveQuerySubscription(const std::string& sSubscriptionId);
 
+                void AddBrowseServices();
+                void StartBrowsers();
+
+                bool AddBrowseDomain(const std::string& sDomain);
+                bool RemoveBrowseDomain(const std::string& sDomain);
+
             private:
                 friend class ClientPoster;
 
@@ -165,6 +171,9 @@ namespace pml
                 bool AddQuerySubscriptionP2P(int nResource, const std::string& sQuery);
                 bool RemoveQuerySubscriptionP2P(const std::string& sSubscriptionId);
 
+
+                void HandleQuerySubscriptionResponse(unsigned short nCode, const Json::Value& jsResponse);
+                void HandleSuccessfulQuerySubscription(const Json::Value& jsResponse);
 
                 template<class T> bool RunQuery(std::list<std::shared_ptr<T> >& lstCheck, int nResource);
                 template<class T> bool RunQuery(std::list<std::shared_ptr<T> >& lstCheck, const std::string& sQuery);
@@ -217,6 +226,9 @@ namespace pml
                 std::unique_ptr<CurlRegister> m_pCurl;
                 std::multimap<unsigned short, std::shared_ptr<dnsInstance> > m_mmQueryNodes;
 
+                std::map<std::string, std::unique_ptr<ServiceBrowser>> m_mBrowser;
+
+                std::unique_ptr<std::thread> m_pThread;
                 bool m_bStarted;
                 bool m_bDoneQueryBrowse;
                 struct query

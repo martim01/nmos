@@ -1,31 +1,31 @@
 #include "nmosthread.h"
 #include <thread>
 #include <chrono>
-#include "nodeapi.h"
+#include "nodeapiprivate.h"
 #include "eventposter.h"
 #include "log.h"
 
 using namespace pml::nmos;
 
-void NodeThread::Main()
+void NodeApiPrivate::Run()
 {
     //start the discovery and connection servers
-    NodeApi::Get().StartHttpServers();
+    StartHttpServers();
     //start the DNS-SD publisher server
-    NodeApi::Get().StartmDNSServer();
+    StartmDNSServer();
 
     //browse for an registry server this will now wait until all services have been browsed for,
 
-    NodeApi::Get().BrowseForRegistrationNode();
+    BrowseForRegistrationNode();
 //    bool bDoneOnce(false);
     int nBackoff = 5000;
     do
     {
-        if(NodeApi::Get().Wait(nBackoff))
+        if(Wait(nBackoff))
         {
-            switch(NodeApi::Get().GetSignal())
+            switch(GetSignal())
             {
-                case NodeApi::SIG_BROWSE_DONE:
+                case NodeApiPrivate::SIG_BROWSE_DONE:
                     FindRegisterNode();
                     break;
                 default:
@@ -37,22 +37,22 @@ void NodeThread::Main()
             FindRegisterNode();
             nBackoff+= 500;
         }
-    }while(NodeApi::Get().IsRunning());
+    }while(IsRunning());
 
 }
 
-bool NodeThread::FindRegisterNode()
+bool NodeApiPrivate::FindRegisterNode()
 {
     //try to find the registartion node
-    while(NodeApi::Get().FindRegistrationNode())
+    while(FindRegistrationNode())
     {
         //remove the ver_ txt from our p9ublisher
-        NodeApi::Get().ModifyTxtRecords();
+        ModifyTxtRecords();
 
         //Run the registered operation loop
-        if(RegisteredOperation(ApiVersion(1,2)))    //@todo use the version that the registry wants us to
+        if(RegisteredOperation())
         {   //exited cleanly so still registered
-            NodeApi::Get().UnregisterSimple();
+            UnregisterSimple();
             break;  //break out of the while loop as we are exiting
         }
 
@@ -61,25 +61,25 @@ bool NodeThread::FindRegisterNode()
 
 }
 
-bool NodeThread::RegisteredOperation(const ApiVersion& version)
+bool NodeApiPrivate::RegisteredOperation()
 {
-    if(NodeApi::Get().RegisterSimple(version) == NodeApi::REG_DONE)
+    if(RegisterSimple() == NodeApiPrivate::REG_DONE)
     {
-        if(HandleHeartbeatResponse(NodeApi::Get().RegistrationHeartbeat(), version) == false)
+        if(HandleHeartbeatResponse(RegistrationHeartbeat()) == false)
         {
             return false;
         }
 
-        while(NodeApi::Get().IsRunning())
+        while(IsRunning())
         {
-            if(NodeApi::Get().WaitUntil(NodeApi::Get().GetHeartbeatTime()))
+            if(WaitUntil(GetHeartbeatTime()))
             {
-                switch(NodeApi::Get().GetSignal())
+                switch(GetSignal())
                 {
-                    case NodeApi::SIG_COMMIT:
-                        NodeApi::Get().UpdateRegisterSimple(version);
+                    case NodeApiPrivate::SIG_COMMIT:
+                        UpdateRegisterSimple();
                         break;
-                    case NodeApi::SIG_INSTANCE_REMOVED: //this means our reg node has gone
+                    case NodeApiPrivate::SIG_INSTANCE_REMOVED: //this means our reg node has gone
                         pmlLog(pml::LOG_INFO) << "NMOS: " << "Registration server gone" ;
                         return false;
                         break;
@@ -89,7 +89,7 @@ bool NodeThread::RegisteredOperation(const ApiVersion& version)
             }
             else
             {
-                if(HandleHeartbeatResponse(NodeApi::Get().RegistrationHeartbeat(), version) == false)
+                if(HandleHeartbeatResponse(RegistrationHeartbeat()) == false)
                 {
                     return false;
                 }
@@ -101,7 +101,7 @@ bool NodeThread::RegisteredOperation(const ApiVersion& version)
     return false;
 }
 
-bool NodeThread::HandleHeartbeatResponse(unsigned int nResponse, const ApiVersion& version)
+bool NodeApiPrivate::HandleHeartbeatResponse(unsigned int nResponse)
 {
     bool bRegistryOk(true);
     if(nResponse == 0 || nResponse >= 500)
@@ -112,16 +112,16 @@ bool NodeThread::HandleHeartbeatResponse(unsigned int nResponse, const ApiVersio
     else if(nResponse == 404)
     { //not known about re-register
         pmlLog(pml::LOG_WARN) << "NMOS: " << "Registration server forgotten node. Reregister" ;
-        if(NodeApi::Get().RegisterSimple(version) != NodeApi::REG_DONE)
+        if(RegisterSimple() != NodeApiPrivate::REG_DONE)
         {
             bRegistryOk = false;
         }
     }
     else if(nResponse == 409)
-    {  //already registered with different version - deregister and re-register
-       pmlLog(pml::LOG_WARN) << "NMOS: " << "Registered with different version. Deregister and reregister." ;
-       NodeApi::Get().UnregisterSimple();
-       if(NodeApi::Get().RegisterSimple(version) != NodeApi::REG_DONE)
+    {  //already registered with different  - deregister and re-register
+       pmlLog(pml::LOG_WARN) << "NMOS: " << "Registered with different . Deregister and reregister." ;
+       UnregisterSimple();
+       if(RegisterSimple() != NodeApiPrivate::REG_DONE)
        {
             bRegistryOk = false;
        }

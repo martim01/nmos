@@ -12,17 +12,15 @@ namespace pml
         class IOResource;
         class Sender;
         class Receiver;
+        class NodeApiPrivate;
 
         class Activator
         {
             public:
-                static Activator& Get();
 
-                bool AddActivationSender(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId);
-                bool RemoveActivationSender(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId);
+                Activator(NodeApiPrivate& api);
+                ~Activator();
 
-                bool AddActivationReceiver(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId);
-                bool RemoveActivationReceiver(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId);
 
                 void Activate();
 
@@ -31,13 +29,17 @@ namespace pml
                 void PrimeWait();
 
                 bool IsRunning();
-            private:
+
 
                 void AddActivation(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, std::shared_ptr<pml::nmos::IOResource> pResource);
                 void RemoveActivation(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, std::shared_ptr<pml::nmos::IOResource> pResource);
 
-                Activator();
-                ~Activator();
+            private:
+
+
+
+
+                NodeApiPrivate& m_api;
 
                 bool m_bRunning;
                 bool m_bWait;

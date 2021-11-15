@@ -27,43 +27,8 @@ void ThreadPoster::SetReason(unsigned int nReason)
     m_nReason = nReason;
 }
 
-void ThreadPoster::CurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId)
-{
-    SetReason(CURL_DONE);
 
-    LaunchThread();
-}
 
-void ThreadPoster::InstanceResolved(std::shared_ptr<pml::nmos::dnsInstance> pInstance)
-{
-    SetReason(INSTANCE_RESOLVED);
-    LaunchThread();
-}
-
-void ThreadPoster::AllForNow(const std::string& sService)
-{
-    SetReason(ALLFORNOW);
-    LaunchThread();
-
-}
-
-void ThreadPoster::Finished()
-{
-    SetReason(FINISHED);
-    LaunchThread();
-}
-
-void ThreadPoster::RegistrationNodeError()
-{
-    SetReason(REGERROR);
-    LaunchThread();
-}
-
-void ThreadPoster::InstanceRemoved(std::shared_ptr<pml::nmos::dnsInstance> pInstance)
-{
-    SetReason(INSTANCE_REMOVED);
-    LaunchThread();
-}
 
 void ThreadPoster::Target(const std::string& sReceiverId, const std::string& sTransportFile, unsigned short nPort)
 {
@@ -102,6 +67,46 @@ void ThreadPoster::ReceiverActivated(const std::string& sReceiverId)
 {
     SetReason(ACTIVATE_RECEIVER);
     m_sString = sReceiverId;
+    LaunchThread();
+}
+
+void ThreadPoster::RegistrationNodeFound(const std::string& sUrl, unsigned short nPriority, const pml::nmos::ApiVersion& version)
+{
+    SetReason(REGISTRATION_NODE_FOUND);
+    m_sString = sUrl;
+    m_nShort = nPriority;
+    LaunchThread();
+}
+
+void ThreadPoster::RegistrationNodeRemoved(const std::string& sUrl)
+{
+    SetReason(REGISTRATION_NODE_REMOVED);
+    m_sString = sUrl;
+    LaunchThread();
+}
+
+void ThreadPoster::RegistrationNodeChanged(const std::string& sUrl, unsigned short nPriority, bool bGood, const pml::nmos::ApiVersion& version)
+{
+    SetReason(REGISTRATION_NODE_CHANGED);
+    m_sString = sUrl;
+    m_nShort = nPriority;
+    m_nLong = bGood;
+    LaunchThread();
+}
+
+void ThreadPoster::RegistrationNodeChosen(const std::string& sUrl, unsigned short nPriority, const pml::nmos::ApiVersion& version)
+{
+    SetReason(REGISTRATION_NODE_CHOSEN);
+    m_sString = sUrl;
+    m_nShort = nPriority;
+    LaunchThread();
+}
+
+void ThreadPoster::RegistrationChanged(const std::string& sUrl, bool bRegistered)
+{
+    SetReason(REGISTRATION_CHANGED);
+    m_sString = sUrl;
+    m_nShort = bRegistered;
     LaunchThread();
 }
 

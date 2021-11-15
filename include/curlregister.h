@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 #include <list>
+#include <functional>
 
 namespace pml
 {
@@ -27,12 +28,11 @@ namespace pml
 
             public:
                 ///< @brief constructor
-                CurlRegister(std::shared_ptr<EventPoster> pPoster);
+                CurlRegister(std::function<void(unsigned long, const std::string&, long, const std::string&)> pCallback);
 
                 ///< @brief Destructor
                 ~CurlRegister();
 
-                std::shared_ptr<EventPoster> GetPoster();
 
                 //simple versions
                 static curlResponse Post(const std::string& sBaseUrl, const std::string& sJson);
@@ -47,13 +47,15 @@ namespace pml
                 void PutPatch(const std::string& sBaseUrl, const std::string& sJson, long nUserType, bool bPut, const std::string& sResourceId);
                 void Get(const std::string& sUrl, long nUserType);
 
+                void Callback(unsigned long nResult, const std::string& sResult, long nUser, const std::string sResponse="");
+
                 static const int TIMEOUT_CONNECT = 3;
                 static const int TIMEOUT_MSG = 2;
 
             private:
 
 
-                std::shared_ptr<EventPoster> m_pPoster;
+                std::function<void(unsigned long, const std::string&, long, const std::string&)> m_pCallback;
 
                 static const std::string STR_RESOURCE[7];
 

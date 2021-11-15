@@ -141,7 +141,6 @@
 		<Unit filename="include/constraint.h" />
 		<Unit filename="include/curlregister.h" />
 		<Unit filename="include/device.h" />
-		<Unit filename="include/eventposter.h" />
 		<Unit filename="include/flow.h" />
 		<Unit filename="include/flowaudio.h" />
 		<Unit filename="include/flowaudiocoded.h" />
@@ -172,7 +171,6 @@
 		<Unit filename="src/constraint.cpp" />
 		<Unit filename="src/curlregister.cpp" />
 		<Unit filename="src/device.cpp" />
-		<Unit filename="src/eventposter.cpp" />
 		<Unit filename="src/flow.cpp" />
 		<Unit filename="src/flowaudio.cpp" />
 		<Unit filename="src/flowaudiocoded.cpp" />

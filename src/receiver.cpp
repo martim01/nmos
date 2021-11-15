@@ -1,5 +1,5 @@
 #include "receiver.h"
-#include "nodeapi.h"
+#include "nodeapiprivate.h"
 #include "activator.h"
 #include "utils.h"
 #include "log.h"
@@ -17,7 +17,7 @@ Receiver::Receiver() : ReceiverBase()
 }
 
 
-void Receiver::CommitActivation()
+void Receiver::CommitActivation(NodeApiPrivate& api)
 {
     //reset the staged activation
     m_Staged.eActivate = connection::ACT_NULL;
@@ -26,10 +26,10 @@ void Receiver::CommitActivation()
 
     UpdateVersionTime();
 
-    NodeApi::Get().ReceiverActivated(GetId());
+    api.ReceiverActivated(GetId());
 }
 
-bool Receiver::Stage(const connectionReceiver& conRequest)
+bool Receiver::Stage(const connectionReceiver& conRequest, NodeApiPrivate& api)
 {
     bool bOk(true);
     m_mutex.lock();
@@ -43,7 +43,7 @@ bool Receiver::Stage(const connectionReceiver& conRequest)
         case connection::ACT_NULL:
             if(m_Staged.sActivationTime.empty() == false)
             {
-                Activator::Get().RemoveActivationReceiver(m_Staged.tpActivation, GetId());
+                api.RemoveActivationReceiver(m_Staged.tpActivation, GetId());
                 m_Staged.sActivationTime.clear();
                 m_Staged.tpActivation = std::chrono::time_point<std::chrono::high_resolution_clock>();
             }
@@ -52,7 +52,7 @@ bool Receiver::Stage(const connectionReceiver& conRequest)
         case connection::ACT_NOW:
             m_Staged.sActivationTime = GetCurrentTaiTime();
             m_bActivateAllowed = true;
-            Activate(true);
+            Activate(true, api);
             break;
         case connection::ACT_ABSOLUTE:
             {
@@ -62,7 +62,7 @@ bool Receiver::Stage(const connectionReceiver& conRequest)
                     m_bActivateAllowed = true;
                     m_Staged.sActivationTime = m_Staged.sRequestedTime;
                     m_Staged.tpActivation = tp;
-                    Activator::Get().AddActivationReceiver(tp, GetId());
+                    api.AddActivationReceiver(tp, GetId());
                 }
                 else
                 {
@@ -88,7 +88,7 @@ bool Receiver::Stage(const connectionReceiver& conRequest)
 
                 m_Staged.sActivationTime = ConvertTimeToString(tpAbs, true);
                 m_Staged.tpActivation = tpAbs;
-                Activator::Get().AddActivationReceiver(tpAbs, GetId());
+                api.AddActivationReceiver(tpAbs, GetId());
             }
             catch(std::invalid_argument& ia)
             {
@@ -102,7 +102,7 @@ bool Receiver::Stage(const connectionReceiver& conRequest)
     return bOk;
 }
 
-void Receiver::Activate(bool bImmediate)
+void Receiver::Activate(bool bImmediate, NodeApiPrivate& api)
 {
     m_bActivateAllowed = false;
     //move the staged parameters to active parameters
@@ -126,7 +126,55 @@ void Receiver::Activate(bool bImmediate)
 
     if(!bImmediate)
     {
-        CommitActivation();
+        CommitActivation(api);
     }
 }
 
+void Receiver::SetSender(const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp, NodeApiPrivate& api)
+{
+    if(sSenderId.empty() == false)
+    {
+        pmlLog(pml::LOG_INFO) << "Receiver subscribe to sender " << sSenderId ;
+        m_sSenderId = sSenderId;
+
+        // need to update the IS-05 stage and active connection settings to match
+        m_Staged.sSenderId = sSenderId;
+        m_Staged.bMasterEnable = true;
+        m_Staged.sTransportFileData = sSdp;
+        m_Staged.sTransportFileType = "application/sdp";
+        m_Staged.sActivationTime = GetCurrentTaiTime();
+        SetupActivation(sInterfaceIp);
+        Activate(false, api);
+    }
+    else
+    {   //this means unsubscribe
+        pmlLog(pml::LOG_INFO) << "Receiver unssubscribe " ;
+        m_sSenderId.clear();
+
+        // need to update the IS-05 stage and active connection settings to match
+        m_Staged.sSenderId.clear();
+        m_Staged.bMasterEnable = false;
+        m_Staged.sTransportFileData.clear();
+        m_Staged.sTransportFileType.clear();
+        m_Staged.sActivationTime = GetCurrentTaiTime();
+        SetupActivation(sInterfaceIp);
+        Activate(false, api);
+    }
+    UpdateVersionTime();
+
+}
+
+void Receiver::MasterEnable(bool bEnable)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_Active.bMasterEnable = bEnable;
+    m_Active.tpReceiver.bRtpEnabled = bEnable;
+    m_Staged.bMasterEnable = bEnable;
+    m_Staged.tpReceiver.bRtpEnabled = bEnable;
+    UpdateVersionTime();
+}
+
+void Receiver::SetupActivation(const std::string& sInterfaceIp)
+{
+    m_sInterfaceIp = sInterfaceIp;
+}

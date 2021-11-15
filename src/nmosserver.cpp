@@ -4,10 +4,11 @@
 
 using namespace pml::nmos;
 
-NmosServer::NmosServer(std::shared_ptr<RestGoose> pServer, const ApiVersion& version, std::shared_ptr<EventPoster> pPoster) :
+NmosServer::NmosServer(std::shared_ptr<RestGoose> pServer, const ApiVersion& version, std::shared_ptr<EventPoster> pPoster, NodeApiPrivate& api) :
     m_pServer(pServer),
     m_version(version),
-    m_pPoster(pPoster)
+    m_pPoster(pPoster),
+    m_api(api)
 {
 
 }

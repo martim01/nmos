@@ -69,42 +69,31 @@ static curlResponse DoCurl(CURL* pCurl, curl_slist *pHeaders)
 static void PostThreaded(const std::string& sUrl, const std::string& sJson, CurlRegister* pRegister, long nUserType)
 {
     auto resp = pRegister->Post(sUrl, sJson);
-    if(pRegister->GetPoster())
-    {
-        pRegister->GetPoster()->_CurlDone(resp.nCode, resp.sResponse, nUserType);
-    }
+    pRegister->Callback(resp.nCode, resp.sResponse, nUserType);
+
 }
 
 static void DeleteThreaded(const std::string& sUrl, const std::string& sType, const std::string& sId, CurlRegister* pRegister, long nUserType)
 {
     auto resp = pRegister->Delete(sUrl, sType, sId);
-    if(pRegister->GetPoster())
-    {
-        pRegister->GetPoster()->_CurlDone(resp.nCode, resp.sResponse, nUserType);
-    }
+    pRegister->Callback(resp.nCode, resp.sResponse, nUserType);
 }
 
 
 static void PutThreaded(const std::string& sUrl, const std::string& sJson, CurlRegister* pRegister, long nUserType, bool bPut, const std::string& sResourceId)
 {
     auto resp = pRegister->PutPatch(sUrl, sJson, bPut, sResourceId);
-    if(pRegister->GetPoster())
-    {
-        pRegister->GetPoster()->_CurlDone(resp.nCode, resp.sResponse, nUserType, sResourceId);
-    }
+    pRegister->Callback(resp.nCode, resp.sResponse, nUserType);
 }
 
 static void GetThreaded(const std::string& sUrl, CurlRegister* pRegister, long nUserType)
 {
     auto resp = pRegister->Get(sUrl);
-    if(pRegister->GetPoster())
-    {
-        pRegister->GetPoster()->_CurlDone(resp.nCode, resp.sResponse, nUserType);
-    }
+    pRegister->Callback(resp.nCode, resp.sResponse, nUserType);
 }
 
-CurlRegister::CurlRegister(std::shared_ptr<EventPoster> pPoster) :
-    m_pPoster(pPoster)
+CurlRegister::CurlRegister(std::function<void(unsigned long, const std::string&, long, const std::string&)> pCallback) :
+    m_pCallback(pCallback)
 {
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
@@ -116,10 +105,6 @@ CurlRegister::~CurlRegister()
     curl_global_cleanup();
 }
 
-std::shared_ptr<EventPoster> CurlRegister::GetPoster()
-{
-    return m_pPoster;
-}
 
 void CurlRegister::Post(const std::string& sBaseUrl, const std::string& sJson, long nUserType)
 {
@@ -262,4 +247,12 @@ curlResponse CurlRegister::PutPatch(const std::string& sUrl, const std::string& 
         resp = DoCurl(pCurl, pHeaders);
     }
     return resp;
+}
+
+void CurlRegister::Callback(unsigned long nResult, const std::string& sResult, long nUser, const std::string sResponse)
+{
+    if(m_pCallback)
+    {
+        m_pCallback(nResult, sResult, nUser, sResponse);
+    }
 }

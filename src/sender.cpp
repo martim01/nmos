@@ -1,5 +1,5 @@
 #include "sender.h"
-#include "nodeapi.h"
+#include "nodeapiprivate.h"
 #include "utils.h"
 #include "log.h"
 #include "activator.h"
@@ -14,19 +14,19 @@ Sender::Sender(const std::string& sLabel, const std::string& sDescription, const
    SenderBase(sLabel, sDescription, sFlowId, eTransport, sDeviceId, sInterface, flagsTransport)
 {
     SetupActivation("", "239.220.1.1","");  // @todo choose some defaults - get the ori
-    Activate();
+    //Activate();
 }
 
 Sender::Sender() : SenderBase()
 {
 }
 
-void Sender::CreateSDP()
+void Sender::CreateSDP(NodeApiPrivate& api)
 {
-    CreateSDP(m_Active);
+    CreateSDP(api, m_Active);
 }
 
-void Sender::CreateSDP(const connectionSender& state)
+void Sender::CreateSDP(NodeApiPrivate& api, const connectionSender& state)
 {
     std::stringstream ssSDP;
     ssSDP << "v=0\r\n";
@@ -48,8 +48,8 @@ void Sender::CreateSDP(const connectionSender& state)
     ssSDP << state.tpSender.sSourceIp << "\r\n";    // @todo should check here if sSourceIp is not set to auto
     ssSDP << "t=0 0 \r\n";
 
-    std::map<std::string, std::shared_ptr<Device> >::const_iterator itDevice = NodeApi::Get().GetDevices().FindNmosResource(m_sDeviceId);
-    if(itDevice != NodeApi::Get().GetDevices().GetResourceEnd())
+    std::map<std::string, std::shared_ptr<Device> >::const_iterator itDevice = api.GetDevices().FindNmosResource(m_sDeviceId);
+    if(itDevice != api.GetDevices().GetResourceEnd())
     {
         ssSDP << "s=" << itDevice->second->GetLabel() << ":";
     }
@@ -91,43 +91,8 @@ void Sender::CreateSDP(const connectionSender& state)
             break;
     }
 
+    ssSDP << api.CreateFlowSdp(m_sFlowId, state, ssc.str(), m_setInterfaces);
 
-    //now put in the flow media information
-    auto itFlow = NodeApi::Get().GetFlows().FindNmosResource(m_sFlowId);
-    if(itFlow != NodeApi::Get().GetFlows().GetResourceEnd())
-    {
-        auto pFlow = std::dynamic_pointer_cast<Flow>(itFlow->second);
-        if(pFlow)
-        {
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "CreateSDP Destination Port = " << state.tpSender.nDestinationPort ;
-            unsigned short nPort(state.tpSender.nDestinationPort);
-            if(nPort == 0)
-            {
-                nPort = 5004;
-            }
-            ssSDP << pFlow->CreateSDPLines(nPort);
-            ssSDP << ssc.str();
-
-            //get clock name from source
-            auto itSource = NodeApi::Get().GetSources().FindNmosResource(pFlow->GetSourceId());
-            if(itSource != NodeApi::Get().GetSources().GetResourceEnd())
-            {
-                auto pSource = std::dynamic_pointer_cast<Source>(itSource->second);
-                auto sClock = pSource->GetClock();
-
-                //clock information is probably at the media level
-                if(m_setInterfaces.empty() || sClock.empty())
-                {
-                    ssSDP << NodeApi::Get().GetSelf().CreateClockSdp(sClock, "");
-                }
-                else
-                {
-                    ssSDP << NodeApi::Get().GetSelf().CreateClockSdp(sClock, *(m_setInterfaces.begin())); // @todo should we check all the intefaces for the clock mac address??
-                }
-            }
-        }
-    }
-    //now put in the RTCP info if we've got any
     if(state.tpSender.bRtcpEnabled)
     {
         switch(SdpManager::CheckIpAddress(state.tpSender.sRtcpDestinationIp))
@@ -150,7 +115,7 @@ void Sender::CreateSDP(const connectionSender& state)
 }
 
 
-void Sender::Activate(bool bImmediate)
+void Sender::Activate(bool bImmediate, NodeApiPrivate& api)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
 
@@ -163,8 +128,8 @@ void Sender::Activate(bool bImmediate)
         //get the bound to interface source address
         for(std::set<std::string>::iterator itInteface = m_setInterfaces.begin(); itInteface != m_setInterfaces.end(); ++itInteface)
         {
-            std::map<std::string, nodeinterface>::const_iterator itDetails = NodeApi::Get().GetSelf().FindInterface((*itInteface));
-            if(itDetails != NodeApi::Get().GetSelf().GetInterfaceEnd())
+            std::map<std::string, nodeinterface>::const_iterator itDetails = api.GetSelf().FindInterface((*itInteface));
+            if(itDetails != api.GetSelf().GetInterfaceEnd())
             {
                 m_sSourceIp = itDetails->second.sMainIpAddress;
                 break;
@@ -179,10 +144,10 @@ void Sender::Activate(bool bImmediate)
     // create the SDP
     if(m_Active.bMasterEnable)
     {
-        CreateSDP(m_Active);    // @TODO need to update SDP but keep stuff
+        CreateSDP(api, m_Active);    // @TODO need to update SDP but keep stuff
         if(m_sSDP.empty())
         {
-            CreateSDP(m_Active);
+            CreateSDP(api, m_Active);
         }
         else
         {
@@ -208,11 +173,11 @@ void Sender::Activate(bool bImmediate)
 
     if(!bImmediate)
     {
-        CommitActivation();
+        CommitActivation(api);
     }
 }
 
-void Sender::CommitActivation()
+void Sender::CommitActivation(NodeApiPrivate& api)
 {
     //reset the staged activation
     pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ActivateSender: Reset Staged activation parameters..." ;
@@ -222,7 +187,7 @@ void Sender::CommitActivation()
 
     UpdateVersionTime();
 
-    NodeApi::Get().SenderActivated(GetId());
+    api.SenderActivated(GetId());
 }
 
 bool Sender::Commit(const ApiVersion& version)
@@ -265,7 +230,7 @@ bool Sender::Commit(const ApiVersion& version)
         {
             m_json["subscription"]["active"] = false;
         }
-        CreateSDP(m_Active);
+        //@todo create the SDP somehow         CreateSDP(api, m_Active);
         return true;
     }
     return false;
@@ -284,7 +249,8 @@ void Sender::SetDestinationDetails(const std::string& sDestinationIp, unsigned s
     std::lock_guard<std::mutex> lock(m_mutex);
     m_Active.tpSender.sDestinationIp = sDestinationIp;
     m_Active.tpSender.nDestinationPort = nDestinationPort;
-    CreateSDP(m_Active);
+    //@todo create the SDP somehow         CreateSDP(api, m_Active);
+
     UpdateVersionTime();
 }
 
@@ -298,7 +264,7 @@ void Sender::MasterEnable(bool bEnable)
     UpdateVersionTime();
 }
 
-bool Sender::Stage(const connectionSender& conRequest, std::shared_ptr<EventPoster> pPoster)
+bool Sender::Stage(const connectionSender& conRequest, std::shared_ptr<EventPoster> pPoster, NodeApiPrivate& api)
 {
     bool bOk(true);
 
@@ -312,7 +278,7 @@ bool Sender::Stage(const connectionSender& conRequest, std::shared_ptr<EventPost
         case connection::ACT_NULL:
             if(m_Staged.sActivationTime.empty() == false)
             {
-                Activator::Get().RemoveActivationSender(m_Staged.tpActivation, GetId());
+                api.RemoveActivationSender(m_Staged.tpActivation, GetId());
                 m_Staged.sActivationTime.clear();
                 m_Staged.tpActivation = std::chrono::time_point<std::chrono::high_resolution_clock>();
             }
@@ -321,7 +287,7 @@ bool Sender::Stage(const connectionSender& conRequest, std::shared_ptr<EventPost
         case connection::ACT_NOW:
             m_Staged.sActivationTime = GetCurrentTaiTime();
             m_bActivateAllowed = true;
-            Activate(true);
+            Activate(true, api);
             break;
         case connection::ACT_ABSOLUTE:
             {
@@ -332,7 +298,7 @@ bool Sender::Stage(const connectionSender& conRequest, std::shared_ptr<EventPost
 
                     m_Staged.sActivationTime = m_Staged.sRequestedTime;
                     m_Staged.tpActivation = tp;
-                    Activator::Get().AddActivationSender(tp, GetId());
+                    api.AddActivationSender(tp, GetId());
                 }
                 else
                 {
@@ -359,7 +325,7 @@ bool Sender::Stage(const connectionSender& conRequest, std::shared_ptr<EventPost
 
                 m_Staged.sActivationTime = ConvertTimeToString(tpAbs, true);
                 m_Staged.tpActivation = tpAbs;
-                Activator::Get().AddActivationSender(tpAbs, GetId());
+                api.AddActivationSender(tpAbs, GetId());
             }
             catch(std::invalid_argument& ia)
             {

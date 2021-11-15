@@ -4,12 +4,9 @@
 #include <fstream>
 #include "threadposter.h"
 #include "nodeapi.h"
+#include "../../log/include/log.h"
 #include "sourceaudio.h"
 #include "flowaudioraw.h"
-#include "device.h"
-#include "sender.h"
-#include "receiver.h"
-#include "../../log/include/log.h"
 
 using namespace std;
 
@@ -45,7 +42,7 @@ int main()
     auto pReceiver = make_shared<pml::nmos::Receiver>("Test Receiver", "TestDescription", pml::nmos::Receiver::RTP_MCAST, pDevice->GetId(), pml::nmos::Receiver::AUDIO,
     pml::nmos::TransportParamsRTP::CORE | pml::nmos::TransportParamsRTP::MULTICAST);
 
-    pSender->CreateSDP();
+    //pSender->CreateSDP();
     pSender->MasterEnable(true);
 
 

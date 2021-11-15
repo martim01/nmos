@@ -17,11 +17,12 @@ namespace pml
             public:
                 enum enumTransport {RTP, RPT_UCAST, RTP_MCAST, DASH};
                 enum enumType {AUDIO, VIDEO, DATA, MUX};
+
                 ReceiverBase(const std::string& sLabel, const std::string& sDescription, enumTransport eTransport, const std::string& sDeviceId, enumType eType, int flagsTransport=TransportParamsRTP::CORE);
                 virtual ~ReceiverBase();
                 ReceiverBase();
 
-                virtual bool UpdateFromJson(const Json::Value& jsData);
+                bool UpdateFromJson(const Json::Value& jsData) override;
 
                 void SetTransport(enumTransport eTransport);
                 void SetType(enumType eType);
@@ -35,27 +36,22 @@ namespace pml
 
                 virtual bool Commit(const ApiVersion& version);
 
-                std::string GetParentResourceId() const
-                {
-                    return m_sDeviceId;
-                }
+                std::string GetParentResourceId() const {   return m_sDeviceId; }
 
                 Json::Value GetConnectionStagedJson(const ApiVersion& version) const;
                 Json::Value GetConnectionActiveJson(const ApiVersion& version) const;
                 Json::Value GetConnectionConstraintsJson(const ApiVersion& version) const;
 
                 const std::string& GetSender() const;
-                void SetSender(const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp);  //this is the IS-04 way of connecting
+
 
                 bool CheckConstraints(const connectionReceiver& conRequest);
                 bool IsLocked() const;
                 connectionReceiver GetStaged() const;
 
-                void SetupActivation(const std::string& sInterfaceIp);
+
 
                 bool IsMasterEnabled() const;
-                void MasterEnable(bool bEnable);
-
                 bool IsActivateAllowed() const;
 
 
