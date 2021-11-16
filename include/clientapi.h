@@ -172,7 +172,6 @@ namespace pml
             private:
                 friend void NodeBrowser();
                 friend void ClientThread();
-                friend class ClientPoster;
                 friend class ClientZCPoster;
 
                 ClientApi();

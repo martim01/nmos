@@ -161,9 +161,9 @@ void CurlRegister::Delete(const std::string& sUrl, const std::string& sType, con
 
 curlResponse CurlRegister::Delete(const std::string& sUrl, const std::string& sType, const std::string& sId)
 {
+
     std::stringstream ssUrl;
     ssUrl << sUrl << "/" << sType << "/" << sId;
-
     pmlLog(pml::LOG_DEBUG) << "NMOS: " << "DELETE: " << ssUrl.str() ;
 
     curlResponse resp;

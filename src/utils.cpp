@@ -117,17 +117,24 @@ std::string CreateGuid()
 }
 
 
-bool CheckJson(const Json::Value& jsObject, std::initializer_list<std::string> lstAllowed)
+bool CheckJson(const Json::Value& jsObject, std::set<std::string> setAllowed)
 {
-    for(Json::Value::const_iterator itParam = jsObject.begin(); itParam != jsObject.end(); ++itParam)
+    for(auto itObject = jsObject.begin(); itObject != jsObject.end(); ++itObject)
     {
-        std::initializer_list<std::string>::iterator itList = lstAllowed.begin();
-        for(; itList != lstAllowed.end(); ++itList)
+        if(setAllowed.find(itObject.key().asString()) == setAllowed.end())
         {
-            if((*itList) == itParam.key().asString())
-                break;
+            return false;
         }
-        if(itList == lstAllowed.end())   //found a non allowed thing
+    }
+    return true;
+}
+
+
+bool CheckJsonRequired(const Json::Value& jsObject, std::set<std::string> setRequired)
+{
+    for(auto sKey : setRequired)
+    {
+        if(jsObject.isMember(sKey) == false)
         {
             return false;
         }

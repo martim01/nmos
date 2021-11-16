@@ -11,7 +11,11 @@
 #include "senderbase.h"
 #include "flow.h"
 #include "receiverbase.h"
-#include "namedtype.h"
+#include "response.h"
+#include <thread>
+#include <functional>
+
+#include "clientemum.h"
 
 class WebSocketClient;
 namespace pml
@@ -24,6 +28,7 @@ namespace pml
         class dnsInstance;
         class CurlRegister;
         class ClientApiPoster;
+        class ClientZCPoster;
         class ZCPoster;
 
         class ClientApiImpl
@@ -45,12 +50,12 @@ namespace pml
 
                 enumMode GetMode();
 
-                void AddNode(std::list<std::shared_ptr<Self> >& lstAdded, std::list<std::shared_ptr<Self> >& lstUpdated, const std::string& sIpAddress, const std::string& sData);
-                void AddDevices(std::list<std::shared_ptr<Device> >& lstAdded, std::list<std::shared_ptr<Device> >& lstUpdated, const std::string& sIpAddress, const std::string& sData);
-                void AddSources(std::list<std::shared_ptr<Source> >& lstAdded, std::list<std::shared_ptr<Source> >& lstUpdated, const std::string& sIpAddress, const std::string& sData);
-                void AddFlows(std::list<std::shared_ptr<Flow> >& lstAdded, std::list<std::shared_ptr<Flow> >& lstUpdated, const std::string& sIpAddress, const std::string& sData);
-                void AddSenders(std::list<std::shared_ptr<SenderBase> >& lstAdded, std::list<std::shared_ptr<SenderBase> >& lstUpdated, const std::string& sIpAddress, const std::string& sData);
-                void AddReceivers(std::list<std::shared_ptr<ReceiverBase> >& lstAdded, std::list<std::shared_ptr<ReceiverBase> >& lstUpdated, const std::string& sIpAddress, const std::string& sData);
+                void AddNode(std::list<std::shared_ptr<Self> >& lstAdded, std::list<std::shared_ptr<Self> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData);
+                void AddDevices(std::list<std::shared_ptr<Device> >& lstAdded, std::list<std::shared_ptr<Device> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData);
+                void AddSources(std::list<std::shared_ptr<Source> >& lstAdded, std::list<std::shared_ptr<Source> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData);
+                void AddFlows(std::list<std::shared_ptr<Flow> >& lstAdded, std::list<std::shared_ptr<Flow> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData);
+                void AddSenders(std::list<std::shared_ptr<SenderBase> >& lstAdded, std::list<std::shared_ptr<SenderBase> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData);
+                void AddReceivers(std::list<std::shared_ptr<ReceiverBase> >& lstAdded, std::list<std::shared_ptr<ReceiverBase> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData);
 
                 void StoreDevices(const std::string& sIpAddress);
                 void StoreSources(const std::string& sIpAddress);
@@ -67,7 +72,7 @@ namespace pml
                 template<class T> bool RunQuery(std::list<std::shared_ptr<T> >& lstAdded, std::list<std::shared_ptr<T> >& lstUpdated, std::list<std::shared_ptr<T> >& lstRemoved, int nResourceType);
 
 
-                static const std::string STR_RESOURCE[6];
+                static const std::array<std::string,6> STR_RESOURCE;
                 enum enumResource{NODE, DEVICE, SOURCE, FLOW, SENDER, RECEIVER};
 
                 void Signal(enumSignal eSignal);
@@ -128,8 +133,7 @@ namespace pml
 
                 void HandleConnect(const std::string& sSenderId, const std::string& sReceiverId, bool bSuccess, const std::string& sResponse);
 
-                std::shared_ptr<EventPoster> GetClientPoster();
-                std::shared_ptr<ZCPoster> GetClientZCPoster();
+
 
                 bool AddQuerySubscription(int nResource, const std::string& sQuery, unsigned long nUpdateRate);
                 bool RemoveQuerySubscription(const std::string& sSubscriptionId);
@@ -144,8 +148,13 @@ namespace pml
                 bool WebsocketMessage(const url& theUrl, const std::string& sMessage);
 
             private:
-                friend class ClientPoster;
 
+
+                void AddDevice(std::list<std::shared_ptr<Device> >& lstAdded, std::list<std::shared_ptr<Device> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData);
+                void AddSource(std::list<std::shared_ptr<Source> >& lstAdded, std::list<std::shared_ptr<Source> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData);
+                void AddFlow(std::list<std::shared_ptr<Flow> >& lstAdded, std::list<std::shared_ptr<Flow> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData);
+                void AddSender(std::list<std::shared_ptr<SenderBase> >& lstAdded, std::list<std::shared_ptr<SenderBase> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData);
+                void AddReceiver(std::list<std::shared_ptr<ReceiverBase> >& lstAdded, std::list<std::shared_ptr<ReceiverBase> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData);
 
 
                 void ConnectToQueryServer();
@@ -158,8 +167,8 @@ namespace pml
                 std::shared_ptr<SenderBase> GetSender(const std::string& sSenderId);
                 std::shared_ptr<ReceiverBase> GetReceiver(const std::string& sSenderId);
 
-                bool RequestSender(const std::string& sSenderId, ClientPoster::enumCurlType eType);
-                bool RequestReceiver(const std::string& sReceiverId, ClientPoster::enumCurlType eType);
+                bool RequestSender(const std::string& sSenderId, enumConnection eType);
+                bool RequestReceiver(const std::string& sReceiverId, enumConnection eType);
 
                 void HandleCurlDoneTarget();
                 void HandleCurlDonePatchSender();
@@ -177,8 +186,6 @@ namespace pml
                 bool RemoveQuerySubscriptionP2P(const std::string& sSubscriptionId);
 
 
-                void HandleQuerySubscriptionResponse(unsigned short nCode, const Json::Value& jsResponse);
-                void HandleSuccessfulQuerySubscription(const Json::Value& jsResponse);
 
                 template<class T> bool RunQuery(std::list<std::shared_ptr<T> >& lstCheck, int nResource);
                 template<class T> bool RunQuery(std::list<std::shared_ptr<T> >& lstCheck, const std::string& sQuery);
@@ -186,6 +193,7 @@ namespace pml
                 bool MeetsQuery(const std::string& sQuery, std::shared_ptr<Resource> pResource);
 
                 void SubscribeToQueryServer();
+
 
                 void CreateFlow(std::list<std::shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress);
                 void CreateFlowAudio(std::list<std::shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress);
@@ -197,6 +205,20 @@ namespace pml
                 void CreateFlowData(std::list<std::shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress);
                 void CreateFlowMux(std::list<std::shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress);
 
+
+                void HandleGrainEvent(const std::string& sSourceId, const Json::Value& jsGrain);
+
+                void GrainUpdateNode(const std::string& sSourceId, const Json::Value& jsData);
+                void GrainUpdateDevice(const std::string& sSourceId, const Json::Value& jsData);
+                void GrainUpdateSource(const std::string& sSourceId, const Json::Value& jsData);
+                void GrainUpdateFlow(const std::string& sSourceId, const Json::Value& jsData);
+                void GrainUpdateSender(const std::string& sSourceId, const Json::Value& jsData);
+                void GrainUpdateReceiver(const std::string& sSourceId, const Json::Value& jsData);
+
+                enum class enumGrain {ADD, UPDATE, DELETE, UNKNOWN};
+
+
+                enumGrain WorkoutAction(const Json::Value& jsData);
 
                 enumMode m_eMode;
 
@@ -239,16 +261,28 @@ namespace pml
                 {
                     std::string sId;
                     std::string sHref;
-
                     int nResource;
                     std::string sQuery;
                     unsigned long nRefreshRate;
+                    Json::Value jsSubscription;
                 };
+
+                url GetQueryServer();
+                bool QueryQueryServer(const url& theUrl, query& theQuery);
+                void HandleQuerySubscriptionResponse(unsigned short nCode, const ClientApiImpl::query& theQuery);
+                void HandleSuccessfulQuerySubscription(const ClientApiImpl::query& theQuery);
+
 
                 std::multimap<int, query> m_mmQuery;
 
 
                 std::unique_ptr<WebSocketClient> m_pWebSocket;
+
+                std::map<std::string, std::function<void(const std::string&, const Json::Value&)>> m_mGrainUpdate;
+
+                //std::map<std::string, ClientHolder<T>&> m_mGrainRemove;
+
+                static const std::array<std::string, 5> STR_CONNECTION;
         };
     };
 };

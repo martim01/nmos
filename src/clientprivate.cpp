@@ -1,6 +1,5 @@
 #include "clientprivate.h"
 #include "clientapi.h"
-#include "clientposter.h"
 #include "log.h"
 #include "mdns.h"
 #include <thread>
@@ -29,13 +28,13 @@
 #include <algorithm>
 #include <numeric>
 #include "websocketclient.h"
-
+#include "clientposter.h"
 
 using namespace pml::nmos;
 using namespace std::placeholders;
 
-const std::string ClientApiImpl::STR_RESOURCE[6] = {"node", "device", "source", "flow", "sender", "receiver"};
-
+const std::array<std::string, 6> ClientApiImpl::STR_RESOURCE = {"node", "device", "source", "flow", "sender", "receiver"};
+const std::array<std::string, 5> ClientApiImpl::STR_CONNECTION = {"staged", "active", "transportfile", "staged", "active"};
 
 //Main Client Thread
 void ClientThread(ClientApiImpl* pApi)
@@ -114,7 +113,7 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<dnsInstance> pInsta
                     std::list<std::shared_ptr<Self> > lstAdded;
                     std::list<std::shared_ptr<Self> > lstUpdated;
                     std::list<std::shared_ptr<Self> > lstRemoved;
-                    pApi->AddNode(lstAdded, lstUpdated, pInstance->sHostIP, curlresp.sResponse);
+                    pApi->AddNode(lstAdded, lstUpdated, pInstance->sHostIP, ConvertToJson(curlresp.sResponse));
 
                     if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::NODES))
                     {
@@ -140,7 +139,7 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<dnsInstance> pInsta
                     //store the devices this ip address currently provides
                     pApi->StoreDevices(pInstance->sHostIP);
                     //add or update all devices on this ip address
-                    pApi->AddDevices(lstAdded, lstUpdated, pInstance->sHostIP, curlresp.sResponse);
+                    pApi->AddDevices(lstAdded, lstUpdated, pInstance->sHostIP, ConvertToJson(curlresp.sResponse));
                     //remove any devices that we previously stored but didn;t update. i.e. ones that no longer exist
                     pApi->RemoveStaleDevices(lstRemoved);
 
@@ -167,7 +166,7 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<dnsInstance> pInsta
                     std::list<std::shared_ptr<Source> > lstRemoved;
 
                     pApi->StoreSources(pInstance->sHostIP);
-                    pApi->AddSources(lstAdded, lstUpdated, pInstance->sHostIP, curlresp.sResponse);
+                    pApi->AddSources(lstAdded, lstUpdated, pInstance->sHostIP, ConvertToJson(curlresp.sResponse));
                     pApi->RemoveStaleSources(lstRemoved);
 
                     if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::SOURCES))
@@ -193,7 +192,7 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<dnsInstance> pInsta
                     std::list<std::shared_ptr<Flow> > lstRemoved;
 
                     pApi->StoreFlows(pInstance->sHostIP);
-                    pApi->AddFlows(lstAdded, lstUpdated, pInstance->sHostIP, curlresp.sResponse);
+                    pApi->AddFlows(lstAdded, lstUpdated, pInstance->sHostIP, ConvertToJson(curlresp.sResponse));
                     pApi->RemoveStaleFlows(lstRemoved);
 
                     if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::FLOWS))
@@ -219,7 +218,7 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<dnsInstance> pInsta
                     std::list<std::shared_ptr<SenderBase> > lstRemoved;
 
                     pApi->StoreSenders(pInstance->sHostIP);
-                    pApi->AddSenders(lstAdded, lstUpdated, pInstance->sHostIP, curlresp.sResponse);
+                    pApi->AddSenders(lstAdded, lstUpdated, pInstance->sHostIP, ConvertToJson(curlresp.sResponse));
                     pApi->RemoveStaleSenders(lstRemoved);
 
                     if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::SENDERS))
@@ -244,7 +243,7 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<dnsInstance> pInsta
                     std::list<std::shared_ptr<ReceiverBase> > lstUpdated;
                     std::list<std::shared_ptr<ReceiverBase> > lstRemoved;
                     pApi->StoreReceivers(pInstance->sHostIP);
-                    pApi->AddReceivers(lstAdded, lstUpdated, pInstance->sHostIP, curlresp.sResponse);
+                    pApi->AddReceivers(lstAdded, lstUpdated, pInstance->sHostIP, ConvertToJson(curlresp.sResponse));
                     pApi->RemoveStaleReceivers(lstRemoved);
 
                     if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::RECEIVERS))
@@ -380,7 +379,7 @@ ClientApiImpl::ClientApiImpl() :
     m_pInstance(0),
     m_nCurlThreadCount(0),
     m_pPoster(0),
-    m_pClientZCPoster(std::make_shared<ClientZCPoster>()),
+    m_pClientZCPoster(std::make_shared<ClientZCPoster>(this)),
     m_pCurl(new CurlRegister(std::bind(&ClientApiImpl::SetCurlDone, this, _1,_2,_3,_4))),
     m_pThread(nullptr),
     m_bStarted(false),
@@ -388,6 +387,13 @@ ClientApiImpl::ClientApiImpl() :
     m_pWebSocket(std::make_unique<WebSocketClient>(std::bind(&ClientApiImpl::WebsocketConnected, this, _1), std::bind(&ClientApiImpl::WebsocketMessage, this, _1, _2)))
 {
     m_mBrowser.insert(std::make_pair("local", std::make_unique<ServiceBrowser>()));
+
+    m_mGrainUpdate = { {"/nodes/", std::bind(&ClientApiImpl::GrainUpdateNode, this, _1, _2)},
+                        {"/devices/", std::bind(&ClientApiImpl::GrainUpdateDevice, this, _1, _2)},
+                        {"/sources/", std::bind(&ClientApiImpl::GrainUpdateSource, this, _1, _2)},
+                        {"/flows/", std::bind(&ClientApiImpl::GrainUpdateFlow, this, _1, _2)},
+                        {"/senders/", std::bind(&ClientApiImpl::GrainUpdateSender, this, _1, _2)},
+                        {"/receiver/", std::bind(&ClientApiImpl::GrainUpdateReceiver, this, _1, _2)} };
 }
 
 ClientApiImpl::~ClientApiImpl()
@@ -433,10 +439,6 @@ void ClientApiImpl::StopRun()
 
 }
 
-std::shared_ptr<ZCPoster> ClientApiImpl::GetClientZCPoster()
-{
-    return m_pClientZCPoster;
-}
 
 ClientApiImpl::enumSignal ClientApiImpl::GetSignal()
 {
@@ -608,30 +610,30 @@ void ClientApiImpl::HandleCurlDone()
     std::lock_guard<std::mutex> lg(m_mutex);
     if(m_pPoster)
     {
-        switch(m_nCurlType)
+        switch(static_cast<enumConnection>(m_nCurlType))
         {
-            case ClientPoster::CURLTYPE_TARGET:
+            case enumConnection::TARGET:
                 HandleCurlDoneTarget();
                 break;
-            case ClientPoster::CURLTYPE_SENDER_STAGED:
+            case enumConnection::SENDER_STAGED:
                 HandleCurlDoneGetSenderStaged();
                 break;
-            case ClientPoster::CURLTYPE_SENDER_ACTIVE:
+            case enumConnection::SENDER_ACTIVE:
                 HandleCurlDoneGetSenderActive();
                 break;
-            case ClientPoster::CURLTYPE_SENDER_TRANSPORTFILE:
+            case enumConnection::SENDER_TRANSPORTFILE:
                 HandlCurlDoneGetSenderTransportFile();
                 break;
-            case ClientPoster::CURLTYPE_RECEIVER_STAGED:
+            case enumConnection::RECEIVER_STAGED:
                 HandleCurlDoneGetReceiverStaged();
                 break;
-            case ClientPoster::CURLTYPE_RECEIVER_ACTIVE:
+            case enumConnection::RECEIVER_ACTIVE:
                 void HandleCurlDoneGetReceiverActive();
                 break;
-            case ClientPoster::CURLTYPE_SENDER_PATCH:
+            case enumConnection::SENDER_PATCH:
                 HandleCurlDonePatchSender();
                 break;
-            case ClientPoster::CURLTYPE_RECEIVER_PATCH:
+            case enumConnection::RECEIVER_PATCH:
                 HandleCurlDonePatchReceiver();
                 break;
          }
@@ -792,11 +794,9 @@ ClientApiImpl::enumMode ClientApiImpl::GetMode()
 
 
 
-void ClientApiImpl::AddNode(std::list<std::shared_ptr<Self> >& lstAdded, std::list<std::shared_ptr<Self> >& lstUpdated,const std::string& sIpAddress, const std::string& sData)
+void ClientApiImpl::AddNode(std::list<std::shared_ptr<Self> >& lstAdded, std::list<std::shared_ptr<Self> >& lstUpdated,const std::string& sIpAddress, const Json::Value& jsData)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
-
-    Json::Value jsData = ConvertToJson(sData);
 
     if(jsData["id"].isString())
     {
@@ -828,36 +828,17 @@ void ClientApiImpl::AddNode(std::list<std::shared_ptr<Self> >& lstAdded, std::li
 }
 
 void ClientApiImpl::AddDevices(std::list<std::shared_ptr<Device> >& lstAdded, std::list<std::shared_ptr<Device> >& lstUpdated, const std::string& sIpAddress,
-const std::string& sData)
+const Json::Value& jsData)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
 
-    Json::Value jsData = ConvertToJson(sData);
     if(jsData.isArray())
     {
         for(Json::ArrayIndex ai = 0; ai < jsData.size(); ++ai)
         {
             if(jsData[ai].isObject() && jsData[ai]["id"].isString())
             {
-                auto pResource = m_devices.UpdateResource(jsData[ai]);
-                if(!pResource)
-                {
-                    pResource = std::make_shared<Device>();
-                    if(pResource->UpdateFromJson(jsData[ai]))
-                    {
-                        m_devices.AddResource(sIpAddress, pResource);
-                        lstAdded.push_back(pResource);
-                        pmlLog(pml::LOG_INFO) << "NMOS: " << "Device: " << pResource->GetId() << " found at " << sIpAddress ;
-                    }
-                    else
-                    {
-                        pmlLog(pml::LOG_INFO) << "NMOS: " << "Found device but json data incorrect: " << pResource->GetJsonParseError() ;
-                    }
-                }
-                else
-                {
-                    lstUpdated.push_back(pResource);
-                }
+                AddDevice(lstAdded, lstUpdated, sIpAddress, jsData[ai]);
             }
             else
             {
@@ -869,55 +850,43 @@ const std::string& sData)
     {
         pmlLog(pml::LOG_INFO) << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not array" ;
     }
+
 }
 
-void ClientApiImpl::AddSources(std::list<std::shared_ptr<Source> >& lstAdded, std::list<std::shared_ptr<Source> >& lstUpdated, const std::string& sIpAddress, const std::string& sData)
+void ClientApiImpl::AddDevice(std::list<std::shared_ptr<Device> >& lstAdded, std::list<std::shared_ptr<Device> >& lstUpdated, const std::string& sIpAddress,
+const Json::Value& jsData)
+{
+    auto pResource = m_devices.UpdateResource(jsData);
+    if(!pResource)
+    {
+        pResource = std::make_shared<Device>();
+        if(pResource->UpdateFromJson(jsData))
+        {
+            m_devices.AddResource(sIpAddress, pResource);
+            lstAdded.push_back(pResource);
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "Device: " << pResource->GetId() << " found at " << sIpAddress ;
+        }
+        else
+        {
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "Found device but json data incorrect: " << pResource->GetJsonParseError() ;
+        }
+    }
+    else
+    {
+        lstUpdated.push_back(pResource);
+    }
+}
+
+void ClientApiImpl::AddSources(std::list<std::shared_ptr<Source> >& lstAdded, std::list<std::shared_ptr<Source> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
-    Json::Value jsData = ConvertToJson(sData);
     if(jsData.isArray())
     {
         for(Json::ArrayIndex ai = 0; ai < jsData.size(); ++ai)
         {
             if(jsData[ai].isObject() && jsData[ai]["format"].isString() && jsData[ai]["id"].isString())
             {
-                auto pSourceCore = m_sources.UpdateResource(jsData[ai]);
-                if(!pSourceCore)
-                {
-                    if(jsData[ai]["format"].asString().find("urn:x-nmos:format:audio") != std::string::npos)
-                    {   //Audio
-                        auto pResource = std::make_shared<SourceAudio>();
-                        if(pResource->UpdateFromJson(jsData[ai]))
-                        {
-                            m_sources.AddResource(sIpAddress, pResource);
-                            lstAdded.push_back(pResource);
-                            pmlLog(pml::LOG_INFO) << "NMOS: " << "SourceAudio: " << pResource->GetId() << " found at " << sIpAddress ;
-                        }
-                        else
-                        {
-                            pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Source but json data incorrect: " << pResource->GetJsonParseError() ;
-                        }
-                    }
-                    else
-                    {   //Generic
-                        auto pResource = std::make_shared<SourceGeneric>();
-                        if(pResource->UpdateFromJson(jsData[ai]))
-                        {
-                            m_sources.AddResource(sIpAddress, pResource);
-
-                            lstAdded.push_back(pResource);
-                            pmlLog(pml::LOG_INFO) << "NMOS: " << "SourceGeneric: " << pResource->GetId() << " found at " << sIpAddress ;
-                        }
-                        else
-                        {
-                            pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Source but json data incorrect: " << pResource->GetJsonParseError() ;
-                        }
-                    }
-                }
-                else
-                {
-                    lstUpdated.push_back(pSourceCore);
-                }
+                AddSource(lstAdded, lstUpdated, sIpAddress, jsData[ai]);
             }
             else
             {
@@ -931,10 +900,50 @@ void ClientApiImpl::AddSources(std::list<std::shared_ptr<Source> >& lstAdded, st
     }
 }
 
-void ClientApiImpl::AddFlows(std::list<std::shared_ptr<Flow> >& lstAdded, std::list<std::shared_ptr<Flow> >& lstUpdated, const std::string& sIpAddress, const std::string& sData)
+void ClientApiImpl::AddSource(std::list<std::shared_ptr<Source> >& lstAdded, std::list<std::shared_ptr<Source> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData)
+{
+    auto pSourceCore = m_sources.UpdateResource(jsData);
+    if(!pSourceCore)
+    {
+        if(jsData["format"].asString().find("urn:x-nmos:format:audio") != std::string::npos)
+        {   //Audio
+            auto pResource = std::make_shared<SourceAudio>();
+            if(pResource->UpdateFromJson(jsData))
+            {
+                m_sources.AddResource(sIpAddress, pResource);
+                lstAdded.push_back(pResource);
+                pmlLog(pml::LOG_INFO) << "NMOS: " << "SourceAudio: " << pResource->GetId() << " found at " << sIpAddress ;
+            }
+            else
+            {
+                pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Source but json data incorrect: " << pResource->GetJsonParseError() ;
+            }
+        }
+        else
+        {   //Generic
+            auto pResource = std::make_shared<SourceGeneric>();
+            if(pResource->UpdateFromJson(jsData))
+            {
+                m_sources.AddResource(sIpAddress, pResource);
+
+                lstAdded.push_back(pResource);
+                pmlLog(pml::LOG_INFO) << "NMOS: " << "SourceGeneric: " << pResource->GetId() << " found at " << sIpAddress ;
+            }
+            else
+            {
+                pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Source but json data incorrect: " << pResource->GetJsonParseError() ;
+            }
+        }
+    }
+    else
+    {
+        lstUpdated.push_back(pSourceCore);
+    }
+}
+
+void ClientApiImpl::AddFlows(std::list<std::shared_ptr<Flow> >& lstAdded, std::list<std::shared_ptr<Flow> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
-    Json::Value jsData = ConvertToJson(sData);
 
     if(jsData.isArray())
     {
@@ -942,15 +951,7 @@ void ClientApiImpl::AddFlows(std::list<std::shared_ptr<Flow> >& lstAdded, std::l
         {
             if(jsData[ai].isObject() && jsData[ai]["format"].isString() && jsData[ai]["id"].isString())
             {
-                auto pFlowCore = m_flows.UpdateResource(jsData[ai]);
-                if(!pFlowCore)
-                {
-                    CreateFlow(lstAdded, jsData[ai], sIpAddress);
-                }
-                else
-                {
-                    lstUpdated.push_back(pFlowCore);
-                }
+                AddFlow(lstAdded, lstUpdated, sIpAddress, jsData[ai]);
             }
             else
             {
@@ -964,6 +965,18 @@ void ClientApiImpl::AddFlows(std::list<std::shared_ptr<Flow> >& lstAdded, std::l
     }
 }
 
+void ClientApiImpl::AddFlow(std::list<std::shared_ptr<Flow> >& lstAdded, std::list<std::shared_ptr<Flow> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData)
+{
+    auto pFlowCore = m_flows.UpdateResource(jsData);
+    if(!pFlowCore)
+    {
+        CreateFlow(lstAdded, jsData, sIpAddress);
+    }
+    else
+    {
+        lstUpdated.push_back(pFlowCore);
+    }
+}
 
 void ClientApiImpl::CreateFlow(std::list<std::shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress)
 {
@@ -1111,35 +1124,16 @@ void ClientApiImpl::CreateFlowMux(std::list<std::shared_ptr<Flow>>& lstAdded, co
 }
 
 
-void ClientApiImpl::AddSenders(std::list<std::shared_ptr<SenderBase> >& lstAdded, std::list<std::shared_ptr<SenderBase> >& lstUpdated, const std::string& sIpAddress, const std::string& sData)
+void ClientApiImpl::AddSenders(std::list<std::shared_ptr<SenderBase> >& lstAdded, std::list<std::shared_ptr<SenderBase> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
-    Json::Value jsData = ConvertToJson(sData);
     if(jsData.isArray())
     {
         for(Json::ArrayIndex ai = 0; ai < jsData.size(); ++ai)
         {
             if(jsData[ai].isObject() && jsData[ai]["id"].isString())
             {
-                auto pResource = m_senders.UpdateResource(jsData[ai]);
-                if(!pResource)
-                {
-                    pResource = std::make_shared<SenderBase>();
-                    if(pResource->UpdateFromJson(jsData[ai]))
-                    {
-                        m_senders.AddResource(sIpAddress, pResource);
-                        lstAdded.push_back(pResource);
-                        pmlLog(pml::LOG_INFO) << "NMOS: " << "Sender: " << pResource->GetId() << " found at " << sIpAddress ;
-                    }
-                    else
-                    {
-                        pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Sender but json data incorrect: " << pResource->GetJsonParseError() ;
-                    }
-                }
-                else
-                {
-                    lstUpdated.push_back(pResource);
-                }
+                AddSender(lstAdded, lstUpdated, sIpAddress, jsData[ai]);
             }
             else
             {
@@ -1153,35 +1147,39 @@ void ClientApiImpl::AddSenders(std::list<std::shared_ptr<SenderBase> >& lstAdded
     }
 }
 
-void ClientApiImpl::AddReceivers(std::list<std::shared_ptr<ReceiverBase> >& lstAdded, std::list<std::shared_ptr<ReceiverBase> >& lstUpdated, const std::string& sIpAddress, const std::string& sData)
+void ClientApiImpl::AddSender(std::list<std::shared_ptr<SenderBase> >& lstAdded, std::list<std::shared_ptr<SenderBase> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData)
+{
+    auto pResource = m_senders.UpdateResource(jsData);
+    if(!pResource)
+    {
+        pResource = std::make_shared<SenderBase>();
+        if(pResource->UpdateFromJson(jsData))
+        {
+            m_senders.AddResource(sIpAddress, pResource);
+            lstAdded.push_back(pResource);
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "Sender: " << pResource->GetId() << " found at " << sIpAddress ;
+        }
+        else
+        {
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Sender but json data incorrect: " << pResource->GetJsonParseError() ;
+        }
+    }
+    else
+    {
+        lstUpdated.push_back(pResource);
+    }
+}
+
+void ClientApiImpl::AddReceivers(std::list<std::shared_ptr<ReceiverBase> >& lstAdded, std::list<std::shared_ptr<ReceiverBase> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
-    Json::Value jsData = ConvertToJson(sData);
     if(jsData.isArray())
     {
         for(Json::ArrayIndex ai = 0; ai < jsData.size(); ++ai)
         {
             if(jsData[ai].isObject() && jsData[ai]["id"].isString())
             {
-                auto pResource = m_receivers.UpdateResource(jsData[ai]);
-                if(!pResource)
-                {
-                    pResource = std::make_shared<ReceiverBase>();
-                    if(pResource->UpdateFromJson(jsData[ai]))
-                    {
-                        m_receivers.AddResource(sIpAddress, pResource);
-                        lstAdded.push_back(pResource);
-                        pmlLog(pml::LOG_INFO) << "NMOS: " << "Receiver: " << pResource->GetId() << " found at " << sIpAddress ;
-                    }
-                    else
-                    {
-                        pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Receiver but json data incorrect: " << pResource->GetJsonParseError() ;
-                    }
-                }
-                else
-                {
-                    lstUpdated.push_back(pResource);
-                }
+                AddReceiver(lstAdded, lstUpdated, sIpAddress, jsData[ai]);
             }
             else
             {
@@ -1195,6 +1193,28 @@ void ClientApiImpl::AddReceivers(std::list<std::shared_ptr<ReceiverBase> >& lstA
     }
 }
 
+void ClientApiImpl::AddReceiver(std::list<std::shared_ptr<ReceiverBase> >& lstAdded, std::list<std::shared_ptr<ReceiverBase> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData)
+{
+    auto pResource = m_receivers.UpdateResource(jsData);
+    if(!pResource)
+    {
+        pResource = std::make_shared<ReceiverBase>();
+        if(pResource->UpdateFromJson(jsData))
+        {
+            m_receivers.AddResource(sIpAddress, pResource);
+            lstAdded.push_back(pResource);
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "Receiver: " << pResource->GetId() << " found at " << sIpAddress ;
+        }
+        else
+        {
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Receiver but json data incorrect: " << pResource->GetJsonParseError() ;
+        }
+    }
+    else
+    {
+        lstUpdated.push_back(pResource);
+    }
+}
 
 void ClientApiImpl::RemoveResources(const std::string& sIpAddress)
 {
@@ -1346,7 +1366,7 @@ bool ClientApiImpl::Subscribe(const std::string& sSenderId, const std::string& s
     {
         //do a PUT to the correct place on the URL
 
-        m_pCurl->PutPatch(sUrl, ConvertFromJson(pSender->GetJson(version)), ClientPoster::CURLTYPE_TARGET, true, pReceiver->GetId());
+        m_pCurl->PutPatch(sUrl, ConvertFromJson(pSender->GetJson(version)), static_cast<long>(enumConnection::TARGET), true, pReceiver->GetId());
         pmlLog(pml::LOG_DEBUG) << "TARGET: " << sUrl ;
         return true;
     }
@@ -1369,7 +1389,7 @@ bool ClientApiImpl::Unsubscribe(const std::string& sReceiverId)
     {
         pmlLog(pml::LOG_DEBUG) << "NMOS: " << "TARGET: " << sUrl ;
         //do a PUT to the correct place on the URL
-        m_pCurl->PutPatch(sUrl, "{}", ClientPoster::CURLTYPE_TARGET, true, pReceiver->GetId());
+        m_pCurl->PutPatch(sUrl, "{}", static_cast<long>(enumConnection::TARGET), true, pReceiver->GetId());
 
         return true;
     }
@@ -1462,7 +1482,7 @@ std::string ClientApiImpl::GetConnectionUrlSingle(std::shared_ptr<Resource> pRes
     return std::string();
 }
 
-bool ClientApiImpl::RequestSender(const std::string& sSenderId, ClientPoster::enumCurlType eType)
+bool ClientApiImpl::RequestSender(const std::string& sSenderId, enumConnection eType)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
     auto pSender = GetSender(sSenderId);
@@ -1472,7 +1492,7 @@ bool ClientApiImpl::RequestSender(const std::string& sSenderId, ClientPoster::en
     }
 
     ApiVersion version(0,0);
-    std::string sConnectionUrl(GetConnectionUrlSingle(pSender, "senders", ClientPoster::STR_TYPE[eType], version));
+    std::string sConnectionUrl(GetConnectionUrlSingle(pSender, "senders", STR_CONNECTION[eType], version));
     if(sConnectionUrl.empty())
     {
         return false;
@@ -1482,7 +1502,7 @@ bool ClientApiImpl::RequestSender(const std::string& sSenderId, ClientPoster::en
     return true;
 }
 
-bool ClientApiImpl::RequestReceiver(const std::string& sReceiverId, ClientPoster::enumCurlType eType)
+bool ClientApiImpl::RequestReceiver(const std::string& sReceiverId, enumConnection eType)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
     auto pReceiver = GetReceiver(sReceiverId);
@@ -1492,7 +1512,7 @@ bool ClientApiImpl::RequestReceiver(const std::string& sReceiverId, ClientPoster
     }
 
     ApiVersion version(0,0);
-    std::string sConnectionUrl(GetConnectionUrlSingle(pReceiver, "receivers", ClientPoster::STR_TYPE[eType], version));
+    std::string sConnectionUrl(GetConnectionUrlSingle(pReceiver, "receivers", STR_CONNECTION[eType], version));
     if(sConnectionUrl.empty())
     {
         return false;
@@ -1504,27 +1524,27 @@ bool ClientApiImpl::RequestReceiver(const std::string& sReceiverId, ClientPoster
 
 bool ClientApiImpl::RequestSenderStaged(const std::string& sSenderId)
 {
-    return RequestSender(sSenderId, ClientPoster::CURLTYPE_SENDER_STAGED);
+    return RequestSender(sSenderId, enumConnection::SENDER_STAGED);
 }
 
 bool ClientApiImpl::RequestSenderActive(const std::string& sSenderId)
 {
-    return RequestSender(sSenderId, ClientPoster::CURLTYPE_SENDER_ACTIVE);
+    return RequestSender(sSenderId, enumConnection::SENDER_ACTIVE);
 }
 
 bool ClientApiImpl::RequestSenderTransportFile(const std::string& sSenderId)
 {
-    return RequestSender(sSenderId, ClientPoster::CURLTYPE_SENDER_TRANSPORTFILE);
+    return RequestSender(sSenderId, enumConnection::SENDER_TRANSPORTFILE);
 }
 
 bool ClientApiImpl::RequestReceiverStaged(const std::string& sReceiverId)
 {
-    return RequestReceiver(sReceiverId, ClientPoster::CURLTYPE_RECEIVER_STAGED);
+    return RequestReceiver(sReceiverId, enumConnection::RECEIVER_STAGED);
 }
 
 bool ClientApiImpl::RequestReceiverActive(const std::string& sReceiverId)
 {
-    return RequestReceiver(sReceiverId, ClientPoster::CURLTYPE_RECEIVER_ACTIVE);
+    return RequestReceiver(sReceiverId, enumConnection::RECEIVER_ACTIVE);
 }
 
 
@@ -1538,13 +1558,13 @@ bool ClientApiImpl::PatchSenderStaged(const std::string& sSenderId, const connec
     }
 
     ApiVersion version(0,0);
-    std::string sConnectionUrl(GetConnectionUrlSingle(pSender, "senders", ClientPoster::STR_TYPE[ClientPoster::CURLTYPE_SENDER_STAGED], version));
+    std::string sConnectionUrl(GetConnectionUrlSingle(pSender, "senders", STR_CONNECTION[enumConnection::SENDER_STAGED], version));
     if(sConnectionUrl.empty())
     {
         return false;
     }
 
-    m_pCurl->PutPatch(sConnectionUrl, ConvertFromJson(aConnection.GetJson(version)), ClientPoster::CURLTYPE_SENDER_PATCH, false, sSenderId);
+    m_pCurl->PutPatch(sConnectionUrl, ConvertFromJson(aConnection.GetJson(version)), static_cast<long>(enumConnection::SENDER_PATCH), false, sSenderId);
 
     return true;
 }
@@ -1559,13 +1579,13 @@ bool ClientApiImpl::PatchReceiverStaged(const std::string& sReceiverId, const co
     }
 
     ApiVersion version(0,0);
-    std::string sConnectionUrl(GetConnectionUrlSingle(pReceiver, "receivers", ClientPoster::STR_TYPE[ClientPoster::CURLTYPE_SENDER_STAGED], version));
+    std::string sConnectionUrl(GetConnectionUrlSingle(pReceiver, "receivers", STR_CONNECTION[enumConnection::SENDER_STAGED], version));
     if(sConnectionUrl.empty())
     {
         return false;
     }
 
-    m_pCurl->PutPatch(sConnectionUrl, ConvertFromJson(aConnection.GetJson(version)), ClientPoster::CURLTYPE_RECEIVER_PATCH, false, sReceiverId);
+    m_pCurl->PutPatch(sConnectionUrl, ConvertFromJson(aConnection.GetJson(version)), static_cast<long>(enumConnection::RECEIVER_PATCH), false, sReceiverId);
 
     return true;
 }
@@ -1656,9 +1676,9 @@ bool ClientApiImpl::Connect(const std::string& sSenderId, const std::string& sRe
     }
 
     ApiVersion version(0,0);
-    std::string sSenderStageUrl(GetConnectionUrlSingle(pSender, "senders", ClientPoster::STR_TYPE[ClientPoster::CURLTYPE_SENDER_STAGED], version));
-    std::string sSenderTransportUrl(GetConnectionUrlSingle(pSender, "senders", ClientPoster::STR_TYPE[ClientPoster::CURLTYPE_SENDER_TRANSPORTFILE], version));
-    std::string sReceiverStageUrl(GetConnectionUrlSingle(pReceiver, "receivers", ClientPoster::STR_TYPE[ClientPoster::CURLTYPE_RECEIVER_STAGED], version));
+    std::string sSenderStageUrl(GetConnectionUrlSingle(pSender, "senders", STR_CONNECTION[enumConnection::SENDER_STAGED], version));
+    std::string sSenderTransportUrl(GetConnectionUrlSingle(pSender, "senders", STR_CONNECTION[enumConnection::SENDER_TRANSPORTFILE], version));
+    std::string sReceiverStageUrl(GetConnectionUrlSingle(pReceiver, "receivers", STR_CONNECTION[enumConnection::RECEIVER_STAGED], version));
 
 
     if(sSenderStageUrl.empty() || sSenderTransportUrl.empty() || sReceiverStageUrl.empty())
@@ -1691,9 +1711,9 @@ bool ClientApiImpl::Disconnect( const std::string& sReceiverId)
     }
 
     ApiVersion version(0,0);
-    std::string sSenderStageUrl(GetConnectionUrlSingle(pSender, "senders", ClientPoster::STR_TYPE[ClientPoster::CURLTYPE_SENDER_STAGED], version));
-    std::string sSenderTransportUrl(GetConnectionUrlSingle(pSender, "senders", ClientPoster::STR_TYPE[ClientPoster::CURLTYPE_SENDER_TRANSPORTFILE], version));
-    std::string sReceiverStageUrl(GetConnectionUrlSingle(pReceiver, "receivers", ClientPoster::STR_TYPE[ClientPoster::CURLTYPE_RECEIVER_STAGED], version));
+    std::string sSenderStageUrl(GetConnectionUrlSingle(pSender, "senders", STR_CONNECTION[enumConnection::SENDER_STAGED], version));
+    std::string sSenderTransportUrl(GetConnectionUrlSingle(pSender, "senders", STR_CONNECTION[enumConnection::SENDER_TRANSPORTFILE], version));
+    std::string sReceiverStageUrl(GetConnectionUrlSingle(pReceiver, "receivers", STR_CONNECTION[enumConnection::RECEIVER_STAGED], version));
 
 
     if(sSenderStageUrl.empty() || sSenderTransportUrl.empty() || sReceiverStageUrl.empty())
@@ -1743,13 +1763,65 @@ bool ClientApiImpl::RemoveQuerySubscription(const std::string& sSubscriptionId)
 
 bool ClientApiImpl::AddQuerySubscriptionRegistry(int nResource, const std::string& sQuery, unsigned long nUpdateRate)
 {
-    //@todo
-    return false;
+    if(m_mmQueryNodes.empty())
+    {
+        return false;
+    }
+
+    //store the query
+    query aQuery;
+    aQuery.sId = CreateGuid();
+    aQuery.sQuery = sQuery;
+    aQuery.nResource = nResource;
+    m_mmQuery.insert(std::make_pair(nResource, aQuery));
+
+    //we get t
+    bool bSuccess = QueryQueryServer(GetQueryServer(), aQuery);
+    if(bSuccess)
+    {
+        //call the poster to let the client know the id
+        if(m_pPoster)
+        {
+            m_pPoster->_QuerySubscription(aQuery.sId, nResource, sQuery);
+        }
+    }
+    return bSuccess;
 }
 
 bool ClientApiImpl::RemoveQuerySubscriptionRegistry(const std::string& sSubscriptionId)
 {
-    // @todo ClientApiImpl::RemoveQuerySubscriptionRegistry
+    //@todo
+    auto urlServer = GetQueryServer();
+    for(auto& pairQuery : m_mmQuery)
+    {
+        if(pairQuery.second.sId == sSubscriptionId)
+        {
+            if(pairQuery.second.jsSubscription["id"].isString())
+            {
+                auto curlResp = CurlRegister::Delete(urlServer.Get(), "subscriptions", pairQuery.second.jsSubscription["id"].asString());
+                if(curlResp.nCode == 204)
+                {
+                    if(m_pPoster)
+                    {
+                        m_pPoster->_QuerySubscriptionRemoved(sSubscriptionId);
+                    }
+                    m_mmQuery.erase(pairQuery.first);
+                    return true;
+                }
+                else
+                {
+                    pmlLog(pml::LOG_WARN) << "Failed to remove query subscription " << sSubscriptionId << ": code: " << curlResp.nCode << " '" << curlResp.sResponse << "'";
+                    return false;
+                }
+            }
+            else
+            {
+                m_mmQuery.erase(pairQuery.first);
+                return true;
+            }
+        }
+    }
+
     return false;
 }
 
@@ -1936,51 +2008,68 @@ bool ClientApiImpl::MeetsQuery(const std::string& sQuery, std::shared_ptr<Resour
     //return false;9999
 }
 
+url ClientApiImpl::GetQueryServer()
+{
+    if(m_mmQueryNodes.empty() == false)
+    {
+        std::stringstream ssUrl;
+        ssUrl <<  m_mmQueryNodes.begin()->second->sHostIP << ":" << m_mmQueryNodes.begin()->second->nPort << "/x-nmos/query/v1.2";
+        return url(ssUrl.str());
+    }
+    return url("");
+}
+
 void ClientApiImpl::SubscribeToQueryServer()
 {
     if(m_mmQueryNodes.empty() == false)
     {
         //@todo ClientApiImpl::SubscribeToQueryServer Allow other versions than 1.2
-        std::stringstream ssUrl;
-        ssUrl <<  m_mmQueryNodes.begin()->second->sHostIP << ":" << m_mmQueryNodes.begin()->second->nPort << "/x-nmos/query/v1.2/subscriptions";
-
-        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "QUERY URL: " << ssUrl.str() ;
+        url urlQuery = GetQueryServer();
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "QUERY URL: " << urlQuery;
 
         //we run through all our queries and post them to the query server asking for the websocket
         for(auto pairQuery : m_mmQuery)
         {
-            //create our json query
-            Json::Value jsQuery;
-            jsQuery["max_update_rate_ms"] = (int)pairQuery.second.nRefreshRate;
-            jsQuery["resource_path"] = "/" + STR_RESOURCE[pairQuery.second.nResource] + "s";
-            jsQuery["persist"] = false;
-            jsQuery["secure"] = false;
-            jsQuery["authorization"] = false;
-            //@todo params
-            Json::Value jsParams(Json::objectValue);
-            jsQuery["params"] = jsParams;
-
-            auto curlresp = CurlRegister::Post(ssUrl.str(), ConvertFromJson(jsQuery));
-
-            HandleQuerySubscriptionResponse(curlresp.nCode, ConvertToJson(curlresp.sResponse));
-
+            QueryQueryServer(urlQuery, pairQuery.second);
         }
     }
 }
 
-void ClientApiImpl::HandleQuerySubscriptionResponse(unsigned short nCode, const Json::Value& jsResponse)
+bool ClientApiImpl::QueryQueryServer(const url& theUrl, ClientApiImpl::query& theQuery)
+{
+    //create our json query
+    Json::Value jsQuery;
+    jsQuery["max_update_rate_ms"] = (int)theQuery.nRefreshRate;
+    jsQuery["resource_path"] = "/" + STR_RESOURCE[theQuery.nResource] + "s";
+    jsQuery["persist"] = false;
+    jsQuery["secure"] = false;
+    jsQuery["authorization"] = false;
+
+    //@todo params
+    Json::Value jsParams(Json::objectValue);
+    jsQuery["params"] = jsParams;
+
+    auto curlresp = CurlRegister::Post(theUrl.Get()+"/subscriptions", ConvertFromJson(jsQuery));
+
+    theQuery.jsSubscription = ConvertToJson(curlresp.sResponse);
+    HandleQuerySubscriptionResponse(curlresp.nCode, theQuery);
+
+    return (theQuery.jsSubscription["id"].isString());
+}
+
+void ClientApiImpl::HandleQuerySubscriptionResponse(unsigned short nCode, const ClientApiImpl::query& theQuery)
 {
     if(nCode == 200 || nCode == 201)
     {
-        HandleSuccessfulQuerySubscription(jsResponse);
+        HandleSuccessfulQuerySubscription(theQuery);
     }
     else if(nCode == 400)
     {
-        pmlLog(pml::LOG_ERROR) << "NMOS: Could not subscribe to query server " << jsResponse["error"].asString();
+        pmlLog(pml::LOG_ERROR) << "NMOS: Could not subscribe to query server " << theQuery.jsSubscription["error"].asString();
     }
     else if(nCode == 501)
     {
-        pmlLog(pml::LOG_ERROR) << "NMOS: Query server does not suppory query " << jsResponse["error"].asString();
+        pmlLog(pml::LOG_ERROR) << "NMOS: Query server does not suppory query " << theQuery.jsSubscription["error"].asString();
     }
     else
     {
@@ -1988,20 +2077,21 @@ void ClientApiImpl::HandleQuerySubscriptionResponse(unsigned short nCode, const 
     }
 }
 
-void ClientApiImpl::HandleSuccessfulQuerySubscription(const Json::Value& jsResponse)
+void ClientApiImpl::HandleSuccessfulQuerySubscription(const ClientApiImpl::query& theQuery)
 {
     pmlLog(pml::LOG_DEBUG) << "NMOS: Successful query subscription  - now create websocket connection";
-    /*create a websocket pointing at ws_ref and store it wht the id. Remember all the details
-    id
-    ws_href
-            max_update_rate_ms
-            params
-            persist
-            secure
-            resource_path
 
-    */
-
+    if(theQuery.jsSubscription["ws_href"].isString() && theQuery.jsSubscription["id"].isString())
+    {
+        if(m_pWebSocket->Connect(url(theQuery.jsSubscription["ws_href"].asString())))
+        {
+            pmlLog(pml::LOG_INFO) << "NMOS: Attempting websocket connection to " << theQuery.jsSubscription["ws_href"].asString();
+        }
+        else
+        {
+            pmlLog(pml::LOG_ERROR) << "NMOS: Failed in websocket connection to " << theQuery.jsSubscription["ws_href"].asString();
+        }
+    }
 }
 
 void ClientApiImpl::AddBrowseServices()
@@ -2042,11 +2132,294 @@ bool ClientApiImpl::RemoveBrowseDomain(const std::string& sDomain)
 
 bool ClientApiImpl::WebsocketConnected(const url& theUrl)
 {
-
+    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApi Websocket connected to " << theUrl;
     return true;
 }
 
 bool ClientApiImpl::WebsocketMessage(const url& theUrl, const std::string& sMessage)
 {
+    auto jsGrain = ConvertToJson(sMessage);
+    //check requirements
+    if(!CheckJsonRequired(jsGrain, {"grain_type", "source_id", "flow_id", "origin_timestamp", "sync_timestamp", "creation_timestamp", "rate", "duration", "grain"}))
+    {
+        pmlLog(pml::LOG_WARN) << "NMOS: ClientApi - websocket invalid message received '" << sMessage << "'";
+    }
+    else if(jsGrain["grain_type"].asString() == "event")
+    {
+        if(jsGrain["grain"].isObject())
+        {
+            HandleGrainEvent(jsGrain["source_id"].asString(), jsGrain["grain"]);
+        }
+        else
+        {
+            pmlLog(pml::LOG_WARN) << "NMOS: ClientApi - websocket grain invalid '" << sMessage << "'";
+        }
+    }
+    else
+    {
+        pmlLog(pml::LOG_WARN) << "NMOS: ClientApi - unknown grain type'" << jsGrain["grain_type"].asString() << "'";
+    }
     return true;
 }
+
+
+void ClientApiImpl::HandleGrainEvent(const std::string& sSourceId, const Json::Value& jsGrain)
+{
+    if(CheckJsonRequired(jsGrain, {"type", "topic", "data"}))
+    {
+        if(jsGrain["type"].asString() == "urn:x-nmos:format:data.event")
+        {
+            auto itUpdate = m_mGrainUpdate.find(jsGrain["topic"].asString());
+            if(itUpdate != m_mGrainUpdate.end() && jsGrain["data"].isArray())
+            {
+                itUpdate->second(sSourceId, jsGrain["data"]);
+            }
+        }
+        else
+        {
+            pmlLog(pml::LOG_WARN) << "NMOS: ClientApi - unknown grain urn'" << jsGrain["type"].asString() << "'";
+        }
+    }
+}
+
+
+ClientApiImpl::enumGrain ClientApiImpl::WorkoutAction(const Json::Value& jsData)
+{
+    if(jsData.isMember("post"))
+    {
+        if(jsData.isMember("pre"))
+        {
+            return enumGrain::ADD;
+        }
+        else
+        {
+            return enumGrain::UPDATE;
+        }
+
+    }
+    else if(jsData.isMember("pre"))
+    {
+        return enumGrain::DELETE;
+    }
+    return enumGrain::UNKNOWN;
+}
+
+
+void ClientApiImpl::GrainUpdateNode(const std::string& sSourceId, const Json::Value& jsData)
+{
+    std::list<std::shared_ptr<Self>> lstAdded;
+    std::list<std::shared_ptr<Self>> lstUpdated;
+    std::list<std::shared_ptr<Self>> lstRemoved;
+
+    for(Json::ArrayIndex ai = 0; ai < jsData.size(); ai++)
+    {
+        switch(WorkoutAction(jsData[ai]))
+        {
+            case enumGrain::ADD:
+            case enumGrain::UPDATE:
+                AddNode(lstAdded, lstUpdated, sSourceId, jsData[ai]["post"]);
+                break;
+            case enumGrain::DELETE:
+                if(jsData[ai]["pre"]["id"].isString())
+                {
+                    auto pResource = m_nodes.RemoveResource(jsData[ai]["pre"]["id"].asString());
+                    if(pResource)
+                    {
+                        lstRemoved.push_back(pResource);
+                    }
+                }
+                break;
+            case enumGrain::UNKNOWN:
+                pmlLog(pml::LOG_WARN) << "Unknown grain action";
+                break;
+        }
+    }
+
+    if(m_pPoster)
+    {
+        m_pPoster->_NodeChanged(lstAdded, lstUpdated, lstRemoved);
+    }
+}
+
+void ClientApiImpl::GrainUpdateDevice(const std::string& sSourceId, const Json::Value& jsData)
+{
+    std::list<std::shared_ptr<Device>> lstAdded;
+    std::list<std::shared_ptr<Device>> lstUpdated;
+    std::list<std::shared_ptr<Device>> lstRemoved;
+
+    for(Json::ArrayIndex ai = 0; ai < jsData.size(); ai++)
+    {
+        switch(WorkoutAction(jsData[ai]))
+        {
+            case enumGrain::ADD:
+            case enumGrain::UPDATE:
+                AddDevice(lstAdded, lstUpdated, sSourceId, jsData[ai]["post"]);
+                break;
+            case enumGrain::DELETE:
+                if(jsData[ai]["pre"]["id"].isString())
+                {
+                    auto pResource = m_devices.RemoveResource(jsData[ai]["pre"]["id"].asString());
+                    if(pResource)
+                    {
+                        lstRemoved.push_back(pResource);
+                    }
+                }
+                break;
+            case enumGrain::UNKNOWN:
+                pmlLog(pml::LOG_WARN) << "Unknown grain action";
+                break;
+        }
+    }
+
+    if(m_pPoster)
+    {
+        m_pPoster->_DeviceChanged(lstAdded, lstUpdated, lstRemoved);
+    }
+}
+
+void ClientApiImpl::GrainUpdateSource(const std::string& sSourceId, const Json::Value& jsData)
+{
+    std::list<std::shared_ptr<Source>> lstAdded;
+    std::list<std::shared_ptr<Source>> lstUpdated;
+    std::list<std::shared_ptr<Source>> lstRemoved;
+
+    for(Json::ArrayIndex ai = 0; ai < jsData.size(); ai++)
+    {
+        switch(WorkoutAction(jsData[ai]))
+        {
+            case enumGrain::ADD:
+            case enumGrain::UPDATE:
+                AddSource(lstAdded, lstUpdated, sSourceId, jsData[ai]["post"]);
+                break;
+            case enumGrain::DELETE:
+                if(jsData[ai]["pre"]["id"].isString())
+                {
+                    auto pResource = m_sources.RemoveResource(jsData[ai]["pre"]["id"].asString());
+                    if(pResource)
+                    {
+                        lstRemoved.push_back(pResource);
+                    }
+                }
+                break;
+            case enumGrain::UNKNOWN:
+                pmlLog(pml::LOG_WARN) << "Unknown grain action";
+                break;
+        }
+    }
+
+    if(m_pPoster)
+    {
+        m_pPoster->_SourceChanged(lstAdded, lstUpdated, lstRemoved);
+    }
+}
+
+void ClientApiImpl::GrainUpdateFlow(const std::string& sSourceId, const Json::Value& jsData)
+{
+    std::list<std::shared_ptr<Flow>> lstAdded;
+    std::list<std::shared_ptr<Flow>> lstUpdated;
+    std::list<std::shared_ptr<Flow>> lstRemoved;
+
+    for(Json::ArrayIndex ai = 0; ai < jsData.size(); ai++)
+    {
+        switch(WorkoutAction(jsData[ai]))
+        {
+            case enumGrain::ADD:
+            case enumGrain::UPDATE:
+                AddFlow(lstAdded, lstUpdated, sSourceId, jsData[ai]["post"]);
+                break;
+            case enumGrain::DELETE:
+                if(jsData[ai]["pre"]["id"].isString())
+                {
+                    auto pResource = m_flows.RemoveResource(jsData[ai]["pre"]["id"].asString());
+                    if(pResource)
+                    {
+                        lstRemoved.push_back(pResource);
+                    }
+                }
+                break;
+            case enumGrain::UNKNOWN:
+                pmlLog(pml::LOG_WARN) << "Unknown grain action";
+                break;
+        }
+    }
+
+    if(m_pPoster)
+    {
+        m_pPoster->_FlowChanged(lstAdded, lstUpdated, lstRemoved);
+    }
+}
+
+void ClientApiImpl::GrainUpdateSender(const std::string& sSourceId, const Json::Value& jsData)
+{
+    std::list<std::shared_ptr<SenderBase>> lstAdded;
+    std::list<std::shared_ptr<SenderBase>> lstUpdated;
+    std::list<std::shared_ptr<SenderBase>> lstRemoved;
+
+    for(Json::ArrayIndex ai = 0; ai < jsData.size(); ai++)
+    {
+        switch(WorkoutAction(jsData[ai]))
+        {
+            case enumGrain::ADD:
+            case enumGrain::UPDATE:
+                AddSender(lstAdded, lstUpdated, sSourceId, jsData[ai]["post"]);
+                break;
+            case enumGrain::DELETE:
+                if(jsData[ai]["pre"]["id"].isString())
+                {
+                    auto pResource = m_senders.RemoveResource(jsData[ai]["pre"]["id"].asString());
+                    if(pResource)
+                    {
+                        lstRemoved.push_back(pResource);
+                    }
+                }
+                break;
+            case enumGrain::UNKNOWN:
+                pmlLog(pml::LOG_WARN) << "Unknown grain action";
+                break;
+        }
+    }
+
+    if(m_pPoster)
+    {
+        m_pPoster->_SenderChanged(lstAdded, lstUpdated, lstRemoved);
+    }
+}
+
+void ClientApiImpl::GrainUpdateReceiver(const std::string& sSourceId, const Json::Value& jsData)
+{
+    std::list<std::shared_ptr<ReceiverBase>> lstAdded;
+    std::list<std::shared_ptr<ReceiverBase>> lstUpdated;
+    std::list<std::shared_ptr<ReceiverBase>> lstRemoved
+
+    ;
+
+    for(Json::ArrayIndex ai = 0; ai < jsData.size(); ai++)
+    {
+        switch(WorkoutAction(jsData[ai]))
+        {
+            case enumGrain::ADD:
+            case enumGrain::UPDATE:
+                AddReceiver(lstAdded, lstUpdated, sSourceId, jsData[ai]["post"]);
+                break;
+            case enumGrain::DELETE:
+                if(jsData[ai]["pre"]["id"].isString())
+                {
+                    auto pResource = m_receivers.RemoveResource(jsData[ai]["pre"]["id"].asString());
+                    if(pResource)
+                    {
+                        lstRemoved.push_back(pResource);
+                    }
+                }
+                break;
+            case enumGrain::UNKNOWN:
+                pmlLog(pml::LOG_WARN) << "Unknown grain action";
+                break;
+        }
+    }
+
+    if(m_pPoster)
+    {
+        m_pPoster->_ReceiverChanged(lstAdded, lstUpdated, lstRemoved);
+    }
+}
+

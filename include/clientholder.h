@@ -22,7 +22,6 @@ namespace pml
 
 
                 bool AddResource(const std::string& sIpAddres, std::shared_ptr<T> pResource);
-
                 void RemoveResources(const std::string& sIpAddres, typename std::list<std::shared_ptr<T> >& lstRemoved);
 
                 void StoreResources(const std::string& sIpAddress);
@@ -42,10 +41,13 @@ namespace pml
                 size_t GetResourceCount() const;
 
                 void GetResourcesAsList(typename std::list<std::shared_ptr<T> >& lstResources);
+
+                std::shared_ptr<T> RemoveResource(const std::string& sUid);
+
             protected:
 
                 bool RemoveResource(std::shared_ptr<T> pResource);
-                std::shared_ptr<T> RemoveResource(const std::string& sUid);
+
 
                 std::map<std::string, std::shared_ptr<T> > m_mResource;
                 std::multimap<std::string, std::string > m_mmAddressResourceId;

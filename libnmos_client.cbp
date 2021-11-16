@@ -101,7 +101,7 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
-			<Add option="-std=c++1z" />
+			<Add option="-std=c++14" />
 			<Add option="-fexceptions" />
 			<Add option="-DNMOS_EXPORT" />
 			<Add option="-DMG_ENABLE_HTTP_STREAMING_MULTIPART" />
@@ -120,11 +120,15 @@
 		</Linker>
 		<Unit filename="include/clientapi.h" />
 		<Unit filename="include/clientapiposter.h" />
+		<Unit filename="include/clientemum.h" />
 		<Unit filename="include/clientholder.h" />
+		<Unit filename="include/clientposter.h" />
 		<Unit filename="include/clientprivate.h" />
 		<Unit filename="src/clientapi.cpp" />
 		<Unit filename="src/clientapiposter.cpp" />
+		<Unit filename="src/clientenum.cpp" />
 		<Unit filename="src/clientholder.cpp" />
+		<Unit filename="src/clientposter.cpp" />
 		<Unit filename="src/clientprivate.cpp" />
 		<Extensions>
 			<code_completion />

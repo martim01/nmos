@@ -43,11 +43,18 @@ template<class T> bool ClientHolder<T>::RemoveResource(std::shared_ptr<T> pResou
 
 template<class T> std::shared_ptr<T> ClientHolder<T>::RemoveResource(const std::string& sUuid)
 {
-    std::shared_ptr<T> pResource(0);
+    std::shared_ptr<T> pResource(nullptr);
     auto itAddress = m_mResourceIdAddress.find(sUuid);
     if(itAddress != m_mResourceIdAddress.end())
     {
-        m_mmAddressResourceId.erase(itAddress->second);
+        for(auto itRes = m_mmAddressResourceId.lower_bound(itAddress->second); itRes != m_mmAddressResourceId.upper_bound(itAddress->second); ++itRes)
+        {
+            if(itRes->second == sUuid)
+            {
+                m_mmAddressResourceId.erase(itRes);
+                break;
+            }
+        }
     }
     m_mResourceIdAddress.erase(sUuid);
 
@@ -78,6 +85,7 @@ template<class T> void ClientHolder<T>::RemoveResources(const std::string& sIpAd
     }
     m_mmAddressResourceId.erase(sIpAddres);
 }
+
 
 template<class T> void ClientHolder<T>::RemoveAllResources()
 {
