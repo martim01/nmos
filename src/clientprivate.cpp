@@ -1798,20 +1798,35 @@ bool ClientApiImpl::RemoveQuerySubscriptionRegistry(const std::string& sSubscrip
         {
             if(pairQuery.second.jsSubscription["id"].isString())
             {
-                auto curlResp = CurlRegister::Delete(urlServer.Get(), "subscriptions", pairQuery.second.jsSubscription["id"].asString());
-                if(curlResp.nCode == 204)
+                //if a persitent query then we need to send a delete to the server
+                if(pairQuery.second.jsSubscription["persist"].isBool() && pairQuery.second.jsSubscription["persist"].asBool())
                 {
-                    if(m_pPoster)
+                    auto curlResp = CurlRegister::Delete(urlServer.Get(), "subscriptions", pairQuery.second.jsSubscription["id"].asString());
+                    if(curlResp.nCode == 204)
                     {
-                        m_pPoster->_QuerySubscriptionRemoved(sSubscriptionId);
+                        if(m_pPoster)
+                        {
+                            m_pPoster->_QuerySubscriptionRemoved(sSubscriptionId);
+                        }
+                        m_mmQuery.erase(pairQuery.first);
+                        return true;
                     }
+                    else
+                    {
+                        pmlLog(pml::LOG_WARN) << "Failed to remove query subscription " << sSubscriptionId << ": code: " << curlResp.nCode << " '" << curlResp.sResponse << "'";
+                        return false;
+                    }
+                }
+                else if(pairQuery.second.jsSubscription["ws_href"].isString())
+                {
+                    //we simply need to close the websocket
+                    m_pWebSocket->CloseConnection(url(pairQuery.second.jsSubscription["ws_href"].asString()));
                     m_mmQuery.erase(pairQuery.first);
-                    return true;
                 }
                 else
                 {
-                    pmlLog(pml::LOG_WARN) << "Failed to remove query subscription " << sSubscriptionId << ": code: " << curlResp.nCode << " '" << curlResp.sResponse << "'";
-                    return false;
+                    //something seriously wrong
+                    m_mmQuery.erase(pairQuery.first);
                 }
             }
             else
@@ -2008,12 +2023,13 @@ bool ClientApiImpl::MeetsQuery(const std::string& sQuery, std::shared_ptr<Resour
     //return false;9999
 }
 
-url ClientApiImpl::GetQueryServer()
+url ClientApiImpl::GetQueryServer(const ApiVersion& version)
 {
+//@todo ClientApiImpl::SubscribeToQueryServer Allow other versions than 1.2
     if(m_mmQueryNodes.empty() == false)
     {
         std::stringstream ssUrl;
-        ssUrl <<  m_mmQueryNodes.begin()->second->sHostIP << ":" << m_mmQueryNodes.begin()->second->nPort << "/x-nmos/query/v1.2";
+        ssUrl <<  m_mmQueryNodes.begin()->second->sHostIP << ":" << m_mmQueryNodes.begin()->second->nPort << "/x-nmos/query/" << version.GetVersionAsString();
         return url(ssUrl.str());
     }
     return url("");
@@ -2023,7 +2039,6 @@ void ClientApiImpl::SubscribeToQueryServer()
 {
     if(m_mmQueryNodes.empty() == false)
     {
-        //@todo ClientApiImpl::SubscribeToQueryServer Allow other versions than 1.2
         url urlQuery = GetQueryServer();
         pmlLog(pml::LOG_DEBUG) << "NMOS: " << "QUERY URL: " << urlQuery;
 

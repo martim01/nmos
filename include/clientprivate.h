@@ -267,7 +267,7 @@ namespace pml
                     Json::Value jsSubscription;
                 };
 
-                url GetQueryServer();
+                url GetQueryServer(const ApiVersion& version=ApiVersion(1,2));
                 bool QueryQueryServer(const url& theUrl, query& theQuery);
                 void HandleQuerySubscriptionResponse(unsigned short nCode, const ClientApiImpl::query& theQuery);
                 void HandleSuccessfulQuerySubscription(const ClientApiImpl::query& theQuery);
