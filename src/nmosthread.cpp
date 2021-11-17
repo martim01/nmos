@@ -81,6 +81,8 @@ bool NodeApiPrivate::RegisteredOperation()
                         break;
                     case NodeApiPrivate::SIG_INSTANCE_REMOVED: //this means our reg node has gone
                         pmlLog(pml::LOG_INFO) << "NMOS: " << "Registration server gone" ;
+                        m_nRegistrationStatus = REG_FAILED;
+                        PostRegisterStatus();
                         return false;
                         break;
                     default:
@@ -108,13 +110,20 @@ bool NodeApiPrivate::HandleHeartbeatResponse(unsigned int nResponse)
     {   //registry error
         pmlLog(pml::LOG_WARN) << "NMOS: " << "Registration server gone" ;
         bRegistryOk = false;
+        m_nRegistrationStatus = REG_FAILED;
+        PostRegisterStatus();
     }
     else if(nResponse == 404)
     { //not known about re-register
         pmlLog(pml::LOG_WARN) << "NMOS: " << "Registration server forgotten node. Reregister" ;
+        m_nRegistrationStatus = REG_FAILED;
+        PostRegisterStatus();
+
         if(RegisterSimple() != NodeApiPrivate::REG_DONE)
         {
             bRegistryOk = false;
+            m_nRegistrationStatus = REG_FAILED;
+            PostRegisterStatus();
         }
     }
     else if(nResponse == 409)
@@ -124,12 +133,16 @@ bool NodeApiPrivate::HandleHeartbeatResponse(unsigned int nResponse)
        if(RegisterSimple() != NodeApiPrivate::REG_DONE)
        {
             bRegistryOk = false;
+            m_nRegistrationStatus = REG_FAILED;
+            PostRegisterStatus();
        }
     }
     else if(nResponse >= 400)
     { //probably validation failure
         pmlLog(pml::LOG_ERROR) << "NMOS: " << "Registry validation error!";
         bRegistryOk = false;
+        m_nRegistrationStatus = REG_FAILED;
+        PostRegisterStatus();
     }
     return bRegistryOk;
 }

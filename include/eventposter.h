@@ -19,12 +19,12 @@ namespace pml
             public:
                 //EventPoster()=0;
                 //virtual ~EventPoster()=0;
-
+                enum enumRegState {NODE_PEER, NODE_REGISTERING, NODE_REGISTERED, NODE_REGISTER_FAILED};
                 void _RegistrationNodeFound(const std::string& sUrl, unsigned short nPriority, const ApiVersion& version);
                 void _RegistrationNodeRemoved(const std::string& sUrl);
                 void _RegistrationNodeChanged(const std::string& sUrl, unsigned short nPriority, bool bGood, const ApiVersion& version);
                 void _RegistrationNodeChosen(const std::string& sUrl, unsigned short nPriority, const ApiVersion& version);
-                void _RegistrationChanged(const std::string& sUrl, bool bRegistered);
+                void _RegistrationChanged(const std::string& sUrl, enumRegState eState);
 
                 void _Target(const std::string& sReceiverId, const std::string& sTransportFile, unsigned short nPort);
                 void _PatchSender(const std::string& sSenderId, const connectionSender& conPatch, unsigned short nPort);
@@ -66,7 +66,7 @@ namespace pml
                 *   @param sUrl the url/ip address of the registration node
                 *   @param bRegistered true if the node has registered successfully else false
                 **/
-                virtual void RegistrationChanged(const std::string& sUrl, bool bRegistered)=0;
+                virtual void RegistrationChanged(const std::string& sUrl, enumRegState eState)=0;
 
                 /** @brief Called by Server when a IS-04 Target PUT is performed
                 *   @param sReceiverId the uuid of the Receiver to apply the PU to

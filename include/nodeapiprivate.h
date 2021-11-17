@@ -269,6 +269,7 @@ namespace pml
                 bool BrowseForRegistrationNode();
                 void SignalBrowse();
 
+                void PostRegisterStatus();
                 long RegisterResource(const std::string& sType, const Json::Value& json);
 
                 void SignalServer(unsigned short nPort, bool bOk, const std::string& sExtra);

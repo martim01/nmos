@@ -26,10 +26,10 @@ void EventPoster::_RegistrationNodeChosen(const std::string& sUrl, unsigned shor
     RegistrationNodeChosen(sUrl, nPriority,version);
 }
 
-void EventPoster::_RegistrationChanged(const std::string& sUrl, bool bRegistered)
+void EventPoster::_RegistrationChanged(const std::string& sUrl, enumRegState eState)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
-    RegistrationChanged(sUrl, bRegistered);
+    RegistrationChanged(sUrl, eState);
 }
 
 void EventPoster::_Target(const std::string& sReceiverId, const std::string& sTransportFile, unsigned short nPort)

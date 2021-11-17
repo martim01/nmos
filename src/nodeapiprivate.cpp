@@ -594,8 +594,35 @@ void NodeApiPrivate::StopRegistrationBrowser()
     pmlLog(pml::LOG_DEBUG) << "NMOS: NodeApi - stop registration browser - done";
 }
 
+void NodeApiPrivate::PostRegisterStatus()
+{
+    if(m_pPoster)
+    {
+        if(m_sRegistrationNode.empty())
+        {
+            m_pPoster->_RegistrationChanged(m_sRegistrationNode, EventPoster::NODE_PEER);
+        }
+        else
+        {
+            switch(m_nRegistrationStatus)
+            {
+                case REG_DONE:
+                    m_pPoster->_RegistrationChanged(m_sRegistrationNode, EventPoster::NODE_REGISTERED);
+                    break;
+                case REG_FAILED:
+                    m_pPoster->_RegistrationChanged(m_sRegistrationNode, EventPoster::NODE_REGISTER_FAILED);
+                    break;
+                default:
+                    m_pPoster->_RegistrationChanged(m_sRegistrationNode, EventPoster::NODE_REGISTERING);
+            }
+        }
+    }
+}
+
 int NodeApiPrivate::RegisterSimple()
 {
+    PostRegisterStatus();
+
     if(m_nRegistrationStatus != REG_DONE)
     {
         m_nRegistrationStatus = REG_FAILED;
@@ -612,6 +639,7 @@ int NodeApiPrivate::RegisterSimple()
                 pmlLog(pml::LOG_ERROR) << "NMOS: " << "RegisterResources: Failed" ;
                 UnregisterSimple();
                 m_nRegistrationStatus = REG_FAILED;
+                PostRegisterStatus();
                 return m_nRegistrationStatus;
             }
 
@@ -620,18 +648,15 @@ int NodeApiPrivate::RegisterSimple()
                 pmlLog(pml::LOG_ERROR) << "NMOS: " << "RegisterResources: Failed" ;
                 UnregisterSimple();
                 m_nRegistrationStatus = REG_FAILED;
+                PostRegisterStatus();
                 return m_nRegistrationStatus;
             }
             pmlLog(pml::LOG_INFO) << "NMOS: " << "RegisterResources: Done" ;
             m_nRegistrationStatus = REG_DONE;
         }
     }
-    if(m_pPoster)
-    {
-        m_pPoster->_RegistrationChanged(m_sRegistrationNode, (m_nRegistrationStatus==REG_DONE));
-    }
+    PostRegisterStatus();
     return m_nRegistrationStatus;
-
 }
 
 int NodeApiPrivate::UpdateRegisterSimple()
@@ -775,6 +800,7 @@ bool NodeApiPrivate::FindRegistrationNode()
     if(m_pPoster)
     {
         m_pPoster->_RegistrationNodeChosen(m_sRegistrationNode, nPriority, m_versionRegistration);
+        PostRegisterStatus();
     }
     return (m_sRegistrationNode.empty() == false);
 
@@ -867,10 +893,8 @@ int NodeApiPrivate::UnregisterSimple()
         m_nRegistrationStatus = REG_START;
     }
 
-    if(m_pPoster)
-    {
-        m_pPoster->_RegistrationChanged(m_sRegistrationNode, false);
-    }
+    //PostRegisterStatus();
+
     return m_nRegistrationStatus;
 }
 
