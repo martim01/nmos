@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 #include "RestGoose.h"
-#include "version.h"
+#include "nmosapiversion.h"
 
 class RestGoose;
 

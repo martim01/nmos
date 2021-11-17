@@ -40,6 +40,7 @@
 				<Option projectCompilerOptionsRelation="-1" />
 				<Option projectLinkerOptionsRelation="-1" />
 				<Option projectIncludeDirsRelation="-1" />
+				<Option projectResourceIncludeDirsRelation="-1" />
 				<Option projectLibDirsRelation="-1" />
 				<MakeCommands>
 					<Build command="" />
@@ -80,7 +81,6 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-std=c++11" />
 					<Add option="-D__GNU__" />
 					<Add directory="$(#microhttp.include)" />
 					<Add directory="../../lib" />
@@ -89,9 +89,9 @@
 					<Add option="`pkg-config --libs avahi-client`" />
 					<Add option="`pkg-config --libs uuid`" />
 					<Add option="`pkg-config --libs libcurl`" />
+					<Add library="libnmos_base" />
 					<Add library="libnmos_client" />
 					<Add library="pthread" />
-					<Add library="libnmos_base" />
 					<Add directory="$(#microhttp.lib)" />
 				</Linker>
 			</Target>
@@ -99,6 +99,7 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
+			<Add option="-std=c++14" />
 			<Add directory="$(#json.include)" />
 			<Add directory="../../include" />
 		</Compiler>

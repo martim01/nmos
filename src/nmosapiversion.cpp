@@ -1,4 +1,4 @@
-#include "version.h"
+#include "nmosapiversion.h"
 #include "log.h"
 
 using namespace pml::nmos;

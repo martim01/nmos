@@ -2,7 +2,7 @@
 #include <string>
 #include "json/json.h"
 #include <vector>
-#include "version.h"
+#include "nmosapiversion.h"
 
 namespace pml
 {

@@ -165,6 +165,27 @@ void TestPoster::ReceiverChanged(const std::list<std::shared_ptr<pml::nmos::Rece
     cout << "++++++++++++++++++++++++" << endl;
 }
 
+void TestPoster::QueryServerChanged(const std::string& sUrl)
+{
+    cout << "++++++QUERY SERVER CHANGED ++++++" << endl;
+    cout << sUrl;
+    cout << "++++++++++++++++++++++++" << endl;
+}
+
+void TestPoster::QueryServerFound(const std::string& sUrl, unsigned short nPriority)
+{
+    cout << "++++++QUERY SERVER FOUND ++++++" << endl;
+    cout << sUrl << ": " << nPriority;
+    cout << "++++++++++++++++++++++++" << endl;
+}
+
+void TestPoster::QueryServerRemoved(const std::string& sUrl)
+{
+    cout << "++++++QUERY SERVER REMOVED ++++++" << endl;
+    cout << sUrl;
+    cout << "++++++++++++++++++++++++" << endl;
+}
+
 
 void TestPoster::QuerySubscription(const std::string& sSubscriptionId, int nResource, const std::string& sQuery)
 {

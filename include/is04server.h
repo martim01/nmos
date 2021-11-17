@@ -5,7 +5,7 @@
 #include <thread>
 #include <vector>
 #include "json/json.h"
-#include "version.h"
+#include "nmosapiversion.h"
 #include "nmosserver.h"
 
 class RestGoose;

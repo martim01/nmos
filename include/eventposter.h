@@ -3,7 +3,7 @@
 #include <string>
 #include <thread>
 #include <mutex>
-#include "version.h"
+#include "nmosapiversion.h"
 
 namespace pml
 {

@@ -11,7 +11,7 @@
 #include <chrono>
 #include <mutex>
 #include <sstream>
-#include "version.h"
+#include "nmosapiversion.h"
 
 namespace pml
 {

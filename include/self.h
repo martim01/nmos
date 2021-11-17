@@ -5,7 +5,7 @@
 #include <string>
 #include "resource.h"
 #include "nmosdlldefine.h"
-#include "version.h"
+#include "nmosapiversion.h"
 
 namespace pml
 {

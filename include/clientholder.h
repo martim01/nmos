@@ -3,7 +3,7 @@
 #include "json/json.h"
 #include "nmosdlldefine.h"
 #include <memory>
-#include "version.h"
+#include "nmosapiversion.h"
 #include <string>
 #include <set>
 #include <list>

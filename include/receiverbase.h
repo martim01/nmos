@@ -5,7 +5,7 @@
 #include "nmosdlldefine.h"
 #include "constraint.h"
 #include "connection.h"
-#include "version.h"
+#include "nmosapiversion.h"
 
 namespace pml
 {

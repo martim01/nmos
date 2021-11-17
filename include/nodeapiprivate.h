@@ -6,7 +6,7 @@
 #include "nmosdlldefine.h"
 #include <mutex>
 #include <condition_variable>
-#include "version.h"
+#include "nmosapiversion.h"
 #include <chrono>
 #include <thread>
 #include <atomic>

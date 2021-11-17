@@ -1,5 +1,5 @@
 #pragma once
-#include "version.h"
+#include "nmosapiversion.h"
 #include "transportparams.h"
 #include "nmosdlldefine.h"
 #include <chrono>

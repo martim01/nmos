@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include "json/json.h"
-#include "version.h"
+#include "nmosapiversion.h"
 
 namespace pml
 {
