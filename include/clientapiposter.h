@@ -44,6 +44,10 @@ namespace pml
 
                 void _RequestConnectResult(const std::string& sSenderId, const std::string& sReceiverId, bool bSuccess, const std::string& sResponse);
 
+                void _QueryServerFound(const std::string& sUrl, unsigned short nPriority);
+                void _QueryServerRemoved(const std::string& sUrl);
+                void _QueryServerChanged(const std::string& sUrl);
+
                 void _QuerySubscription(const std::string& sSubscriptionId, int nResource, const std::string& sQuery);
                 void _QuerySubscriptionRemoved(const std::string& sSubscriptionId);
 
@@ -108,6 +112,9 @@ namespace pml
                 **/
                 virtual void QuerySubscriptionRemoved(const std::string& sSubscriptionId)=0;
 
+                virtual void QueryServerChanged(const std::string& sUrl)=0;
+                virtual void QueryServerFound(const std::string& sUrl, unsigned short nPriority)=0;
+                virtual void QueryServerRemoved(const std::string& sUrl)=0;
 
                 /** @brief Called when a ClientApi::Subscribe or ClientApi::Unsubscribe gets an answer from the target webserver
                 *   @param nResult the http result code

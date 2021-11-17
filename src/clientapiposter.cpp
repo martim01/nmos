@@ -100,3 +100,18 @@ void ClientApiPoster::_QuerySubscriptionRemoved(const std::string& sSubscription
 {
     QuerySubscriptionRemoved(sSubscriptionId);
 }
+
+void ClientApiPoster::_QueryServerFound(const std::string& sUrl, unsigned short nPriority)
+{
+    QueryServerFound(sUrl, nPriority);
+}
+
+void ClientApiPoster::_QueryServerRemoved(const std::string& sUrl)
+{
+    QueryServerRemoved(sUrl);
+}
+
+void ClientApiPoster::_QueryServerChanged(const std::string& sUrl)
+{
+    QueryServerChanged(sUrl);
+}

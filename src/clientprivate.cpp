@@ -523,7 +523,13 @@ void ClientApiImpl::HandleInstanceResolved()
             {
                 try
                 {
-                    m_mmQueryNodes.insert(std::make_pair(std::stoi(itTxt->second), m_pInstance));
+                    int nPriority = std::stoi(itTxt->second);
+                    m_mmQueryNodes.insert(std::make_pair(nPriority, m_pInstance));
+                    if(m_pPoster)
+                    {
+                        m_pPoster->_QueryServerFound(m_pInstance->sHostIP, nPriority);
+                    }
+
                     if(m_eMode == MODE_P2P)
                     {   //change the mode away from peer to peer
                         m_eMode = MODE_REGISTRY;
@@ -556,7 +562,7 @@ void ClientApiImpl::HandleInstanceResolved()
                 m_lstResolve.push_back(m_pInstance);
             }
         }
-        m_pInstance = 0;
+        m_pInstance = nullptr;
     }
 }
 
@@ -567,12 +573,40 @@ void ClientApiImpl::HandleInstanceRemoved()
         if(m_pInstance->sService == "_nmos_query._tcp")
         {
             pmlLog(pml::LOG_INFO) << "NMOS: " << "Query node: " << m_pInstance->sName << "removed" ;
-            if(m_eMode == MODE_REGISTRY)
-            {   //@todo should we check here if we have another node??
-                m_eMode = MODE_P2P;
-                if(m_pPoster)
+
+            bool bSubscribeAgain(true);
+
+            for(auto itRemove = m_mmQueryNodes.begin(); itRemove != m_mmQueryNodes.end(); ++itRemove)
+            {
+                if(itRemove->second == m_pInstance)
                 {
-                    m_pPoster->_ModeChanged(false);
+                    m_mmQueryNodes.erase(itRemove);
+                    break;
+                }
+                else
+                {   //not the first one so don't need to resubscribe
+                    bSubscribeAgain = false;
+                }
+            }
+
+            if(m_pPoster)
+            {
+                m_pPoster->_QueryServerRemoved(m_pInstance->sHostIP);
+            }
+
+            if(m_eMode == MODE_REGISTRY)
+            {
+                if(m_mmQueryNodes.empty())
+                {
+                    m_eMode = MODE_P2P;
+                    if(m_pPoster)
+                    {
+                        m_pPoster->_ModeChanged(false);
+                    }
+                }
+                else if(bSubscribeAgain)
+                {
+                    SubscribeToQueryServer();
                 }
             }
         }
@@ -580,17 +614,9 @@ void ClientApiImpl::HandleInstanceRemoved()
         {
             pmlLog(pml::LOG_INFO) << "NMOS: " << "node Removed: " << m_pInstance->sName ;
             m_lstResolve.remove_if([this](std::shared_ptr<dnsInstance> pInstance) { return pInstance == m_pInstance;});
-//            for(auto pInstance : m_lstResolve)
-//            {
-//                if(pInstance == m_pInstance)
-//                {
-//                    m_lstResolve.erase(pInstance);
-//                    break;
-//                }
-//            }
             RemoveResources(m_pInstance->sHostIP);
         }
-        m_pInstance = 0;
+        m_pInstance = nullptr;
     }
 }
 
@@ -2046,6 +2072,10 @@ void ClientApiImpl::SubscribeToQueryServer()
         for(auto pairQuery : m_mmQuery)
         {
             QueryQueryServer(urlQuery, pairQuery.second);
+        }
+        if(m_pPoster)
+        {
+            m_pPoster->_QueryServerChanged(urlQuery.Get());
         }
     }
 }
