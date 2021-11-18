@@ -146,6 +146,7 @@
 		<Unit filename="include/flowaudiocoded.h" />
 		<Unit filename="include/flowaudioraw.h" />
 		<Unit filename="include/flowdata.h" />
+		<Unit filename="include/flowdatajson.h" />
 		<Unit filename="include/flowdatasdianc.h" />
 		<Unit filename="include/flowmux.h" />
 		<Unit filename="include/flowsdpcreator.h" />
@@ -176,6 +177,7 @@
 		<Unit filename="src/flowaudiocoded.cpp" />
 		<Unit filename="src/flowaudioraw.cpp" />
 		<Unit filename="src/flowdata.cpp" />
+		<Unit filename="src/flowdatajson.cpp" />
 		<Unit filename="src/flowdatasdianc.cpp" />
 		<Unit filename="src/flowmux.cpp" />
 		<Unit filename="src/flowsdpcreator.cpp" />

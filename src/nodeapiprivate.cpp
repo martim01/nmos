@@ -47,6 +47,7 @@
 #include "flowvideoraw.h"
 #include "flowvideocoded.h"
 #include "flowdatasdianc.h"
+#include "flowdatajson.h"
 #include "flowmux.h"
 #include "flowsdpcreatornode.h"
 
@@ -679,17 +680,16 @@ void NodeApiPrivate::HandleInstanceResolved(std::shared_ptr<dnsInstance> pInstan
         //check if the registration node can handle one of our versions...
 
         ApiVersion version(0,0);
-        for(const auto& pairServer : m_mDiscoveryServers)
+        //auto vVersions = SplitString(itVersion->second, ',');
+        for(auto itServer  = m_mDiscoveryServers.rbegin(); itServer != m_mDiscoveryServers.rend(); ++itServer)
         {
-            if(itVersion->second.find(pairServer.first.GetVersionAsString()) != string::npos)
+            if(itVersion->second.find(itServer->first.GetVersionAsString()) != string::npos)
             {
-                if(version < pairServer.first)
-                {
-                    version = pairServer.first;
-                }
+                version = itServer->first;
                 break;
             }
         }
+
         if(version.GetMajor() != 0)
         {
             try
@@ -795,11 +795,9 @@ bool NodeApiPrivate::FindRegistrationNode()
         m_sRegistrationNode = sRegNode;
         m_versionRegistration = version;
         ModifyTxtRecords();
-
     }
     if(m_pPoster)
     {
-        m_pPoster->_RegistrationNodeChosen(m_sRegistrationNode, nPriority, m_versionRegistration);
         PostRegisterStatus();
     }
     return (m_sRegistrationNode.empty() == false);

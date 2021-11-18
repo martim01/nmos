@@ -15,7 +15,7 @@ namespace pml
         class NMOS_EXPOSE ReceiverBase : public IOResource
         {
             public:
-                enum enumTransport {RTP, RPT_UCAST, RTP_MCAST, DASH};
+
                 enum enumType {AUDIO, VIDEO, DATA, MUX};
 
                 ReceiverBase(const std::string& sLabel, const std::string& sDescription, enumTransport eTransport, const std::string& sDeviceId, enumType eType, int flagsTransport=TransportParamsRTP::CORE);
@@ -24,11 +24,8 @@ namespace pml
 
                 bool UpdateFromJson(const Json::Value& jsData) override;
 
-                void SetTransport(enumTransport eTransport);
                 void SetType(enumType eType);
 
-                void AddInterfaceBinding(const std::string& sInterface);
-                void RemoveInterfaceBinding(const std::string& sInterface);
 
                 bool AddCap(const std::string& sCap);
                 void RemoveCap(const std::string& sCap);
@@ -55,18 +52,14 @@ namespace pml
                 bool IsActivateAllowed() const;
 
 
-                const std::string& GetTransportType() const { return STR_TRANSPORT[m_eTransport]; }
-
             protected:
 
-
-                enumTransport m_eTransport;
                 std::string m_sDeviceId;
                 std::string m_sManifest;
                 std::string m_sSenderId;
                 bool m_bSenderActive;
                 enumType m_eType;
-                std::set<std::string> m_setInterfaces;
+
                 std::set<std::string> m_setCaps;
 
 
@@ -78,8 +71,8 @@ namespace pml
                 //std::string m_sSenderId;
                 std::string m_sInterfaceIp;
 
-                static const std::string STR_TRANSPORT[4];
-                static const std::string STR_TYPE[4];
+
+                static const std::array<std::string,4> STR_TYPE;
         };
     };
 };

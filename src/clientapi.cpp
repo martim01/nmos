@@ -160,7 +160,7 @@ bool ClientApi::Disconnect(const std::string& sReceiverId)
 }
 
 
-bool ClientApi::AddQuerySubscription(flagResource eResource, const std::string& sQuery, unsigned long nUpdateRate)
+bool ClientApi::AddQuerySubscription(enumResource eResource, const std::string& sQuery, unsigned long nUpdateRate)
 {
     return m_pApi->AddQuerySubscription(eResource, sQuery, nUpdateRate);
 }

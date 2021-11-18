@@ -92,6 +92,7 @@
 					<Add library="libnmos_base" />
 					<Add library="libnmos_client" />
 					<Add library="pthread" />
+					<Add library="pml_log" />
 					<Add directory="$(#microhttp.lib)" />
 				</Linker>
 			</Target>
@@ -102,9 +103,11 @@
 			<Add option="-std=c++14" />
 			<Add directory="$(#json.include)" />
 			<Add directory="../../include" />
+			<Add directory="../../../log/include" />
 		</Compiler>
 		<Linker>
 			<Add directory="../../lib" />
+			<Add directory="../../../log/lib" />
 		</Linker>
 		<Unit filename="main.cpp" />
 		<Unit filename="testposter.cpp" />

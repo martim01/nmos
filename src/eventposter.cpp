@@ -20,11 +20,6 @@ void EventPoster::_RegistrationNodeChanged(const std::string& sUrl, unsigned sho
     RegistrationNodeChanged(sUrl, nPriority, bGood, version);
 }
 
-void EventPoster::_RegistrationNodeChosen(const std::string& sUrl, unsigned short nPriority, const ApiVersion& version)
-{
-    std::lock_guard<std::mutex> lg(m_mutex);
-    RegistrationNodeChosen(sUrl, nPriority,version);
-}
 
 void EventPoster::_RegistrationChanged(const std::string& sUrl, enumRegState eState)
 {

@@ -23,7 +23,6 @@ namespace pml
                 void _RegistrationNodeFound(const std::string& sUrl, unsigned short nPriority, const ApiVersion& version);
                 void _RegistrationNodeRemoved(const std::string& sUrl);
                 void _RegistrationNodeChanged(const std::string& sUrl, unsigned short nPriority, bool bGood, const ApiVersion& version);
-                void _RegistrationNodeChosen(const std::string& sUrl, unsigned short nPriority, const ApiVersion& version);
                 void _RegistrationChanged(const std::string& sUrl, enumRegState eState);
 
                 void _Target(const std::string& sReceiverId, const std::string& sTransportFile, unsigned short nPort);
@@ -53,13 +52,6 @@ namespace pml
                 *   @param version the highest ApiVersion that the registration node has in common with our node
                 **/
                 virtual void RegistrationNodeChanged(const std::string& sUrl, unsigned short nPriority, bool bGood, const ApiVersion& version)=0;
-
-                /** @brief Called when a register is chosen
-                *   @param sUrl the url/ip address of the node - if empty then the node is in peer to peer mode
-                *   @param nPriority the priority of the register
-                *   @param version the highest ApiVersion that the registration node has in common with our node
-                **/
-                virtual void RegistrationNodeChosen(const std::string& sUrl, unsigned short nPriority, const ApiVersion& version)=0;
 
 
                 /** @brief called when the node has either completed registering with a register server of unregistered

@@ -20,6 +20,7 @@
 #include "flowaudioraw.h"
 #include "flowvideoraw.h"
 #include "flowdatasdianc.h"
+#include "flowdatajson.h"
 #include "flowmux.h"
 #include "senderbase.h"
 #include "receiverbase.h"
@@ -275,11 +276,13 @@ void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std:
     aCon.eActivate = connection::ACT_NOW;
     aCon.bMasterEnable = true;
     aCon.tpSender.bRtpEnabled = true;
+    aCon.bClient = true;
 
 
-    auto curlresp = CurlRegister::PutPatch(sSenderStage, ConvertFromJson(aCon.GetJson(ApiVersion(1,0))), false, "");
+    auto curlresp = CurlRegister::PutPatch(sSenderStage, ConvertFromJson(aCon.GetJson(pApi->GetVersion())), false, "");
     if(curlresp.nCode != 200)
     {
+        pmlLog(pml::LOG_WARN) << "NMOS: ConnectThread Patch Sender failed: " << curlresp.nCode << " " << curlresp.sResponse;
         pApi->HandleConnect(sSenderId, sReceiverId, false, curlresp.sResponse);
     }
     else
@@ -290,21 +293,23 @@ void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std:
         aConR.tpReceiver.bRtpEnabled = true;
         aConR.sTransportFileType = "application/sdp";
         aConR.sSenderId = sSenderId;
-
+        aConR.bClient = true;
 
         auto curlresp = CurlRegister::Get(sSenderTransport, false);
         if(curlresp.nCode != 200)
         {
+            pmlLog(pml::LOG_WARN) << "NMOS: ConnectThread Get SDP failed: " << curlresp.nCode << " " << curlresp.sResponse;
             pApi->HandleConnect(sSenderId, sReceiverId, false, curlresp.sResponse);
         }
         else
         {
             aConR.sTransportFileData = curlresp.sResponse;
 
-            std::string sData(ConvertFromJson(aConR.GetJson(ApiVersion(1,0))));
+            std::string sData(ConvertFromJson(aConR.GetJson(pApi->GetVersion())));
             auto curlresp = CurlRegister::PutPatch(sReceiverStage, sData, false, "");
             if(curlresp.nCode != 200)
             {
+                pmlLog(pml::LOG_WARN) << "NMOS: ConnectThread Patch Receiver failed: " << curlresp.nCode << " " << curlresp.sResponse;
                 pApi->HandleConnect(sSenderId, sReceiverId, false, curlresp.sResponse);
             }
             else
@@ -365,6 +370,7 @@ void ClientApiImpl::Start()
     if(!m_pThread)
     {
         m_pThread = std::make_unique<std::thread>(ClientThread, this);
+        m_pWebSocket->Run();
     }
 }
 
@@ -374,7 +380,8 @@ void ClientApiImpl::Stop()
 }
 
 ClientApiImpl::ClientApiImpl() :
-    m_eMode(MODE_P2P),
+    m_version(1,1),
+    m_eMode(MODE_REGISTRY),
     m_bRun(true),
     m_pInstance(0),
     m_nCurlThreadCount(0),
@@ -393,7 +400,8 @@ ClientApiImpl::ClientApiImpl() :
                         {"/sources/", std::bind(&ClientApiImpl::GrainUpdateSource, this, _1, _2)},
                         {"/flows/", std::bind(&ClientApiImpl::GrainUpdateFlow, this, _1, _2)},
                         {"/senders/", std::bind(&ClientApiImpl::GrainUpdateSender, this, _1, _2)},
-                        {"/receiver/", std::bind(&ClientApiImpl::GrainUpdateReceiver, this, _1, _2)} };
+                        {"/receivers/", std::bind(&ClientApiImpl::GrainUpdateReceiver, this, _1, _2)} };
+
 }
 
 ClientApiImpl::~ClientApiImpl()
@@ -435,6 +443,8 @@ void ClientApiImpl::StopRun()
         Signal(THREAD_EXIT);
         m_pThread->join();
         m_pThread = nullptr;
+
+        m_pWebSocket->Stop();
     }
 
 }
@@ -1006,6 +1016,7 @@ void ClientApiImpl::AddFlow(std::list<std::shared_ptr<Flow> >& lstAdded, std::li
 
 void ClientApiImpl::CreateFlow(std::list<std::shared_ptr<Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress)
 {
+
     if(jsData["format"].asString().find("urn:x-nmos:format:audio") != std::string::npos)
     {
         CreateFlowAudio(lstAdded, jsData, sIpAddress);
@@ -1021,6 +1032,10 @@ void ClientApiImpl::CreateFlow(std::list<std::shared_ptr<Flow>>& lstAdded, const
     else if(jsData["format"].asString().find("urn:x-nmos:format:mux") != std::string::npos)
     {
         CreateFlowMux(lstAdded, jsData, sIpAddress);
+    }
+    else
+    {
+        pmlLog(pml::LOG_WARN) << "NMOS: ClientApi: Unknown flow format: " << jsData["format"].asString();
     }
 }
 
@@ -1119,6 +1134,20 @@ void ClientApiImpl::CreateFlowData(std::list<std::shared_ptr<Flow>>& lstAdded, c
     if(jsData["media_type"] == "video/smpte291")
     {
         auto pResource = std::make_shared<FlowDataSdiAnc>();
+        if(pResource->UpdateFromJson(jsData))
+        {
+            m_flows.AddResource(sIpAddress, pResource);
+            lstAdded.push_back(pResource);
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "FlowDataSdiAnc: " << pResource->GetId() << " found at " << sIpAddress ;
+        }
+        else
+        {
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() ;
+        }
+    }
+    else if(jsData["media_type"] == "application/json")
+    {
+        auto pResource = std::make_shared<FlowDataJson>();
         if(pResource->UpdateFromJson(jsData))
         {
             m_flows.AddResource(sIpAddress, pResource);
@@ -1485,7 +1514,17 @@ std::string ClientApiImpl::GetTargetUrl(std::shared_ptr<ReceiverBase> pReceiver,
 
 
 
-std::string ClientApiImpl::GetConnectionUrlSingle(std::shared_ptr<Resource> pResource, const std::string& sDirection, const std::string& sEndpoint, ApiVersion& version)
+std::string ClientApiImpl::GetConnectionUrlSingle(std::shared_ptr<Resource> pResource, const std::string& sDirection, const std::string& sEndpoint)
+{
+    auto sUrl = GetConnectionUrl(pResource);
+    if(sUrl.empty() == false)
+    {
+        sUrl += "/single/"+sDirection+"/"+pResource->GetId()+"/"+sEndpoint;
+    }
+    return sUrl;
+}
+
+std::string ClientApiImpl::GetConnectionUrl(std::shared_ptr<Resource> pResource)
 {
     auto itDevice =  m_devices.FindNmosResource(pResource->GetParentResourceId());
     if(itDevice == m_devices.GetResources().end())
@@ -1496,15 +1535,20 @@ std::string ClientApiImpl::GetConnectionUrlSingle(std::shared_ptr<Resource> pRes
 
     for(auto itControl = itDevice->second->GetControlsBegin(); itControl != itDevice->second->GetControlsEnd(); ++itControl)
     {
-        if("urn:x-nmos:control:sr-ctrl/v1.0" == itControl->first)
+        if("urn:x-nmos:control:sr-ctrl/"+m_version.GetVersionAsString() == itControl->first)
         {
-            version = ApiVersion(1,0);
-            std::stringstream ssUrl;
-            ssUrl << itControl->second << "/single/" << sDirection << "/" << pResource->GetId() << "/" << sEndpoint;
-            return ssUrl.str();
+            pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApi GetConnectionUrlSingle: " << itControl->second;
+            auto curlResp = CurlRegister::Get(itControl->second);
+            if(curlResp.nCode == 200)
+            {
+                return itControl->second;
+            }
+            else
+            {
+                pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApi GetConnectionUrlSingle: " << curlResp.nCode;
+            }
         }
     }
-    version = ApiVersion(0,0);
     return std::string();
 }
 
@@ -1517,8 +1561,7 @@ bool ClientApiImpl::RequestSender(const std::string& sSenderId, enumConnection e
         return false;
     }
 
-    ApiVersion version(0,0);
-    std::string sConnectionUrl(GetConnectionUrlSingle(pSender, "senders", STR_CONNECTION[eType], version));
+    std::string sConnectionUrl(GetConnectionUrlSingle(pSender, "senders", STR_CONNECTION[eType]));
     if(sConnectionUrl.empty())
     {
         return false;
@@ -1537,8 +1580,7 @@ bool ClientApiImpl::RequestReceiver(const std::string& sReceiverId, enumConnecti
         return false;
     }
 
-    ApiVersion version(0,0);
-    std::string sConnectionUrl(GetConnectionUrlSingle(pReceiver, "receivers", STR_CONNECTION[eType], version));
+    std::string sConnectionUrl(GetConnectionUrlSingle(pReceiver, "receivers", STR_CONNECTION[eType]));
     if(sConnectionUrl.empty())
     {
         return false;
@@ -1583,14 +1625,13 @@ bool ClientApiImpl::PatchSenderStaged(const std::string& sSenderId, const connec
         return false;
     }
 
-    ApiVersion version(0,0);
-    std::string sConnectionUrl(GetConnectionUrlSingle(pSender, "senders", STR_CONNECTION[enumConnection::SENDER_STAGED], version));
+    std::string sConnectionUrl(GetConnectionUrlSingle(pSender, "senders", STR_CONNECTION[enumConnection::SENDER_STAGED]));
     if(sConnectionUrl.empty())
     {
         return false;
     }
 
-    m_pCurl->PutPatch(sConnectionUrl, ConvertFromJson(aConnection.GetJson(version)), static_cast<long>(enumConnection::SENDER_PATCH), false, sSenderId);
+    m_pCurl->PutPatch(sConnectionUrl, ConvertFromJson(aConnection.GetJson(m_version)), static_cast<long>(enumConnection::SENDER_PATCH), false, sSenderId);
 
     return true;
 }
@@ -1604,14 +1645,13 @@ bool ClientApiImpl::PatchReceiverStaged(const std::string& sReceiverId, const co
         return false;
     }
 
-    ApiVersion version(0,0);
-    std::string sConnectionUrl(GetConnectionUrlSingle(pReceiver, "receivers", STR_CONNECTION[enumConnection::SENDER_STAGED], version));
+    std::string sConnectionUrl(GetConnectionUrlSingle(pReceiver, "receivers", STR_CONNECTION[enumConnection::SENDER_STAGED]));
     if(sConnectionUrl.empty())
     {
         return false;
     }
 
-    m_pCurl->PutPatch(sConnectionUrl, ConvertFromJson(aConnection.GetJson(version)), static_cast<long>(enumConnection::RECEIVER_PATCH), false, sReceiverId);
+    m_pCurl->PutPatch(sConnectionUrl, ConvertFromJson(aConnection.GetJson(m_version)), static_cast<long>(enumConnection::RECEIVER_PATCH), false, sReceiverId);
 
     return true;
 }
@@ -1701,13 +1741,20 @@ bool ClientApiImpl::Connect(const std::string& sSenderId, const std::string& sRe
         return false;
     }
 
-    ApiVersion version(0,0);
-    std::string sSenderStageUrl(GetConnectionUrlSingle(pSender, "senders", STR_CONNECTION[enumConnection::SENDER_STAGED], version));
-    std::string sSenderTransportUrl(GetConnectionUrlSingle(pSender, "senders", STR_CONNECTION[enumConnection::SENDER_TRANSPORTFILE], version));
-    std::string sReceiverStageUrl(GetConnectionUrlSingle(pReceiver, "receivers", STR_CONNECTION[enumConnection::RECEIVER_STAGED], version));
+    auto sUrl = GetConnectionUrl(pSender);
+    if(sUrl.empty())
+    {
+        return false;
+    }
 
+    auto sSenderStageUrl = sUrl + "/single/senders/"+pSender->GetId()+"/"+STR_CONNECTION[enumConnection::SENDER_STAGED];
+    auto sSenderTransportUrl = sUrl + "/single/senders/"+pSender->GetId()+"/"+STR_CONNECTION[enumConnection::SENDER_TRANSPORTFILE];
 
-    if(sSenderStageUrl.empty() || sSenderTransportUrl.empty() || sReceiverStageUrl.empty())
+    auto  sReceiverStageUrl = GetConnectionUrlSingle(pReceiver, "receivers", STR_CONNECTION[enumConnection::RECEIVER_STAGED]);
+
+    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApi: Connect: senderStageUrl='" << sSenderStageUrl << "' transportUrl='" << sSenderTransportUrl << "' receiverStageUrl='" << sReceiverStageUrl << "'";
+
+    if(sReceiverStageUrl.empty())
     {
         return false;
     }
@@ -1736,10 +1783,9 @@ bool ClientApiImpl::Disconnect( const std::string& sReceiverId)
         return false;
     }
 
-    ApiVersion version(0,0);
-    std::string sSenderStageUrl(GetConnectionUrlSingle(pSender, "senders", STR_CONNECTION[enumConnection::SENDER_STAGED], version));
-    std::string sSenderTransportUrl(GetConnectionUrlSingle(pSender, "senders", STR_CONNECTION[enumConnection::SENDER_TRANSPORTFILE], version));
-    std::string sReceiverStageUrl(GetConnectionUrlSingle(pReceiver, "receivers", STR_CONNECTION[enumConnection::RECEIVER_STAGED], version));
+    std::string sSenderStageUrl(GetConnectionUrlSingle(pSender, "senders", STR_CONNECTION[enumConnection::SENDER_STAGED]));
+    std::string sSenderTransportUrl(GetConnectionUrlSingle(pSender, "senders", STR_CONNECTION[enumConnection::SENDER_TRANSPORTFILE]));
+    std::string sReceiverStageUrl(GetConnectionUrlSingle(pReceiver, "receivers", STR_CONNECTION[enumConnection::RECEIVER_STAGED]));
 
 
     if(sSenderStageUrl.empty() || sSenderTransportUrl.empty() || sReceiverStageUrl.empty())
@@ -1789,11 +1835,6 @@ bool ClientApiImpl::RemoveQuerySubscription(const std::string& sSubscriptionId)
 
 bool ClientApiImpl::AddQuerySubscriptionRegistry(int nResource, const std::string& sQuery, unsigned long nUpdateRate)
 {
-    if(m_mmQueryNodes.empty())
-    {
-        return false;
-    }
-
     //store the query
     query aQuery;
     aQuery.sId = CreateGuid();
@@ -2063,13 +2104,14 @@ url ClientApiImpl::GetQueryServer(const ApiVersion& version)
 
 void ClientApiImpl::SubscribeToQueryServer()
 {
+    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApi: SubscribeToQueryServer";
     if(m_mmQueryNodes.empty() == false)
     {
         url urlQuery = GetQueryServer();
         pmlLog(pml::LOG_DEBUG) << "NMOS: " << "QUERY URL: " << urlQuery;
 
         //we run through all our queries and post them to the query server asking for the websocket
-        for(auto pairQuery : m_mmQuery)
+        for(auto& pairQuery : m_mmQuery)
         {
             QueryQueryServer(urlQuery, pairQuery.second);
         }
@@ -2092,9 +2134,22 @@ bool ClientApiImpl::QueryQueryServer(const url& theUrl, ClientApiImpl::query& th
 
     //@todo params
     Json::Value jsParams(Json::objectValue);
+
+
+    auto vQuery = SplitString(theQuery.sQuery, '&');
+    for(const auto& sKeyValue : vQuery)
+    {
+        auto vKeyValue = SplitString(sKeyValue, '=');
+        if(vKeyValue.size() == 2)
+        {
+            jsParams[vKeyValue[0]] = vKeyValue[1];
+        }
+    }
     jsQuery["params"] = jsParams;
 
     auto curlresp = CurlRegister::Post(theUrl.Get()+"/subscriptions", ConvertFromJson(jsQuery));
+
+    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApi - query QueryServer: " << theUrl << ": " << theQuery.nResource << " " << ConvertFromJson(jsQuery);
 
     theQuery.jsSubscription = ConvertToJson(curlresp.sResponse);
     HandleQuerySubscriptionResponse(curlresp.nCode, theQuery);
@@ -2183,6 +2238,7 @@ bool ClientApiImpl::WebsocketConnected(const url& theUrl)
 
 bool ClientApiImpl::WebsocketMessage(const url& theUrl, const std::string& sMessage)
 {
+    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApi: Message: " << sMessage;
     auto jsGrain = ConvertToJson(sMessage);
     //check requirements
     if(!CheckJsonRequired(jsGrain, {"grain_type", "source_id", "flow_id", "origin_timestamp", "sync_timestamp", "creation_timestamp", "rate", "duration", "grain"}))
@@ -2218,6 +2274,10 @@ void ClientApiImpl::HandleGrainEvent(const std::string& sSourceId, const Json::V
             if(itUpdate != m_mGrainUpdate.end() && jsGrain["data"].isArray())
             {
                 itUpdate->second(sSourceId, jsGrain["data"]);
+            }
+            else
+            {
+                pmlLog(pml::LOG_WARN) << "No grain handler";
             }
         }
         else
@@ -2364,6 +2424,7 @@ void ClientApiImpl::GrainUpdateFlow(const std::string& sSourceId, const Json::Va
     std::list<std::shared_ptr<Flow>> lstUpdated;
     std::list<std::shared_ptr<Flow>> lstRemoved;
 
+    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApi: GrainUpdateFlow: ";
     for(Json::ArrayIndex ai = 0; ai < jsData.size(); ai++)
     {
         switch(WorkoutAction(jsData[ai]))
@@ -2434,9 +2495,7 @@ void ClientApiImpl::GrainUpdateReceiver(const std::string& sSourceId, const Json
 {
     std::list<std::shared_ptr<ReceiverBase>> lstAdded;
     std::list<std::shared_ptr<ReceiverBase>> lstUpdated;
-    std::list<std::shared_ptr<ReceiverBase>> lstRemoved
-
-    ;
+    std::list<std::shared_ptr<ReceiverBase>> lstRemoved;
 
     for(Json::ArrayIndex ai = 0; ai < jsData.size(); ai++)
     {

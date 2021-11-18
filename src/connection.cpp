@@ -9,7 +9,8 @@ const std::string connection::STR_ACTIVATE[4] = {"", "activate_immediate", "acti
 connection::connection() :
     bMasterEnable(false),
     eActivate(connection::ACT_NULL),
-    nProperties(connection::FP_ALL)
+    nProperties(connection::FP_ALL),
+    bClient(false)
 {
 
 }
@@ -120,14 +121,18 @@ Json::Value connection::GetJson(const ApiVersion& version) const
         if(eActivate == ACT_NULL)
         {
             jsConnect["activation"]["mode"] = Json::nullValue;
-            if(sActivationTime.empty())
+            if(!bClient)
             {
-                jsConnect["activation"]["activation_time"] = Json::nullValue;
+                if(sActivationTime.empty())
+                {
+                    jsConnect["activation"]["activation_time"] = Json::nullValue;
+                }
+                else
+                {
+                    jsConnect["activation"]["activation_time"] = sActivationTime;
+                }
             }
-            else
-            {
-                jsConnect["activation"]["activation_time"] = sActivationTime;
-            }
+
             if(sRequestedTime.empty() == false)
             {
                 jsConnect["activation"]["requested_time"] = sRequestedTime;
@@ -145,7 +150,7 @@ Json::Value connection::GetJson(const ApiVersion& version) const
             {
                 jsConnect["activation"]["requested_time"] = Json::nullValue;
 
-                if(sActivationTime.empty() == false)
+                if(sActivationTime.empty() == false && !bClient)
                 {
                     jsConnect["activation"]["activation_time"] = Json::nullValue;
                 }
@@ -161,13 +166,16 @@ Json::Value connection::GetJson(const ApiVersion& version) const
                     jsConnect["activation"]["requested_time"] = Json::nullValue;
                 }
 
-                if(sActivationTime.empty() == false)
+                if(!bClient)
                 {
-                    jsConnect["activation"]["activation_time"] = sActivationTime;
-                }
-                else
-                {
-                    jsConnect["activation"]["activation_time"] = Json::nullValue;
+                    if(sActivationTime.empty() == false)
+                    {
+                        jsConnect["activation"]["activation_time"] = sActivationTime;
+                    }
+                    else
+                    {
+                        jsConnect["activation"]["activation_time"] = Json::nullValue;
+                    }
                 }
             }
         }

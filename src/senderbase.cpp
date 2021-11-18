@@ -11,13 +11,12 @@
 #include "source.h"
 
 using namespace pml::nmos;
-const std::string SenderBase::STR_TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash"};
+
 
 
 SenderBase::SenderBase(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId, const std::string& sInterface, TransportParamsRTP::flagsTP flagsTransport) :
-    IOResource("sender", sLabel, sDescription),
+    IOResource("sender", sLabel, sDescription, eTransport),
     m_sFlowId(sFlowId),
-    m_eTransport(eTransport),
     m_sDeviceId(sDeviceId),
     m_sReceiverId(""),
     m_bReceiverActive(false),
@@ -86,7 +85,7 @@ bool SenderBase::UpdateFromJson(const Json::Value& jsData)
         m_bIsOk = false;
         m_ssJsonError << "'device_id' is not a string" ;
     }
-    if(jsData["manifest_href"].isString() == false)
+    if(jsData["manifest_href"].isString() == false  && JsonMemberExistsAndIsNotNull(jsData, "manifest_href"))
     {
         m_bIsOk = false;
         m_ssJsonError << "'manifest_href' is not a string" ;
@@ -126,29 +125,22 @@ bool SenderBase::UpdateFromJson(const Json::Value& jsData)
         m_sDeviceId = jsData["device_id"].asString();
         m_sManifest = jsData["manifest_href"].asString();
 
+        m_eTransport = enumTransport::UNKNOWN_TRANSPORT;
+        for(int i = 0; i < STR_TRANSPORT.size(); i++)
+        {
+            if(jsData["transport"].asString().find(STR_TRANSPORT[i]) != std::string::npos)
+            {
+                m_eTransport = (enumTransport)i;
+                break;
+            }
+        }
 
-        if(jsData["transport"].asString().find(STR_TRANSPORT[RTP_MCAST]) != std::string::npos)
-        {
-            m_eTransport = RTP_MCAST;
-        }
-        else if(jsData["transport"].asString().find(STR_TRANSPORT[RTP_UCAST]) != std::string::npos)
-        {
-            m_eTransport = RTP_UCAST;
-        }
-
-        else if(jsData["transport"].asString().find(STR_TRANSPORT[RTP]) != std::string::npos)
-        {
-            m_eTransport = RTP;
-        }
-        else if(jsData["transport"].asString().find(STR_TRANSPORT[DASH]) != std::string::npos)
-        {
-            m_eTransport = DASH;
-        }
-        else
+        if(m_eTransport == enumTransport::UNKNOWN_TRANSPORT)
         {
             m_bIsOk = false;
             m_ssJsonError << "'transport' " <<jsData["transport"].asString() <<" incorrect" ;
         }
+
         for(Json::ArrayIndex n = 0; n < jsData["interface_bindings"].size(); n++)
         {
             if(jsData["interface_bindings"][n].isString())
@@ -172,15 +164,6 @@ bool SenderBase::UpdateFromJson(const Json::Value& jsData)
     return m_bIsOk;
 }
 
-void SenderBase::AddInterfaceBinding(const std::string& sInterface)
-{
-    m_setInterfaces.insert(sInterface);
-}
-
-void SenderBase::RemoveInterfaceBinding(const std::string& sInterface)
-{
-    m_setInterfaces.erase(sInterface);
-}
 
 void SenderBase::SetReceiverId(const std::string& sReceiverId, bool bActive)
 {
@@ -190,12 +173,6 @@ void SenderBase::SetReceiverId(const std::string& sReceiverId, bool bActive)
 }
 
 
-
-void SenderBase::SetTransport(enumTransport eTransport)
-{
-    m_eTransport = eTransport;
-
-}
 
 
 

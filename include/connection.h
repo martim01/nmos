@@ -28,6 +28,7 @@ namespace pml
                 std::chrono::time_point<std::chrono::high_resolution_clock> tpActivation;
 
                 int nProperties;
+                bool bClient;
                 static const std::string STR_ACTIVATE[4];
             };
 

@@ -9,14 +9,13 @@
 
 using namespace pml::nmos;
 
-const std::string ReceiverBase::STR_TRANSPORT[4] = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash"};
-const std::string ReceiverBase::STR_TYPE[4] = {"urn:x-nmos:format:audio", "urn:x-nmos:format:video", "urn:x-nmos:format:data", "urn:x-nmos:format:mux"};
+
+const std::array<std::string,4> ReceiverBase::STR_TYPE = {"urn:x-nmos:format:audio", "urn:x-nmos:format:video", "urn:x-nmos:format:data", "urn:x-nmos:format:mux"};
 
 
 
 ReceiverBase::ReceiverBase(const std::string& sLabel, const std::string& sDescription, enumTransport eTransport, const std::string& sDeviceId, enumType eFormat, int flagsTransport) :
-    IOResource("receiver", sLabel, sDescription),
-    m_eTransport(eTransport),
+    IOResource("receiver", sLabel, sDescription, eTransport),
     m_sDeviceId(sDeviceId),
     m_sSenderId(""),
     m_bSenderActive(false),
@@ -70,15 +69,7 @@ ReceiverBase::ReceiverBase() : IOResource("receiver")
 
 }
 
-void ReceiverBase::AddInterfaceBinding(const std::string& sInterface)
-{
-    m_setInterfaces.insert(sInterface);
-}
 
-void ReceiverBase::RemoveInterfaceBinding(const std::string& sInterface)
-{
-    m_setInterfaces.erase(sInterface);
-}
 
 bool ReceiverBase::AddCap(const std::string& sCap)
 {
@@ -123,11 +114,6 @@ void ReceiverBase::RemoveCap(const std::string& sCap)
 
 
 
-void ReceiverBase::SetTransport(enumTransport eTransport)
-{
-    m_eTransport = eTransport;
-    UpdateVersionTime();
-}
 
 void ReceiverBase::SetType(enumType eType)
 {

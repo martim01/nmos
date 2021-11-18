@@ -22,7 +22,7 @@ namespace pml
         {
             public:
 
-                enum flagResource {NONE=0, NODES=1, DEVICES=2, SOURCES=4, FLOWS=8, SENDERS=16, RECEIVERS=32, ALL=63};
+                enum enumResource { NODES=0, DEVICES=1, SOURCES=2, FLOWS=3, SENDERS=4, RECEIVERS=5};
 
                 static ClientApi& Get();
 
@@ -45,7 +45,7 @@ namespace pml
                 *   @param nUpdateRate the update rate in ms for messages. Ignored in P2P mode
                 *   @return <i>bool</i>
                 **/
-                bool AddQuerySubscription(flagResource eResource, const std::string& sQuery="", unsigned long nUpdateRate=0);
+                bool AddQuerySubscription(enumResource eResource, const std::string& sQuery="", unsigned long nUpdateRate=0);
 
                 /** @brief Removes a query subscription
                 *   @param sSubscriptionId the id of the subscription

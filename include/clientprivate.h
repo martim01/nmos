@@ -147,6 +147,8 @@ namespace pml
                 bool WebsocketConnected(const url& theUrl);
                 bool WebsocketMessage(const url& theUrl, const std::string& sMessage);
 
+                const ApiVersion& GetVersion() const { return m_version;}
+
             private:
 
 
@@ -162,7 +164,8 @@ namespace pml
                 void StoreNodeVersion(const std::string& sIpAddress, std::shared_ptr<dnsInstance> pInstance);
 
                 std::string GetTargetUrl(std::shared_ptr<ReceiverBase> pReceiver, ApiVersion& version);
-                std::string GetConnectionUrlSingle(std::shared_ptr<Resource> pResource, const std::string& sDirection, const std::string& sEndpoint, ApiVersion& version);
+                std::string GetConnectionUrlSingle(std::shared_ptr<Resource> pResource, const std::string& sDirection, const std::string& sEndpoint);
+                std::string GetConnectionUrl(std::shared_ptr<Resource> pResource);
 
                 std::shared_ptr<SenderBase> GetSender(const std::string& sSenderId);
                 std::shared_ptr<ReceiverBase> GetReceiver(const std::string& sSenderId);
@@ -220,6 +223,7 @@ namespace pml
 
                 enumGrain WorkoutAction(const Json::Value& jsData);
 
+                ApiVersion m_version;
                 enumMode m_eMode;
 
                 ClientHolder<Self> m_nodes;
@@ -259,6 +263,7 @@ namespace pml
                 bool m_bDoneQueryBrowse;
                 struct query
                 {
+                    query() : nResource(0), nRefreshRate(0){}
                     std::string sId;
                     std::string sHref;
                     int nResource;
