@@ -65,7 +65,7 @@ namespace pml
 
                 connectionReceiver m_Staged;
                 connectionReceiver m_Active;
-                constraintsReceiver m_constraints;  // @todo constraints should be same parameters as connection
+                std::vector<constraintsReceiver> m_vConstraints;  // @todo constraints should be same parameters as connection
 
                 bool m_bActivateAllowed;
                 //std::string m_sSenderId;

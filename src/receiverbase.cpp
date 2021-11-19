@@ -20,43 +20,54 @@ ReceiverBase::ReceiverBase(const std::string& sLabel, const std::string& sDescri
     m_sSenderId(""),
     m_bSenderActive(false),
     m_eType(eFormat),
+    m_vConstraints(1),
     m_bActivateAllowed(false)
 {
-    if(flagsTransport & TransportParamsRTP::FEC)
+    if(flagsTransport & TransportParamsRTP::REDUNDANT)
     {
-        m_Staged.tpReceiver.eFec = TransportParamsRTP::TP_SUPPORTED;
-        m_Active.tpReceiver.eFec = TransportParamsRTP::TP_SUPPORTED;
-    }
-    else
-    {
-        m_Staged.tpReceiver.eFec = TransportParamsRTP::TP_NOT_SUPPORTED;
-        m_Active.tpReceiver.eFec = TransportParamsRTP::TP_NOT_SUPPORTED;
+        m_vConstraints.resize(2);
+        m_Staged.tpReceivers.resize(2);
+        m_Active.tpReceivers.resize(2);
     }
 
-    if(flagsTransport & TransportParamsRTP::RTCP)
+    for(size_t i = 0; i < m_vConstraints.size(); i++)
     {
-        m_Staged.tpReceiver.eRTCP = TransportParamsRTP::TP_SUPPORTED;
-        m_Active.tpReceiver.eRTCP = TransportParamsRTP::TP_SUPPORTED;
-    }
-    else
-    {
-        m_Staged.tpReceiver.eRTCP = TransportParamsRTP::TP_NOT_SUPPORTED;
-        m_Active.tpReceiver.eRTCP = TransportParamsRTP::TP_NOT_SUPPORTED;
-    }
-    if(flagsTransport & TransportParamsRTP::MULTICAST)
-    {
-        m_Staged.tpReceiver.eMulticast = TransportParamsRTP::TP_SUPPORTED;
-        m_Active.tpReceiver.eMulticast = TransportParamsRTP::TP_SUPPORTED;
-    }
-    else
-    {
-        m_Staged.tpReceiver.eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
-        m_Active.tpReceiver.eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
-    }
-    m_Active.tpReceiver.nDestinationPort = 5004;
-    m_Active.tpReceiver.sInterfaceIp = "127.0.0.1";
+        if(flagsTransport & TransportParamsRTP::FEC)
+        {
+            m_Staged.tpReceivers[i].eFec = TransportParamsRTP::TP_SUPPORTED;
+            m_Active.tpReceivers[i].eFec = TransportParamsRTP::TP_SUPPORTED;
+        }
+        else
+        {
+            m_Staged.tpReceivers[i].eFec = TransportParamsRTP::TP_NOT_SUPPORTED;
+            m_Active.tpReceivers[i].eFec = TransportParamsRTP::TP_NOT_SUPPORTED;
+        }
 
-    m_constraints.nParamsSupported = flagsTransport;
+        if(flagsTransport & TransportParamsRTP::RTCP)
+        {
+            m_Staged.tpReceivers[i].eRTCP = TransportParamsRTP::TP_SUPPORTED;
+            m_Active.tpReceivers[i].eRTCP = TransportParamsRTP::TP_SUPPORTED;
+        }
+        else
+        {
+            m_Staged.tpReceivers[i].eRTCP = TransportParamsRTP::TP_NOT_SUPPORTED;
+            m_Active.tpReceivers[i].eRTCP = TransportParamsRTP::TP_NOT_SUPPORTED;
+        }
+        if(flagsTransport & TransportParamsRTP::MULTICAST)
+        {
+            m_Staged.tpReceivers[i].eMulticast = TransportParamsRTP::TP_SUPPORTED;
+            m_Active.tpReceivers[i].eMulticast = TransportParamsRTP::TP_SUPPORTED;
+        }
+        else
+        {
+            m_Staged.tpReceivers[i].eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
+            m_Active.tpReceivers[i].eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
+        }
+        m_Active.tpReceivers[i].nDestinationPort = 5004;
+        m_Active.tpReceivers[i].sInterfaceIp = "127.0.0.1";
+
+        m_vConstraints[i].nParamsSupported = flagsTransport;
+    }
 }
 
 ReceiverBase::~ReceiverBase()
@@ -372,23 +383,32 @@ const std::string& ReceiverBase::GetSender() const
 Json::Value ReceiverBase::GetConnectionConstraintsJson(const ApiVersion& version) const
 {
     Json::Value jsArray(Json::arrayValue);
-    jsArray.append(m_constraints.GetJson(version));
+    for(const auto& con : m_vConstraints)
+    {
+        jsArray.append(con.GetJson(version));
+    }
     return jsArray;
 }
 
 
 bool ReceiverBase::CheckConstraints(const connectionReceiver& conRequest)
 {
-    bool bMeets = m_constraints.destination_port.MeetsConstraint(conRequest.tpReceiver.nDestinationPort);
-    bMeets &= m_constraints.fec_destination_ip.MeetsConstraint(conRequest.tpReceiver.sFecDestinationIp);
-    bMeets &= m_constraints.fec_enabled.MeetsConstraint(conRequest.tpReceiver.bFecEnabled);
-    bMeets &= m_constraints.fec_mode.MeetsConstraint(TransportParamsRTP::STR_FEC_MODE[conRequest.tpReceiver.eFecMode]);
-    bMeets &= m_constraints.fec1D_destination_port.MeetsConstraint(conRequest.tpReceiver.nFec1DDestinationPort);
-    bMeets &= m_constraints.fec2D_destination_port.MeetsConstraint(conRequest.tpReceiver.nFec2DDestinationPort);
-    bMeets &= m_constraints.rtcp_destination_ip.MeetsConstraint(conRequest.tpReceiver.sRtcpDestinationIp);
-    bMeets &= m_constraints.rtcp_destination_port.MeetsConstraint(conRequest.tpReceiver.nRtcpDestinationPort);
-    bMeets &= m_constraints.interface_ip.MeetsConstraint(conRequest.tpReceiver.sInterfaceIp);
-
+    bool bMeets = (m_vConstraints.size() == conRequest.tpReceivers.size());
+    if(bMeets)
+    {
+        for(size_t i = 0; i < m_vConstraints.size(); i++)
+        {
+            bMeets &= m_vConstraints[i].destination_port.MeetsConstraint(conRequest.tpReceivers[i].nDestinationPort);
+            bMeets &= m_vConstraints[i].fec_destination_ip.MeetsConstraint(conRequest.tpReceivers[i].sFecDestinationIp);
+            bMeets &= m_vConstraints[i].fec_enabled.MeetsConstraint(conRequest.tpReceivers[i].bFecEnabled);
+            bMeets &= m_vConstraints[i].fec_mode.MeetsConstraint(TransportParamsRTP::STR_FEC_MODE[conRequest.tpReceivers[i].eFecMode]);
+            bMeets &= m_vConstraints[i].fec1D_destination_port.MeetsConstraint(conRequest.tpReceivers[i].nFec1DDestinationPort);
+            bMeets &= m_vConstraints[i].fec2D_destination_port.MeetsConstraint(conRequest.tpReceivers[i].nFec2DDestinationPort);
+            bMeets &= m_vConstraints[i].rtcp_destination_ip.MeetsConstraint(conRequest.tpReceivers[i].sRtcpDestinationIp);
+            bMeets &= m_vConstraints[i].rtcp_destination_port.MeetsConstraint(conRequest.tpReceivers[i].nRtcpDestinationPort);
+            bMeets &= m_vConstraints[i].interface_ip.MeetsConstraint(conRequest.tpReceivers[i].sInterfaceIp);
+        }
+    }
     return bMeets;
 }
 

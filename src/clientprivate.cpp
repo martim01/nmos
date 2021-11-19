@@ -272,6 +272,9 @@ void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std:
     // @todo ConnectThread - if a unicast stream then tell the sender where it should be sending stuff
     // @todo ConnectTrhead = multiple versions of connecting
 
+    CurlRegister::Get(sSenderConstraints)
+    CurlRegister::Get(sReceiverConstraints)
+
     connectionSender aCon(connection::FP_ACTIVATION | connection::FP_ENABLE | connection::FP_TRANSPORT_PARAMS);
     aCon.eActivate = connection::ACT_NOW;
     aCon.bMasterEnable = true;

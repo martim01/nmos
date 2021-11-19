@@ -31,7 +31,7 @@ void Sender::CreateSDP(NodeApiPrivate& api, const connectionSender& state)
     std::stringstream ssSDP;
     ssSDP << "v=0\r\n";
     ssSDP << "o=- " << GetCurrentTaiTime(false) << " " << GetCurrentTaiTime(false) << " IN IP";
-    switch(SdpManager::CheckIpAddress(state.tpSender.sSourceIp))
+    switch(SdpManager::CheckIpAddress(state.tpSenders[0].sSourceIp))
     {
         case SdpManager::IP4_UNI:
         case SdpManager::IP4_MULTI:
@@ -45,7 +45,7 @@ void Sender::CreateSDP(NodeApiPrivate& api, const connectionSender& state)
             ssSDP << " ";
             break;
     }
-    ssSDP << state.tpSender.sSourceIp << "\r\n";    // @todo should check here if sSourceIp is not set to auto
+    ssSDP << state.tpSenders[0].sSourceIp << "\r\n";    // @todo should check here if sSourceIp is not set to auto
     ssSDP << "t=0 0 \r\n";
 
     std::map<std::string, std::shared_ptr<Device> >::const_iterator itDevice = api.GetDevices().FindNmosResource(m_sDeviceId);
@@ -62,48 +62,48 @@ void Sender::CreateSDP(NodeApiPrivate& api, const connectionSender& state)
 
     std::stringstream ssc;
     //put in the destination unicast/multicast block
-    switch(SdpManager::CheckIpAddress(state.tpSender.sDestinationIp))
+    switch(SdpManager::CheckIpAddress(state.tpSenders[0].sDestinationIp))
     {
         case SdpManager::IP4_UNI:
-            ssc << "c=IN IP4 " << state.tpSender.sDestinationIp << "\r\n";
+            ssc << "c=IN IP4 " << state.tpSenders[0].sDestinationIp << "\r\n";
             ssSDP << ssc.str();
             ssSDP << "a=type:unicast\r\n";
             break;
         case SdpManager::IP4_MULTI:
-            ssc << "c=IN IP4 " << state.tpSender.sDestinationIp << "/32\r\n";
+            ssc << "c=IN IP4 " << state.tpSenders[0].sDestinationIp << "/32\r\n";
             ssSDP << ssc.str();
-            ssSDP << "a=source-filter:incl IN IP4 " << state.tpSender.sDestinationIp << " " << state.tpSender.sSourceIp << "\r\n";
+            ssSDP << "a=source-filter:incl IN IP4 " << state.tpSenders[0].sDestinationIp << " " << state.tpSenders[0].sSourceIp << "\r\n";
             ssSDP << "a=type:multicast\r\n";
             break;
         case SdpManager::IP6_UNI:
-            ssc << "c=IN IP6 " << state.tpSender.sDestinationIp << "\r\n";
+            ssc << "c=IN IP6 " << state.tpSenders[0].sDestinationIp << "\r\n";
             ssSDP << ssc.str();
             ssSDP << "a=type:unicast\r\n";
             break;
         case SdpManager::IP6_MULTI:
-            ssc << "c=IN IP6 " << state.tpSender.sDestinationIp << "\r\n";
+            ssc << "c=IN IP6 " << state.tpSenders[0].sDestinationIp << "\r\n";
             ssSDP << ssc.str();
-            ssSDP << "a=source-filter:incl IN IP6 " << state.tpSender.sDestinationIp << " " << state.tpSender.sSourceIp << "\r\n";
+            ssSDP << "a=source-filter:incl IN IP6 " << state.tpSenders[0].sDestinationIp << " " << state.tpSenders[0].sSourceIp << "\r\n";
             ssSDP << "a=type:multicast\r\n";
             break;
         case SdpManager::SdpManager::IP_INVALID:
-            pmlLog(pml::LOG_WARN) << "NMOS: Sender can't create SDP - destination IP invalid '" << state.tpSender.sDestinationIp << "'";
+            pmlLog(pml::LOG_WARN) << "NMOS: Sender can't create SDP - destination IP invalid '" << state.tpSenders[0].sDestinationIp << "'";
             break;
     }
 
     ssSDP << api.CreateFlowSdp(m_sFlowId, state, ssc.str(), m_setInterfaces);
 
-    if(state.tpSender.bRtcpEnabled)
+    if(state.tpSenders[0].bRtcpEnabled)
     {
-        switch(SdpManager::CheckIpAddress(state.tpSender.sRtcpDestinationIp))
+        switch(SdpManager::CheckIpAddress(state.tpSenders[0].sRtcpDestinationIp))
         {
             case SdpManager::IP4_UNI:
             case SdpManager::IP4_MULTI:
-                ssSDP << "a=rtcp:" << state.tpSender.nRtcpDestinationPort << " IN IP4 " << state.tpSender.sRtcpDestinationIp << "\r\n";
+                ssSDP << "a=rtcp:" << state.tpSenders[0].nRtcpDestinationPort << " IN IP4 " << state.tpSenders[0].sRtcpDestinationIp << "\r\n";
                 break;
             case SdpManager::IP6_UNI:
             case SdpManager::IP6_MULTI:
-                ssSDP << "a=rtcp:" << state.tpSender.nRtcpDestinationPort << " IN IP6 " << state.tpSender.sRtcpDestinationIp << "\r\n";
+                ssSDP << "a=rtcp:" << state.tpSenders[0].nRtcpDestinationPort << " IN IP6 " << state.tpSenders[0].sRtcpDestinationIp << "\r\n";
                 break;
             default:
                 break;
@@ -138,7 +138,10 @@ void Sender::Activate(bool bImmediate, NodeApiPrivate& api)
     }
 
     //Change auto settings to what they actually are
-    m_Active.tpSender.Actualize(m_sSourceIp, m_sDestinationIp);
+    for(size_t i = 0;i < m_vConstraints.size(); i++)
+    {
+        m_Active.tpSenders[i].Actualize(m_sSourceIp, m_sDestinationIp);
+    }
 
 
     // create the SDP
@@ -247,8 +250,11 @@ void Sender::SetupActivation(const std::string& sSourceIp, const std::string& sD
 void Sender::SetDestinationDetails(const std::string& sDestinationIp, unsigned short nDestinationPort)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_Active.tpSender.sDestinationIp = sDestinationIp;
-    m_Active.tpSender.nDestinationPort = nDestinationPort;
+    for(size_t i = 0;i < m_vConstraints.size(); i++)
+    {
+        m_Active.tpSenders[i].sDestinationIp = sDestinationIp;
+        m_Active.tpSenders[i].nDestinationPort = nDestinationPort;
+    }
     //@todo create the SDP somehow         CreateSDP(api, m_Active);
 
     UpdateVersionTime();
@@ -258,9 +264,12 @@ void Sender::MasterEnable(bool bEnable)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_Active.bMasterEnable = bEnable;
-    m_Active.tpSender.bRtpEnabled = bEnable;
     m_Staged.bMasterEnable = bEnable;
-    m_Staged.tpSender.bRtpEnabled = bEnable;
+    for(size_t i = 0;i < m_vConstraints.size(); i++)
+    {
+        m_Active.tpSenders[i].bRtpEnabled = bEnable;
+        m_Staged.tpSenders[i].bRtpEnabled = bEnable;
+    }
     UpdateVersionTime();
 }
 

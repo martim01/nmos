@@ -44,7 +44,8 @@ namespace pml
                 virtual Json::Value GetJson(const ApiVersion& version) const;
 
                 // @todo we should have an array of senders for SMPTE2022
-                TransportParamsRTPSender tpSender;
+                std::vector<TransportParamsRTPSender> tpSenders;
+
                 std::string sReceiverId;
 
 
@@ -63,7 +64,7 @@ namespace pml
                 virtual Json::Value GetJson(const ApiVersion& version) const;
 
                 // @todo we should have an array of TransportParamsRTPReceiver for SMPTE2022
-                TransportParamsRTPReceiver tpReceiver;
+                std::vector<TransportParamsRTPReceiver> tpReceivers;
                 std::string sSenderId;
                 std::string sTransportFileType;
                 std::string sTransportFileData;

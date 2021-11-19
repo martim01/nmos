@@ -20,45 +20,55 @@ SenderBase::SenderBase(const std::string& sLabel, const std::string& sDescriptio
     m_sDeviceId(sDeviceId),
     m_sReceiverId(""),
     m_bReceiverActive(false),
+    m_vConstraints(1),
     m_bActivateAllowed(false)
 {
     AddInterfaceBinding(sInterface);
 
-    if(flagsTransport & TransportParamsRTP::FEC)
+    if(flagsTransport & TransportParamsRTP::REDUNDANT)
     {
-        m_Staged.tpSender.eFec = TransportParamsRTP::TP_SUPPORTED;
-        m_Active.tpSender.eFec = TransportParamsRTP::TP_SUPPORTED;
-    }
-    else
-    {
-        m_Staged.tpSender.eFec = TransportParamsRTP::TP_NOT_SUPPORTED;
-        m_Active.tpSender.eFec = TransportParamsRTP::TP_NOT_SUPPORTED;
+        m_vConstraints.resize(2);
+        m_Staged.tpSenders.resize(2);
+        m_Active.tpSenders.resize(2);
     }
 
-    if(flagsTransport & TransportParamsRTP::RTCP)
+    for(size_t i = 0; i < m_vConstraints.size(); i++)
     {
-        m_Staged.tpSender.eRTCP = TransportParamsRTP::TP_SUPPORTED;
-        m_Active.tpSender.eRTCP = TransportParamsRTP::TP_SUPPORTED;
-    }
-    else
-    {
-        m_Staged.tpSender.eRTCP = TransportParamsRTP::TP_NOT_SUPPORTED;
-        m_Active.tpSender.eRTCP = TransportParamsRTP::TP_NOT_SUPPORTED;
-    }
-    if(flagsTransport & TransportParamsRTP::MULTICAST)
-    {
-        m_Staged.tpSender.eMulticast = TransportParamsRTP::TP_SUPPORTED;
-        m_Active.tpSender.eMulticast = TransportParamsRTP::TP_SUPPORTED;
-    }
-    else
-    {
-        m_Staged.tpSender.eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
-        m_Active.tpSender.eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
-    }
+        if(flagsTransport & TransportParamsRTP::FEC)
+        {
+            m_Staged.tpSenders[i].eFec = TransportParamsRTP::TP_SUPPORTED;
+            m_Active.tpSenders[i].eFec = TransportParamsRTP::TP_SUPPORTED;
+        }
+        else
+        {
+            m_Staged.tpSenders[i].eFec = TransportParamsRTP::TP_NOT_SUPPORTED;
+            m_Active.tpSenders[i].eFec = TransportParamsRTP::TP_NOT_SUPPORTED;
+        }
 
-    m_constraints.nParamsSupported = flagsTransport;
+        if(flagsTransport & TransportParamsRTP::RTCP)
+        {
+            m_Staged.tpSenders[i].eRTCP = TransportParamsRTP::TP_SUPPORTED;
+            m_Active.tpSenders[i].eRTCP = TransportParamsRTP::TP_SUPPORTED;
+        }
+        else
+        {
+            m_Staged.tpSenders[i].eRTCP = TransportParamsRTP::TP_NOT_SUPPORTED;
+            m_Active.tpSenders[i].eRTCP = TransportParamsRTP::TP_NOT_SUPPORTED;
+        }
+        if(flagsTransport & TransportParamsRTP::MULTICAST)
+        {
+            m_Staged.tpSenders[i].eMulticast = TransportParamsRTP::TP_SUPPORTED;
+            m_Active.tpSenders[i].eMulticast = TransportParamsRTP::TP_SUPPORTED;
+        }
+        else
+        {
+            m_Staged.tpSenders[i].eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
+            m_Active.tpSenders[i].eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
+        }
 
+        m_vConstraints[i].nParamsSupported = flagsTransport;
 
+    }
 
 }
 
@@ -193,7 +203,10 @@ Json::Value SenderBase::GetConnectionActiveJson(const ApiVersion& version) const
 Json::Value SenderBase::GetConnectionConstraintsJson(const ApiVersion& version) const
 {
     Json::Value jsArray(Json::arrayValue);
-    jsArray.append(m_constraints.GetJson(version));
+    for(const auto& con :m_vConstraints)
+    {
+        jsArray.append(con.GetJson(version));
+    }
     return jsArray;
 }
 
@@ -201,26 +214,33 @@ Json::Value SenderBase::GetConnectionConstraintsJson(const ApiVersion& version) 
 
 bool SenderBase::CheckConstraints(const connectionSender& conRequest)
 {
-    bool bMeets = m_constraints.destination_port.MeetsConstraint(conRequest.tpSender.nDestinationPort);
-    bMeets &= m_constraints.fec_destination_ip.MeetsConstraint(conRequest.tpSender.sFecDestinationIp);
-    bMeets &= m_constraints.fec_enabled.MeetsConstraint(conRequest.tpSender.bFecEnabled);
-    bMeets &= m_constraints.fec_mode.MeetsConstraint(TransportParamsRTP::STR_FEC_MODE[conRequest.tpSender.eFecMode]);
-    bMeets &= m_constraints.fec1D_destination_port.MeetsConstraint(conRequest.tpSender.nFec1DDestinationPort);
-    bMeets &= m_constraints.fec2D_destination_port.MeetsConstraint(conRequest.tpSender.nFec2DDestinationPort);
-    bMeets &= m_constraints.rtcp_destination_ip.MeetsConstraint(conRequest.tpSender.sRtcpDestinationIp);
-    bMeets &= m_constraints.rtcp_destination_port.MeetsConstraint(conRequest.tpSender.nRtcpDestinationPort);
+    bool bMeets = (m_vConstraints.size() == conRequest.tpSenders.size());
+    if(bMeets)
+    {
+        for(size_t i = 0; i < m_vConstraints.size(); i++)
+        {
+            bMeets &= m_vConstraints[i].destination_port.MeetsConstraint(conRequest.tpSenders[i].nDestinationPort);
+            bMeets &= m_vConstraints[i].fec_destination_ip.MeetsConstraint(conRequest.tpSenders[i].sFecDestinationIp);
+            bMeets &= m_vConstraints[i].fec_enabled.MeetsConstraint(conRequest.tpSenders[i].bFecEnabled);
+            bMeets &= m_vConstraints[i].fec_mode.MeetsConstraint(TransportParamsRTP::STR_FEC_MODE[conRequest.tpSenders[i].eFecMode]);
+            bMeets &= m_vConstraints[i].fec1D_destination_port.MeetsConstraint(conRequest.tpSenders[i].nFec1DDestinationPort);
+            bMeets &= m_vConstraints[i].fec2D_destination_port.MeetsConstraint(conRequest.tpSenders[i].nFec2DDestinationPort);
+            bMeets &= m_vConstraints[i].rtcp_destination_ip.MeetsConstraint(conRequest.tpSenders[i].sRtcpDestinationIp);
+            bMeets &= m_vConstraints[i].rtcp_destination_port.MeetsConstraint(conRequest.tpSenders[i].nRtcpDestinationPort);
 
-    bMeets &= m_constraints.destination_ip.MeetsConstraint(conRequest.tpSender.sDestinationIp);
-    bMeets &= m_constraints.source_ip.MeetsConstraint(conRequest.tpSender.sSourceIp);
-    bMeets &= m_constraints.source_port.MeetsConstraint(conRequest.tpSender.nSourcePort);
-    bMeets &= m_constraints.fec_type.MeetsConstraint(TransportParamsRTPSender::STR_FEC_TYPE[conRequest.tpSender.eFecType]);
-    bMeets &= m_constraints.fec_block_width.MeetsConstraint(conRequest.tpSender.nFecBlockWidth);
-    bMeets &= m_constraints.fec_block_height.MeetsConstraint(conRequest.tpSender.nFecBlockHeight);
-    bMeets &= m_constraints.fec1D_source_port.MeetsConstraint(conRequest.tpSender.nFec1DSourcePort);
-    bMeets &= m_constraints.fec2D_source_port.MeetsConstraint(conRequest.tpSender.nFec2DSourcePort);
-    bMeets &= m_constraints.rtcp_enabled.MeetsConstraint(conRequest.tpSender.bRtcpEnabled);
-    bMeets &= m_constraints.rtcp_source_port.MeetsConstraint(conRequest.tpSender.nRtcpSourcePort);
-    bMeets &= m_constraints.rtp_enabled.MeetsConstraint(conRequest.tpSender.bRtpEnabled);
+            bMeets &= m_vConstraints[i].destination_ip.MeetsConstraint(conRequest.tpSenders[i].sDestinationIp);
+            bMeets &= m_vConstraints[i].source_ip.MeetsConstraint(conRequest.tpSenders[i].sSourceIp);
+            bMeets &= m_vConstraints[i].source_port.MeetsConstraint(conRequest.tpSenders[i].nSourcePort);
+            bMeets &= m_vConstraints[i].fec_type.MeetsConstraint(TransportParamsRTPSender::STR_FEC_TYPE[conRequest.tpSenders[i].eFecType]);
+            bMeets &= m_vConstraints[i].fec_block_width.MeetsConstraint(conRequest.tpSenders[i].nFecBlockWidth);
+            bMeets &= m_vConstraints[i].fec_block_height.MeetsConstraint(conRequest.tpSenders[i].nFecBlockHeight);
+            bMeets &= m_vConstraints[i].fec1D_source_port.MeetsConstraint(conRequest.tpSenders[i].nFec1DSourcePort);
+            bMeets &= m_vConstraints[i].fec2D_source_port.MeetsConstraint(conRequest.tpSenders[i].nFec2DSourcePort);
+            bMeets &= m_vConstraints[i].rtcp_enabled.MeetsConstraint(conRequest.tpSenders[i].bRtcpEnabled);
+            bMeets &= m_vConstraints[i].rtcp_source_port.MeetsConstraint(conRequest.tpSenders[i].nRtcpSourcePort);
+            bMeets &= m_vConstraints[i].rtp_enabled.MeetsConstraint(conRequest.tpSenders[i].bRtpEnabled);
+        }
+    }
     return bMeets;
 }
 

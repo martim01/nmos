@@ -69,6 +69,8 @@
 					<Add library="nmos_noded" />
 					<Add library="pthread" />
 					<Add library="pml_logd" />
+					<Add library="nmos_based" />
+					<Add library="restgoosed" />
 					<Add directory="$(#microhttp.lib)" />
 					<Add directory="../../lib" />
 				</Linker>

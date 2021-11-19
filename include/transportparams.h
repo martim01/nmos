@@ -7,17 +7,26 @@ namespace pml
 {
     namespace nmos
     {
-        struct TransportParamsRTP
+        struct TransportParams
+        {
+            public:
+                TransportParams(){}
+                virtual ~TransportParams(){}
+                virtual bool Patch(const Json::Value& jsData)=0;
+                virtual Json::Value GetJson(const ApiVersion& version) const=0;
+        };
+
+        struct TransportParamsRTP : public TransportParams
         {
             enum enumFecMode {ONED, TWOD};
             enum enumTParams {TP_UNKNOWN = -1, TP_NOT_SUPPORTED=0, TP_SUPPORTED=1};
-            enum flagsTP {CORE=0, FEC=1, RTCP=2, MULTICAST=4};
+            enum flagsTP {CORE=0, FEC=1, RTCP=2, MULTICAST=4, REDUNDANT=8};
             TransportParamsRTP();
             TransportParamsRTP(const TransportParamsRTP& tp);
 
-            virtual bool Patch(const Json::Value& jsData);
+            virtual bool Patch(const Json::Value& jsData) override;
+            virtual Json::Value GetJson(const ApiVersion& version) const override;
 
-            virtual Json::Value GetJson(const ApiVersion& version) const;
             void SetPort(Json::Value& js, const std::string& sPort, unsigned short nPort) const;
             bool DecodePort(const Json::Value& jsData, const std::string& sPort, unsigned short& nPort);
 
@@ -52,8 +61,8 @@ namespace pml
 
             TransportParamsRTPReceiver();
             TransportParamsRTPReceiver(const TransportParamsRTPReceiver& tp);
-            virtual bool Patch(const Json::Value& jsData);
-            virtual Json::Value GetJson(const ApiVersion& version) const;
+            bool Patch(const Json::Value& jsData) override;
+            Json::Value GetJson(const ApiVersion& version) const override;
             void Actualize(const std::string& sInterfaceIp);
             TransportParamsRTPReceiver& operator=(const TransportParamsRTPReceiver& other);
         };
@@ -65,9 +74,9 @@ namespace pml
 
             TransportParamsRTPSender();
             TransportParamsRTPSender(const TransportParamsRTPSender& tp);
-            virtual bool Patch(const Json::Value& jsData);
+            bool Patch(const Json::Value& jsData) override;
 
-            virtual Json::Value GetJson(const ApiVersion& version) const;
+            Json::Value GetJson(const ApiVersion& version) const override;
 
             void Actualize(const std::string& sSource, const std::string& sDestination);
 

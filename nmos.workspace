@@ -10,5 +10,11 @@
 		</Project>
 		<Project filename="tests/nmos_client_test/nmos_client_test.cbp" />
 		<Project filename="../Restgoose/Restgoose.cbp" />
+		<Project filename="../pam/pam2/pam2.cbp">
+			<Depends filename="libnmos_base.cbp" />
+			<Depends filename="libnmos_node.cbp" />
+			<Depends filename="libnmos_client.cbp" />
+		</Project>
+		<Project filename="../log/log.cbp" />
 	</Workspace>
 </CodeBlocks_workspace_file>

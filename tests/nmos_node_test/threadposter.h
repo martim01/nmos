@@ -42,8 +42,7 @@ class ThreadPoster : public pml::nmos::EventPoster
         void RegistrationNodeFound(const std::string& sUrl, unsigned short nPriority, const pml::nmos::ApiVersion& version) override;
         void RegistrationNodeRemoved(const std::string& sUrl) override;
         void RegistrationNodeChanged(const std::string& sUrl, unsigned short nPriority, bool bGood, const pml::nmos::ApiVersion& version) override;
-        void RegistrationNodeChosen(const std::string& sUrl, unsigned short nPriority, const pml::nmos::ApiVersion& version) override;
-        void RegistrationChanged(const std::string& sUrl, bool bRegistered) override;
+        void RegistrationChanged(const std::string& sUrl, enumRegState eState) override;
 
 
         void SetReason(unsigned int nReason);

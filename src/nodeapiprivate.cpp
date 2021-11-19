@@ -1351,8 +1351,8 @@ std::string NodeApiPrivate::CreateFlowSdp(const std::string& sId, const connecti
         auto pFlow = std::dynamic_pointer_cast<Flow>(itFlow->second);
         if(pFlow)
         {
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "CreateSDP Destination Port = " << state.tpSender.nDestinationPort ;
-            unsigned short nPort(state.tpSender.nDestinationPort);
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "CreateSDP Destination Port = " << state.tpSenders[0].nDestinationPort ;
+            unsigned short nPort(state.tpSenders[0].nDestinationPort);
             if(nPort == 0)
             {
                 nPort = 5004;

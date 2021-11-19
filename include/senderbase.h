@@ -63,7 +63,7 @@ namespace pml
 
                 connectionSender m_Staged;
                 connectionSender m_Active;
-                constraintsSender m_constraints;
+                std::vector<constraintsSender> m_vConstraints;
 
                 std::string m_sTransportFile;
                 bool m_bActivateAllowed;

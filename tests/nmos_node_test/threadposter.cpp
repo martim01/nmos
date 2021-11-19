@@ -94,19 +94,12 @@ void ThreadPoster::RegistrationNodeChanged(const std::string& sUrl, unsigned sho
     LaunchThread();
 }
 
-void ThreadPoster::RegistrationNodeChosen(const std::string& sUrl, unsigned short nPriority, const pml::nmos::ApiVersion& version)
-{
-    SetReason(REGISTRATION_NODE_CHOSEN);
-    m_sString = sUrl;
-    m_nShort = nPriority;
-    LaunchThread();
-}
 
-void ThreadPoster::RegistrationChanged(const std::string& sUrl, bool bRegistered)
+void ThreadPoster::RegistrationChanged(const std::string& sUrl, EventPoster::enumRegState eState)
 {
     SetReason(REGISTRATION_CHANGED);
     m_sString = sUrl;
-    m_nShort = bRegistered;
+    m_nShort = eState;
     LaunchThread();
 }
 

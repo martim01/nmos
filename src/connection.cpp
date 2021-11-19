@@ -190,18 +190,18 @@ Json::Value connection::GetJson(const ApiVersion& version) const
 
 
 
-connectionSender::connectionSender() : connection()
+connectionSender::connectionSender() : connection(), tpSenders(1)
 {
 
 }
 
-connectionSender::connectionSender(int flagProperties) : connection(flagProperties)
+connectionSender::connectionSender(int flagProperties) : connection(flagProperties), tpSenders(1)
 {
 
 }
 
 connectionSender::connectionSender(const connectionSender& conReq) : connection(conReq),
-    tpSender(conReq.tpSender),
+    tpSenders(conReq.tpSenders),
     sReceiverId(conReq.sReceiverId)
 {
 
@@ -215,17 +215,18 @@ bool connectionSender::Patch(const Json::Value& jsData)
     if(bIsOk)
     {
 
-        if(jsData["transport_params"].isArray())
+        if(jsData["transport_params"].isArray() && jsData["transport_params"].size() == tpSenders.size())
         {
             nProperties |= FP_TRANSPORT_PARAMS;
-            bIsOk &= tpSender.Patch(jsData["transport_params"][0]);
-
-            // @todo second tp for SMPTE2022
-            tpSender.bRtpEnabled = bMasterEnable;   //this should be settable if 2 or more transportparams
+            for(size_t i = 0; i < tpSenders.size(); i++)
+            {
+                bIsOk &= tpSenders[i].Patch(jsData["transport_params"][i]);
+                tpSenders[i].bRtpEnabled = bMasterEnable;   //this should be settable if 2 or more transportparams
+            }
         }
         else if(jsData["transport_params"].empty() == false)
         {
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: transport_params not an array." ;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: transport_params not an array or is wrong size." ;
             bIsOk = false;
         }
 
@@ -274,24 +275,27 @@ Json::Value connectionSender::GetJson(const ApiVersion& version) const
     if(FP_TRANSPORT_PARAMS & nProperties)
     {
         jsConnect["transport_params"] = Json::arrayValue;
-        jsConnect["transport_params"].append(tpSender.GetJson(version));
+        for(const auto& tpSender : tpSenders)
+        {
+            jsConnect["transport_params"].append(tpSender.GetJson(version));
+        }
     }
     return jsConnect;
 }
 
 
-connectionReceiver::connectionReceiver() : connection(), sTransportFileType("application/sdp")
+connectionReceiver::connectionReceiver() : connection(), tpReceivers(1), sTransportFileType("application/sdp")
 {
 
 }
 
-connectionReceiver::connectionReceiver(int flagProperties) : connection(flagProperties)
+connectionReceiver::connectionReceiver(int flagProperties) : connection(flagProperties), tpReceivers(1)
 {
 
 }
 
 connectionReceiver::connectionReceiver(const connectionReceiver& conReq) : connection(conReq),
-    tpReceiver(conReq.tpReceiver),
+    tpReceivers(conReq.tpReceivers),
     sSenderId(conReq.sSenderId),
     sTransportFileType(conReq.sTransportFileType),
     sTransportFileData(conReq.sTransportFileData)
@@ -330,7 +334,7 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
         if(sTransportFileType == "application/sdp" && sTransportFileData.empty() == false)
         {
             pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: transport_file data correct" ;
-            SdpManager::SdpToTransportParams(sTransportFileData, tpReceiver);
+            SdpManager::SdpToTransportParams(sTransportFileData, tpReceivers);
         }
     }
 
@@ -338,21 +342,26 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
     if(bIsOk)
     {
 
-        if(jsData["transport_params"].isArray())
+        if(jsData["transport_params"].isArray() && jsData["transport_params"].size() == tpReceivers.size())
         {
             nProperties |= FP_TRANSPORT_PARAMS;
-            bIsOk &= tpReceiver.Patch(jsData["transport_params"][0]);
-            // @todo second tp for SMPTE2022
-            tpReceiver.bRtpEnabled = bMasterEnable;   //this should be settable if 2 or more transportparams
+            for(size_t i = 0; i < tpReceivers.size(); i++)
+            {
+                bIsOk &= tpReceivers[i].Patch(jsData["transport_params"][i]);
+                tpReceivers[i].bRtpEnabled = bMasterEnable;   //this should be settable if 2 or more transportparams
+            }
         }
         else if(jsData["transport_params"].empty() == false)
         {
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: transport_params not an array." ;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: transport_params not an array or is wrong size." ;
             bIsOk = false;
         }
         else
         {
-            tpReceiver.bRtpEnabled = bMasterEnable;
+            for(size_t i = 0; i < tpReceivers.size(); i++)
+            {
+                tpReceivers[i].bRtpEnabled = bMasterEnable;
+            }
         }
 
         if(jsData["sender_id"].isString())
@@ -419,7 +428,10 @@ Json::Value connectionReceiver::GetJson(const ApiVersion& version)  const
     if(FP_TRANSPORT_PARAMS & nProperties)
     {
         jsConnect["transport_params"] = Json::arrayValue;
-        jsConnect["transport_params"].append(tpReceiver.GetJson(version));
+        for(const auto& tpReceiver : tpReceivers)
+        {
+            jsConnect["transport_params"].append(tpReceiver.GetJson(version));
+        }
     }
     return jsConnect;
 }
@@ -445,7 +457,7 @@ connection& connection::operator=(const connection& other)
 connectionSender& connectionSender::operator=(const connectionSender& other)
 {
     connection::operator=(other);
-    tpSender = other.tpSender;
+    tpSenders = other.tpSenders;
     sReceiverId = other.sReceiverId;
 
     return *this;
@@ -455,7 +467,7 @@ connectionReceiver& connectionReceiver::operator=(const connectionReceiver& othe
 {
     connection::operator=(other);
 
-    tpReceiver = other.tpReceiver;
+    tpReceivers = other.tpReceivers;
     sSenderId = other.sSenderId;
     sTransportFileType = other.sTransportFileType;
     sTransportFileData = other.sTransportFileData;

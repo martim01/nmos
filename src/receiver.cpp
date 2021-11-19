@@ -110,7 +110,10 @@ void Receiver::Activate(bool bImmediate, NodeApiPrivate& api)
 
 
     //Change auto settings to what they actually are
-    m_Active.tpReceiver.Actualize(m_sInterfaceIp);
+    for(size_t i = 0;i < m_vConstraints.size(); i++)
+    {
+        m_Active.tpReceivers[i].Actualize(m_sInterfaceIp);
+    }
 
     //activeate - set subscription, receiverId and active on master_enable. Commit afterwards
     if(m_Active.bMasterEnable)
@@ -168,9 +171,13 @@ void Receiver::MasterEnable(bool bEnable)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_Active.bMasterEnable = bEnable;
-    m_Active.tpReceiver.bRtpEnabled = bEnable;
     m_Staged.bMasterEnable = bEnable;
-    m_Staged.tpReceiver.bRtpEnabled = bEnable;
+
+    for(size_t i = 0;i < m_vConstraints.size(); i++)
+    {
+        m_Active.tpReceivers[i].bRtpEnabled = bEnable;
+        m_Staged.tpReceivers[i].bRtpEnabled = bEnable;
+    }
     UpdateVersionTime();
 }
 
