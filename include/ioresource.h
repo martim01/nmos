@@ -35,8 +35,12 @@ namespace pml
                 void AddInterfaceBinding(const std::string& sInterface);
                 void RemoveInterfaceBinding(const std::string& sInterface);
 
+                const std::set<std::string>& GetInterfaces() const { return m_setInterfaces;}
 
             protected:
+                friend class NodeApiPrivate;
+
+
                 enumTransport m_eTransport;
                 std::set<std::string> m_setInterfaces;
 

@@ -20,10 +20,17 @@ namespace pml
             private:
                 friend class IS05Server;
                 friend class IS04Server;
-                void SetSender(const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp, NodeApiPrivate& api);  //this is the IS-04 way of connecting
-                bool Stage(const connectionReceiver& conRequest, NodeApiPrivate& api);
-                void CommitActivation(NodeApiPrivate& api);
-                void Activate(bool bImmediate, NodeApiPrivate& api) override;
+                friend class NodeApiPrivate;
+
+                void SetSender(const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp);  //this is the IS-04 way of connecting
+                connection::enumActivate Stage(const connectionReceiver& conRequest);
+                void CommitActivation();
+                void Activate();
+
+                void SetStagedActivationTime(const std::string& sTime);
+                void SetStagedActivationTimePoint(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp);
+                void RemoveStagedActivationTime();
+                void SetActivationAllowed(bool bAllowed) { m_bActivateAllowed = bAllowed;}
         };
     };
 };

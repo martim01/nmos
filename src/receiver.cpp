@@ -17,97 +17,28 @@ Receiver::Receiver() : ReceiverBase()
 }
 
 
-void Receiver::CommitActivation(NodeApiPrivate& api)
+void Receiver::CommitActivation()
 {
-    //reset the staged activation
     m_Staged.eActivate = connection::ACT_NULL;
     m_Staged.sActivationTime.clear();
     m_Staged.sRequestedTime.clear();
 
     UpdateVersionTime();
 
-    api.ReceiverActivated(GetId());
 }
 
-bool Receiver::Stage(const connectionReceiver& conRequest, NodeApiPrivate& api)
+connection::enumActivate Receiver::Stage(const connectionReceiver& conRequest)
 {
-    bool bOk(true);
-    m_mutex.lock();
-
+    std::lock_guard<std::mutex> lg(m_mutex);
     m_Staged = conRequest;
-
-    m_mutex.unlock();
-
-    switch(m_Staged.eActivate)
-    {
-        case connection::ACT_NULL:
-            if(m_Staged.sActivationTime.empty() == false)
-            {
-                api.RemoveActivationReceiver(m_Staged.tpActivation, GetId());
-                m_Staged.sActivationTime.clear();
-                m_Staged.tpActivation = std::chrono::time_point<std::chrono::high_resolution_clock>();
-            }
-            m_bActivateAllowed = false;
-            break;
-        case connection::ACT_NOW:
-            m_Staged.sActivationTime = GetCurrentTaiTime();
-            m_bActivateAllowed = true;
-            Activate(true, api);
-            break;
-        case connection::ACT_ABSOLUTE:
-            {
-                std::chrono::time_point<std::chrono::high_resolution_clock> tp;
-                if(ConvertTaiStringToTimePoint(m_Staged.sRequestedTime, tp))
-                {
-                    m_bActivateAllowed = true;
-                    m_Staged.sActivationTime = m_Staged.sRequestedTime;
-                    m_Staged.tpActivation = tp;
-                    api.AddActivationReceiver(tp, GetId());
-                }
-                else
-                {
-                    bOk = false;
-                }
-            }
-            break;
-        case connection::ACT_RELATIVE:
-            try
-            {
-                std::chrono::time_point<std::chrono::high_resolution_clock> tp(std::chrono::high_resolution_clock::now().time_since_epoch());
-                std::vector<std::string> vTime;
-                SplitString(vTime, m_Staged.sRequestedTime, ':');
-                if(vTime.size() != 2)
-                {
-                    throw std::invalid_argument("invalid time");
-                }
-
-                m_bActivateAllowed = true;
-                std::chrono::nanoseconds nano((static_cast<long long int>(std::stoul(vTime[0]))*1000000000)+stoul(vTime[1]));
-                std::chrono::time_point<std::chrono::high_resolution_clock> tpAbs(tp+nano-LEAP_SECONDS);
-
-
-                m_Staged.sActivationTime = ConvertTimeToString(tpAbs, true);
-                m_Staged.tpActivation = tpAbs;
-                api.AddActivationReceiver(tpAbs, GetId());
-            }
-            catch(std::invalid_argument& ia)
-            {
-                m_bActivateAllowed = false;
-                bOk = false;
-            }
-            break;
-        default:
-            pmlLog(pml::LOG_ERROR) << "Unexpected patch" ;
-    }
-    return bOk;
+    return m_Staged.eActivate;
 }
 
-void Receiver::Activate(bool bImmediate, NodeApiPrivate& api)
+void Receiver::Activate()
 {
     m_bActivateAllowed = false;
     //move the staged parameters to active parameters
     m_Active = m_Staged;
-
 
     //Change auto settings to what they actually are
     for(size_t i = 0;i < m_vConstraints.size(); i++)
@@ -127,13 +58,10 @@ void Receiver::Activate(bool bImmediate, NodeApiPrivate& api)
         m_bSenderActive = false;
     }
 
-    if(!bImmediate)
-    {
-        CommitActivation(api);
-    }
+
 }
 
-void Receiver::SetSender(const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp, NodeApiPrivate& api)
+void Receiver::SetSender(const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp)
 {
     if(sSenderId.empty() == false)
     {
@@ -147,7 +75,6 @@ void Receiver::SetSender(const std::string& sSenderId, const std::string& sSdp, 
         m_Staged.sTransportFileType = "application/sdp";
         m_Staged.sActivationTime = GetCurrentTaiTime();
         SetupActivation(sInterfaceIp);
-        Activate(false, api);
     }
     else
     {   //this means unsubscribe
@@ -161,10 +88,7 @@ void Receiver::SetSender(const std::string& sSenderId, const std::string& sSdp, 
         m_Staged.sTransportFileType.clear();
         m_Staged.sActivationTime = GetCurrentTaiTime();
         SetupActivation(sInterfaceIp);
-        Activate(false, api);
     }
-    UpdateVersionTime();
-
 }
 
 void Receiver::MasterEnable(bool bEnable)
@@ -184,4 +108,17 @@ void Receiver::MasterEnable(bool bEnable)
 void Receiver::SetupActivation(const std::string& sInterfaceIp)
 {
     m_sInterfaceIp = sInterfaceIp;
+}
+
+
+void Receiver::RemoveStagedActivationTime()
+{
+    m_Staged.sActivationTime.clear();
+    m_Staged.tpActivation = std::chrono::time_point<std::chrono::high_resolution_clock>();
+}
+
+void Receiver::SetStagedActivationTimePoint(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp)
+{
+    m_Staged.tpActivation = tp;
+    m_Staged.sActivationTime = ConvertTimeToString(tp);
 }

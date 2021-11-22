@@ -429,7 +429,7 @@ response IS05Server::PatchSender(std::shared_ptr<Sender> pSender, const Json::Va
         m_pServer->Wait();
 
 
-        if(m_pServer->IsOk() && pSender->Stage(conRequest, m_pPoster,m_api)) //PATCH the sender
+        if(m_pServer->IsOk() && m_api.Stage(conRequest, pSender)) //PATCH the sender
         {
             resp.nHttpCode = 202;
             resp.jsonData = pSender->GetConnectionStagedJson(m_version);
@@ -441,7 +441,7 @@ response IS05Server::PatchSender(std::shared_ptr<Sender> pSender, const Json::Va
             else if(conRequest.eActivate == connection::ACT_NOW)
             {
                 resp.nHttpCode = 200;
-                pSender->CommitActivation(m_api);
+                m_api.CommitActivation(pSender);
             }
             pmlLog(pml::LOG_DEBUG) << "NMOS: " << resp.jsonData ;
         }
@@ -453,7 +453,7 @@ response IS05Server::PatchSender(std::shared_ptr<Sender> pSender, const Json::Va
     }
     else
     {   //no way of telling main thread to do this so we'll simply assume it's been done
-        if(pSender->Stage(conRequest, m_pPoster,m_api)) //PATCH the sender
+        if(m_api.Stage(conRequest, pSender)) //PATCH the sender
         {
             resp.nHttpCode = 200;
             resp.jsonData = pSender->GetConnectionStagedJson(m_version);
@@ -499,7 +499,7 @@ response IS05Server::PatchReceiver(std::shared_ptr<Receiver> pReceiver, const Js
         //Pause the HTTP thread
         m_pServer->Wait();
 
-        if(m_pServer->IsOk() && pReceiver->Stage(conRequest, m_api)) //PATCH the Receiver
+        if(m_pServer->IsOk() && m_api.Stage(conRequest, pReceiver)) //PATCH the Receiver
         {
             resp.nHttpCode = 202;
             resp.jsonData = pReceiver->GetConnectionStagedJson(m_version);
@@ -510,7 +510,7 @@ response IS05Server::PatchReceiver(std::shared_ptr<Receiver> pReceiver, const Js
             else if(conRequest.eActivate == connection::ACT_NOW)
             {
                 resp.nHttpCode = 200;
-                pReceiver->CommitActivation(m_api);
+                m_api.CommitActivation(pReceiver);
             }
             pmlLog(pml::LOG_DEBUG) << "NMOS: " << resp.jsonData ;
         }
@@ -522,7 +522,7 @@ response IS05Server::PatchReceiver(std::shared_ptr<Receiver> pReceiver, const Js
     }
     else
     {   //no way of telling main thread to do this so we'll simply assume it's been done
-        if(pReceiver->Stage(conRequest, m_api)) //PATCH the Receiver
+        if(m_api.Stage(conRequest, pReceiver)) //PATCH the Receiver
         {
             resp.jsonData = pReceiver->GetConnectionStagedJson(m_version);
             pmlLog(pml::LOG_DEBUG) << resp.jsonData ;

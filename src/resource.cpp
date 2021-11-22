@@ -177,29 +177,6 @@ const std::string& Resource::GetVersion() const
 }
 
 
-bool Resource::ConvertTaiStringToTimePoint(const std::string& sTai, std::chrono::time_point<std::chrono::high_resolution_clock>& tp)
-{
-    std::istringstream f(sTai);
-    std::string sSeconds;
-    std::string sNano;
-
-    if(getline(f, sSeconds, ':') && getline(f, sNano, ':'))
-    {
-        try
-        {
-            std::chrono::seconds sec(std::stoul(sSeconds));
-            std::chrono::nanoseconds nano(std::stoul(sNano));
-            nano += std::chrono::duration_cast<std::chrono::nanoseconds>(sec);
-            tp = std::chrono::time_point<std::chrono::high_resolution_clock>(nano);
-            return true;
-        }
-        catch(std::invalid_argument& e)
-        {
-            return false;
-        }
-    }
-    return false;
-}
 
 const std::string& Resource::GetType() const
 {

@@ -29,14 +29,16 @@ namespace pml
 
 
             private:
-                void CreateSDP(NodeApiPrivate& api);
-                void CreateSDP(NodeApiPrivate& api, const connectionSender& state);
+                void SetTransportFile(const std::string& sSDP);
 
+                void SetStagedActivationTime(const std::string& sTime);
+                void SetStagedActivationTimePoint(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp);
+                void RemoveStagedActivationTime();
+                void SetActivationAllowed(bool bAllowed) { m_bActivateAllowed = bAllowed;}
 
-
-                void Activate(bool bImmediate, NodeApiPrivate& api) override;
-                void CommitActivation(NodeApiPrivate& api);
-                bool Stage(const connectionSender& conRequest, std::shared_ptr<EventPoster> pPoster, NodeApiPrivate& api);
+                void Activate(const std::string& sSourceIp);
+                void CommitActivation();
+                connection::enumActivate Stage(const connectionSender& conRequest);
         };
     };
 };

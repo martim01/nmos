@@ -40,6 +40,7 @@ namespace pml
         class IS04Server;
         class IS05Server;
         struct connectionSender;
+        struct connectionReceiver;
 
         class NodeApiPrivate
         {
@@ -239,6 +240,19 @@ namespace pml
                 bool RemoveBrowseDomain(const std::string& sDomain);
 
 
+
+
+            protected:
+                friend class ServiceBrowser;
+                friend class Server;
+                friend class NodeZCPoster;
+                friend class IS04Server;
+                friend class IS05Server;
+                friend class Activator;
+
+                enum {REG_FAILED = 0, REG_START, REG_DEVICES, REG_SOURCES, REG_FLOWS, REG_SENDERS, REG_RECEIVERS, REG_DONE};
+
+
                 response GetRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
                 response GetNmosDiscoveryRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
                 response GetNmosConnectionRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
@@ -252,13 +266,20 @@ namespace pml
                 bool RemoveActivationReceiver(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId);
 
 
+                void CreateSDP(std::shared_ptr<Sender> pSender);
+                void Activate(bool bImmediate, std::shared_ptr<IOResource> pResource);
 
-            protected:
-                friend class ServiceBrowser;
-                friend class Server;
-                friend class NodeZCPoster;
+                void Activate(bool bImmediate, std::shared_ptr<Sender> pSender);
+                void CommitActivation(std::shared_ptr<Sender> pSender);
+                bool Stage(const connectionSender& conRequest, std::shared_ptr<Sender> pSender);
 
-                enum {REG_FAILED = 0, REG_START, REG_DEVICES, REG_SOURCES, REG_FLOWS, REG_SENDERS, REG_RECEIVERS, REG_DONE};
+                void Activate(bool bImmediate, std::shared_ptr<Receiver> pReceiver);
+                void CommitActivation(std::shared_ptr<Receiver> pReceiver);
+                bool Stage(const connectionReceiver& conRequest, std::shared_ptr<Receiver> pReceiver);
+
+                void SetSender(std::shared_ptr<Receiver> pReceiver, const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp);
+
+
 
                 void Run();
                 bool RegisteredOperation();

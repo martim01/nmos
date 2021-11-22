@@ -80,9 +80,14 @@ size_t GetCurrentHeartbeatTime()
 
 std::string GetCurrentTaiTime(bool bIncludeNano)
 {
-    std::chrono::time_point<std::chrono::high_resolution_clock> tp(std::chrono::high_resolution_clock::now());
+    return ConvertTimeToString(GetTaiTimeNow(), bIncludeNano);
+}
+
+std::chrono::time_point<std::chrono::high_resolution_clock> GetTaiTimeNow()
+{
+    auto tp = std::chrono::high_resolution_clock::now();
     tp += LEAP_SECONDS;
-    return ConvertTimeToString(tp, bIncludeNano);
+    return tp;
 }
 
 std::string ConvertTimeToString(std::chrono::time_point<std::chrono::high_resolution_clock> tp, bool bIncludeNano)
@@ -182,4 +187,28 @@ std::string ConvertFromJson(const Json::Value& jsValue)
     //std::stringstream ssJson;
     //ssJson << jsValue;
     //return ssJson.str();
+}
+
+bool ConvertTaiStringToTimePoint(const std::string& sTai, std::chrono::time_point<std::chrono::high_resolution_clock>& tp)
+{
+    std::istringstream f(sTai);
+    std::string sSeconds;
+    std::string sNano;
+
+    if(getline(f, sSeconds, ':') && getline(f, sNano, ':'))
+    {
+        try
+        {
+            std::chrono::seconds sec(std::stoul(sSeconds));
+            std::chrono::nanoseconds nano(std::stoul(sNano));
+            nano += std::chrono::duration_cast<std::chrono::nanoseconds>(sec);
+            tp = std::chrono::time_point<std::chrono::high_resolution_clock>(nano);
+            return true;
+        }
+        catch(std::invalid_argument& e)
+        {
+            return false;
+        }
+    }
+    return false;
 }

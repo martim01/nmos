@@ -50,6 +50,10 @@ namespace pml
                 bool IsActivateAllowed() const;
                 const std::string GetDestinationIp() const {return m_sDestinationIp;}
 
+                bool IsActiveMasterEnabled() const { return m_Active.bMasterEnable;}
+                bool IsStageMasterEnabled() const { return m_Active.bMasterEnable;}
+
+                const std::string& GetDeviceId() const { return m_sDeviceId;}
 
             protected:
 

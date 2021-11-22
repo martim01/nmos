@@ -59,7 +59,7 @@ namespace pml
                 void UpdateVersionTime();
 
 
-                bool ConvertTaiStringToTimePoint(const std::string& sTai,  std::chrono::time_point<std::chrono::high_resolution_clock>& tp);
+
 
                 Json::Value m_json;
                 bool m_bIsOk;
