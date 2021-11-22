@@ -68,7 +68,7 @@ template<class T> std::shared_ptr<T> ClientHolder<T>::RemoveResource(const std::
     return pResource;
 }
 
-template<class T> void ClientHolder<T>::RemoveResources(const std::string& sIpAddres, typename std::list<std::shared_ptr<T> >& lstRemoved)
+template<class T> void ClientHolder<T>::RemoveResources(const std::string& sIpAddres, typename std::list<std::shared_ptr<const T> >& lstRemoved)
 {
     std::set<std::string> setRemoved;
 
@@ -164,7 +164,7 @@ template<class T> void ClientHolder<T>::StoreResources(const std::string& sIpAdd
     }
 }
 
-template<class T> void ClientHolder<T>::RemoveStaleResources(typename std::list<std::shared_ptr<T> >& lstRemoved)
+template<class T> void ClientHolder<T>::RemoveStaleResources(typename std::list<std::shared_ptr<const T> >& lstRemoved)
 {
     for(auto pResource : m_setStored)
     {
@@ -172,7 +172,7 @@ template<class T> void ClientHolder<T>::RemoveStaleResources(typename std::list<
     }
 }
 
-template<class T> void ClientHolder<T>::GetResourcesAsList(typename std::list<std::shared_ptr<T> >& lstResources)
+template<class T> void ClientHolder<T>::GetResourcesAsList(typename std::list<std::shared_ptr<const T> >& lstResources)
 {
     for(auto pairResource : m_mResource)
     {
@@ -183,8 +183,8 @@ template<class T> void ClientHolder<T>::GetResourcesAsList(typename std::list<st
 
 
 template class ClientHolder<Self>;
-template class ClientHolder<SenderBase>;
+template class ClientHolder<Sender>;
 template class ClientHolder<Device>;
 template class ClientHolder<Source>;
-template class ClientHolder<ReceiverBase>;
+template class ClientHolder<Receiver>;
 template class ClientHolder<Flow>;

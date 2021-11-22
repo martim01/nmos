@@ -8,8 +8,8 @@
 #include "device.h"
 #include "source.h"
 #include "flow.h"
-#include "receiver.h"
-#include "sender.h"
+#include "receiverbase.h"
+#include "senderbase.h"
 
 namespace pml
 {

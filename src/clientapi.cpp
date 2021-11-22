@@ -37,7 +37,7 @@ const std::map<std::string, std::shared_ptr<Self> >& ClientApi::GetNodes()
     return m_pApi->GetNodes();
 }
 
-std::map<std::string, std::shared_ptr<Self> >::const_iterator ClientApi::FindNode(const std::string& sUid)
+std::shared_ptr<const Self> ClientApi::FindNode(const std::string& sUid)
 {
     return m_pApi->FindNode(sUid);
 }
@@ -47,7 +47,7 @@ const std::map<std::string, std::shared_ptr<Device> >& ClientApi::GetDevices()
     return m_pApi->GetDevices();
 }
 
-std::map<std::string, std::shared_ptr<Device> >::const_iterator ClientApi::FindDevice(const std::string& sUid)
+std::shared_ptr<const Device> ClientApi::FindDevice(const std::string& sUid)
 {
     return m_pApi->FindDevice(sUid);
 }
@@ -58,7 +58,7 @@ const std::map<std::string, std::shared_ptr<Source> >& ClientApi::GetSources()
 }
 
 
-std::map<std::string, std::shared_ptr<Source> >::const_iterator ClientApi::FindSource(const std::string& sUid)
+std::shared_ptr<const Source> ClientApi::FindSource(const std::string& sUid)
 {
     return m_pApi->FindSource(sUid);
 }
@@ -69,28 +69,28 @@ const std::map<std::string, std::shared_ptr<Flow> >& ClientApi::GetFlows()
 }
 
 
-std::map<std::string, std::shared_ptr<Flow> >::const_iterator ClientApi::FindFlow(const std::string& sUid)
+std::shared_ptr<const Flow> ClientApi::FindFlow(const std::string& sUid)
 {
     return m_pApi->FindFlow(sUid);
 }
 
-const std::map<std::string, std::shared_ptr<SenderBase> >& ClientApi::GetSenders()
+const std::map<std::string, std::shared_ptr<Sender> >& ClientApi::GetSenders()
 {
     return m_pApi->GetSenders();
 }
 
 
-std::map<std::string, std::shared_ptr<SenderBase> >::const_iterator ClientApi::FindSender(const std::string& sUid)
+std::shared_ptr<const Sender> ClientApi::FindSender(const std::string& sUid)
 {
     return m_pApi->FindSender(sUid);
 }
 
-const std::map<std::string, std::shared_ptr<ReceiverBase> >& ClientApi::GetReceivers()
+const std::map<std::string, std::shared_ptr<Receiver> >& ClientApi::GetReceivers()
 {
     return m_pApi->GetReceivers();
 }
 
-std::map<std::string, std::shared_ptr<ReceiverBase> >::const_iterator ClientApi::FindReceiver(const std::string& sUid)
+std::shared_ptr<const Receiver> ClientApi::FindReceiver(const std::string& sUid)
 {
     return m_pApi->FindReceiver(sUid);
 }

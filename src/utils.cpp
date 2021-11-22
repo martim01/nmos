@@ -79,7 +79,7 @@ size_t GetCurrentHeartbeatTime()
 }
 
 std::string GetCurrentTaiTime(bool bIncludeNano)
-{
+            {
     return ConvertTimeToString(GetTaiTimeNow(), bIncludeNano);
 }
 
@@ -121,13 +121,73 @@ std::string CreateGuid()
     return CreateGuid(GetCurrentTaiTime(true));
 }
 
+bool CheckJsonType(const Json::Value& jsValue, const std::set<jsondatatype>& setType)
+{
+    switch(jsValue.type())
+    {
+        case Json::ValueType::arrayValue:
+            if(setType.find(jsondatatype::_ARRAY) == setType.end())
+            {
+                return false;
+            }
+            break;
+        case Json::ValueType::booleanValue:
+            if(setType.find(jsondatatype::_BOOLEAN) == setType.end())
+            {
+                return false;
+            }
+            break;
+        case Json::ValueType::intValue:
+        case Json::ValueType::uintValue:
+            if(setType.find(jsondatatype::_INTEGER) == setType.end())
+            {
+                return false;
+            }
+            break;
+        case Json::ValueType::realValue:
+            if(setType.find(jsondatatype::_NUMBER) == setType.end())
+            {
+                return false;
+            }
+            break;
+        case Json::ValueType::nullValue:
+            if(setType.find(jsondatatype::_NULL) == setType.end())
+            {
+                return false;
+            }
+            break;
+        case Json::ValueType::objectValue:
+            if(setType.find(jsondatatype::_OBJECT) == setType.end())
+            {
+                return false;
+            }
+            break;
+        case Json::ValueType::stringValue:
+            if(setType.find(jsondatatype::_STRING) == setType.end())
+            {
+                return false;
+            }
+            break;
+    }
+    return true;
+}
 
-bool CheckJson(const Json::Value& jsObject, std::set<std::string> setAllowed)
+bool CheckJson(const Json::Value& jsObject, const std::map<std::string, std::set<jsondatatype>>& mKeys)
+{
+    return CheckJsonAllowed(jsObject, mKeys) && CheckJsonRequired(jsObject, mKeys);
+}
+
+bool CheckJsonAllowed(const Json::Value& jsObject, const std::map<std::string, std::set<jsondatatype>>& mAllowed)
 {
     for(auto itObject = jsObject.begin(); itObject != jsObject.end(); ++itObject)
     {
-        if(setAllowed.find(itObject.key().asString()) == setAllowed.end())
+        auto itAllowed = mAllowed.find(itObject.key().asString()) ;
+        if(itAllowed == mAllowed.end())
         {
+            return false;
+        }
+        else if(CheckJsonType(*itObject, itAllowed->second) == false)
+        {   //key allowed but not if this type
             return false;
         }
     }
@@ -135,11 +195,15 @@ bool CheckJson(const Json::Value& jsObject, std::set<std::string> setAllowed)
 }
 
 
-bool CheckJsonRequired(const Json::Value& jsObject, std::set<std::string> setRequired)
+bool CheckJsonRequired(const Json::Value& jsObject, const std::map<std::string, std::set<jsondatatype>>& mRequired)
 {
-    for(auto sKey : setRequired)
+    for(auto required : mRequired)
     {
-        if(jsObject.isMember(sKey) == false)
+        if(jsObject.isMember(required.first) == false)
+        {
+            return false;
+        }
+        if(!CheckJsonType(jsObject[required.first], required.second))
         {
             return false;
         }
@@ -211,4 +275,25 @@ bool ConvertTaiStringToTimePoint(const std::string& sTai, std::chrono::time_poin
         }
     }
     return false;
+}
+
+bool AddTaiStringToTimePoint(const std::string& sTai,std::chrono::time_point<std::chrono::high_resolution_clock>& tp)
+{
+    try
+    {
+        std::vector<std::string> vTime;
+        SplitString(vTime, sTai, ':');
+        if(vTime.size() != 2)
+        {
+            throw std::invalid_argument("invalid time");
+        }
+        std::chrono::nanoseconds nano((static_cast<long long int>(std::stoul(vTime[0]))*1000000000)+stoul(vTime[1]));
+        tp+=nano;
+        tp-=LEAP_SECONDS;   //remove the leap seconds to get back to the system time?>?>
+        return true;
+    }
+    catch(std::invalid_argument& e)
+    {
+        return false;
+    }
 }

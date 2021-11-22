@@ -12,15 +12,15 @@ namespace pml
     namespace nmos
     {
 
-        class NMOS_EXPOSE ReceiverBase : public IOResource
+        class NMOS_EXPOSE Receiver : public IOResource
         {
             public:
 
                 enum enumType {AUDIO, VIDEO, DATA, MUX};
 
-                ReceiverBase(const std::string& sLabel, const std::string& sDescription, enumTransport eTransport, const std::string& sDeviceId, enumType eType, int flagsTransport=TransportParamsRTP::CORE);
-                virtual ~ReceiverBase();
-                ReceiverBase();
+                Receiver(const std::string& sLabel, const std::string& sDescription, enumTransport eTransport, const std::string& sDeviceId, enumType eType, int flagsTransport=TransportParamsRTP::CORE);
+                virtual ~Receiver();
+                Receiver();
 
                 bool UpdateFromJson(const Json::Value& jsData) override;
 
@@ -51,6 +51,24 @@ namespace pml
                 bool IsMasterEnabled() const;
                 bool IsActivateAllowed() const;
 
+                void SetupActivation(const std::string& sInterfaceIp);
+                void MasterEnable(bool bEnable);
+
+
+            private:
+                friend class IS05Server;
+                friend class IS04Server;
+                friend class NodeApiPrivate;
+
+                void SetSender(const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp);  //this is the IS-04 way of connecting
+                connection::enumActivate Stage(const connectionReceiver& conRequest);
+                void CommitActivation();
+                void Activate();
+
+                void SetStagedActivationTime(const std::string& sTime);
+                void SetStagedActivationTimePoint(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp);
+                void RemoveStagedActivationTime();
+                void SetActivationAllowed(bool bAllowed) { m_bActivateAllowed = bAllowed;}
 
             protected:
 
@@ -65,7 +83,7 @@ namespace pml
 
                 connectionReceiver m_Staged;
                 connectionReceiver m_Active;
-                std::vector<constraintsReceiver> m_vConstraints;  // @todo constraints should be same parameters as connection
+                std::vector<ConstraintsReceiver> m_vConstraints;  // @todo constraints should be same parameters as connection
 
                 bool m_bActivateAllowed;
                 //std::string m_sSenderId;

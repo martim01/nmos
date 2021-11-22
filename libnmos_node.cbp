@@ -129,9 +129,7 @@
 		<Unit filename="include/nodeapi.h" />
 		<Unit filename="include/nodeapiprivate.h" />
 		<Unit filename="include/nodezcposter.h" />
-		<Unit filename="include/receiver.h" />
 		<Unit filename="include/resourceholder.h" />
-		<Unit filename="include/sender.h" />
 		<Unit filename="src/activator.cpp" />
 		<Unit filename="src/eventposter.cpp" />
 		<Unit filename="src/flowsdpcreatornode.cpp" />
@@ -142,9 +140,7 @@
 		<Unit filename="src/nodeapi.cpp" />
 		<Unit filename="src/nodeapiprivate.cpp" />
 		<Unit filename="src/nodezcposter.cpp" />
-		<Unit filename="src/receiver.cpp" />
 		<Unit filename="src/resourceholder.cpp" />
-		<Unit filename="src/sender.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />

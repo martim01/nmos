@@ -5,9 +5,9 @@
 #include "self.h"
 #include "device.h"
 #include "source.h"
-#include "sender.h"
+#include "senderbase.h"
 #include "flow.h"
-#include "receiver.h"
+#include "receiverbase.h"
 
 
 using namespace pml::nmos;

@@ -41,6 +41,7 @@ namespace pml
         class IS05Server;
         struct connectionSender;
         struct connectionReceiver;
+        struct TransportParamsRTPSender;
 
         class NodeApiPrivate
         {
@@ -257,14 +258,7 @@ namespace pml
                 response GetNmosDiscoveryRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
                 response GetNmosConnectionRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
 
-                std::string CreateFlowSdp(const std::string& sId, const connectionSender& state, const std::string& sConnection, const std::set<std::string>& setInterfaces);
-
-                bool AddActivationSender(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId);
-                bool RemoveActivationSender(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId);
-
-                bool AddActivationReceiver(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId);
-                bool RemoveActivationReceiver(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp, const std::string& sId);
-
+                std::string CreateFlowSdp(const std::string& sId, const TransportParamsRTPSender& tpSender, const std::set<std::string>& setInterfaces);
 
                 void CreateSDP(std::shared_ptr<Sender> pSender);
                 void Activate(bool bImmediate, std::shared_ptr<IOResource> pResource);

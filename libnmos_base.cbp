@@ -162,6 +162,7 @@
 		<Unit filename="include/sdp.h" />
 		<Unit filename="include/self.h" />
 		<Unit filename="include/senderbase.h" />
+		<Unit filename="include/senderrtp.h" />
 		<Unit filename="include/source.h" />
 		<Unit filename="include/sourceaudio.h" />
 		<Unit filename="include/sourcegeneric.h" />
@@ -199,6 +200,7 @@
 		<Unit filename="src/sdp.cpp" />
 		<Unit filename="src/self.cpp" />
 		<Unit filename="src/senderbase.cpp" />
+		<Unit filename="src/senderrtp.cpp" />
 		<Unit filename="src/source.cpp" />
 		<Unit filename="src/sourceaudio.cpp" />
 		<Unit filename="src/sourcegeneric.cpp" />

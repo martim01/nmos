@@ -10,22 +10,24 @@
 using namespace pml::nmos;
 
 
-const std::array<std::string,4> ReceiverBase::STR_TYPE = {"urn:x-nmos:format:audio", "urn:x-nmos:format:video", "urn:x-nmos:format:data", "urn:x-nmos:format:mux"};
+const std::array<std::string,4> Receiver::STR_TYPE = {"urn:x-nmos:format:audio", "urn:x-nmos:format:video", "urn:x-nmos:format:data", "urn:x-nmos:format:mux"};
 
 
 
-ReceiverBase::ReceiverBase(const std::string& sLabel, const std::string& sDescription, enumTransport eTransport, const std::string& sDeviceId, enumType eFormat, int flagsTransport) :
+Receiver::Receiver(const std::string& sLabel, const std::string& sDescription, enumTransport eTransport, const std::string& sDeviceId, enumType eFormat, int flagsTransport) :
     IOResource("receiver", sLabel, sDescription, eTransport),
     m_sDeviceId(sDeviceId),
     m_sSenderId(""),
     m_bSenderActive(false),
     m_eType(eFormat),
-    m_vConstraints(1),
     m_bActivateAllowed(false)
 {
+    m_vConstraints.push_back(ConstraintsReceiver(flagsTransport));
+
     if(flagsTransport & TransportParamsRTP::REDUNDANT)
     {
-        m_vConstraints.resize(2);
+        m_vConstraints.push_back(ConstraintsReceiver(flagsTransport));
+
         m_Staged.tpReceivers.resize(2);
         m_Active.tpReceivers.resize(2);
     }
@@ -66,23 +68,22 @@ ReceiverBase::ReceiverBase(const std::string& sLabel, const std::string& sDescri
         m_Active.tpReceivers[i].nDestinationPort = 5004;
         m_Active.tpReceivers[i].sInterfaceIp = "127.0.0.1";
 
-        m_vConstraints[i].nParamsSupported = flagsTransport;
     }
 }
 
-ReceiverBase::~ReceiverBase()
+Receiver::~Receiver()
 {
 
 }
 
-ReceiverBase::ReceiverBase() : IOResource("receiver")
+Receiver::Receiver() : IOResource("receiver")
 {
 
 }
 
 
 
-bool ReceiverBase::AddCap(const std::string& sCap)
+bool Receiver::AddCap(const std::string& sCap)
 {
     //check that the caps are valid
     switch(m_eType)
@@ -117,7 +118,7 @@ bool ReceiverBase::AddCap(const std::string& sCap)
     return true;
 }
 
-void ReceiverBase::RemoveCap(const std::string& sCap)
+void Receiver::RemoveCap(const std::string& sCap)
 {
     m_setCaps.erase(sCap);
     UpdateVersionTime();
@@ -126,13 +127,13 @@ void ReceiverBase::RemoveCap(const std::string& sCap)
 
 
 
-void ReceiverBase::SetType(enumType eType)
+void Receiver::SetType(enumType eType)
 {
     m_eType = eType;
     UpdateVersionTime();
 }
 
-bool ReceiverBase::UpdateFromJson(const Json::Value& jsData)
+bool Receiver::UpdateFromJson(const Json::Value& jsData)
 {
     Resource::UpdateFromJson(jsData);
     if(jsData["device_id"].isString() == false)
@@ -316,7 +317,7 @@ bool ReceiverBase::UpdateFromJson(const Json::Value& jsData)
     }
     return m_bIsOk;
 }
-bool ReceiverBase::Commit(const ApiVersion& version)
+bool Receiver::Commit(const ApiVersion& version)
 {
     if(Resource::Commit(version))
     {
@@ -358,20 +359,20 @@ bool ReceiverBase::Commit(const ApiVersion& version)
 
 
 
-Json::Value ReceiverBase::GetConnectionStagedJson(const ApiVersion& version) const
+Json::Value Receiver::GetConnectionStagedJson(const ApiVersion& version) const
 {
     return m_Staged.GetJson(version);
 }
 
 
-Json::Value ReceiverBase::GetConnectionActiveJson(const ApiVersion& version) const
+Json::Value Receiver::GetConnectionActiveJson(const ApiVersion& version) const
 {
     return m_Active.GetJson(version);
 }
 
 
 
-const std::string& ReceiverBase::GetSender() const
+const std::string& Receiver::GetSender() const
 {
     return m_sSenderId;
 }
@@ -380,7 +381,7 @@ const std::string& ReceiverBase::GetSender() const
 
 
 
-Json::Value ReceiverBase::GetConnectionConstraintsJson(const ApiVersion& version) const
+Json::Value Receiver::GetConnectionConstraintsJson(const ApiVersion& version) const
 {
     Json::Value jsArray(Json::arrayValue);
     for(const auto& con : m_vConstraints)
@@ -391,36 +392,36 @@ Json::Value ReceiverBase::GetConnectionConstraintsJson(const ApiVersion& version
 }
 
 
-bool ReceiverBase::CheckConstraints(const connectionReceiver& conRequest)
+bool Receiver::CheckConstraints(const connectionReceiver& conRequest)
 {
     bool bMeets = (m_vConstraints.size() == conRequest.tpReceivers.size());
     if(bMeets)
     {
         for(size_t i = 0; i < m_vConstraints.size(); i++)
         {
-            bMeets &= m_vConstraints[i].destination_port.MeetsConstraint(conRequest.tpReceivers[i].nDestinationPort);
-            bMeets &= m_vConstraints[i].fec_destination_ip.MeetsConstraint(conRequest.tpReceivers[i].sFecDestinationIp);
-            bMeets &= m_vConstraints[i].fec_enabled.MeetsConstraint(conRequest.tpReceivers[i].bFecEnabled);
-            bMeets &= m_vConstraints[i].fec_mode.MeetsConstraint(TransportParamsRTP::STR_FEC_MODE[conRequest.tpReceivers[i].eFecMode]);
-            bMeets &= m_vConstraints[i].fec1D_destination_port.MeetsConstraint(conRequest.tpReceivers[i].nFec1DDestinationPort);
-            bMeets &= m_vConstraints[i].fec2D_destination_port.MeetsConstraint(conRequest.tpReceivers[i].nFec2DDestinationPort);
-            bMeets &= m_vConstraints[i].rtcp_destination_ip.MeetsConstraint(conRequest.tpReceivers[i].sRtcpDestinationIp);
-            bMeets &= m_vConstraints[i].rtcp_destination_port.MeetsConstraint(conRequest.tpReceivers[i].nRtcpDestinationPort);
-            bMeets &= m_vConstraints[i].interface_ip.MeetsConstraint(conRequest.tpReceivers[i].sInterfaceIp);
+            bMeets &= m_vConstraints[i].MeetsConstraint("destination_port", conRequest.tpReceivers[i].nDestinationPort);
+            bMeets &= m_vConstraints[i].MeetsConstraint("fec_destination_ip", conRequest.tpReceivers[i].sFecDestinationIp);
+            bMeets &= m_vConstraints[i].MeetsConstraint("fec_enabled", conRequest.tpReceivers[i].bFecEnabled);
+            bMeets &= m_vConstraints[i].MeetsConstraint("fec_mode", TransportParamsRTP::STR_FEC_MODE[conRequest.tpReceivers[i].eFecMode]);
+            bMeets &= m_vConstraints[i].MeetsConstraint("fec1D_destination_port", conRequest.tpReceivers[i].nFec1DDestinationPort);
+            bMeets &= m_vConstraints[i].MeetsConstraint("fec2D_destination_port", conRequest.tpReceivers[i].nFec2DDestinationPort);
+            bMeets &= m_vConstraints[i].MeetsConstraint("rtcp_destination_ip", conRequest.tpReceivers[i].sRtcpDestinationIp);
+            bMeets &= m_vConstraints[i].MeetsConstraint("rtcp_destination_port", conRequest.tpReceivers[i].nRtcpDestinationPort);
+            bMeets &= m_vConstraints[i].MeetsConstraint("interface_ip", conRequest.tpReceivers[i].sInterfaceIp);
         }
     }
     return bMeets;
 }
 
 
-bool ReceiverBase::IsLocked() const
+bool Receiver::IsLocked() const
 {
     std::lock_guard<std::mutex> lg(m_mutex);
     return (m_Staged.eActivate == connection::ACT_ABSOLUTE || m_Staged.eActivate == connection::ACT_RELATIVE);
 }
 
 
-connectionReceiver ReceiverBase::GetStaged() const
+connectionReceiver Receiver::GetStaged() const
 {
     std::lock_guard<std::mutex> lg(m_mutex);
     return m_Staged;
@@ -428,14 +429,120 @@ connectionReceiver ReceiverBase::GetStaged() const
 
 
 
-bool ReceiverBase::IsMasterEnabled() const
+bool Receiver::IsMasterEnabled() const
 {
     return m_Active.bMasterEnable;
 }
 
 
-bool ReceiverBase::IsActivateAllowed() const
+bool Receiver::IsActivateAllowed() const
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     return m_bActivateAllowed;
+}
+
+void Receiver::CommitActivation()
+{
+    m_Staged.eActivate = connection::ACT_NULL;
+    m_Staged.sActivationTime.clear();
+    m_Staged.sRequestedTime.clear();
+
+    UpdateVersionTime();
+
+}
+
+connection::enumActivate Receiver::Stage(const connectionReceiver& conRequest)
+{
+    std::lock_guard<std::mutex> lg(m_mutex);
+    m_Staged = conRequest;
+    return m_Staged.eActivate;
+}
+
+void Receiver::Activate()
+{
+    m_bActivateAllowed = false;
+    //move the staged parameters to active parameters
+    m_Active = m_Staged;
+
+    //Change auto settings to what they actually are
+    for(size_t i = 0;i < m_vConstraints.size(); i++)
+    {
+        m_Active.tpReceivers[i].Actualize(m_sInterfaceIp);
+    }
+
+    //activeate - set subscription, receiverId and active on master_enable. Commit afterwards
+    if(m_Active.bMasterEnable)
+    {
+        m_sSenderId = m_Staged.sSenderId;
+        m_bSenderActive = m_Staged.bMasterEnable;
+    }
+    else
+    {
+        m_sSenderId.clear();
+        m_bSenderActive = false;
+    }
+
+
+}
+
+void Receiver::SetSender(const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp)
+{
+    if(sSenderId.empty() == false)
+    {
+        pmlLog(pml::LOG_INFO) << "Receiver subscribe to sender " << sSenderId ;
+        m_sSenderId = sSenderId;
+
+        // need to update the IS-05 stage and active connection settings to match
+        m_Staged.sSenderId = sSenderId;
+        m_Staged.bMasterEnable = true;
+        m_Staged.sTransportFileData = sSdp;
+        m_Staged.sTransportFileType = "application/sdp";
+        m_Staged.sActivationTime = GetCurrentTaiTime();
+        SetupActivation(sInterfaceIp);
+    }
+    else
+    {   //this means unsubscribe
+        pmlLog(pml::LOG_INFO) << "Receiver unssubscribe " ;
+        m_sSenderId.clear();
+
+        // need to update the IS-05 stage and active connection settings to match
+        m_Staged.sSenderId.clear();
+        m_Staged.bMasterEnable = false;
+        m_Staged.sTransportFileData.clear();
+        m_Staged.sTransportFileType.clear();
+        m_Staged.sActivationTime = GetCurrentTaiTime();
+        SetupActivation(sInterfaceIp);
+    }
+}
+
+void Receiver::MasterEnable(bool bEnable)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_Active.bMasterEnable = bEnable;
+    m_Staged.bMasterEnable = bEnable;
+
+    for(size_t i = 0;i < m_vConstraints.size(); i++)
+    {
+        m_Active.tpReceivers[i].bRtpEnabled = bEnable;
+        m_Staged.tpReceivers[i].bRtpEnabled = bEnable;
+    }
+    UpdateVersionTime();
+}
+
+void Receiver::SetupActivation(const std::string& sInterfaceIp)
+{
+    m_sInterfaceIp = sInterfaceIp;
+}
+
+
+void Receiver::RemoveStagedActivationTime()
+{
+    m_Staged.sActivationTime.clear();
+    m_Staged.tpActivation = std::chrono::time_point<std::chrono::high_resolution_clock>();
+}
+
+void Receiver::SetStagedActivationTimePoint(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp)
+{
+    m_Staged.tpActivation = tp;
+    m_Staged.sActivationTime = ConvertTimeToString(tp);
 }

@@ -4,8 +4,8 @@
 #include "source.h"
 #include "device.h"
 #include "flow.h"
-#include "sender.h"
-#include "receiver.h"
+#include "senderbase.h"
+#include "receiverbase.h"
 #include <iostream>
 #include "log.h"
 
@@ -22,7 +22,7 @@ void TestPoster::ModeChanged(bool bQueryApi)
         pmlLog() << "++++++P2P MODE++++++" ;
     }
 }
-void TestPoster::NodeChanged(const std::list<std::shared_ptr<pml::nmos::Self> >& lstNodesAdded, const std::list<std::shared_ptr<pml::nmos::Self> >& lstNodesUpdated, const std::list<std::shared_ptr<pml::nmos::Self> >& lstNodesRemoved)
+void TestPoster::NodeChanged(const std::list<std::shared_ptr<const pml::nmos::Self> >& lstNodesAdded, const std::list<std::shared_ptr<const pml::nmos::Self> >& lstNodesUpdated, const std::list<std::shared_ptr<const pml::nmos::Self> >& lstNodesRemoved)
 {
     pmlLog() << "++++++NODES ADDED++++++" ;
     for(auto pResource : lstNodesAdded)
@@ -46,7 +46,7 @@ void TestPoster::NodeChanged(const std::list<std::shared_ptr<pml::nmos::Self> >&
     pmlLog() << "++++++++++" << lstNodesRemoved.size() << "++++++++++++++" ;
 }
 
-void TestPoster::DeviceChanged(const std::list<std::shared_ptr<pml::nmos::Device> >& lstDevicesAdded, const std::list<std::shared_ptr<pml::nmos::Device> >& lstDevicesUpdated, const std::list<std::shared_ptr<pml::nmos::Device> >& lstDevicesRemoved)
+void TestPoster::DeviceChanged(const std::list<std::shared_ptr<const pml::nmos::Device> >& lstDevicesAdded, const std::list<std::shared_ptr<const pml::nmos::Device> >& lstDevicesUpdated, const std::list<std::shared_ptr<const pml::nmos::Device> >& lstDevicesRemoved)
 {
 
     pmlLog() << "++++++DEVICES ADDED++++++" ;
@@ -72,7 +72,7 @@ void TestPoster::DeviceChanged(const std::list<std::shared_ptr<pml::nmos::Device
     pmlLog() << "++++++++++" << lstDevicesRemoved.size() << "++++++++++++++" ;
 }
 
-void TestPoster::SourceChanged(const std::list<std::shared_ptr<pml::nmos::Source> >& lstSourcesAdded, const std::list<std::shared_ptr<pml::nmos::Source> >& lstSourcesUpdated, const std::list<std::shared_ptr<pml::nmos::Source> >& lstSourcesRemoved)
+void TestPoster::SourceChanged(const std::list<std::shared_ptr<const pml::nmos::Source> >& lstSourcesAdded, const std::list<std::shared_ptr<const pml::nmos::Source> >& lstSourcesUpdated, const std::list<std::shared_ptr<const pml::nmos::Source> >& lstSourcesRemoved)
 {
     pmlLog() << "++++++SOURCES ADDED++++++" ;
     for(auto pResource : lstSourcesAdded)
@@ -96,7 +96,7 @@ void TestPoster::SourceChanged(const std::list<std::shared_ptr<pml::nmos::Source
     pmlLog() << "++++++++++" << lstSourcesRemoved.size() << "++++++++++++++" ;
 }
 
-void TestPoster::FlowChanged(const std::list<std::shared_ptr<pml::nmos::Flow> >& lstFlowsAdded, const std::list<std::shared_ptr<pml::nmos::Flow> >& lstFlowsUpdated, const std::list<std::shared_ptr<pml::nmos::Flow> >& lstFlowsRemoved)
+void TestPoster::FlowChanged(const std::list<std::shared_ptr<const pml::nmos::Flow> >& lstFlowsAdded, const std::list<std::shared_ptr<const pml::nmos::Flow> >& lstFlowsUpdated, const std::list<std::shared_ptr<const pml::nmos::Flow> >& lstFlowsRemoved)
 {
     pmlLog() << "++++++FLOWS ADDED++++++" ;
     for(auto pResource : lstFlowsAdded)
@@ -121,7 +121,7 @@ void TestPoster::FlowChanged(const std::list<std::shared_ptr<pml::nmos::Flow> >&
     pmlLog() << "++++++++++" << lstFlowsRemoved.size() << "++++++++++++++" ;
 }
 
-void TestPoster::SenderChanged(const std::list<std::shared_ptr<pml::nmos::SenderBase> >& lstSendersAdded, const std::list<std::shared_ptr<pml::nmos::SenderBase> >& lstSendersUpdated, const std::list<std::shared_ptr<pml::nmos::SenderBase> >& lstSendersRemoved)
+void TestPoster::SenderChanged(const std::list<std::shared_ptr<const pml::nmos::SenderBase> >& lstSendersAdded, const std::list<std::shared_ptr<const pml::nmos::SenderBase> >& lstSendersUpdated, const std::list<std::shared_ptr<const pml::nmos::SenderBase> >& lstSendersRemoved)
 {
     pmlLog() << "++++++SENDERS ADDED++++++" ;
     for(auto pResource : lstSendersAdded)
@@ -145,7 +145,7 @@ void TestPoster::SenderChanged(const std::list<std::shared_ptr<pml::nmos::Sender
     pmlLog() << "++++++++++" << lstSendersRemoved.size() << "++++++++++++++" ;
 }
 
-void TestPoster::ReceiverChanged(const std::list<std::shared_ptr<pml::nmos::ReceiverBase> >& lstReceiversAdded, const std::list<std::shared_ptr<pml::nmos::ReceiverBase> >& lstReceiversUpdated, const std::list<std::shared_ptr<pml::nmos::ReceiverBase> >& lstReceiversRemoved)
+void TestPoster::ReceiverChanged(const std::list<std::shared_ptr<const pml::nmos::ReceiverBase> >& lstReceiversAdded, const std::list<std::shared_ptr<const pml::nmos::ReceiverBase> >& lstReceiversUpdated, const std::list<std::shared_ptr<const pml::nmos::ReceiverBase> >& lstReceiversRemoved)
 {
     pmlLog() << "++++++RECEIVERS ADDED++++++" ;
     for(auto pResource : lstReceiversAdded)

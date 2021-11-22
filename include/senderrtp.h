@@ -14,13 +14,13 @@ namespace pml
     {
         class EventPoster;
 
-        class NMOS_EXPOSE Sender : public IOResource
+        class NMOS_EXPOSE SenderRTP : public IOResource
         {
             public:
-                Sender(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId, const std::string& sInterface,
+                SenderRTP(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId, const std::string& sInterface,
                            TransportParamsRTP::flagsTP flagsTransport=TransportParamsRTP::CORE);
-                Sender();
-                virtual ~Sender();
+                SenderRTP();
+                virtual ~SenderRTP();
 
                 /** @brief Set the active destination details to create an SDP. This will be overwritten by IS-05
                 **/
@@ -43,11 +43,11 @@ namespace pml
 
                 virtual bool CheckConstraints(const connectionSender& conRequest);
 
-                connectionSender GetStaged();
-                connectionSender GetActive();
+                connectionSender GetStaged() const;
+                connectionSender GetActive() const;
                 const std::string& GetTransportFile() const;
 
-                bool IsLocked();
+                bool IsLocked() const;
                 bool IsActivateAllowed() const;
                 const std::string GetDestinationIp() const {return m_sDestinationIp;}
 
@@ -55,29 +55,25 @@ namespace pml
                 bool IsStageMasterEnabled() const { return m_Active.bMasterEnable;}
 
 
-                bool Commit(const ApiVersion& version) override;
-
-
+                void SetupActivation(const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP);
+                void SetDestinationDetails(const std::string& sDestinationIp, unsigned short nDestinationPort);
                 void MasterEnable(bool bEnable);
-                void SetTransportFile(const std::string& sSDP);
+
+                bool Commit(const ApiVersion& version) override;
 
             protected:
 
-                friend class IS05Server;
-                friend class IS04Server;
-                friend class NodeApiPrivate;
+                void SetTransportFile(const std::string& sSDP);
 
-                connection::enumActivate Stage(const connectionSender& conRequest);
-                void CommitActivation();
-                void Activate(const std::string& sSourceIp);
-
-                void SetupActivation(const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP);
                 void SetStagedActivationTime(const std::string& sTime);
                 void SetStagedActivationTimePoint(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp);
                 void RemoveStagedActivationTime();
                 void SetActivationAllowed(bool bAllowed) { m_bActivateAllowed = bAllowed;}
 
-                void SetDestinationDetails(const std::string& sDestinationIp, unsigned short nDestinationPort);
+                void Activate(const std::string& sSourceIp);
+                void CommitActivation();
+                connection::enumActivate Stage(const connectionSender& conRequest);
+
 
                 std::string m_sFlowId;
                 enumTransport m_eTransport;
@@ -89,7 +85,7 @@ namespace pml
 
                 connectionSender m_Staged;
                 connectionSender m_Active;
-                std::vector<ConstraintsSender> m_vConstraints;
+                std::vector<constraintsSender> m_vConstraints;
 
                 std::string m_sTransportFile;
                 bool m_bActivateAllowed;
@@ -98,9 +94,9 @@ namespace pml
                 std::string m_sDestinationIp;
                 std::string m_sSDP;
 
-
         };
     };
 };
+
 
 

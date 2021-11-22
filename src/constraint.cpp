@@ -5,12 +5,12 @@
 using namespace std;
 using namespace pml::nmos;
 
-constraint::constraint(const std::string& sParam, const std::string& sDescription) :
-    m_sParam(sParam),
+constraint::constraint(const std::string& sDescription) :
+    m_sDescription(sDescription),
     m_pairMinimum(make_pair(false, 0)),
     m_pairMaximum(make_pair(false, 0)),
-    m_pairPattern(make_pair(false, "")),
-    m_sDescription(sDescription)
+    m_pairPattern(make_pair(false, ""))
+
 {
 
 }
@@ -79,7 +79,7 @@ Json::Value constraint::GetJson(const ApiVersion& version) const
         {
             switch(m_vEnum[i].first)
             {
-                case CON_BOOL:
+                case jsondatatype::_BOOLEAN:
                     if(m_vEnum[i].second == "true")
                     {
                         jsConstraint["enum"].append(true);
@@ -89,17 +89,19 @@ Json::Value constraint::GetJson(const ApiVersion& version) const
                         jsConstraint["enum"].append(false);
                     }
                     break;
-                case CON_INTEGER:
+                case jsondatatype::_INTEGER:
                     jsConstraint["enum"] = stoi(m_vEnum[i].second);
                     break;
-                case CON_NULL:
+                case jsondatatype::_NULL:
                     jsConstraint["enum"] = Json::nullValue;
                     break;
-                case CON_STRING:
+                case jsondatatype::_STRING:
                     jsConstraint["enum"] = m_vEnum[i].second;
                     break;
-                case CON_NUMBER:
+                case jsondatatype::_NUMBER:
                     jsConstraint["enum"] = stod(m_vEnum[i].second);
+                    break;
+                default:
                     break;
             }
         }
@@ -250,103 +252,191 @@ bool constraint::MeetsConstraint(bool bValue)
     return bMeets;
 }
 
-
-
-
-constraints::constraints() :
-    nParamsSupported(TransportParamsRTP::CORE),
-    source_ip("source_ip"),
-    destination_port("destination_port"),
-    fec_destination_ip("fec_destination_ip"),
-    fec_enabled("fec_enabled"),
-    fec_mode("fec_mode"),
-    fec1D_destination_port("fec1D_destination_port"),
-    fec2D_destination_port("fec2D_destination_port"),
-    rtcp_enabled("rtcp_enabled"),
-    rtcp_destination_ip("rtcp_destination_ip"),
-    rtcp_destination_port("rtcp_destination_port"),
-    rtp_enabled("rtp_enabled")
+bool constraint::UpdateFromJson(const Json::Value& jsConstraint)
 {
+    if(CheckJsonAllowed(jsConstraint, { {"maximum", {jsondatatype::_NUMBER, jsondatatype::_INTEGER}},
+                          {"minumum", {jsondatatype::_NUMBER, jsondatatype::_INTEGER}},
+                          {"enum", {jsondatatype::_ARRAY}},
+                          {"pattern", {jsondatatype::_STRING}}}) == false)
+    {
+        return false;
+    }
 
+    if(jsConstraint.isMember("maximum"))
+    {
+        m_pairMaximum = {true, jsConstraint.asInt()};   //@todo this could be a double
+    }
+    if(jsConstraint.isMember("minumum"))
+    {
+        m_pairMinimum = {true, jsConstraint.asInt()};   //@todo this could be a double
+    }
+    if(jsConstraint.isMember("enum"))
+    {
+        m_vEnum.clear();
+        m_vEnum.resize(jsConstraint["enum"].size());
+        for(Json::ArrayIndex ai = 0; ai < jsConstraint["enum"].size(); ai++)
+        {
+            switch(jsConstraint["enum"][ai].type())
+            {
+                case Json::ValueType::booleanValue:
+                    m_vEnum[ai] = {jsondatatype::_BOOLEAN, jsConstraint["enum"][ai].asBool() ? "true" : "false"};
+                    break;
+                case Json::ValueType::intValue:
+                case Json::ValueType::uintValue:
+                    m_vEnum[ai] = {jsondatatype::_INTEGER, jsConstraint["enum"][ai].asString()};
+                    break;
+                case Json::ValueType::realValue:
+                    m_vEnum[ai] = {jsondatatype::_NUMBER, jsConstraint["enum"][ai].asString()};
+                    break;
+                case Json::ValueType::nullValue:
+                    m_vEnum[ai] = {jsondatatype::_NULL, "null"};
+                    break;
+                case Json::ValueType::stringValue:
+                    m_vEnum[ai] = {jsondatatype::_STRING, jsConstraint["enum"][ai].asString()};
+                    break;
+                default:
+                    return false;
+            }
+
+        }
+    }
+    if(jsConstraint.isMember("pattern"))
+    {
+        m_pairPattern = {true, jsConstraint.asString()};   //@todo this could be a double
+    }
+    return true;
 }
 
-Json::Value constraints::GetJson(const ApiVersion& version) const
+
+
+Constraints::Constraints(int nSupported) :
+    m_nParamsSupported(nSupported),
+    m_mConstraints({ {"source_ip", constraint()},
+                   {"destination_port",constraint()},
+                   {"rtp_enabled",constraint()}})
+{
+    if(m_nParamsSupported & TransportParamsRTP::FEC)
+    {
+        m_mConstraints.insert({"fec_enabled",constraint()});
+        m_mConstraints.insert({"fec_destination_ip",constraint()});
+        m_mConstraints.insert({"fec_mode",constraint()});
+        m_mConstraints.insert({"fec1D_destination_port",constraint()});
+        m_mConstraints.insert({"fec2D_destination_port",constraint()});
+    }
+    if(m_nParamsSupported & TransportParamsRTP::RTCP)
+    {
+        m_mConstraints.insert({"rtcp_enabled",constraint()});
+        m_mConstraints.insert({"rtcp_destination_ip",constraint()});
+        m_mConstraints.insert({"rtcp_destination_port",constraint()});
+    }
+}
+
+Json::Value Constraints::GetJson(const ApiVersion& version) const
 {
     Json::Value jsConstraints(Json::objectValue);
-    jsConstraints[destination_port.GetParam()] = destination_port.GetJson(version);
-    jsConstraints[source_ip.GetParam()] = source_ip.GetJson(version);
-    jsConstraints[rtp_enabled.GetParam()] = rtp_enabled.GetJson(version);
 
-    if(nParamsSupported & TransportParamsRTP::FEC)
+    for(const auto& pairConstraint : m_mConstraints)
     {
-        jsConstraints[fec_destination_ip.GetParam()] = fec_destination_ip.GetJson(version);
-        jsConstraints[fec_enabled.GetParam()] = fec_enabled.GetJson(version);
-        jsConstraints[fec_mode.GetParam()] = fec_mode.GetJson(version);
-        jsConstraints[fec1D_destination_port.GetParam()] = fec1D_destination_port.GetJson(version);
-        jsConstraints[fec2D_destination_port.GetParam()] = fec2D_destination_port.GetJson(version);
-    }
-    if(nParamsSupported & TransportParamsRTP::RTCP)
-    {
-        jsConstraints[rtcp_enabled.GetParam()] = rtcp_enabled.GetJson(version);
-        jsConstraints[rtcp_destination_ip.GetParam()] = rtcp_destination_ip.GetJson(version);
-        jsConstraints[rtcp_destination_port.GetParam()] = rtcp_destination_port.GetJson(version);
+        jsConstraints[pairConstraint.first] = pairConstraint.second.GetJson(version);
     }
     return jsConstraints;
 }
 
-constraintsSender::constraintsSender() : constraints(),
-    destination_ip("destination_ip"),
-    source_port("source_port"),
-    fec_type("fec_type"),
-    fec_block_width("fec_block_width"),
-    fec_block_height("fec_block_height"),
-    fec1D_source_port("fec1D_source_port"),
-    fec2D_source_port("fec2D_source_port"),
-    rtcp_source_port("rtcp_source_port")
 
+bool Constraints::UpdateFromJson(const Json::Value& jsData)
 {
-
+    for(auto itObject = jsData.begin(); itObject != jsData.end(); ++itObject)
+    {
+        m_mConstraints[itObject.key().asString()].UpdateFromJson(*itObject);
+    }
+    return true;
 }
 
-Json::Value constraintsSender::GetJson(const ApiVersion& version) const
+bool Constraints::MeetsConstraint(const std::string& sConstraint, const std::string& sValue)
 {
-    Json::Value jsConstraints(constraints::GetJson(version));
-
-    jsConstraints[destination_ip.GetParam()] = destination_ip.GetJson(version);
-    jsConstraints[source_port.GetParam()] = source_port.GetJson(version);
-
-    if(nParamsSupported & TransportParamsRTP::FEC)
+    auto itConstraint = m_mConstraints.find(sConstraint);
+    if(itConstraint != m_mConstraints.end())
     {
-        jsConstraints[fec_type.GetParam()] = fec_type.GetJson(version);
-        jsConstraints[fec_block_width.GetParam()] = fec_block_width.GetJson(version);
-        jsConstraints[fec_block_height.GetParam()] = fec_block_height.GetJson(version);
-        jsConstraints[fec1D_source_port.GetParam()] = fec1D_source_port.GetJson(version);
-        jsConstraints[fec2D_source_port.GetParam()] = fec2D_source_port.GetJson(version);
+        return itConstraint->second.MeetsConstraint(sValue);
     }
-    if(nParamsSupported & TransportParamsRTP::RTCP)
-    {
-        jsConstraints[rtcp_enabled.GetParam()] = rtcp_enabled.GetJson(version);
-        jsConstraints[rtcp_source_port.GetParam()] = rtcp_source_port.GetJson(version);
-    }
-
-
-    return jsConstraints;
+    return true;
 }
 
-constraintsReceiver::constraintsReceiver() : constraints(),
-    interface_ip("interface_ip"),
-    multicast_ip("multicast_ip")
+bool Constraints::MeetsConstraint(const std::string& sConstraint, int nValue)
 {
-
+    auto itConstraint = m_mConstraints.find(sConstraint);
+    if(itConstraint != m_mConstraints.end())
+    {
+        return itConstraint->second.MeetsConstraint(nValue);
+    }
+    return true;
 }
 
-Json::Value constraintsReceiver::GetJson(const ApiVersion& version) const
+bool Constraints::MeetsConstraint(const std::string& sConstraint, double dValue)
 {
-    Json::Value jsConstraints(constraints::GetJson(version));
-    jsConstraints[interface_ip.GetParam()] = interface_ip.GetJson(version);
-    if(nParamsSupported & TransportParamsRTP::MULTICAST)
+    auto itConstraint = m_mConstraints.find(sConstraint);
+    if(itConstraint != m_mConstraints.end())
     {
-        jsConstraints[multicast_ip.GetParam()] = multicast_ip.GetJson(version);
+        return itConstraint->second.MeetsConstraint(dValue);
     }
-    return jsConstraints;
+    return true;
+}
+
+bool Constraints::MeetsConstraint(const std::string& sConstraint, bool bValue)
+{
+    auto itConstraint = m_mConstraints.find(sConstraint);
+    if(itConstraint != m_mConstraints.end())
+    {
+        return itConstraint->second.MeetsConstraint(bValue);
+    }
+    return true;
+}
+
+ConstraintsSender::ConstraintsSender(int nSupported) : Constraints(nSupported)
+{
+    m_mConstraints.insert({"destination_ip", constraint()});
+    m_mConstraints.insert({"source_port", constraint()});
+
+    if(m_nParamsSupported & TransportParamsRTP::FEC)
+    {
+        m_mConstraints.insert({"fec_type", constraint()});
+        m_mConstraints.insert({"fec_block_width", constraint()});
+        m_mConstraints.insert({"fec_block_height", constraint()});
+        m_mConstraints.insert({"fec1D_source_port", constraint()});
+        m_mConstraints.insert({"fec2D_source_port", constraint()});
+    }
+    if(m_nParamsSupported & TransportParamsRTP::RTCP)
+    {
+        m_mConstraints.insert({"rtcp_source_port", constraint()});
+    }
+}
+
+ConstraintsReceiver::ConstraintsReceiver(int nSupported) : Constraints(nSupported)
+{
+    m_mConstraints.insert({"interface_ip", constraint()});
+    if(m_nParamsSupported & TransportParamsRTP::MULTICAST)
+    {
+        m_mConstraints.insert({"multicast_ip", constraint()});
+    }
+}
+
+
+std::vector<Constraints> CreateConstraints(const Json::Value& jsData)
+{
+    std::vector<Constraints> vConstraints;
+    if(jsData.isArray() != false)
+    {
+        for(size_t i = 0; i < jsData.size(); i++)
+        {
+            if(jsData[i].isObject())
+            {
+                Constraints con(TransportParamsRTP::CORE);
+                if(con.UpdateFromJson(jsData[i]))
+                {
+                    vConstraints.push_back(con);
+                }
+            }
+        }
+    }
+    return vConstraints;
 }

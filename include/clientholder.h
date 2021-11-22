@@ -22,10 +22,10 @@ namespace pml
 
 
                 bool AddResource(const std::string& sIpAddres, std::shared_ptr<T> pResource);
-                void RemoveResources(const std::string& sIpAddres, typename std::list<std::shared_ptr<T> >& lstRemoved);
+                void RemoveResources(const std::string& sIpAddres, typename std::list<std::shared_ptr<const T> >& lstRemoved);
 
                 void StoreResources(const std::string& sIpAddress);
-                void RemoveStaleResources(typename std::list<std::shared_ptr<T> >& lstRemoved);
+                void RemoveStaleResources(typename std::list<std::shared_ptr<const T> >& lstRemoved);
 
                 void RemoveAllResources();
 
@@ -40,7 +40,7 @@ namespace pml
                 std::shared_ptr<T> UpdateResource(const Json::Value& jsData);
                 size_t GetResourceCount() const;
 
-                void GetResourcesAsList(typename std::list<std::shared_ptr<T> >& lstResources);
+                void GetResourcesAsList(typename std::list<std::shared_ptr<const T> >& lstResources);
 
                 std::shared_ptr<T> RemoveResource(const std::string& sUid);
 

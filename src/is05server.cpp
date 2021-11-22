@@ -8,8 +8,8 @@
 #include "device.h"
 #include "source.h"
 #include "flow.h"
-#include "receiver.h"
-#include "sender.h"
+#include "receiverbase.h"
+#include "senderbase.h"
 #include "log.h"
 #include "eventposter.h"
 #include "utils.h"
@@ -545,7 +545,7 @@ response IS05Server::PostJsonSenders(const Json::Value& jsRequest)
     //check that each part of the array is correct.
     for(Json::ArrayIndex ai = 0; ai < jsRequest.size(); ai++)
     {
-        if(jsRequest[ai]["id"].isString() == false || jsRequest[ai]["params"].isObject() == false || CheckJson(jsRequest[ai], {"id", "params"}) == false)
+        if(CheckJson(jsRequest[ai], {{"id",{jsondatatype::_STRING}}, {"params",{jsondatatype::_OBJECT}}}) == false)
         {
             resp = JsonError(400, "Request is ill defined.");
             break;
@@ -594,7 +594,7 @@ response IS05Server::PostJsonReceivers(const Json::Value& jsRequest)
     //check that each part of the array is correct.
     for(Json::ArrayIndex ai = 0; ai < jsRequest.size(); ai++)
     {
-        if(jsRequest[ai]["id"].isString() == false || jsRequest[ai]["params"].isObject() == false || CheckJson(jsRequest[ai], {"id", "params"}) == false)
+        if(CheckJson(jsRequest[ai], {{"id",{jsondatatype::_STRING}}, {"params",{jsondatatype::_OBJECT}}}) == false)
         {
             resp = JsonError(400, "Request is ill defined.");
             break;

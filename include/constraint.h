@@ -3,6 +3,7 @@
 #include "json/json.h"
 #include <vector>
 #include "nmosapiversion.h"
+#include "utils.h"
 
 namespace pml
 {
@@ -12,10 +13,9 @@ namespace pml
         {
             public:
 
-                enum enumConstraint {CON_BOOL, CON_INTEGER, CON_NULL, CON_NUMBER, CON_STRING};
-                typedef std::pair<enumConstraint, std::string> pairEnum_t;
+                typedef std::pair<jsondatatype, std::string> pairEnum_t;
 
-                constraint(const std::string& sParam, const std::string& sDescription="");
+                constraint(const std::string& sDescription="");
 
                 bool MeetsConstraint(const std::string& sValue);
                 bool MeetsConstraint(int nValue);
@@ -32,77 +32,61 @@ namespace pml
                 void RemoveEnum();
                 void RemovePattern();
 
-                std::string GetParam() const
-                {
-                    return m_sParam;
-                }
 
                 Json::Value GetJson(const ApiVersion& version) const;
 
-            private:
-                std::string m_sParam;
+                bool UpdateFromJson(const Json::Value& jsConstraint);
 
+            private:
+
+                std::string m_sDescription;
                 std::pair<bool, int> m_pairMinimum;     // @todo min constraint can be a double as well
                 std::pair<bool, int> m_pairMaximum;     // @todo max constraint can be a double as well
                 std::vector<pairEnum_t> m_vEnum;
                 std::pair<bool, std::string> m_pairPattern;
 
-                std::string m_sDescription;
+
         };
 
 
-        struct constraints
+        class Constraints
         {
-            constraints();
+            public:
+                Constraints(int nSupported);
 
-            virtual Json::Value GetJson(const ApiVersion& version) const;
+                virtual Json::Value GetJson(const ApiVersion& version) const;
 
-            int nParamsSupported;
+                bool UpdateFromJson(const Json::Value& jsData);
 
-            constraint source_ip;
-            constraint destination_port;
+                bool MeetsConstraint(const std::string& sConstraint, const std::string& sValue);
+                bool MeetsConstraint(const std::string& sConstraint, int nValue);
+                bool MeetsConstraint(const std::string& sConstraint, double dValue);
+                bool MeetsConstraint(const std::string& sConstraint, bool bValue);
 
-            constraint fec_destination_ip;
-            constraint fec_enabled;
-            constraint fec_mode;
-            constraint fec1D_destination_port;
-            constraint fec2D_destination_port;
 
-            constraint rtcp_enabled;
-            constraint rtcp_destination_ip;
-            constraint rtcp_destination_port;
+            protected:
+                int m_nParamsSupported;
 
-            constraint rtp_enabled;
+
+            std::map<std::string, constraint> m_mConstraints;
+
+
         };
 
-        struct constraintsSender : public constraints
+        class ConstraintsSender : public Constraints
         {
-            constraintsSender();
-            virtual Json::Value GetJson(const ApiVersion& version) const;
+            public:
+                ConstraintsSender(int nSupported);
 
-
-
-            constraint destination_ip;
-
-            constraint source_port;
-            constraint fec_type;
-            constraint fec_block_width;
-            constraint fec_block_height;
-            constraint fec1D_source_port;
-            constraint fec2D_source_port;
-                constraint rtcp_source_port;
 
         };
 
 
-        struct constraintsReceiver : public constraints
+        struct ConstraintsReceiver : public Constraints
         {
-            constraintsReceiver();
-
-            virtual Json::Value GetJson(const ApiVersion& version) const;
-
-            constraint interface_ip;
-            constraint multicast_ip;
+            ConstraintsReceiver(int nSupported);
         };
+
+        std::vector<Constraints> CreateConstraints(const Json::Value& jsData);
     };
 };

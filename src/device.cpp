@@ -1,4 +1,5 @@
 #include "device.h"
+#include "utils.h"
 
 using namespace pml::nmos;
 
@@ -21,31 +22,16 @@ Device::Device() : Resource("device")
 bool Device::UpdateFromJson(const Json::Value& jsData)
 {
     Resource::UpdateFromJson(jsData);
-    if(jsData["type"].isString() == false)
+    if(CheckJson(jsData, {{"type",{jsondatatype::_STRING}},
+                       {"node_id",{jsondatatype::_STRING}},
+                       {"senders",{jsondatatype::_ARRAY}},
+                       {"receivers",{jsondatatype::_ARRAY}},
+                       {"controls",{jsondatatype::_ARRAY}}}) == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'type' is not a string" ;
+        m_ssJsonError << "Device json incorrect";
     }
-    if(jsData["node_id"].isString() == false)
-    {
-        m_bIsOk = false;
-        m_ssJsonError << "'node_id' is not a string" ;
-    }
-    if(jsData["senders"].isArray() == false)
-    {
-        m_bIsOk = false;
-        m_ssJsonError << "'sender' is not an array" ;
-    }
-    if(jsData["receivers"].isArray() == false)
-    {
-        m_bIsOk = false;
-        m_ssJsonError << "'receivers' is not an array" ;
-    }
-    if(jsData["controls"].isArray() == false)
-    {
-        m_bIsOk = false;
-        m_ssJsonError << "'controls' is not an array" ;
-    }
+
     if(m_bIsOk)
     {
         if(jsData["type"].asString() == STR_TYPE[GENERIC])

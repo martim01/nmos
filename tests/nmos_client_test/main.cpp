@@ -4,7 +4,7 @@
 #include <fstream>
 #include "clientapi.h"
 #include "self.h"
-#include "receiver.h"
+#include "receiverbase.h"
 #include "testposter.h"
 #include "log.h"
 

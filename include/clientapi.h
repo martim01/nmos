@@ -13,8 +13,8 @@ namespace pml
         class Device;
         class Source;
         class Flow;
-        class SenderBase;
-        class ReceiverBase;
+        class Sender;
+        class Receiver;
         class ClientApiPoster;
         class ClientApiImpl;
 
@@ -138,33 +138,21 @@ namespace pml
                 bool Disconnect(const std::string& sReceiverId);
 
 
+
+                std::shared_ptr<const Self> FindNode(const std::string& sUid);
+                std::shared_ptr<const Device> FindDevice(const std::string& sUid);
+                std::shared_ptr<const Source> FindSource(const std::string& sUid);
+                std::shared_ptr<const Flow> FindFlow(const std::string& sUid);
+                std::shared_ptr<const Sender> FindSender(const std::string& sUid);
+                std::shared_ptr<const Receiver> FindReceiver(const std::string& sUid);
+
                 const std::map<std::string, std::shared_ptr<Self> >& GetNodes();
-                std::map<std::string, std::shared_ptr<Self> >::const_iterator FindNode(const std::string& sUid);
-
                 const std::map<std::string, std::shared_ptr<Device> >& GetDevices();
-                std::map<std::string, std::shared_ptr<Device> >::const_iterator FindDevice(const std::string& sUid);
-
-                ///< @brief Gets a const_iterator to the beginning of the map containing all discovered sources
                 const std::map<std::string, std::shared_ptr<Source> >& GetSources();
-                ///< @brief Gets a const_iterator pointing to the source with the given id, or to the end of the map
-                std::map<std::string, std::shared_ptr<Source> >::const_iterator FindSource(const std::string& sUid);
-
-                ///< @brief Gets a const_iterator to the beginning of the map containing all discovered flows
                 const std::map<std::string, std::shared_ptr<Flow> >& GetFlows();
-                ///< @brief Gets a const_iterator pointing to the flow with the given id, or to the end of the map
-                std::map<std::string, std::shared_ptr<Flow> >::const_iterator FindFlow(const std::string& sUid);
+                const std::map<std::string, std::shared_ptr<Sender> >& GetSenders();
+                const std::map<std::string, std::shared_ptr<Receiver> >& GetReceivers();
 
-                ///< @brief Gets a const_iterator to the beginning of the map containing all discovered senders
-                const std::map<std::string, std::shared_ptr<SenderBase> >& GetSenders();
-
-                ///< @brief Gets a const_iterator pointing to the sender with the given id, or to the end of the map
-                std::map<std::string, std::shared_ptr<SenderBase> >::const_iterator FindSender(const std::string& sUid);
-
-                ///< @brief Gets a const_iterator to the beginning of the map containing all discovered receivers
-                const std::map<std::string, std::shared_ptr<ReceiverBase> >& GetReceivers();
-
-                ///< @brief Gets a const_iterator pointing to the receiver with the given id, or to the end of the map
-                std::map<std::string, std::shared_ptr<ReceiverBase> >::const_iterator FindReceiver(const std::string& sUid);
 
                 bool AddBrowseDomain(const std::string& sDomain);
                 bool RemoveBrowseDomain(const std::string& sDomain);

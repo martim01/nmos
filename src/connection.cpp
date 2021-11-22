@@ -211,11 +211,17 @@ connectionSender::connectionSender(const connectionSender& conReq) : connection(
 bool connectionSender::Patch(const Json::Value& jsData)
 {
     pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: connectionSender: NOW" ;
-    bool bIsOk = (connection::Patch(jsData) && CheckJson(jsData, {"master_enable", "activation", "transport_params", "receiver_id"}));
+    pmlLog(pml::LOG_DEBUG) << jsData;
+
+    bool bIsOk = CheckJsonAllowed(jsData, {{"master_enable",{jsondatatype::_BOOLEAN}},
+                                           {"activation", {jsondatatype::_OBJECT}},
+                                           {"transport_params", {jsondatatype::_ARRAY}},
+                                           {"receiver_id", {jsondatatype::_STRING, jsondatatype::_NULL}}}) && connection::Patch(jsData);
+
     if(bIsOk)
     {
 
-        if(jsData["transport_params"].isArray() && jsData["transport_params"].size() == tpSenders.size())
+        if(jsData["transport_params"].size() == tpSenders.size())
         {
             nProperties |= FP_TRANSPORT_PARAMS;
             for(size_t i = 0; i < tpSenders.size(); i++)
@@ -226,7 +232,8 @@ bool connectionSender::Patch(const Json::Value& jsData)
         }
         else if(jsData["transport_params"].empty() == false)
         {
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: transport_params not an array or is wrong size." ;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: transport_params not an array or is wrong size. " << jsData["transport_params"].size() << ":" << tpSenders.size();
+            pmlLog(pml::LOG_DEBUG) << jsData;
             bIsOk = false;
         }
 
@@ -243,16 +250,10 @@ bool connectionSender::Patch(const Json::Value& jsData)
             nProperties |= FP_ID;
             sReceiverId.clear();
         }
-        else if(jsData.isMember("receiver_id"))
-        {
-            bIsOk = false;
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: receiver_id incorrect type" ;
-        }
-
     }
     else
     {
-    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: error" ;
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: error" ;
     }
     return bIsOk;
 }
@@ -305,7 +306,11 @@ connectionReceiver::connectionReceiver(const connectionReceiver& conReq) : conne
 
 bool connectionReceiver::Patch(const Json::Value& jsData)
 {
-    bool bIsOk(CheckJson(jsData, {"master_enable", "activation", "transport_params", "sender_id", "transport_file"}));
+    bool bIsOk(CheckJsonAllowed(jsData, {{"master_enable", {jsondatatype::_BOOLEAN}},
+                                  {"activation",{jsondatatype::_OBJECT}},
+                                  {"transport_params",{jsondatatype::_ARRAY}},
+                                  {"sender_id",{jsondatatype::_STRING, jsondatatype::_NULL}},
+                                  {"transport_file", {jsondatatype::_OBJECT}}}));
     //need to decode the SDP and make the correct transport param changes here so that any connection json will overwrite them
     if(bIsOk && jsData["transport_file"].isObject())
     {
@@ -342,7 +347,7 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
     if(bIsOk)
     {
 
-        if(jsData["transport_params"].isArray() && jsData["transport_params"].size() == tpReceivers.size())
+        if(jsData["transport_params"].size() == tpReceivers.size())
         {
             nProperties |= FP_TRANSPORT_PARAMS;
             for(size_t i = 0; i < tpReceivers.size(); i++)
@@ -353,7 +358,7 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
         }
         else if(jsData["transport_params"].empty() == false)
         {
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: transport_params not an array or is wrong size." ;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: transport_params not an array or is wrong size. " << jsData["transport_params"].size() << ":" << tpReceivers.size() ;
             bIsOk = false;
         }
         else
@@ -373,12 +378,8 @@ bool connectionReceiver::Patch(const Json::Value& jsData)
         else if(JsonMemberExistsAndIsNull(jsData, "sender_id"))
         {
             pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchReceiver Connection: sender_id is NULL" ;
+            pmlLog() << jsData;
             sSenderId.clear();
-        }
-        else if(jsData.isMember("sender_id") != false)
-        {
-            bIsOk = false;
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: sender_id incorrect type" ;
         }
     }
 

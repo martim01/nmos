@@ -12,12 +12,12 @@ class TestPoster : public pml::nmos::ClientApiPoster
     protected:
 
         void ModeChanged(bool bQueryApi) override;
-        void NodeChanged(const std::list<std::shared_ptr<pml::nmos::Self> >& lstNodesAdded, const std::list<std::shared_ptr<pml::nmos::Self> >& lstNodesUpdated, const std::list<std::shared_ptr<pml::nmos::Self> >& lstNodesRemoved) override;
-        void DeviceChanged(const std::list<std::shared_ptr<pml::nmos::Device> >& lstDevicesAdded, const std::list<std::shared_ptr<pml::nmos::Device> >& lstDevicesUpdated, const std::list<std::shared_ptr<pml::nmos::Device> >& lstDevicesRemoved) override;
-        void SourceChanged(const std::list<std::shared_ptr<pml::nmos::Source> >& lstSourcesAdded, const std::list<std::shared_ptr<pml::nmos::Source> >& lstSourcesUpdated, const std::list<std::shared_ptr<pml::nmos::Source> >& lstSourcesRemoved) override;
-        void FlowChanged(const std::list<std::shared_ptr<pml::nmos::Flow> >& lstFlowsAdded, const std::list<std::shared_ptr<pml::nmos::Flow> >& lstFlowsUpdated, const std::list<std::shared_ptr<pml::nmos::Flow> >& lstFlowsRemoved) override;
-        void SenderChanged(const std::list<std::shared_ptr<pml::nmos::SenderBase> >& lstSendersAdded, const std::list<std::shared_ptr<pml::nmos::SenderBase> >& lstSendersUpdated, const std::list<std::shared_ptr<pml::nmos::SenderBase> >& lstSendersRemoved) override;
-        void ReceiverChanged(const std::list<std::shared_ptr<pml::nmos::ReceiverBase> >& lstReceiversAdded, const std::list<std::shared_ptr<pml::nmos::ReceiverBase> >& lstReceiversUpdated, const std::list<std::shared_ptr<pml::nmos::ReceiverBase> >& lstReceiversRemoved) override;
+        void NodeChanged(const std::list<std::shared_ptr<const pml::nmos::Self> >& lstNodesAdded, const std::list<std::shared_ptr<const pml::nmos::Self> >& lstNodesUpdated, const std::list<std::shared_ptr<const pml::nmos::Self> >& lstNodesRemoved) override;
+        void DeviceChanged(const std::list<std::shared_ptr<const pml::nmos::Device> >& lstDevicesAdded, const std::list<std::shared_ptr<const pml::nmos::Device> >& lstDevicesUpdated, const std::list<std::shared_ptr<const pml::nmos::Device> >& lstDevicesRemoved) override;
+        void SourceChanged(const std::list<std::shared_ptr<const pml::nmos::Source> >& lstSourcesAdded, const std::list<std::shared_ptr<const pml::nmos::Source> >& lstSourcesUpdated, const std::list<std::shared_ptr<const pml::nmos::Source> >& lstSourcesRemoved) override;
+        void FlowChanged(const std::list<std::shared_ptr<const pml::nmos::Flow> >& lstFlowsAdded, const std::list<std::shared_ptr<const pml::nmos::Flow> >& lstFlowsUpdated, const std::list<std::shared_ptr<const pml::nmos::Flow> >& lstFlowsRemoved) override;
+        void SenderChanged(const std::list<std::shared_ptr<const pml::nmos::Sender> >& lstSendersAdded, const std::list<std::shared_ptr<const pml::nmos::Sender> >& lstSendersUpdated, const std::list<std::shared_ptr<const pml::nmos::Sender> >& lstSendersRemoved) override;
+        void ReceiverChanged(const std::list<std::shared_ptr<const pml::nmos::Receiver> >& lstReceiversAdded, const std::list<std::shared_ptr<const pml::nmos::Receiver> >& lstReceiversUpdated, const std::list<std::shared_ptr<const pml::nmos::Receiver> >& lstReceiversRemoved) override;
 
         void QuerySubscription(const std::string& sSubscriptionId, int nResource, const std::string& sQuery) override;
         void QuerySubscriptionRemoved(const std::string& sSubscriptionId) override;
