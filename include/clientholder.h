@@ -7,6 +7,7 @@
 #include <string>
 #include <set>
 #include <list>
+#include "clientapiposter.h"
 
 namespace pml
 {
@@ -22,10 +23,11 @@ namespace pml
 
 
                 bool AddResource(const std::string& sIpAddres, std::shared_ptr<T> pResource);
-                void RemoveResources(const std::string& sIpAddres, typename std::list<std::shared_ptr<const T> >& lstRemoved);
+                resourcechanges<T> RemoveResources(const std::string& sIpAddres);
 
                 void StoreResources(const std::string& sIpAddress);
-                void RemoveStaleResources(typename std::list<std::shared_ptr<const T> >& lstRemoved);
+                typename std::list<std::shared_ptr<const T> > RemoveStaleResources();
+
 
                 void RemoveAllResources();
 
@@ -40,7 +42,7 @@ namespace pml
                 std::shared_ptr<T> UpdateResource(const Json::Value& jsData);
                 size_t GetResourceCount() const;
 
-                void GetResourcesAsList(typename std::list<std::shared_ptr<const T> >& lstResources);
+                resourcechanges<T> GetResourcesAsList();
 
                 std::shared_ptr<T> RemoveResource(const std::string& sUid);
 
@@ -54,6 +56,7 @@ namespace pml
                 std::multimap<std::string, std::string > m_mResourceIdAddress;
 
                 std::set<std::string> m_setStored;
+                std::list<std::shared_ptr<const T>> m_lstRemoved;
         };
     };
 };

@@ -12,12 +12,12 @@ class TestPoster : public pml::nmos::ClientApiPoster
     protected:
 
         void ModeChanged(bool bQueryApi) override;
-        void NodeChanged(const std::list<std::shared_ptr<const pml::nmos::Self> >& lstNodesAdded, const std::list<std::shared_ptr<const pml::nmos::Self> >& lstNodesUpdated, const std::list<std::shared_ptr<const pml::nmos::Self> >& lstNodesRemoved) override;
-        void DeviceChanged(const std::list<std::shared_ptr<const pml::nmos::Device> >& lstDevicesAdded, const std::list<std::shared_ptr<const pml::nmos::Device> >& lstDevicesUpdated, const std::list<std::shared_ptr<const pml::nmos::Device> >& lstDevicesRemoved) override;
-        void SourceChanged(const std::list<std::shared_ptr<const pml::nmos::Source> >& lstSourcesAdded, const std::list<std::shared_ptr<const pml::nmos::Source> >& lstSourcesUpdated, const std::list<std::shared_ptr<const pml::nmos::Source> >& lstSourcesRemoved) override;
-        void FlowChanged(const std::list<std::shared_ptr<const pml::nmos::Flow> >& lstFlowsAdded, const std::list<std::shared_ptr<const pml::nmos::Flow> >& lstFlowsUpdated, const std::list<std::shared_ptr<const pml::nmos::Flow> >& lstFlowsRemoved) override;
-        void SenderChanged(const std::list<std::shared_ptr<const pml::nmos::Sender> >& lstSendersAdded, const std::list<std::shared_ptr<const pml::nmos::Sender> >& lstSendersUpdated, const std::list<std::shared_ptr<const pml::nmos::Sender> >& lstSendersRemoved) override;
-        void ReceiverChanged(const std::list<std::shared_ptr<const pml::nmos::Receiver> >& lstReceiversAdded, const std::list<std::shared_ptr<const pml::nmos::Receiver> >& lstReceiversUpdated, const std::list<std::shared_ptr<const pml::nmos::Receiver> >& lstReceiversRemoved) override;
+        void NodeChanged(const pml::nmos::resourcechanges<pml::nmos::Self>& changed) override;
+        void DeviceChanged(const pml::nmos::resourcechanges<pml::nmos::Device>& changed) override;
+        void SourceChanged(const pml::nmos::resourcechanges<pml::nmos::Source>& changed) override;
+        void FlowChanged(const pml::nmos::resourcechanges<pml::nmos::Flow>& changed) override;
+        void SenderChanged(const pml::nmos::resourcechanges<pml::nmos::Sender>& changed) override;
+        void ReceiverChanged(const pml::nmos::resourcechanges<pml::nmos::Receiver>& changed) override;
 
         void QuerySubscription(const std::string& sSubscriptionId, int nResource, const std::string& sQuery) override;
         void QuerySubscriptionRemoved(const std::string& sSubscriptionId) override;

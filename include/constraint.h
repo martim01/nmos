@@ -87,6 +87,5 @@ namespace pml
             ConstraintsReceiver(int nSupported);
         };
 
-        std::vector<Constraints> CreateConstraints(const Json::Value& jsData);
     };
 };

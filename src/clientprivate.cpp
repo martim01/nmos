@@ -37,6 +37,26 @@ using namespace std::placeholders;
 const std::array<std::string, 6> ClientApiImpl::STR_RESOURCE = {"node", "device", "source", "flow", "sender", "receiver"};
 const std::array<std::string, 7> ClientApiImpl::STR_CONNECTION = {"staged", "active", "transportfile","constraints", "staged", "active", "constraint"};
 
+std::vector<Constraints> CreateConstraints(const Json::Value& jsData)
+{
+    std::vector<Constraints> vConstraints;
+    if(jsData.isArray() != false)
+    {
+        for(size_t i = 0; i < jsData.size(); i++)
+        {
+            if(jsData[i].isObject())
+            {
+                Constraints con(TransportParamsRTP::CORE);
+                if(con.UpdateFromJson(jsData[i]))
+                {
+                    vConstraints.push_back(con);
+                }
+            }
+        }
+    }
+    return vConstraints;
+}
+
 //Main Client Thread
 void ClientThread(ClientApiImpl* pApi)
 {
@@ -111,16 +131,13 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<dnsInstance> pInsta
                     pmlLog(pml::LOG_DEBUG) << "NMOS: NodeBrowser ver_slf changed" ;
 
                     auto curlresp = CurlRegister::Get(std::string(ss.str()+"self"), true);
-                    std::list<std::shared_ptr<const Self> > lstAdded;
-                    std::list<std::shared_ptr<const Self> > lstUpdated;
-                    std::list<std::shared_ptr<const Self> > lstRemoved;
-                    pApi->AddNode(lstAdded, lstUpdated, pInstance->sHostIP, ConvertToJson(curlresp.sResponse));
+                    auto changed = pApi->AddNode(pInstance->sHostIP, ConvertToJson(curlresp.sResponse));
 
-                    if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::NODES))
+                    if(pApi->RunQuery(changed, ClientApiImpl::NODES))
                     {
                         if(pApi->GetPoster())
                         {
-                            pApi->GetPoster()->_NodeChanged(lstAdded, lstUpdated, lstRemoved);
+                            pApi->GetPoster()->_NodeChanged(changed);
                         }
                     }
                     else
@@ -134,21 +151,18 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<dnsInstance> pInsta
 
                     auto curlresp = CurlRegister::Get(std::string(ss.str()+"devices"), true);
 
-                    std::list<std::shared_ptr<const Device> > lstAdded;
-                    std::list<std::shared_ptr<const Device> > lstUpdated;
-                    std::list<std::shared_ptr<const Device> > lstRemoved;
                     //store the devices this ip address currently provides
                     pApi->StoreDevices(pInstance->sHostIP);
                     //add or update all devices on this ip address
-                    pApi->AddDevices(lstAdded, lstUpdated, pInstance->sHostIP, ConvertToJson(curlresp.sResponse));
+                    auto changed = pApi->AddDevices(pInstance->sHostIP, ConvertToJson(curlresp.sResponse));
                     //remove any devices that we previously stored but didn;t update. i.e. ones that no longer exist
-                    pApi->RemoveStaleDevices(lstRemoved);
+                    changed += pApi->RemoveStaleDevices();
 
-                    if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::DEVICES))
+                    if(pApi->RunQuery(changed, ClientApiImpl::DEVICES))
                     {
                         if(pApi->GetPoster())
                         {
-                            pApi->GetPoster()->_DeviceChanged(lstAdded, lstUpdated, lstRemoved);
+                            pApi->GetPoster()->_DeviceChanged(changed);
                         }
                     }
                     else
@@ -162,19 +176,16 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<dnsInstance> pInsta
 
                     auto curlresp = CurlRegister::Get(std::string(ss.str()+"sources"), true);
 
-                    std::list<std::shared_ptr<const Source> > lstAdded;
-                    std::list<std::shared_ptr<const Source> > lstUpdated;
-                    std::list<std::shared_ptr<const Source> > lstRemoved;
 
                     pApi->StoreSources(pInstance->sHostIP);
-                    pApi->AddSources(lstAdded, lstUpdated, pInstance->sHostIP, ConvertToJson(curlresp.sResponse));
-                    pApi->RemoveStaleSources(lstRemoved);
+                    auto changed = pApi->AddSources(pInstance->sHostIP, ConvertToJson(curlresp.sResponse));
+                    changed += pApi->RemoveStaleSources();
 
-                    if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::SOURCES))
+                    if(pApi->RunQuery(changed, ClientApiImpl::SOURCES))
                     {
                         if(pApi->GetPoster())
                         {
-                            pApi->GetPoster()->_SourceChanged(lstAdded, lstUpdated, lstRemoved);
+                            pApi->GetPoster()->_SourceChanged(changed);
                         }
                     }
                     else
@@ -188,19 +199,16 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<dnsInstance> pInsta
 
                     auto curlresp = CurlRegister::Get(std::string(ss.str()+"flows"), true);
 
-                    std::list<std::shared_ptr<const Flow> > lstAdded;
-                    std::list<std::shared_ptr<const Flow> > lstUpdated;
-                    std::list<std::shared_ptr<const Flow> > lstRemoved;
 
                     pApi->StoreFlows(pInstance->sHostIP);
-                    pApi->AddFlows(lstAdded, lstUpdated, pInstance->sHostIP, ConvertToJson(curlresp.sResponse));
-                    pApi->RemoveStaleFlows(lstRemoved);
+                    auto changed = pApi->AddFlows(pInstance->sHostIP, ConvertToJson(curlresp.sResponse));
+                    changed += pApi->RemoveStaleFlows();
 
-                    if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::FLOWS))
+                    if(pApi->RunQuery(changed, ClientApiImpl::FLOWS))
                     {
                         if(pApi->GetPoster())
                         {
-                            pApi->GetPoster()->_FlowChanged(lstAdded, lstUpdated, lstRemoved);
+                            pApi->GetPoster()->_FlowChanged(changed);
                         }
                     }
                     else
@@ -214,19 +222,16 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<dnsInstance> pInsta
 
                     auto curlresp = CurlRegister::Get(std::string(ss.str()+"senders"), true);
 
-                    std::list<std::shared_ptr<const Sender> > lstAdded;
-                    std::list<std::shared_ptr<const Sender> > lstUpdated;
-                    std::list<std::shared_ptr<const Sender> > lstRemoved;
 
                     pApi->StoreSenders(pInstance->sHostIP);
-                    pApi->AddSenders(lstAdded, lstUpdated, pInstance->sHostIP, ConvertToJson(curlresp.sResponse));
-                    pApi->RemoveStaleSenders(lstRemoved);
+                    auto changed = pApi->AddSenders( pInstance->sHostIP, ConvertToJson(curlresp.sResponse));
+                    changed += pApi->RemoveStaleSenders();
 
-                    if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::SENDERS))
+                    if(pApi->RunQuery(changed, ClientApiImpl::SENDERS))
                     {
                         if(pApi->GetPoster())
                         {
-                            pApi->GetPoster()->_SenderChanged(lstAdded, lstUpdated, lstRemoved);
+                            pApi->GetPoster()->_SenderChanged(changed);
                         }
                     }
                     else
@@ -240,18 +245,15 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<dnsInstance> pInsta
 
                     auto curlresp = CurlRegister::Get(std::string(ss.str()+"receivers"), true);
 
-                    std::list<std::shared_ptr<const Receiver> > lstAdded;
-                    std::list<std::shared_ptr<const Receiver> > lstUpdated;
-                    std::list<std::shared_ptr<const Receiver> > lstRemoved;
                     pApi->StoreReceivers(pInstance->sHostIP);
-                    pApi->AddReceivers(lstAdded, lstUpdated, pInstance->sHostIP, ConvertToJson(curlresp.sResponse));
-                    pApi->RemoveStaleReceivers(lstRemoved);
+                    auto changed = pApi->AddReceivers(pInstance->sHostIP, ConvertToJson(curlresp.sResponse));
+                    changed += pApi->RemoveStaleReceivers();
 
-                    if(pApi->RunQuery(lstAdded, lstUpdated, lstRemoved, ClientApiImpl::RECEIVERS))
+                    if(pApi->RunQuery(changed, ClientApiImpl::RECEIVERS))
                     {
                         if(pApi->GetPoster())
                         {
-                            pApi->GetPoster()->_ReceiverChanged(lstAdded, lstUpdated, lstRemoved);
+                            pApi->GetPoster()->_ReceiverChanged(changed);
                         }
                     }
                     else
@@ -299,7 +301,7 @@ void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std:
         pApi->HandleConnect(sSenderId, sReceiverId, false, curlResp.sResponse);
     }
 
-
+    //@todo check that what we want to do will meet the constraints
 
     connectionSender aCon(connection::FP_ACTIVATION | connection::FP_ENABLE | connection::FP_TRANSPORT_PARAMS);
     aCon.eActivate = connection::ACT_NOW;
@@ -875,10 +877,11 @@ ClientApiImpl::enumMode ClientApiImpl::GetMode()
 
 
 
-void ClientApiImpl::AddNode(std::list<std::shared_ptr<const Self> >& lstAdded, std::list<std::shared_ptr<const Self> >& lstUpdated,const std::string& sIpAddress, const Json::Value& jsData)
+resourcechanges<Self> ClientApiImpl::AddNode(const std::string& sIpAddress, const Json::Value& jsData)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
 
+    resourcechanges<Self> changed;
     if(jsData["id"].isString())
     {
         auto pSelf = m_nodes.UpdateResource(jsData);
@@ -888,7 +891,7 @@ void ClientApiImpl::AddNode(std::list<std::shared_ptr<const Self> >& lstAdded, s
             if(pSelf->UpdateFromJson(jsData))
             {
                 m_nodes.AddResource(sIpAddress, pSelf);
-                lstAdded.push_back(pSelf);
+                changed.lstAdded.push_back(pSelf);
 
                 pmlLog(pml::LOG_INFO) << "NMOS: " << "Node: " << pSelf->GetId() << " found at " << sIpAddress ;
             }
@@ -899,19 +902,20 @@ void ClientApiImpl::AddNode(std::list<std::shared_ptr<const Self> >& lstAdded, s
         }
         else
         {
-            lstUpdated.push_back(pSelf);
+            changed.lstUpdated.push_back(pSelf);
         }
     }
     else
     {
         pmlLog(pml::LOG_INFO) << "NMOS: " << "Reply from " << sIpAddress << "but not valid JSON - id not correct" ;
     }
+    return changed;
 }
 
-void ClientApiImpl::AddDevices(std::list<std::shared_ptr<const Device> >& lstAdded, std::list<std::shared_ptr<const Device> >& lstUpdated, const std::string& sIpAddress,
-const Json::Value& jsData)
+resourcechanges<Device> ClientApiImpl::AddDevices(const std::string& sIpAddress, const Json::Value& jsData)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
+    resourcechanges<Device> changed;
 
     if(jsData.isArray())
     {
@@ -919,7 +923,7 @@ const Json::Value& jsData)
         {
             if(jsData[ai].isObject() && jsData[ai]["id"].isString())
             {
-                AddDevice(lstAdded, lstUpdated, sIpAddress, jsData[ai]);
+                changed += AddDevice(sIpAddress, jsData[ai]);
             }
             else
             {
@@ -931,12 +935,12 @@ const Json::Value& jsData)
     {
         pmlLog(pml::LOG_INFO) << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not array" ;
     }
-
+    return changed;
 }
 
-void ClientApiImpl::AddDevice(std::list<std::shared_ptr<const Device> >& lstAdded, std::list<std::shared_ptr<const Device> >& lstUpdated, const std::string& sIpAddress,
-const Json::Value& jsData)
+resourcechanges<Device> ClientApiImpl::AddDevice(const std::string& sIpAddress,const Json::Value& jsData)
 {
+    resourcechanges<Device> changed;
     auto pResource = m_devices.UpdateResource(jsData);
     if(!pResource)
     {
@@ -944,7 +948,7 @@ const Json::Value& jsData)
         if(pResource->UpdateFromJson(jsData))
         {
             m_devices.AddResource(sIpAddress, pResource);
-            lstAdded.push_back(pResource);
+            changed.lstAdded.push_back(pResource);
             pmlLog(pml::LOG_INFO) << "NMOS: " << "Device: " << pResource->GetId() << " found at " << sIpAddress ;
         }
         else
@@ -954,20 +958,23 @@ const Json::Value& jsData)
     }
     else
     {
-        lstUpdated.push_back(pResource);
+        changed.lstUpdated.push_back(pResource);
     }
+    return changed;
 }
 
-void ClientApiImpl::AddSources(std::list<std::shared_ptr<const Source> >& lstAdded, std::list<std::shared_ptr<const Source> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData)
+resourcechanges<Source> ClientApiImpl::AddSources(const std::string& sIpAddress, const Json::Value& jsData)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
+    resourcechanges<Source> changed;
+
     if(jsData.isArray())
     {
         for(Json::ArrayIndex ai = 0; ai < jsData.size(); ++ai)
         {
             if(jsData[ai].isObject() && jsData[ai]["format"].isString() && jsData[ai]["id"].isString())
             {
-                AddSource(lstAdded, lstUpdated, sIpAddress, jsData[ai]);
+                changed += AddSource(sIpAddress, jsData[ai]);
             }
             else
             {
@@ -979,10 +986,12 @@ void ClientApiImpl::AddSources(std::list<std::shared_ptr<const Source> >& lstAdd
     {
         pmlLog(pml::LOG_INFO) << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not array" ;
     }
+    return changed;
 }
 
-void ClientApiImpl::AddSource(std::list<std::shared_ptr<const Source> >& lstAdded, std::list<std::shared_ptr<const Source> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData)
+resourcechanges<Source> ClientApiImpl::AddSource(const std::string& sIpAddress, const Json::Value& jsData)
 {
+    resourcechanges<Source> changed;
     auto pSourceCore = m_sources.UpdateResource(jsData);
     if(!pSourceCore)
     {
@@ -992,7 +1001,7 @@ void ClientApiImpl::AddSource(std::list<std::shared_ptr<const Source> >& lstAdde
             if(pResource->UpdateFromJson(jsData))
             {
                 m_sources.AddResource(sIpAddress, pResource);
-                lstAdded.push_back(pResource);
+                changed.lstAdded.push_back(pResource);
                 pmlLog(pml::LOG_INFO) << "NMOS: " << "SourceAudio: " << pResource->GetId() << " found at " << sIpAddress ;
             }
             else
@@ -1007,7 +1016,7 @@ void ClientApiImpl::AddSource(std::list<std::shared_ptr<const Source> >& lstAdde
             {
                 m_sources.AddResource(sIpAddress, pResource);
 
-                lstAdded.push_back(pResource);
+                changed.lstAdded.push_back(pResource);
                 pmlLog(pml::LOG_INFO) << "NMOS: " << "SourceGeneric: " << pResource->GetId() << " found at " << sIpAddress ;
             }
             else
@@ -1018,13 +1027,16 @@ void ClientApiImpl::AddSource(std::list<std::shared_ptr<const Source> >& lstAdde
     }
     else
     {
-        lstUpdated.push_back(pSourceCore);
+        changed.lstUpdated.push_back(pSourceCore);
     }
+    return changed;
 }
 
-void ClientApiImpl::AddFlows(std::list<std::shared_ptr<const Flow> >& lstAdded, std::list<std::shared_ptr<const Flow> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData)
+resourcechanges<Flow> ClientApiImpl::AddFlows(const std::string& sIpAddress, const Json::Value& jsData)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
+
+    resourcechanges<Flow> changed;
 
     if(jsData.isArray())
     {
@@ -1032,7 +1044,7 @@ void ClientApiImpl::AddFlows(std::list<std::shared_ptr<const Flow> >& lstAdded, 
         {
             if(jsData[ai].isObject() && jsData[ai]["format"].isString() && jsData[ai]["id"].isString())
             {
-                AddFlow(lstAdded, lstUpdated, sIpAddress, jsData[ai]);
+                changed += AddFlow(sIpAddress, jsData[ai]);
             }
             else
             {
@@ -1044,137 +1056,155 @@ void ClientApiImpl::AddFlows(std::list<std::shared_ptr<const Flow> >& lstAdded, 
     {
         pmlLog(pml::LOG_INFO) << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not array" ;
     }
+    return changed;
 }
 
-void ClientApiImpl::AddFlow(std::list<std::shared_ptr<const Flow> >& lstAdded, std::list<std::shared_ptr<const Flow> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData)
+resourcechanges<Flow> ClientApiImpl::AddFlow(const std::string& sIpAddress, const Json::Value& jsData)
 {
+    resourcechanges<Flow> changed;
+
     auto pFlowCore = m_flows.UpdateResource(jsData);
     if(!pFlowCore)
     {
-        CreateFlow(lstAdded, jsData, sIpAddress);
+        auto pFlow = CreateFlow(jsData, sIpAddress);
+        if(pFlow)
+        {
+            changed.lstAdded.push_back(pFlow);
+        }
     }
     else
     {
-        lstUpdated.push_back(pFlowCore);
+        changed.lstUpdated.push_back(pFlowCore);
+
     }
+    return changed;
 }
 
-void ClientApiImpl::CreateFlow(std::list<std::shared_ptr<const Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress)
+std::shared_ptr<const Flow> ClientApiImpl::CreateFlow(const Json::Value& jsData, const std::string& sIpAddress)
 {
 
     if(jsData["format"].asString().find("urn:x-nmos:format:audio") != std::string::npos)
     {
-        CreateFlowAudio(lstAdded, jsData, sIpAddress);
+        return CreateFlowAudio(jsData, sIpAddress);
     }
     else if(jsData["format"].asString().find("urn:x-nmos:format:video") != std::string::npos)
     {
-        CreateFlowVideo(lstAdded, jsData, sIpAddress);
+        return CreateFlowVideo(jsData, sIpAddress);
     }
     else if(jsData["format"].asString().find("urn:x-nmos:format:data") != std::string::npos)
     {
-        CreateFlowData(lstAdded, jsData, sIpAddress);
+        return CreateFlowData(jsData, sIpAddress);
     }
     else if(jsData["format"].asString().find("urn:x-nmos:format:mux") != std::string::npos)
     {
-        CreateFlowMux(lstAdded, jsData, sIpAddress);
+        return CreateFlowMux(jsData, sIpAddress);
     }
     else
     {
         pmlLog(pml::LOG_WARN) << "NMOS: ClientApi: Unknown flow format: " << jsData["format"].asString();
+        return nullptr;
     }
+
 }
 
-void ClientApiImpl::CreateFlowAudio(std::list<std::shared_ptr<const Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress)
+std::shared_ptr<const Flow> ClientApiImpl::CreateFlowAudio(const Json::Value& jsData, const std::string& sIpAddress)
 {
     if(jsData["media_type"].isString())
     {
         if(jsData["media_type"].asString() == "audio/L24" || jsData["media_type"].asString() == "audio/L20" || jsData["media_type"].asString() == "audio/L16" || jsData["media_type"].asString() == "audio/L8")
         {   //Raw Audio
-            CreateFlowAudioRaw(lstAdded, jsData, sIpAddress);
+            return CreateFlowAudioRaw(jsData, sIpAddress);
         }
         else
         {   //Code audio
-            CreateFlowAudioCoded(lstAdded, jsData, sIpAddress);
+            return CreateFlowAudioCoded(jsData, sIpAddress);
         }
     }
+    return nullptr;
 }
 
-void ClientApiImpl::CreateFlowAudioCoded(std::list<std::shared_ptr<const Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress)
+std::shared_ptr<const Flow> ClientApiImpl::CreateFlowAudioCoded(const Json::Value& jsData, const std::string& sIpAddress)
 {
     auto pResource = std::make_shared<FlowAudioCoded>();
     if(pResource->UpdateFromJson(jsData))
     {
         m_flows.AddResource(sIpAddress, pResource);
-        lstAdded.push_back(pResource);
         pmlLog(pml::LOG_INFO) << "NMOS: " << "FlowAudioCoded: " << pResource->GetId() << " found at " << sIpAddress ;
+        return pResource;
     }
     else
     {
         pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() ;
+        return nullptr;
     }
 }
-void ClientApiImpl::CreateFlowAudioRaw(std::list<std::shared_ptr<const Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress)
+
+std::shared_ptr<const Flow> ClientApiImpl::CreateFlowAudioRaw(const Json::Value& jsData, const std::string& sIpAddress)
 {
     auto pResource = std::make_shared<FlowAudioRaw>();
     if(pResource->UpdateFromJson(jsData))
     {
         m_flows.AddResource(sIpAddress, pResource);
-        lstAdded.push_back(pResource);
         pmlLog(pml::LOG_INFO) << "NMOS: " << "FlowAudioRaw: " << pResource->GetId() << " found at " << sIpAddress ;
+        return pResource;
     }
     else
     {
         pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() ;
+        return nullptr;
     }
 
 }
 
-void ClientApiImpl::CreateFlowVideo(std::list<std::shared_ptr<const Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress)
+std::shared_ptr<const Flow> ClientApiImpl::CreateFlowVideo(const Json::Value& jsData, const std::string& sIpAddress)
 {
     if(jsData["media_type"].isString())
     {//Coded vidoe
         if(jsData["media_type"].asString() == "vidoe/raw")
         {
-            CreateFlowVideoRaw(lstAdded, jsData, sIpAddress);
+            return CreateFlowVideoRaw(jsData, sIpAddress);
         }
         else
         {
-            CreateFlowVideoCoded(lstAdded, jsData, sIpAddress);
+            return CreateFlowVideoCoded(jsData, sIpAddress);
         }
     }
+    return nullptr;
 }
 
-void ClientApiImpl::CreateFlowVideoRaw(std::list<std::shared_ptr<const Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress)
+std::shared_ptr<const Flow> ClientApiImpl::CreateFlowVideoRaw(const Json::Value& jsData, const std::string& sIpAddress)
 {
     auto pResource = std::make_shared<FlowVideoRaw>();
     if(pResource->UpdateFromJson(jsData))
     {
         m_flows.AddResource(sIpAddress, pResource);
-        lstAdded.push_back(pResource);
         pmlLog(pml::LOG_INFO) << "NMOS: " << "FlowVideoRaw: " << pResource->GetId() << " found at " << sIpAddress ;
+        return pResource;
     }
     else
     {
         pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() ;
+        return nullptr;
     }
 }
 
-void ClientApiImpl::CreateFlowVideoCoded(std::list<std::shared_ptr<const Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress)
+std::shared_ptr<const Flow> ClientApiImpl::CreateFlowVideoCoded(const Json::Value& jsData, const std::string& sIpAddress)
 {
     auto pResource = std::make_shared<FlowVideoCoded>(jsData["media_type"].asString());
     if(pResource->UpdateFromJson(jsData))
     {
         m_flows.AddResource(sIpAddress, pResource);
-        lstAdded.push_back(pResource);
         pmlLog(pml::LOG_INFO) << "NMOS: " << "FlowVideoCoded: " << pResource->GetId() << " found at " << sIpAddress ;
+        return pResource;
     }
     else
     {
         pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() ;
+        return nullptr;
     }
 }
 
-void ClientApiImpl::CreateFlowData(std::list<std::shared_ptr<const Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress)
+std::shared_ptr<const Flow> ClientApiImpl::CreateFlowData(const Json::Value& jsData, const std::string& sIpAddress)
 {
     if(jsData["media_type"] == "video/smpte291")
     {
@@ -1182,12 +1212,13 @@ void ClientApiImpl::CreateFlowData(std::list<std::shared_ptr<const Flow>>& lstAd
         if(pResource->UpdateFromJson(jsData))
         {
             m_flows.AddResource(sIpAddress, pResource);
-            lstAdded.push_back(pResource);
             pmlLog(pml::LOG_INFO) << "NMOS: " << "FlowDataSdiAnc: " << pResource->GetId() << " found at " << sIpAddress ;
+            return pResource;
         }
         else
         {
             pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() ;
+            return nullptr;
         }
     }
     else if(jsData["media_type"] == "application/json")
@@ -1196,44 +1227,50 @@ void ClientApiImpl::CreateFlowData(std::list<std::shared_ptr<const Flow>>& lstAd
         if(pResource->UpdateFromJson(jsData))
         {
             m_flows.AddResource(sIpAddress, pResource);
-            lstAdded.push_back(pResource);
             pmlLog(pml::LOG_INFO) << "NMOS: " << "FlowDataSdiAnc: " << pResource->GetId() << " found at " << sIpAddress ;
+            return pResource;
         }
         else
         {
             pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() ;
+            return nullptr;
         }
     }
-    //SDIAncData only at the moment
+    else
+    {
+        return nullptr;
+    }
 }
 
-void ClientApiImpl::CreateFlowMux(std::list<std::shared_ptr<const Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress)
+std::shared_ptr<const Flow> ClientApiImpl::CreateFlowMux(const Json::Value& jsData, const std::string& sIpAddress)
 {
     //Mux only at the momemnt
     auto pResource = std::make_shared<FlowMux>();
     if(pResource->UpdateFromJson(jsData))
     {
         m_flows.AddResource(sIpAddress, pResource);
-        lstAdded.push_back(pResource);
         pmlLog(pml::LOG_INFO) << "NMOS: " << "FlowMux: " << pResource->GetId() << " found at " << sIpAddress ;
+        return pResource;
     }
     else
     {
         pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() ;
+        return nullptr;
     }
 }
 
 
-void ClientApiImpl::AddSenders(std::list<std::shared_ptr<const Sender> >& lstAdded, std::list<std::shared_ptr<const Sender> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData)
+resourcechanges<Sender> ClientApiImpl::AddSenders(const std::string& sIpAddress, const Json::Value& jsData)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
+    resourcechanges<Sender> changed;
     if(jsData.isArray())
     {
         for(Json::ArrayIndex ai = 0; ai < jsData.size(); ++ai)
         {
             if(jsData[ai].isObject() && jsData[ai]["id"].isString())
             {
-                AddSender(lstAdded, lstUpdated, sIpAddress, jsData[ai]);
+                changed += AddSender(sIpAddress, jsData[ai]);
             }
             else
             {
@@ -1245,10 +1282,12 @@ void ClientApiImpl::AddSenders(std::list<std::shared_ptr<const Sender> >& lstAdd
     {
         pmlLog(pml::LOG_INFO) << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not array" ;
     }
+    return changed;
 }
 
-void ClientApiImpl::AddSender(std::list<std::shared_ptr<const Sender> >& lstAdded, std::list<std::shared_ptr<const Sender> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData)
+resourcechanges<Sender> ClientApiImpl::AddSender(const std::string& sIpAddress, const Json::Value& jsData)
 {
+    resourcechanges<Sender> changed;
     auto pResource = m_senders.UpdateResource(jsData);
     if(!pResource)
     {
@@ -1256,7 +1295,7 @@ void ClientApiImpl::AddSender(std::list<std::shared_ptr<const Sender> >& lstAdde
         if(pResource->UpdateFromJson(jsData))
         {
             m_senders.AddResource(sIpAddress, pResource);
-            lstAdded.push_back(pResource);
+            changed.lstAdded.push_back(pResource);
             pmlLog(pml::LOG_INFO) << "NMOS: " << "Sender: " << pResource->GetId() << " found at " << sIpAddress ;
         }
         else
@@ -1266,20 +1305,22 @@ void ClientApiImpl::AddSender(std::list<std::shared_ptr<const Sender> >& lstAdde
     }
     else
     {
-        lstUpdated.push_back(pResource);
+        changed.lstUpdated.push_back(pResource);
     }
+    return changed;
 }
 
-void ClientApiImpl::AddReceivers(std::list<std::shared_ptr<const Receiver> >& lstAdded, std::list<std::shared_ptr<const Receiver> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData)
+resourcechanges<Receiver> ClientApiImpl::AddReceivers(const std::string& sIpAddress, const Json::Value& jsData)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
+    resourcechanges<Receiver> changed;
     if(jsData.isArray())
     {
         for(Json::ArrayIndex ai = 0; ai < jsData.size(); ++ai)
         {
             if(jsData[ai].isObject() && jsData[ai]["id"].isString())
             {
-                AddReceiver(lstAdded, lstUpdated, sIpAddress, jsData[ai]);
+                changed += AddReceiver(sIpAddress, jsData[ai]);
             }
             else
             {
@@ -1291,10 +1332,12 @@ void ClientApiImpl::AddReceivers(std::list<std::shared_ptr<const Receiver> >& ls
     {
         pmlLog(pml::LOG_INFO) << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not array" ;
     }
+    return changed;
 }
 
-void ClientApiImpl::AddReceiver(std::list<std::shared_ptr<const Receiver> >& lstAdded, std::list<std::shared_ptr<const Receiver> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData)
+resourcechanges<Receiver> ClientApiImpl::AddReceiver(const std::string& sIpAddress, const Json::Value& jsData)
 {
+    resourcechanges<Receiver> changed;
     auto pResource = m_receivers.UpdateResource(jsData);
     if(!pResource)
     {
@@ -1302,7 +1345,7 @@ void ClientApiImpl::AddReceiver(std::list<std::shared_ptr<const Receiver> >& lst
         if(pResource->UpdateFromJson(jsData))
         {
             m_receivers.AddResource(sIpAddress, pResource);
-            lstAdded.push_back(pResource);
+            changed.lstAdded.push_back(pResource);
             pmlLog(pml::LOG_INFO) << "NMOS: " << "Receiver: " << pResource->GetId() << " found at " << sIpAddress ;
         }
         else
@@ -1312,54 +1355,49 @@ void ClientApiImpl::AddReceiver(std::list<std::shared_ptr<const Receiver> >& lst
     }
     else
     {
-        lstUpdated.push_back(pResource);
+        changed.lstUpdated.push_back(pResource);
     }
+    return changed;
+
 }
 
 void ClientApiImpl::RemoveResources(const std::string& sIpAddress)
 {
-    std::list<std::shared_ptr<const Self> > lstSelf;
-    std::list<std::shared_ptr<const Device> > lstDevice;
-    std::list<std::shared_ptr<const Source> > lstSource;
-    std::list<std::shared_ptr<const Flow> > lstFlow;
-    std::list<std::shared_ptr<const Sender> > lstSender;
-    std::list<std::shared_ptr<const Receiver> > lstReceiver;
+    auto changedSelf = m_nodes.RemoveResources(sIpAddress);
+    auto changedDevices = m_devices.RemoveResources(sIpAddress);
+    auto changedSources = m_sources.RemoveResources(sIpAddress);
+    auto changedFlows = m_flows.RemoveResources(sIpAddress);
+    auto changedSenders = m_senders.RemoveResources(sIpAddress);
+    auto changedReceivers = m_receivers.RemoveResources(sIpAddress);
 
-    m_nodes.RemoveResources(sIpAddress, lstSelf);
-    m_devices.RemoveResources(sIpAddress, lstDevice);
-    m_sources.RemoveResources(sIpAddress, lstSource);
-    m_flows.RemoveResources(sIpAddress, lstFlow);
-    m_senders.RemoveResources(sIpAddress, lstSender);
-    m_receivers.RemoveResources(sIpAddress, lstReceiver);
-
-    if(RunQuery(lstSelf, ClientApiImpl::NODES))
+    if(RunQuery(changedSelf.lstRemoved, ClientApiImpl::NODES))
     {
-        m_pPoster->_NodeChanged({}, {}, lstSelf);
+        m_pPoster->_NodeChanged(changedSelf);
     }
 
-    if(RunQuery(lstDevice, ClientApiImpl::DEVICES))
+    if(RunQuery(changedDevices.lstRemoved, ClientApiImpl::DEVICES))
     {
-        m_pPoster->_DeviceChanged({}, {}, lstDevice);
+        m_pPoster->_DeviceChanged(changedDevices);
     }
 
-    if(RunQuery(lstSource, ClientApiImpl::SOURCES))
+    if(RunQuery(changedSources.lstRemoved, ClientApiImpl::SOURCES))
     {
-        m_pPoster->_SourceChanged({}, {}, lstSource);
+        m_pPoster->_SourceChanged(changedSources);
     }
 
-    if(RunQuery(lstFlow, ClientApiImpl::FLOWS))
+    if(RunQuery(changedFlows.lstRemoved, ClientApiImpl::FLOWS))
     {
-        m_pPoster->_FlowChanged({}, {}, lstFlow);
+        m_pPoster->_FlowChanged(changedFlows);
     }
 
-    if(RunQuery(lstSender, ClientApiImpl::SENDERS))
+    if(RunQuery(changedSenders.lstRemoved, ClientApiImpl::SENDERS))
     {
-        m_pPoster->_SenderChanged({}, {}, lstSender);
+        m_pPoster->_SenderChanged(changedSenders);
     }
 
-    if(RunQuery(lstReceiver, ClientApiImpl::RECEIVERS))
+    if(RunQuery(changedReceivers.lstRemoved, ClientApiImpl::RECEIVERS))
     {
-        m_pPoster->_ReceiverChanged({}, {}, lstReceiver);
+        m_pPoster->_ReceiverChanged(changedReceivers);
     }
 }
 
@@ -1750,30 +1788,39 @@ void ClientApiImpl::StoreReceivers(const std::string& sIpAddress)
     m_receivers.StoreResources(sIpAddress);
 }
 
-void ClientApiImpl::RemoveStaleDevices(std::list<std::shared_ptr<const Device> >& lstRemoved)
+resourcechanges<Device> ClientApiImpl::RemoveStaleDevices()
 {
-    m_devices.RemoveStaleResources(lstRemoved);
-
+    resourcechanges<Device> changes;
+    changes.lstRemoved = m_devices.RemoveStaleResources();
+    return changes;
 }
 
-void ClientApiImpl::RemoveStaleSources(std::list<std::shared_ptr<const Source> >& lstRemoved)
+resourcechanges<Source> ClientApiImpl::RemoveStaleSources()
 {
-    m_sources.RemoveStaleResources(lstRemoved);
+    resourcechanges<Source> changes;
+    changes.lstRemoved = m_sources.RemoveStaleResources();
+    return changes;
 }
 
-void ClientApiImpl::RemoveStaleFlows(std::list<std::shared_ptr<const Flow> >& lstRemoved)
+resourcechanges<Flow> ClientApiImpl::RemoveStaleFlows()
 {
-    m_flows.RemoveStaleResources(lstRemoved);
+    resourcechanges<Flow> changes;
+    changes.lstRemoved = m_flows.RemoveStaleResources();
+    return changes;
 }
 
-void ClientApiImpl::RemoveStaleSenders(std::list<std::shared_ptr<const Sender> >& lstRemoved)
+resourcechanges<Sender> ClientApiImpl::RemoveStaleSenders()
 {
-    m_senders.RemoveStaleResources(lstRemoved);
+    resourcechanges<Sender> changes;
+    changes.lstRemoved = m_senders.RemoveStaleResources();
+    return changes;
 }
 
-void ClientApiImpl::RemoveStaleReceivers(std::list<std::shared_ptr<const Receiver> >& lstRemoved)
+resourcechanges<Receiver> ClientApiImpl::RemoveStaleReceivers()
 {
-    m_receivers.RemoveStaleResources(lstRemoved);
+    resourcechanges<Receiver> changes;
+    changes.lstRemoved = m_receivers.RemoveStaleResources();
+    return changes;
 }
 
 bool ClientApiImpl::Connect(const std::string& sSenderId, const std::string& sReceiverId)
@@ -1796,7 +1843,6 @@ bool ClientApiImpl::Connect(const std::string& sSenderId, const std::string& sRe
     {
         return false;
     }
-
 
 
     std::thread th(ConnectThread, this, sSenderId, sReceiverId, sSenderUrl, sReceiverUrl);
@@ -1967,61 +2013,55 @@ bool ClientApiImpl::AddQuerySubscriptionP2P(int nResource, const std::string& sQ
     {
     case NODES:
         {
-            std::list<std::shared_ptr<const Self> > lstResources;
-            m_nodes.GetResourcesAsList(lstResources);
-            if(RunQuery(lstResources, sQuery))
+            auto changes = m_nodes.GetResourcesAsList();
+            if(RunQuery(changes.lstAdded, sQuery))
             {
-                m_pPoster->_NodeChanged(std::list<std::shared_ptr<const Self> >(lstResources.begin(), lstResources.end()), {}, {});
+                m_pPoster->_NodeChanged(changes);
             }
         }
         break;
     case DEVICES:
         {
-            std::list<std::shared_ptr<const Device> > lstResources;
-            m_devices.GetResourcesAsList(lstResources);
-            if(RunQuery(lstResources, sQuery))
+            auto changes = m_devices.GetResourcesAsList();
+            if(RunQuery(changes.lstAdded, sQuery))
             {
-                m_pPoster->_DeviceChanged(std::list<std::shared_ptr<const Device> >(lstResources.begin(), lstResources.end()), {}, {});
+                m_pPoster->_DeviceChanged(changes);
             }
         }
         break;
     case SOURCES:
         {
-            std::list<std::shared_ptr<const Source> > lstResources;
-            m_sources.GetResourcesAsList(lstResources);
-            if(RunQuery(lstResources, sQuery))
+            auto changes = m_sources.GetResourcesAsList();
+            if(RunQuery(changes.lstAdded, sQuery))
             {
-                m_pPoster->_SourceChanged(std::list<std::shared_ptr<const Source> >(lstResources.begin(), lstResources.end()), {}, {});
+                m_pPoster->_SourceChanged(changes);
             }
         }
         break;
     case FLOWS:
         {
-            std::list<std::shared_ptr<const Flow> > lstResources;
-            m_flows.GetResourcesAsList(lstResources);
-            if(RunQuery(lstResources, sQuery))
+            auto changes = m_flows.GetResourcesAsList();
+            if(RunQuery(changes.lstAdded, sQuery))
             {
-                m_pPoster->_FlowChanged(std::list<std::shared_ptr<const Flow> >(lstResources.begin(), lstResources.end()), {}, {});
+                m_pPoster->_FlowChanged(changes);
             }
         }
         break;
     case SENDERS:
         {
-            std::list<std::shared_ptr<const Sender> > lstResources;
-            m_senders.GetResourcesAsList(lstResources);
-            if(RunQuery(lstResources, sQuery))
+            auto changes = m_senders.GetResourcesAsList();
+            if(RunQuery(changes.lstAdded, sQuery))
             {
-                m_pPoster->_SenderChanged(std::list<std::shared_ptr<const Sender> >(lstResources.begin(), lstResources.end()), {}, {});
+                m_pPoster->_SenderChanged(changes);
             }
         }
         break;
     case RECEIVERS:
         {
-            std::list<std::shared_ptr<const Receiver> > lstResources;
-            m_receivers.GetResourcesAsList(lstResources);
-            if(RunQuery(lstResources, sQuery))
+            auto changes = m_receivers.GetResourcesAsList();
+            if(RunQuery(changes.lstAdded, sQuery))
             {
-                m_pPoster->_ReceiverChanged(std::list<std::shared_ptr<const Receiver> >(lstResources.begin(), lstResources.end()), {}, {});
+                m_pPoster->_ReceiverChanged(changes);
             }
         }
         break;
@@ -2109,16 +2149,16 @@ template<class T> bool ClientApiImpl::RunQuery(std::list<std::shared_ptr<const T
     return (lstCheck.empty() == false);
 }
 
-template<class T> bool ClientApiImpl::RunQuery(std::list<std::shared_ptr<const T> >& lstAdded, std::list<std::shared_ptr<const T> >& lstUpdated, std::list<std::shared_ptr<const T> >& lstRemoved, int nResourceType)
+template<class T> bool ClientApiImpl::RunQuery(resourcechanges<T>& changed, int nResourceType)
 {
     if(m_pPoster)
     {
-        return (RunQuery(lstAdded, nResourceType) || RunQuery(lstUpdated, nResourceType) || RunQuery(lstRemoved, nResourceType));
+        return (RunQuery(changed.lstAdded, nResourceType) || RunQuery(changed.lstUpdated, nResourceType) || RunQuery(changed.lstRemoved, nResourceType));
     }
     return false;
 }
 
-bool ClientApiImpl::MeetsQuery(const std::string& sQuery, std::shared_ptr<Resource> pResource)
+bool ClientApiImpl::MeetsQuery(const std::string& sQuery, std::shared_ptr<const Resource> pResource)
 {
     return true;
 
@@ -2354,9 +2394,7 @@ ClientApiImpl::enumGrain ClientApiImpl::WorkoutAction(const Json::Value& jsData)
 
 void ClientApiImpl::GrainUpdateNode(const std::string& sSourceId, const Json::Value& jsData)
 {
-    std::list<std::shared_ptr<const Self>> lstAdded;
-    std::list<std::shared_ptr<const Self>> lstUpdated;
-    std::list<std::shared_ptr<const Self>> lstRemoved;
+    resourcechanges<Self> changed;
 
     for(Json::ArrayIndex ai = 0; ai < jsData.size(); ai++)
     {
@@ -2364,7 +2402,7 @@ void ClientApiImpl::GrainUpdateNode(const std::string& sSourceId, const Json::Va
         {
             case enumGrain::ADD:
             case enumGrain::UPDATE:
-                AddNode(lstAdded, lstUpdated, sSourceId, jsData[ai]["post"]);
+                changed += AddNode(sSourceId, jsData[ai]["post"]);
                 break;
             case enumGrain::DELETE:
                 if(jsData[ai]["pre"]["id"].isString())
@@ -2372,7 +2410,7 @@ void ClientApiImpl::GrainUpdateNode(const std::string& sSourceId, const Json::Va
                     auto pResource = m_nodes.RemoveResource(jsData[ai]["pre"]["id"].asString());
                     if(pResource)
                     {
-                        lstRemoved.push_back(pResource);
+                        changed.lstRemoved.push_back(pResource);
                     }
                 }
                 break;
@@ -2384,15 +2422,13 @@ void ClientApiImpl::GrainUpdateNode(const std::string& sSourceId, const Json::Va
 
     if(m_pPoster)
     {
-        m_pPoster->_NodeChanged(lstAdded, lstUpdated, lstRemoved);
+        m_pPoster->_NodeChanged(changed);
     }
 }
 
 void ClientApiImpl::GrainUpdateDevice(const std::string& sSourceId, const Json::Value& jsData)
 {
-    std::list<std::shared_ptr<const Device>> lstAdded;
-    std::list<std::shared_ptr<const Device>> lstUpdated;
-    std::list<std::shared_ptr<const Device>> lstRemoved;
+    resourcechanges<Device> changed;
 
     for(Json::ArrayIndex ai = 0; ai < jsData.size(); ai++)
     {
@@ -2400,7 +2436,7 @@ void ClientApiImpl::GrainUpdateDevice(const std::string& sSourceId, const Json::
         {
             case enumGrain::ADD:
             case enumGrain::UPDATE:
-                AddDevice(lstAdded, lstUpdated, sSourceId, jsData[ai]["post"]);
+                changed += AddDevice(sSourceId, jsData[ai]["post"]);
                 break;
             case enumGrain::DELETE:
                 if(jsData[ai]["pre"]["id"].isString())
@@ -2408,7 +2444,7 @@ void ClientApiImpl::GrainUpdateDevice(const std::string& sSourceId, const Json::
                     auto pResource = m_devices.RemoveResource(jsData[ai]["pre"]["id"].asString());
                     if(pResource)
                     {
-                        lstRemoved.push_back(pResource);
+                        changed.lstRemoved.push_back(pResource);
                     }
                 }
                 break;
@@ -2420,15 +2456,13 @@ void ClientApiImpl::GrainUpdateDevice(const std::string& sSourceId, const Json::
 
     if(m_pPoster)
     {
-        m_pPoster->_DeviceChanged(lstAdded, lstUpdated, lstRemoved);
+        m_pPoster->_DeviceChanged(changed);
     }
 }
 
 void ClientApiImpl::GrainUpdateSource(const std::string& sSourceId, const Json::Value& jsData)
 {
-    std::list<std::shared_ptr<const Source>> lstAdded;
-    std::list<std::shared_ptr<const Source>> lstUpdated;
-    std::list<std::shared_ptr<const Source>> lstRemoved;
+    resourcechanges<Source> changed;
 
     for(Json::ArrayIndex ai = 0; ai < jsData.size(); ai++)
     {
@@ -2436,7 +2470,7 @@ void ClientApiImpl::GrainUpdateSource(const std::string& sSourceId, const Json::
         {
             case enumGrain::ADD:
             case enumGrain::UPDATE:
-                AddSource(lstAdded, lstUpdated, sSourceId, jsData[ai]["post"]);
+                changed += AddSource(sSourceId, jsData[ai]["post"]);
                 break;
             case enumGrain::DELETE:
                 if(jsData[ai]["pre"]["id"].isString())
@@ -2444,7 +2478,7 @@ void ClientApiImpl::GrainUpdateSource(const std::string& sSourceId, const Json::
                     auto pResource = m_sources.RemoveResource(jsData[ai]["pre"]["id"].asString());
                     if(pResource)
                     {
-                        lstRemoved.push_back(pResource);
+                        changed.lstRemoved.push_back(pResource);
                     }
                 }
                 break;
@@ -2456,15 +2490,13 @@ void ClientApiImpl::GrainUpdateSource(const std::string& sSourceId, const Json::
 
     if(m_pPoster)
     {
-        m_pPoster->_SourceChanged(lstAdded, lstUpdated, lstRemoved);
+        m_pPoster->_SourceChanged(changed);
     }
 }
 
 void ClientApiImpl::GrainUpdateFlow(const std::string& sSourceId, const Json::Value& jsData)
 {
-    std::list<std::shared_ptr<const Flow>> lstAdded;
-    std::list<std::shared_ptr<const Flow>> lstUpdated;
-    std::list<std::shared_ptr<const Flow>> lstRemoved;
+    resourcechanges<Flow> changed;
 
     pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApi: GrainUpdateFlow: ";
     for(Json::ArrayIndex ai = 0; ai < jsData.size(); ai++)
@@ -2473,7 +2505,7 @@ void ClientApiImpl::GrainUpdateFlow(const std::string& sSourceId, const Json::Va
         {
             case enumGrain::ADD:
             case enumGrain::UPDATE:
-                AddFlow(lstAdded, lstUpdated, sSourceId, jsData[ai]["post"]);
+                changed += AddFlow(sSourceId, jsData[ai]["post"]);
                 break;
             case enumGrain::DELETE:
                 if(jsData[ai]["pre"]["id"].isString())
@@ -2481,7 +2513,7 @@ void ClientApiImpl::GrainUpdateFlow(const std::string& sSourceId, const Json::Va
                     auto pResource = m_flows.RemoveResource(jsData[ai]["pre"]["id"].asString());
                     if(pResource)
                     {
-                        lstRemoved.push_back(pResource);
+                        changed.lstRemoved.push_back(pResource);
                     }
                 }
                 break;
@@ -2493,15 +2525,13 @@ void ClientApiImpl::GrainUpdateFlow(const std::string& sSourceId, const Json::Va
 
     if(m_pPoster)
     {
-        m_pPoster->_FlowChanged(lstAdded, lstUpdated, lstRemoved);
+        m_pPoster->_FlowChanged(changed);
     }
 }
 
 void ClientApiImpl::GrainUpdateSender(const std::string& sSourceId, const Json::Value& jsData)
 {
-    std::list<std::shared_ptr<const Sender>> lstAdded;
-    std::list<std::shared_ptr<const Sender>> lstUpdated;
-    std::list<std::shared_ptr<const Sender>> lstRemoved;
+    resourcechanges<Sender> changed;
 
     for(Json::ArrayIndex ai = 0; ai < jsData.size(); ai++)
     {
@@ -2509,7 +2539,7 @@ void ClientApiImpl::GrainUpdateSender(const std::string& sSourceId, const Json::
         {
             case enumGrain::ADD:
             case enumGrain::UPDATE:
-                AddSender(lstAdded, lstUpdated, sSourceId, jsData[ai]["post"]);
+                changed += AddSender(sSourceId, jsData[ai]["post"]);
                 break;
             case enumGrain::DELETE:
                 if(jsData[ai]["pre"]["id"].isString())
@@ -2517,7 +2547,7 @@ void ClientApiImpl::GrainUpdateSender(const std::string& sSourceId, const Json::
                     auto pResource = m_senders.RemoveResource(jsData[ai]["pre"]["id"].asString());
                     if(pResource)
                     {
-                        lstRemoved.push_back(pResource);
+                        changed.lstRemoved.push_back(pResource);
                     }
                 }
                 break;
@@ -2529,15 +2559,13 @@ void ClientApiImpl::GrainUpdateSender(const std::string& sSourceId, const Json::
 
     if(m_pPoster)
     {
-        m_pPoster->_SenderChanged(lstAdded, lstUpdated, lstRemoved);
+        m_pPoster->_SenderChanged(changed);
     }
 }
 
 void ClientApiImpl::GrainUpdateReceiver(const std::string& sSourceId, const Json::Value& jsData)
 {
-    std::list<std::shared_ptr<const Receiver>> lstAdded;
-    std::list<std::shared_ptr<const Receiver>> lstUpdated;
-    std::list<std::shared_ptr<const Receiver>> lstRemoved;
+    resourcechanges<Receiver> changed;
 
     for(Json::ArrayIndex ai = 0; ai < jsData.size(); ai++)
     {
@@ -2545,7 +2573,7 @@ void ClientApiImpl::GrainUpdateReceiver(const std::string& sSourceId, const Json
         {
             case enumGrain::ADD:
             case enumGrain::UPDATE:
-                AddReceiver(lstAdded, lstUpdated, sSourceId, jsData[ai]["post"]);
+                changed += AddReceiver(sSourceId, jsData[ai]["post"]);
                 break;
             case enumGrain::DELETE:
                 if(jsData[ai]["pre"]["id"].isString())
@@ -2553,7 +2581,7 @@ void ClientApiImpl::GrainUpdateReceiver(const std::string& sSourceId, const Json
                     auto pResource = m_receivers.RemoveResource(jsData[ai]["pre"]["id"].asString());
                     if(pResource)
                     {
-                        lstRemoved.push_back(pResource);
+                        changed.lstRemoved.push_back(pResource);
                     }
                 }
                 break;
@@ -2565,7 +2593,7 @@ void ClientApiImpl::GrainUpdateReceiver(const std::string& sSourceId, const Json
 
     if(m_pPoster)
     {
-        m_pPoster->_ReceiverChanged(lstAdded, lstUpdated, lstRemoved);
+        m_pPoster->_ReceiverChanged(changed);
     }
 }
 

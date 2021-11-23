@@ -14,6 +14,7 @@
 #include "response.h"
 #include <thread>
 #include <functional>
+#include "clientapiposter.h"
 
 #include "clientemum.h"
 
@@ -30,7 +31,6 @@ namespace pml
         class ClientApiPoster;
         class ClientZCPoster;
         class ZCPoster;
-
 
         class ClientApiImpl
         {
@@ -51,12 +51,12 @@ namespace pml
 
                 enumMode GetMode();
 
-                void AddNode(std::list<std::shared_ptr<const Self> >& lstAdded, std::list<std::shared_ptr<const Self> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData);
-                void AddDevices(std::list<std::shared_ptr<const Device> >& lstAdded, std::list<std::shared_ptr<const Device> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData);
-                void AddSources(std::list<std::shared_ptr<const Source> >& lstAdded, std::list<std::shared_ptr<const Source> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData);
-                void AddFlows(std::list<std::shared_ptr<const Flow> >& lstAdded, std::list<std::shared_ptr<const Flow> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData);
-                void AddSenders(std::list<std::shared_ptr<const Sender> >& lstAdded, std::list<std::shared_ptr<const Sender> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData);
-                void AddReceivers(std::list<std::shared_ptr<const Receiver> >& lstAdded, std::list<std::shared_ptr<const Receiver> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData);
+                resourcechanges<Self> AddNode(const std::string& sIpAddress, const Json::Value& jsData);
+                resourcechanges<Device> AddDevices(const std::string& sIpAddress, const Json::Value& jsData);
+                resourcechanges<Source> AddSources(const std::string& sIpAddress, const Json::Value& jsData);
+                resourcechanges<Flow> AddFlows(const std::string& sIpAddress, const Json::Value& jsData);
+                resourcechanges<Sender> AddSenders(const std::string& sIpAddress, const Json::Value& jsData);
+                resourcechanges<Receiver> AddReceivers(const std::string& sIpAddress, const Json::Value& jsData);
 
                 void StoreDevices(const std::string& sIpAddress);
                 void StoreSources(const std::string& sIpAddress);
@@ -64,13 +64,13 @@ namespace pml
                 void StoreSenders(const std::string& sIpAddress);
                 void StoreReceivers(const std::string& sIpAddress);
 
-                void RemoveStaleDevices(std::list<std::shared_ptr<const Device> >& lstRemoved);
-                void RemoveStaleSources(std::list<std::shared_ptr<const Source> >& lstRemoved);
-                void RemoveStaleFlows(std::list<std::shared_ptr<const Flow> >& lstRemoved);
-                void RemoveStaleSenders(std::list<std::shared_ptr<const Sender> >& lstRemoved);
-                void RemoveStaleReceivers(std::list<std::shared_ptr<const Receiver> >& lstRemoved);
+                resourcechanges<Device> RemoveStaleDevices();
+                resourcechanges<Source> RemoveStaleSources();
+                resourcechanges<Flow> RemoveStaleFlows();
+                resourcechanges<Sender> RemoveStaleSenders();
+                resourcechanges<Receiver> RemoveStaleReceivers();
 
-                template<class T> bool RunQuery(std::list<std::shared_ptr<const T> >& lstAdded, std::list<std::shared_ptr<const T> >& lstUpdated, std::list<std::shared_ptr<const T> >& lstRemoved, int nResourceType);
+                template<class T> bool RunQuery(resourcechanges<T>& changed, int nResourceType);
 
 
                 static const std::array<std::string,6> STR_RESOURCE;
@@ -153,11 +153,11 @@ namespace pml
             private:
 
 
-                void AddDevice(std::list<std::shared_ptr<const Device> >& lstAdded, std::list<std::shared_ptr<const Device> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData);
-                void AddSource(std::list<std::shared_ptr<const Source> >& lstAdded, std::list<std::shared_ptr<const Source> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData);
-                void AddFlow(std::list<std::shared_ptr<const Flow> >& lstAdded, std::list<std::shared_ptr<const Flow> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData);
-                void AddSender(std::list<std::shared_ptr<const Sender> >& lstAdded, std::list<std::shared_ptr<const Sender> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData);
-                void AddReceiver(std::list<std::shared_ptr<const Receiver> >& lstAdded, std::list<std::shared_ptr<const Receiver> >& lstUpdated, const std::string& sIpAddress, const Json::Value& jsData);
+                resourcechanges<Device> AddDevice(const std::string& sIpAddress, const Json::Value& jsData);
+                resourcechanges<Source> AddSource(const std::string& sIpAddress, const Json::Value& jsData);
+                resourcechanges<Flow> AddFlow(const std::string& sIpAddress, const Json::Value& jsData);
+                resourcechanges<Sender> AddSender(const std::string& sIpAddress, const Json::Value& jsData);
+                resourcechanges<Receiver> AddReceiver(const std::string& sIpAddress, const Json::Value& jsData);
 
 
                 void ConnectToQueryServer();
@@ -194,20 +194,20 @@ namespace pml
                 template<class T> bool RunQuery(std::list<std::shared_ptr<const T> >& lstCheck, int nResource);
                 template<class T> bool RunQuery(std::list<std::shared_ptr<const T> >& lstCheck, const std::string& sQuery);
 
-                bool MeetsQuery(const std::string& sQuery, std::shared_ptr<Resource> pResource);
+                bool MeetsQuery(const std::string& sQuery, std::shared_ptr<const Resource> pResource);
 
                 void SubscribeToQueryServer();
 
 
-                void CreateFlow(std::list<std::shared_ptr<const Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress);
-                void CreateFlowAudio(std::list<std::shared_ptr<const Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress);
-                void CreateFlowAudioCoded(std::list<std::shared_ptr<const Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress);
-                void CreateFlowAudioRaw(std::list<std::shared_ptr<const Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress);
-                void CreateFlowVideo(std::list<std::shared_ptr<const Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress);
-                void CreateFlowVideoRaw(std::list<std::shared_ptr<const Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress);
-                void CreateFlowVideoCoded(std::list<std::shared_ptr<const Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress);
-                void CreateFlowData(std::list<std::shared_ptr<const Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress);
-                void CreateFlowMux(std::list<std::shared_ptr<const Flow>>& lstAdded, const Json::Value& jsData, const std::string& sIpAddress);
+                std::shared_ptr<const Flow> CreateFlow(const Json::Value& jsData, const std::string& sIpAddress);
+                std::shared_ptr<const Flow> CreateFlowAudio(const Json::Value& jsData, const std::string& sIpAddress);
+                std::shared_ptr<const Flow> CreateFlowAudioCoded(const Json::Value& jsData, const std::string& sIpAddress);
+                std::shared_ptr<const Flow> CreateFlowAudioRaw(const Json::Value& jsData, const std::string& sIpAddress);
+                std::shared_ptr<const Flow> CreateFlowVideo(const Json::Value& jsData, const std::string& sIpAddress);
+                std::shared_ptr<const Flow> CreateFlowVideoRaw(const Json::Value& jsData, const std::string& sIpAddress);
+                std::shared_ptr<const Flow> CreateFlowVideoCoded(const Json::Value& jsData, const std::string& sIpAddress);
+                std::shared_ptr<const Flow> CreateFlowData(const Json::Value& jsData, const std::string& sIpAddress);
+                std::shared_ptr<const Flow> CreateFlowMux(const Json::Value& jsData, const std::string& sIpAddress);
 
 
                 void HandleGrainEvent(const std::string& sSourceId, const Json::Value& jsGrain);

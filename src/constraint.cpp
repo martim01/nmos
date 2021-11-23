@@ -421,22 +421,4 @@ ConstraintsReceiver::ConstraintsReceiver(int nSupported) : Constraints(nSupporte
 }
 
 
-std::vector<Constraints> CreateConstraints(const Json::Value& jsData)
-{
-    std::vector<Constraints> vConstraints;
-    if(jsData.isArray() != false)
-    {
-        for(size_t i = 0; i < jsData.size(); i++)
-        {
-            if(jsData[i].isObject())
-            {
-                Constraints con(TransportParamsRTP::CORE);
-                if(con.UpdateFromJson(jsData[i]))
-                {
-                    vConstraints.push_back(con);
-                }
-            }
-        }
-    }
-    return vConstraints;
-}
+

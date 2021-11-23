@@ -68,9 +68,10 @@ template<class T> std::shared_ptr<T> ClientHolder<T>::RemoveResource(const std::
     return pResource;
 }
 
-template<class T> void ClientHolder<T>::RemoveResources(const std::string& sIpAddres, typename std::list<std::shared_ptr<const T> >& lstRemoved)
+template<class T> resourcechanges<T> ClientHolder<T>::RemoveResources(const std::string& sIpAddres)
 {
     std::set<std::string> setRemoved;
+    resourcechanges<T> changed;
 
     for(auto itResource = m_mmAddressResourceId.lower_bound(sIpAddres); itResource != m_mmAddressResourceId.upper_bound(sIpAddres); ++itResource)
     {
@@ -78,12 +79,13 @@ template<class T> void ClientHolder<T>::RemoveResources(const std::string& sIpAd
         auto itRemove = m_mResource.find(itResource->second);
         if(itRemove != m_mResource.end())
         {
-            lstRemoved.push_back(itRemove->second);
+            changed.lstRemoved.push_back(itRemove->second);
         }
         m_mResource.erase(itResource->second);
         m_mResourceIdAddress.erase(itResource->second);
     }
     m_mmAddressResourceId.erase(sIpAddres);
+    return changed;
 }
 
 
@@ -164,20 +166,24 @@ template<class T> void ClientHolder<T>::StoreResources(const std::string& sIpAdd
     }
 }
 
-template<class T> void ClientHolder<T>::RemoveStaleResources(typename std::list<std::shared_ptr<const T> >& lstRemoved)
+template<class T> typename std::list<std::shared_ptr<const T> > ClientHolder<T>::RemoveStaleResources()
 {
+    m_lstRemoved.clear();
     for(auto pResource : m_setStored)
     {
-        lstRemoved.push_back(RemoveResource(pResource));
+        m_lstRemoved.push_back(RemoveResource(pResource));
     }
+    return m_lstRemoved;
 }
 
-template<class T> void ClientHolder<T>::GetResourcesAsList(typename std::list<std::shared_ptr<const T> >& lstResources)
+template<class T> resourcechanges<T> ClientHolder<T>::GetResourcesAsList()
 {
+    resourcechanges<T> changes;
     for(auto pairResource : m_mResource)
     {
-        lstResources.push_back(pairResource.second);
+        changes.lstAdded.push_back(pairResource.second);
     }
+    return changes;
 }
 
 
