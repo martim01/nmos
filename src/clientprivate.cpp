@@ -64,6 +64,16 @@ std::vector<Constraints> CreateConstraints(const Json::Value& jsData)
     return vConstraints;
 }
 
+bool CheckSubnet(const url address, unsigned long  nSubnet)
+{
+    in_addr addr;
+    if(inet_aton(address.Get().c_str(), &addr) == 0)
+    {
+        return ((addr.s_addr & nSubnet) != 0);
+    }
+    return false;
+}
+
 //Main Client Thread
 void ClientThread(ClientApiImpl* pApi)
 {
@@ -1623,6 +1633,7 @@ std::string ClientApiImpl::GetConnectionUrlSingle(std::shared_ptr<Resource> pRes
 
 std::string ClientApiImpl::GetConnectionUrl(std::shared_ptr<Resource> pResource)
 {
+    //get the device Id
     auto itDevice =  m_devices.FindNmosResource(pResource->GetParentResourceId());
     if(itDevice == m_devices.GetResources().end())
     {
@@ -1639,16 +1650,39 @@ std::string ClientApiImpl::GetConnectionUrl(std::shared_ptr<Resource> pResource)
     }
 
     //work our way through the possible endpoints and find one which will reply to us
-    for(auto pairControl : itDevice->second->GetControls())
+    std::set<url> setTried;
+    for(auto itControl = itDevice->second->GetControls().lower_bound(theControl); itControl != itDevice->second->GetControls().upper_bound(theControl); ++itControl)
     {
-        if(theControl == pairControl.first)
+        //is it in the same subnet as any of our interfaces
+        for(auto pairInterface : m_mSubnetMasks)
         {
-            auto curlResp = CurlRegister::Get(pairControl.second.Get());
+            //same subnet mask and not tried this ip address before
+            if(CheckSubnet(itControl->second, pairInterface.second) && setTried.insert(itControl->second).second)
+            {
+                //we should be able to connect on this
+                auto curlResp = CurlRegister::Get(itControl->second.Get());
+                if(curlResp.nCode == 200)
+                {
+                    //found one - make it our preferred one
+                    itDevice->second->SetPreferredUrl(theControl, itControl->second);
+                    return itControl->second.Get();
+                }
+            }
+        }
+    }
+
+    //couldn't connect so try from beginning ignoring the one we couldn't connect on
+    for(auto itControl = itDevice->second->GetControls().lower_bound(theControl); itControl != itDevice->second->GetControls().upper_bound(theControl); ++itControl)
+    {
+        //same subnet mask and not tried this ip address before
+        if(setTried.insert(itControl->second).second)
+        {
+            auto curlResp = CurlRegister::Get(itControl->second.Get());
             if(curlResp.nCode == 200)
             {
                 //found one - make it our preferred one
-                itDevice->second->SetPreferredUrl(theControl, pairControl.second);
-                return pairControl.second.Get();
+                itDevice->second->SetPreferredUrl(theControl, itControl->second);
+                return itControl->second.Get();
             }
         }
     }
@@ -2631,10 +2665,10 @@ void ClientApiImpl::GetSubnetMasks()
                 pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Interface: " << temp_addr->ifa_name ;
                 std::string sInterface(temp_addr->ifa_name);
                 std::string sAddress(inet_ntoa(((sockaddr_in*)temp_addr->ifa_addr)->sin_addr));
-                std::string sMask(inet_ntoa(((sockaddr_in*)temp_addr->ifa_netmask)->sin_addr));
 
-                m_mSubnetMasks.insert({sAddress, sMask});
+                m_mSubnetMasks.insert({sAddress, ((sockaddr_in*)temp_addr->ifa_netmask)->sin_addr.s_addr});
             }
+            // @todo AF_INET6
             temp_addr = temp_addr->ifa_next;
         }
     }

@@ -288,7 +288,7 @@ namespace pml
 
                 std::map<std::string, std::function<void(const std::string&, const Json::Value&)>> m_mGrainUpdate;
 
-                std::map<std::string, std::string> m_mSubnetMasks;
+                std::map<std::string, unsigned long> m_mSubnetMasks;
                 //std::map<std::string, ClientHolder<T>&> m_mGrainRemove;
 
 

@@ -98,11 +98,12 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
-			<Add option="-fexceptions" />
 			<Add option="-std=c++14" />
+			<Add option="-fexceptions" />
 			<Add directory="$(#json.include)" />
 			<Add directory="../../include" />
 			<Add directory="../../../log/include" />
+			<Add directory="../../../Restgoose" />
 		</Compiler>
 		<Linker>
 			<Add directory="../../lib" />
