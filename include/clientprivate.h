@@ -37,7 +37,8 @@ namespace pml
             public:
                 enum enumMode {MODE_P2P=0, MODE_REGISTRY};
                 enum enumSignal {CLIENT_SIG_NONE=0, CLIENT_SIG_INSTANCE_RESOLVED, CLIENT_SIG_INSTANCE_REMOVED, CLIENT_SIG_NODE_BROWSED, CLIENT_SIG_CURL_DONE, CLIENT_SIG_BROWSE_DONE, THREAD_EXIT};
-                enum flagResource {NONE=0, NODES=1, DEVICES=2, SOURCES=4, FLOWS=8, SENDERS=16, RECEIVERS=32, ALL=63};
+
+                enum flagResource {NODES=0, DEVICES=1, SOURCES=2, FLOWS=3, SENDERS=4, RECEIVERS=5};
                 static const std::array<std::string, 7> STR_CONNECTION;
 
                 ClientApiImpl();
@@ -171,8 +172,8 @@ namespace pml
                 std::shared_ptr<Sender> GetSender(const std::string& sSenderId);
                 std::shared_ptr<Receiver> GetReceiver(const std::string& sSenderId);
 
-                bool RequestSender(const std::string& sSenderId, enumConnection eType);
-                bool RequestReceiver(const std::string& sReceiverId, enumConnection eType);
+                bool RequestSender(const std::string& sSenderId, enumConnection eType, bool bJson=true);
+                bool RequestReceiver(const std::string& sReceiverId, enumConnection eType, bool bJson=true);
 
                 void HandleCurlDoneTarget();
                 void HandleCurlDonePatchSender();
@@ -278,6 +279,7 @@ namespace pml
                 void HandleQuerySubscriptionResponse(unsigned short nCode, const ClientApiImpl::query& theQuery);
                 void HandleSuccessfulQuerySubscription(const ClientApiImpl::query& theQuery);
 
+                void GetSubnetMasks();
 
                 std::multimap<int, query> m_mmQuery;
 
@@ -286,6 +288,7 @@ namespace pml
 
                 std::map<std::string, std::function<void(const std::string&, const Json::Value&)>> m_mGrainUpdate;
 
+                std::map<std::string, std::string> m_mSubnetMasks;
                 //std::map<std::string, ClientHolder<T>&> m_mGrainRemove;
 
 

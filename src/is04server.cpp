@@ -238,6 +238,7 @@ response IS04Server::GetNmosReceiver(const query& theQuery, const postData& theD
 
 response IS04Server::PutNmosReceiver(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
 {
+    pmlLog(pml::LOG_DEBUG) << "PutNmosReceiver";
     response resp;
     auto vPath = SplitUrl(theUrl);
     //does the receiver exist?

@@ -42,10 +42,10 @@ namespace pml
 
 
                 //threaded version
-                void Post(const std::string& sBaseUrl, const std::string& sJson, long nUserType);
-                void Delete(const std::string& sBaseUrl, const std::string& sType, const std::string& sId, long nUserType);
-                void PutPatch(const std::string& sBaseUrl, const std::string& sJson, long nUserType, bool bPut, const std::string& sResourceId);
-                void Get(const std::string& sUrl, long nUserType);
+                void PostAsync(const std::string& sBaseUrl, const std::string& sJson, long nUserType);
+                void DeleteAsync(const std::string& sBaseUrl, const std::string& sType, const std::string& sId, long nUserType);
+                void PutPatchAsync(const std::string& sBaseUrl, const std::string& sJson, long nUserType, bool bPut, const std::string& sResourceId);
+                void GetAsync(const std::string& sUrl, long nUserType, bool bJson=false);
 
                 void Callback(unsigned long nResult, const std::string& sResult, long nUser, const std::string sResponse="");
 

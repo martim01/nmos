@@ -52,7 +52,7 @@ static curlResponse DoCurl(CURL* pCurl, curl_slist *pHeaders)
     /* Check for errors */
     if(res != CURLE_OK)
     {
-        resp.sResponse = curl_easy_strerror(res);
+        resp.sResponse = "{\"error\" : \""+std::string(curl_easy_strerror(res))+"\"}";
         pmlLog(pml::LOG_ERROR) << "NMOS: " << "CURL Error: " << resp.sResponse ;
     }
 
@@ -86,9 +86,9 @@ static void PutThreaded(const std::string& sUrl, const std::string& sJson, CurlR
     pRegister->Callback(resp.nCode, resp.sResponse, nUserType);
 }
 
-static void GetThreaded(const std::string& sUrl, CurlRegister* pRegister, long nUserType)
+static void GetThreaded(const std::string& sUrl, CurlRegister* pRegister, long nUserType, bool bJson)
 {
-    auto resp = pRegister->Get(sUrl);
+    auto resp = pRegister->Get(sUrl, bJson);
     pRegister->Callback(resp.nCode, resp.sResponse, nUserType);
 }
 
@@ -106,7 +106,7 @@ CurlRegister::~CurlRegister()
 }
 
 
-void CurlRegister::Post(const std::string& sBaseUrl, const std::string& sJson, long nUserType)
+void CurlRegister::PostAsync(const std::string& sBaseUrl, const std::string& sJson, long nUserType)
 {
     std::thread threadPost(PostThreaded, sBaseUrl, sJson, this, nUserType);
     threadPost.detach();
@@ -151,7 +151,7 @@ curlResponse CurlRegister::Post(const std::string& sUrl, const std::string& sJso
 
 
 
-void CurlRegister::Delete(const std::string& sUrl, const std::string& sType, const std::string& sId, long nUserType)
+void CurlRegister::DeleteAsync(const std::string& sUrl, const std::string& sType, const std::string& sId, long nUserType)
 {
     std::thread threadPost(DeleteThreaded, sUrl, sType, sId, this, nUserType);
     threadPost.detach();
@@ -186,9 +186,9 @@ curlResponse CurlRegister::Delete(const std::string& sUrl, const std::string& sT
 }
 
 
-void CurlRegister::Get(const std::string& sUrl, long nUserType)
+void CurlRegister::GetAsync(const std::string& sUrl, long nUserType, bool bJson)
 {
-    std::thread threadGet(GetThreaded, sUrl, this, nUserType);
+    std::thread threadGet(GetThreaded, sUrl, this, nUserType, bJson);
     threadGet.detach();
 }
 
@@ -214,7 +214,7 @@ curlResponse CurlRegister::Get(const std::string& sUrl, bool bJson)
 }
 
 
-void CurlRegister::PutPatch(const std::string& sBaseUrl, const std::string& sJson, long nUserType, bool bPut, const std::string& sResourceId)
+void CurlRegister::PutPatchAsync(const std::string& sBaseUrl, const std::string& sJson, long nUserType, bool bPut, const std::string& sResourceId)
 {
     std::thread threadPut(PutThreaded, sBaseUrl, sJson, this, nUserType, bPut, sResourceId);
     threadPut.detach();

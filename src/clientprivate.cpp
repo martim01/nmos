@@ -6,6 +6,13 @@
 #include <set>
 #ifdef __GNU__
 #include "avahibrowser.h"
+#include <unistd.h>
+#include <sys/types.h>
+#include <ifaddrs.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <arpa/inet.h>
 #endif // __GNU__
 #include "curlregister.h"
 
@@ -176,13 +183,13 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<dnsInstance> pInsta
 
                     auto curlresp = CurlRegister::Get(std::string(ss.str()+"sources"), true);
 
-
                     pApi->StoreSources(pInstance->sHostIP);
                     auto changed = pApi->AddSources(pInstance->sHostIP, ConvertToJson(curlresp.sResponse));
                     changed += pApi->RemoveStaleSources();
 
                     if(pApi->RunQuery(changed, ClientApiImpl::SOURCES))
                     {
+                        pmlLog() << "AddSources: " << changed.lstAdded.size() << ", " << changed.lstUpdated.size();
                         if(pApi->GetPoster())
                         {
                             pApi->GetPoster()->_SourceChanged(changed);
@@ -203,9 +210,10 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<dnsInstance> pInsta
                     pApi->StoreFlows(pInstance->sHostIP);
                     auto changed = pApi->AddFlows(pInstance->sHostIP, ConvertToJson(curlresp.sResponse));
                     changed += pApi->RemoveStaleFlows();
-
+                    pmlLog() << "Flows: " << changed.lstAdded.size() << "," << changed.lstUpdated.size() << "," << changed.lstRemoved.size();
                     if(pApi->RunQuery(changed, ClientApiImpl::FLOWS))
                     {
+                        pmlLog() << "Flows: " << changed.lstAdded.size() << "," << changed.lstUpdated.size() << "," << changed.lstRemoved.size();
                         if(pApi->GetPoster())
                         {
                             pApi->GetPoster()->_FlowChanged(changed);
@@ -428,7 +436,7 @@ void ClientApiImpl::Stop()
 
 ClientApiImpl::ClientApiImpl() :
     m_version(1,1),
-    m_eMode(MODE_REGISTRY),
+    m_eMode(MODE_P2P),
     m_bRun(true),
     m_pInstance(0),
     m_nCurlThreadCount(0),
@@ -449,6 +457,11 @@ ClientApiImpl::ClientApiImpl() :
                         {"/senders/", std::bind(&ClientApiImpl::GrainUpdateSender, this, _1, _2)},
                         {"/receivers/", std::bind(&ClientApiImpl::GrainUpdateReceiver, this, _1, _2)} };
 
+    GetSubnetMasks();
+    for(auto pairMask : m_mSubnetMasks)
+    {
+        pmlLog() << pairMask.first << "=" << pairMask.second;
+    }
 }
 
 ClientApiImpl::~ClientApiImpl()
@@ -986,6 +999,7 @@ resourcechanges<Source> ClientApiImpl::AddSources(const std::string& sIpAddress,
     {
         pmlLog(pml::LOG_INFO) << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not array" ;
     }
+
     return changed;
 }
 
@@ -1504,7 +1518,7 @@ bool ClientApiImpl::Subscribe(const std::string& sSenderId, const std::string& s
     {
         //do a PUT to the correct place on the URL
 
-        m_pCurl->PutPatch(sUrl, ConvertFromJson(pSender->GetJson(version)), static_cast<long>(enumConnection::TARGET), true, pReceiver->GetId());
+        m_pCurl->PutPatchAsync(sUrl, ConvertFromJson(pSender->GetJson(version)), static_cast<long>(enumConnection::TARGET), true, pReceiver->GetId());
         pmlLog(pml::LOG_DEBUG) << "TARGET: " << sUrl ;
         return true;
     }
@@ -1527,7 +1541,7 @@ bool ClientApiImpl::Unsubscribe(const std::string& sReceiverId)
     {
         pmlLog(pml::LOG_DEBUG) << "NMOS: " << "TARGET: " << sUrl ;
         //do a PUT to the correct place on the URL
-        m_pCurl->PutPatch(sUrl, "{}", static_cast<long>(enumConnection::TARGET), true, pReceiver->GetId());
+        m_pCurl->PutPatchAsync(sUrl, "{}", static_cast<long>(enumConnection::TARGET), true, pReceiver->GetId());
 
         return true;
     }
@@ -1616,26 +1630,32 @@ std::string ClientApiImpl::GetConnectionUrl(std::shared_ptr<Resource> pResource)
         return std::string();
     }
 
-    for(auto itControl = itDevice->second->GetControlsBegin(); itControl != itDevice->second->GetControlsEnd(); ++itControl)
+    //have we a preferred url to control this device?
+    auto theControl = control("urn:x-nmos:control:sr-ctrl/"+m_version.GetVersionAsString());
+    auto uri = itDevice->second->GetPreferredUrl(theControl);
+    if(uri.Get().empty() == false)
     {
-        if("urn:x-nmos:control:sr-ctrl/"+m_version.GetVersionAsString() == itControl->first)
+        return uri.Get();
+    }
+
+    //work our way through the possible endpoints and find one which will reply to us
+    for(auto pairControl : itDevice->second->GetControls())
+    {
+        if(theControl == pairControl.first)
         {
-            pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApi GetConnectionUrlSingle: " << itControl->second;
-            auto curlResp = CurlRegister::Get(itControl->second);
+            auto curlResp = CurlRegister::Get(pairControl.second.Get());
             if(curlResp.nCode == 200)
             {
-                return itControl->second;
-            }
-            else
-            {
-                pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApi GetConnectionUrlSingle: " << curlResp.nCode;
+                //found one - make it our preferred one
+                itDevice->second->SetPreferredUrl(theControl, pairControl.second);
+                return pairControl.second.Get();
             }
         }
     }
     return std::string();
 }
 
-bool ClientApiImpl::RequestSender(const std::string& sSenderId, enumConnection eType)
+bool ClientApiImpl::RequestSender(const std::string& sSenderId, enumConnection eType, bool bJson)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
     auto pSender = GetSender(sSenderId);
@@ -1650,11 +1670,11 @@ bool ClientApiImpl::RequestSender(const std::string& sSenderId, enumConnection e
         return false;
     }
 
-    m_pCurl->Get(sConnectionUrl, (long)eType);
+    m_pCurl->GetAsync(sConnectionUrl, (long)eType, bJson);
     return true;
 }
 
-bool ClientApiImpl::RequestReceiver(const std::string& sReceiverId, enumConnection eType)
+bool ClientApiImpl::RequestReceiver(const std::string& sReceiverId, enumConnection eType, bool bJson)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
     auto pReceiver = GetReceiver(sReceiverId);
@@ -1669,7 +1689,7 @@ bool ClientApiImpl::RequestReceiver(const std::string& sReceiverId, enumConnecti
         return false;
     }
 
-    m_pCurl->Get(sConnectionUrl, (long)eType);
+    m_pCurl->GetAsync(sConnectionUrl, (long)eType, bJson);
     return true;
 }
 
@@ -1685,7 +1705,7 @@ bool ClientApiImpl::RequestSenderActive(const std::string& sSenderId)
 
 bool ClientApiImpl::RequestSenderTransportFile(const std::string& sSenderId)
 {
-    return RequestSender(sSenderId, enumConnection::SENDER_TRANSPORTFILE);
+    return RequestSender(sSenderId, enumConnection::SENDER_TRANSPORTFILE, false);
 }
 
 bool ClientApiImpl::RequestReceiverStaged(const std::string& sReceiverId)
@@ -1714,7 +1734,7 @@ bool ClientApiImpl::PatchSenderStaged(const std::string& sSenderId, const connec
         return false;
     }
 
-    m_pCurl->PutPatch(sConnectionUrl, ConvertFromJson(aConnection.GetJson(m_version)), static_cast<long>(enumConnection::SENDER_PATCH), false, sSenderId);
+    m_pCurl->PutPatchAsync(sConnectionUrl, ConvertFromJson(aConnection.GetJson(m_version)), static_cast<long>(enumConnection::SENDER_PATCH), false, sSenderId);
 
     return true;
 }
@@ -1734,7 +1754,7 @@ bool ClientApiImpl::PatchReceiverStaged(const std::string& sReceiverId, const co
         return false;
     }
 
-    m_pCurl->PutPatch(sConnectionUrl, ConvertFromJson(aConnection.GetJson(m_version)), static_cast<long>(enumConnection::RECEIVER_PATCH), false, sReceiverId);
+    m_pCurl->PutPatchAsync(sConnectionUrl, ConvertFromJson(aConnection.GetJson(m_version)), static_cast<long>(enumConnection::RECEIVER_PATCH), false, sReceiverId);
 
     return true;
 }
@@ -2114,9 +2134,8 @@ template<class T> bool ClientApiImpl::RunQuery(std::list<std::shared_ptr<const T
 {
     if(lstCheck.empty())
     {
-        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ClientApiImpl::RunQuery - lstcheck empty" ;
+        return true;
     }
-
     if(m_mmQuery.empty())
     {
         pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ClientApiImpl::RunQuery - m_mmQuery empty" ;
@@ -2125,15 +2144,12 @@ template<class T> bool ClientApiImpl::RunQuery(std::list<std::shared_ptr<const T
     for(auto itResource = lstCheck.begin(); itResource != lstCheck.end(); )
     {
         bool bKeep(false);
-        for(auto pairQuery : m_mmQuery)
+        for(auto itQuery = m_mmQuery.lower_bound(nResource); itQuery != m_mmQuery.upper_bound(nResource); ++itQuery)
         {
-            if((pairQuery.first & nResource))
+            if(MeetsQuery(itQuery->second.sQuery, (*itResource)))
             {
-                if(MeetsQuery(pairQuery.second.sQuery, (*itResource)))
-                {
-                    bKeep = true;
-                    break;
-                }
+                bKeep = true;
+                break;
             }
         }
 
@@ -2143,6 +2159,7 @@ template<class T> bool ClientApiImpl::RunQuery(std::list<std::shared_ptr<const T
         }
         else
         {
+            pmlLog() << nResource << " queries not met";
             itResource = lstCheck.erase(itResource);
         }
     }
@@ -2597,3 +2614,31 @@ void ClientApiImpl::GrainUpdateReceiver(const std::string& sSourceId, const Json
     }
 }
 
+void ClientApiImpl::GetSubnetMasks()
+{
+    #ifdef __GNU__
+    struct ifaddrs *interfaces = NULL;
+    struct ifaddrs *temp_addr = NULL;
+    int success = getifaddrs(&interfaces);
+    if (success == 0)
+    {
+        // Loop through linked list of interfaces
+        temp_addr = interfaces;
+        while(temp_addr != NULL)
+        {
+            if(temp_addr->ifa_addr->sa_family == AF_INET)
+            {
+                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Interface: " << temp_addr->ifa_name ;
+                std::string sInterface(temp_addr->ifa_name);
+                std::string sAddress(inet_ntoa(((sockaddr_in*)temp_addr->ifa_addr)->sin_addr));
+                std::string sMask(inet_ntoa(((sockaddr_in*)temp_addr->ifa_netmask)->sin_addr));
+
+                m_mSubnetMasks.insert({sAddress, sMask});
+            }
+            temp_addr = temp_addr->ifa_next;
+        }
+    }
+    // Free memory
+    freeifaddrs(interfaces);
+    #endif
+}

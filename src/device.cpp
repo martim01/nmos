@@ -1,5 +1,6 @@
 #include "device.h"
 #include "utils.h"
+#include "log.h"
 
 using namespace pml::nmos;
 
@@ -22,7 +23,7 @@ Device::Device() : Resource("device")
 bool Device::UpdateFromJson(const Json::Value& jsData)
 {
     Resource::UpdateFromJson(jsData);
-    if(CheckJson(jsData, {{"type",{jsondatatype::_STRING}},
+    if(CheckJsonRequired(jsData, {{"type",{jsondatatype::_STRING}},
                        {"node_id",{jsondatatype::_STRING}},
                        {"senders",{jsondatatype::_ARRAY}},
                        {"receivers",{jsondatatype::_ARRAY}},
@@ -30,6 +31,7 @@ bool Device::UpdateFromJson(const Json::Value& jsData)
     {
         m_bIsOk = false;
         m_ssJsonError << "Device json incorrect";
+        pmlLog(pml::LOG_WARN) << "NMOS: Device - json incorrect: " << jsData;
     }
 
     if(m_bIsOk)
@@ -92,7 +94,7 @@ bool Device::UpdateFromJson(const Json::Value& jsData)
             }
             else
             {
-                m_setControls.insert(std::make_pair(jsData["controls"][ai]["type"].asString(), jsData["controls"][ai]["href"].asString()));
+                m_mmControls.insert({control(jsData["controls"][ai]["type"].asString()), url(jsData["controls"][ai]["href"].asString())});
             }
         }
     }
@@ -118,11 +120,11 @@ bool Device::Commit(const ApiVersion& version)
         }
 
         m_json["controls"] = Json::Value(Json::arrayValue);
-        for(std::set<std::pair<std::string, std::string> >::iterator itControl = m_setControls.begin(); itControl != m_setControls.end(); ++itControl)
+        for(const auto& pairControl : m_mmControls)
         {
             Json::Value jsControl = Json::Value(Json::objectValue);
-            jsControl["type"] = (*itControl).first;
-            jsControl["href"] = (*itControl).second;
+            jsControl["type"] = pairControl.first.Get();
+            jsControl["href"] = pairControl.second.Get();
             m_json["controls"].append(jsControl);
         }
         return true;
@@ -130,14 +132,22 @@ bool Device::Commit(const ApiVersion& version)
     return false;
 }
 
-void Device::AddControl(const std::string& sType, const std::string& sUri)
+void Device::AddControl(const control& type, const url& Uri)
 {
-    m_setControls.insert(make_pair(sType, sUri));
+    m_mmControls.insert({type, Uri});
+
     UpdateVersionTime();
 }
-void Device::RemoveControl(const std::string& sType, const std::string& sUri)
+void Device::RemoveControl(const control& type, const url& Uri)
 {
-    m_setControls.erase(make_pair(sType, sUri));
+    for(auto itControl = m_mmControls.lower_bound(type); itControl != m_mmControls.upper_bound(type); ++itControl)
+    {
+        if(itControl->second == Uri)
+        {
+            m_mmControls.erase(itControl);
+            break;
+        }
+    }
     UpdateVersionTime();
 }
 
@@ -147,12 +157,24 @@ void Device::ChangeType(enumType eType)
     UpdateVersionTime();
 }
 
-std::set<std::pair<std::string, std::string> >::const_iterator Device::GetControlsBegin() const
+
+
+url Device::GetPreferredUrl(const control& type) const
 {
-    return m_setControls.begin();
+    auto itPref = m_mPreferred.find(type);
+    if(itPref != m_mPreferred.end())
+    {
+        return itPref->second;
+    }
+    return url("");
 }
 
-std::set<std::pair<std::string, std::string> >::const_iterator Device::GetControlsEnd() const
+void Device::SetPreferredUrl(const control& type, const url& Uri)
 {
-    return m_setControls.end();
+    m_mPreferred[type] = Uri;
+}
+
+void Device::RemovePreferredUrl(const control& type)
+{
+    m_mPreferred.erase(type);
 }

@@ -1037,7 +1037,7 @@ bool NodeApiPrivate::AddDevice(shared_ptr<Device> pResource)
             {
                 stringstream sstr;
                 sstr << "http://" << itEndpoint->sHost << ":" << m_nConnectionPort << "/x-nmos/connection/" << pairServer.first.GetVersionAsString();
-                pResource->AddControl("urn:x-nmos:control:sr-ctrl/"+pairServer.first.GetVersionAsString(), sstr.str());
+                pResource->AddControl(control("urn:x-nmos:control:sr-ctrl/"+pairServer.first.GetVersionAsString()), url(sstr.str()));
             }
         }
         //add the discovery endpoints

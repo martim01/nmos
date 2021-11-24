@@ -18,12 +18,12 @@ int main()
     pml::LogStream::SetOutputLevel(pml::LOG_DEBUG);
 
     pml::nmos::ClientApi::Get().SetPoster(make_shared<TestPoster>());
-    //pml::nmos::ClientApi::Get().AddQuerySubscription(pml::nmos::ClientApi::NODES);
-    //pml::nmos::ClientApi::Get().AddQuerySubscription(pml::nmos::ClientApi::DEVICES);
-    pml::nmos::ClientApi::Get().AddQuerySubscription(pml::nmos::ClientApi::FLOWS, "media_type=audio/L24"); //"label=pi-ptp-node/flow/c4")
-    //pml::nmos::ClientApi::Get().AddQuerySubscription(pml::nmos::ClientApi::SOURCES);
-    //pml::nmos::ClientApi::Get().AddQuerySubscription(pml::nmos::ClientApi::SENDERS);
-    //pml::nmos::ClientApi::Get().AddQuerySubscription(pml::nmos::ClientApi::RECEIVERS);
+    pml::nmos::ClientApi::Get().AddQuerySubscription(pml::nmos::ClientApi::NODES);
+    pml::nmos::ClientApi::Get().AddQuerySubscription(pml::nmos::ClientApi::DEVICES);
+    pml::nmos::ClientApi::Get().AddQuerySubscription(pml::nmos::ClientApi::FLOWS); //"label=pi-ptp-node/flow/c4")
+    pml::nmos::ClientApi::Get().AddQuerySubscription(pml::nmos::ClientApi::SOURCES);
+    pml::nmos::ClientApi::Get().AddQuerySubscription(pml::nmos::ClientApi::SENDERS);
+    pml::nmos::ClientApi::Get().AddQuerySubscription(pml::nmos::ClientApi::RECEIVERS);
     pml::nmos::ClientApi::Get().Start();
     pmlLog() << "Press Key To Target" ;
     getchar();
