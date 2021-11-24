@@ -1410,7 +1410,7 @@ void NodeApiPrivate::CreateSDP(std::shared_ptr<Sender> pSender)
 //    {
 //        ssSDP << "s=-:";
 //    }
-    ssSDP << pSender->GetLabel() << "\r\n";
+    ssSDP << "s=:" << pSender->GetLabel() << "\r\n";
 
     for(auto tpSender: pSender->GetActive().tpSenders)
     {

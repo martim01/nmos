@@ -1,5 +1,7 @@
 #include "clientapi.h"
 #include "clientprivate.h"
+#include "curlregister.h"
+
 
 using namespace pml::nmos;
 ClientApi& ClientApi::Get()
@@ -108,39 +110,50 @@ bool ClientApi::Unsubscribe(const std::string& sReceiverId)
 }
 
 
-bool ClientApi::RequestSenderStaged(const std::string& sSenderId)
+std::pair<curlResponse, std::experimental::optional<connectionSender>>  ClientApi::RequestSenderStaged(const std::string& sSenderId, bool bAsync)
 {
-    return m_pApi->RequestSenderStaged(sSenderId);
+    return m_pApi->RequestSenderStaged(sSenderId, bAsync);
 }
 
-bool ClientApi::RequestSenderActive(const std::string& sSenderId)
+std::pair<curlResponse, std::experimental::optional<connectionSender>>  ClientApi::RequestSenderActive(const std::string& sSenderId, bool bAsync)
 {
-    return m_pApi->RequestSenderActive(sSenderId);
+    return m_pApi->RequestSenderActive(sSenderId, bAsync);
 }
 
-bool ClientApi::RequestSenderTransportFile(const std::string& sSenderId)
+std::pair<curlResponse, std::experimental::optional<std::string>> ClientApi::RequestSenderTransportFile(const std::string& sSenderId, bool bAsync)
 {
-    return m_pApi->RequestSenderTransportFile(sSenderId);
+    return m_pApi->RequestSenderTransportFile(sSenderId, bAsync);
 }
 
-bool ClientApi::RequestReceiverStaged(const std::string& sReceiverId)
+std::pair<curlResponse, std::experimental::optional<std::vector<ConstraintsSender>>> ClientApi::RequestSenderConstraints(const std::string& sSenderId, bool bAsync)
 {
-    return m_pApi->RequestReceiverStaged(sReceiverId);
+    return m_pApi->RequestSenderConstraints(sSenderId, bAsync);
 }
 
-bool ClientApi::RequestReceiverActive(const std::string& sReceiverId)
+std::pair<curlResponse, std::experimental::optional<connectionReceiver>> ClientApi::RequestReceiverStaged(const std::string& sReceiverId, bool bAsync)
 {
-    return m_pApi->RequestReceiverActive(sReceiverId);
+    return m_pApi->RequestReceiverStaged(sReceiverId, bAsync);
 }
 
-bool ClientApi::PatchSenderStaged(const std::string& sSenderId, const connectionSender& aConnection)
+std::pair<curlResponse, std::experimental::optional<connectionReceiver>> ClientApi::RequestReceiverActive(const std::string& sReceiverId, bool bAsync)
 {
-    return m_pApi->PatchSenderStaged(sSenderId, aConnection);
+    return m_pApi->RequestReceiverActive(sReceiverId, bAsync);
 }
 
-bool ClientApi::PatchReceiverStaged(const std::string& sReceiverId, const connectionReceiver& aConnection)
+
+std::pair<curlResponse, std::experimental::optional<std::vector<ConstraintsReceiver>>> ClientApi::RequestReceiverConstraints(const std::string& sReceiverId, bool bAsync)
 {
-    return m_pApi->PatchReceiverStaged(sReceiverId, aConnection);
+    return m_pApi->RequestReceiverConstraints(sReceiverId, bAsync);
+}
+
+std::pair<curlResponse, std::experimental::optional<connectionSender>> ClientApi::PatchSenderStaged(const std::string& sSenderId, const connectionSender& aConnection, bool bAsync)
+{
+    return m_pApi->PatchSenderStaged(sSenderId, aConnection, bAsync);
+}
+
+std::pair<curlResponse, std::experimental::optional<connectionReceiver>> ClientApi::PatchReceiverStaged(const std::string& sReceiverId, const connectionReceiver& aConnection, bool bAsync)
+{
+    return m_pApi->PatchReceiverStaged(sReceiverId, aConnection, bAsync);
 }
 
 void ClientApi::SetPoster(std::shared_ptr<ClientApiPoster> pPoster)

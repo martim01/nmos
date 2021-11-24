@@ -64,12 +64,52 @@ std::vector<Constraints> CreateConstraints(const Json::Value& jsData)
     return vConstraints;
 }
 
-bool CheckSubnet(const url address, unsigned long  nSubnet)
+std::vector<ConstraintsSender> CreateConstraintsSender(const Json::Value& jsData)
 {
-    in_addr addr;
-    if(inet_aton(address.Get().c_str(), &addr) == 0)
+    std::vector<ConstraintsSender> vConstraints;
+    if(jsData.isArray() != false)
     {
-        return ((addr.s_addr & nSubnet) != 0);
+        for(size_t i = 0; i < jsData.size(); i++)
+        {
+            if(jsData[i].isObject())
+            {
+                ConstraintsSender con(TransportParamsRTP::CORE);
+                if(con.UpdateFromJson(jsData[i]))
+                {
+                    vConstraints.push_back(con);
+                }
+            }
+        }
+    }
+    return vConstraints;
+}
+
+std::vector<ConstraintsReceiver> CreateConstraintsRecevier(const Json::Value& jsData)
+{
+    std::vector<ConstraintsReceiver> vConstraints;
+    if(jsData.isArray() != false)
+    {
+        for(size_t i = 0; i < jsData.size(); i++)
+        {
+            if(jsData[i].isObject())
+            {
+                ConstraintsReceiver con(TransportParamsRTP::CORE);
+                if(con.UpdateFromJson(jsData[i]))
+                {
+                    vConstraints.push_back(con);
+                }
+            }
+        }
+    }
+    return vConstraints;
+}
+
+bool CheckSubnet(const url& address1, const url& address2, unsigned long  nSubnet)
+{
+    in_addr addr1, addr2;
+    if(inet_aton(address1.Get().c_str(), &addr1) != 0 && inet_aton(address2.Get().c_str(), &addr2) != 0)
+    {
+        return ((addr1.s_addr & nSubnet) == (addr2.s_addr & nSubnet));
     }
     return false;
 }
@@ -332,8 +372,6 @@ void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std:
         aCon.tpSenders[i].bRtpEnabled = (i < vReceiverConstraints.size());
     }
 
-    aCon.bClient = true;
-
 
     auto sSenderStageUrl = sSenderUrl + "/single/senders/"+sSenderId+"/"+ClientApiImpl::STR_CONNECTION[enumConnection::SENDER_STAGED];
     auto sSenderTransportUrl = sSenderUrl + "/single/senders/"+sSenderId+"/"+ClientApiImpl::STR_CONNECTION[enumConnection::SENDER_TRANSPORTFILE];
@@ -359,7 +397,7 @@ void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std:
 
         aConR.sTransportFileType = "application/sdp";
         aConR.sSenderId = sSenderId;
-        aConR.bClient = true;
+
 
         curlResp = CurlRegister::Get(sSenderTransportUrl, false);
         if(curlResp.nCode != 200)
@@ -452,7 +490,7 @@ ClientApiImpl::ClientApiImpl() :
     m_nCurlThreadCount(0),
     m_pPoster(0),
     m_pClientZCPoster(std::make_shared<ClientZCPoster>(this)),
-    m_pCurl(new CurlRegister(std::bind(&ClientApiImpl::SetCurlDone, this, _1,_2,_3,_4))),
+    m_pCurl(new CurlRegister(std::bind(&ClientApiImpl::SetCurlDone, this, _1,_2,_3))),
     m_pThread(nullptr),
     m_bStarted(false),
     m_bDoneQueryBrowse(false),
@@ -527,11 +565,10 @@ ClientApiImpl::enumSignal ClientApiImpl::GetSignal()
 }
 
 
-void ClientApiImpl::SetCurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId)
+void ClientApiImpl::SetCurlDone(const curlResponse& resp, unsigned long nType, const std::string& sResourceId)
 {
     m_mutex.lock();
-    m_nCurlResult = nResult;
-    m_sCurlResponse = sResponse;
+    m_asyncResponse = resp;
     m_nCurlType = nType;
     m_eSignal = CLIENT_SIG_CURL_DONE;
     m_sCurlResourceId = sResourceId;
@@ -749,126 +786,117 @@ void ClientApiImpl::HandleCurlDone()
 void ClientApiImpl::HandleCurlDoneTarget()
 {
     //don't need to check for m_pPoster as check in HandleCurlDon
-    Json::Value jsData = ConvertToJson(m_sCurlResponse);
-    if(202 == m_nCurlResult && jsData["id"].isString())
+    Json::Value jsData = ConvertToJson(m_asyncResponse.sResponse);
+    if(202 == m_asyncResponse.nCode && jsData["id"].isString())
     {
-        pmlLog(pml::LOG_DEBUG) << "NMOS: " << m_nCurlResult << ": " << jsData["id"].asString() ;
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << m_asyncResponse.nCode << ": " << jsData["id"].asString() ;
         m_pPoster->_RequestTargetResult(202, jsData["id"].asString(), m_sCurlResourceId);
         return;
     }
 
     if(jsData["error"].isString())
     {
-        pmlLog(pml::LOG_DEBUG) << "NMOS: " << m_nCurlResult << ": " << jsData["error"].asString() ;
-        m_pPoster->_RequestTargetResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << m_asyncResponse.nCode << ": " << jsData["error"].asString() ;
+        m_pPoster->_RequestTargetResult(m_asyncResponse.nCode, jsData["error"].asString(), m_sCurlResourceId);
         return;
     }
-    pmlLog(pml::LOG_DEBUG) << "NMOS: " << m_nCurlResult << ": " << m_sCurlResponse ;
-    m_pPoster->_RequestTargetResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << m_asyncResponse.nCode << ": " << m_asyncResponse.sResponse ;
+    m_pPoster->_RequestTargetResult(m_asyncResponse.nCode, m_asyncResponse.sResponse, m_sCurlResourceId);
 }
 
 void ClientApiImpl::HandleCurlDonePatchSender()
 {
-    Json::Value jsData = ConvertToJson(m_sCurlResponse);
-
-    //don't need to check for m_pPoster as check in HandleCurlDon
-    if(m_nCurlResult != 200 && m_nCurlResult != 202 && jsData["error"].isString())
+    if(m_asyncResponse.nCode == 200 || m_asyncResponse.nCode == 202)
     {
-        m_pPoster->_RequestPatchSenderResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
+        connectionSender con;
+        con.Patch(ConvertToJson(m_asyncResponse.sResponse));
+        m_pPoster->_RequestPatchSenderResult(m_asyncResponse, con, m_sCurlResourceId);
     }
     else
     {
-        m_pPoster->_RequestPatchSenderResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+        m_pPoster->_RequestPatchSenderResult(m_asyncResponse, {}, m_sCurlResourceId);
     }
 }
 
 void ClientApiImpl::HandleCurlDonePatchReceiver()
 {
-    //don't need to check for m_pPoster as check in HandleCurlDon
-    Json::Value jsData = ConvertToJson(m_sCurlResponse);
-    if(m_nCurlResult != 200 && m_nCurlResult != 202 && jsData["error"].isString())
+    if(m_asyncResponse.nCode == 200 || m_asyncResponse.nCode == 202)
     {
-        m_pPoster->_RequestPatchReceiverResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
+        connectionReceiver con;
+        con.Patch(ConvertToJson(m_asyncResponse.sResponse));
+        m_pPoster->_RequestPatchReceiverResult(m_asyncResponse, con, m_sCurlResourceId);
     }
     else
     {
-        m_pPoster->_RequestPatchReceiverResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+        m_pPoster->_RequestPatchReceiverResult(m_asyncResponse, {}, m_sCurlResourceId);
     }
 }
 
 void ClientApiImpl::HandleCurlDoneGetSenderStaged()
 {
-    //don't need to check for m_pPoster as check in HandleCurlDon
-    Json::Value jsData = ConvertToJson(m_sCurlResponse);
-
-    if(m_nCurlResult != 200 && jsData["error"].isString())
+    if(m_asyncResponse.nCode == 200)
     {
-        m_pPoster->_RequestGetSenderStagedResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
+        connectionSender con;
+        con.Patch(ConvertToJson(m_asyncResponse.sResponse));
+        m_pPoster->_RequestGetSenderStagedResult(m_asyncResponse, con, m_sCurlResourceId);
     }
     else
     {
-        m_pPoster->_RequestGetSenderStagedResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+        m_pPoster->_RequestGetSenderStagedResult(m_asyncResponse, {}, m_sCurlResourceId);
     }
 }
 
 void ClientApiImpl::HandleCurlDoneGetSenderActive()
 {
-    //don't need to check for m_pPoster as check in HandleCurlDon
-    Json::Value jsData = ConvertToJson(m_sCurlResponse);
-    if(m_nCurlResult != 200 && jsData["error"].isString())
+    if(m_asyncResponse.nCode == 200)
     {
-        m_pPoster->_RequestGetSenderActiveResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
+        connectionSender con;
+        con.Patch(ConvertToJson(m_asyncResponse.sResponse));
+        m_pPoster->_RequestGetSenderActiveResult(m_asyncResponse, con, m_sCurlResourceId);
     }
     else
     {
-        m_pPoster->_RequestGetSenderActiveResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+        m_pPoster->_RequestGetSenderActiveResult(m_asyncResponse, {}, m_sCurlResourceId);
     }
-
 }
 
 void ClientApiImpl::HandlCurlDoneGetSenderTransportFile()
 {
-    //don't need to check for m_pPoster as check in HandleCurlDon
-    Json::Value jsData = ConvertToJson(m_sCurlResponse);
-    if(m_nCurlResult != 200 && jsData["error"].isString())
+    if(m_asyncResponse.nCode == 200)
     {
-        m_pPoster->_RequestGetSenderTransportFileResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
+        m_pPoster->_RequestGetSenderTransportFileResult(m_asyncResponse, m_asyncResponse.sResponse, m_sCurlResourceId);
     }
     else
     {
-        m_pPoster->_RequestGetSenderTransportFileResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
+        m_pPoster->_RequestGetSenderTransportFileResult(m_asyncResponse, {}, m_sCurlResourceId);
     }
 }
 
 void ClientApiImpl::HandleCurlDoneGetReceiverStaged()
 {
-    //don't need to check for m_pPoster as check in HandleCurlDon
-    Json::Value jsData = ConvertToJson(m_sCurlResponse);
+    if(m_asyncResponse.nCode == 200)
     {
-        if(m_nCurlResult != 200 && jsData["error"].isString())
-        {
-            m_pPoster->_RequestGetReceiverStagedResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
-        }
-        else
-        {
-            m_pPoster->_RequestGetReceiverStagedResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
-        }
+        connectionReceiver con;
+        con.Patch(ConvertToJson(m_asyncResponse.sResponse));
+        m_pPoster->_RequestGetReceiverStagedResult(m_asyncResponse, con, m_sCurlResourceId);
+    }
+    else
+    {
+        m_pPoster->_RequestGetReceiverStagedResult(m_asyncResponse, {}, m_sCurlResourceId);
     }
 }
 
 void ClientApiImpl::HandleCurlDoneGetReceiverActive()
 {
-    //don't need to check for m_pPoster as check in HandleCurlDon
-    Json::Value jsData = ConvertToJson(m_sCurlResponse);
+    if(m_asyncResponse.nCode == 200)
     {
-        if(m_nCurlResult != 200 && jsData["error"].isString())
-        {
-            m_pPoster->_RequestGetReceiverActiveResult(m_nCurlResult, jsData["error"].asString(), m_sCurlResourceId);
-        }
-        else
-        {
-            m_pPoster->_RequestGetReceiverActiveResult(m_nCurlResult, m_sCurlResponse, m_sCurlResourceId);
-        }
+        connectionReceiver con;
+        con.Patch(ConvertToJson(m_asyncResponse.sResponse));
+        m_pPoster->_RequestGetReceiverActiveResult(m_asyncResponse, con, m_sCurlResourceId);
+    }
+    else
+    {
+        m_pPoster->_RequestGetReceiverActiveResult(m_asyncResponse, {}, m_sCurlResourceId);
     }
 }
 
@@ -1657,7 +1685,9 @@ std::string ClientApiImpl::GetConnectionUrl(std::shared_ptr<Resource> pResource)
         for(auto pairInterface : m_mSubnetMasks)
         {
             //same subnet mask and not tried this ip address before
-            if(CheckSubnet(itControl->second, pairInterface.second) && setTried.insert(itControl->second).second)
+            auto vSplit = SplitString(itControl->second.Get(), '/');
+
+            if(CheckSubnet(url(vSplit[1].substr(0, vSplit[1].find(':'))), pairInterface.first, pairInterface.second) && setTried.insert(itControl->second).second)
             {
                 //we should be able to connect on this
                 auto curlResp = CurlRegister::Get(itControl->second.Get());
@@ -1689,108 +1719,228 @@ std::string ClientApiImpl::GetConnectionUrl(std::shared_ptr<Resource> pResource)
     return std::string();
 }
 
-bool ClientApiImpl::RequestSender(const std::string& sSenderId, enumConnection eType, bool bJson)
+curlResponse CreateCurlResponse(int nCode, const std::string& sMessage)
+{
+    curlResponse resp;
+    resp.nCode = nCode;
+    Json::Value jsData;
+    jsData["code"] = nCode;
+    jsData["error"] = sMessage;
+    resp.sResponse = ConvertFromJson(jsData);
+    return resp;
+}
+
+curlResponse ClientApiImpl::RequestSender(const std::string& sSenderId, enumConnection eType, bool bAsync, bool bJson)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
+
     auto pSender = GetSender(sSenderId);
     if(!pSender)
     {
-        return false;
+        return CreateCurlResponse(404, "Sender not found with id "+sSenderId);
     }
 
     std::string sConnectionUrl(GetConnectionUrlSingle(pSender, "senders", STR_CONNECTION[eType]));
     if(sConnectionUrl.empty())
     {
-        return false;
+        return CreateCurlResponse(408, "Control endpoint not found");
     }
 
-    m_pCurl->GetAsync(sConnectionUrl, (long)eType, bJson);
-    return true;
+    if(bAsync)
+    {
+        m_pCurl->GetAsync(sConnectionUrl, (long)eType, bJson);
+        return CreateCurlResponse(202, "Request actioned");
+    }
+    else
+    {
+        return CurlRegister::Get(sConnectionUrl, bJson);
+    }
 }
 
-bool ClientApiImpl::RequestReceiver(const std::string& sReceiverId, enumConnection eType, bool bJson)
+curlResponse ClientApiImpl::RequestReceiver(const std::string& sReceiverId, enumConnection eType, bool bAsync, bool bJson)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
     auto pReceiver = GetReceiver(sReceiverId);
     if(!pReceiver)
     {
-        return false;
+        return CreateCurlResponse(404, "Receiver not found with id "+sReceiverId);
     }
 
     std::string sConnectionUrl(GetConnectionUrlSingle(pReceiver, "receivers", STR_CONNECTION[eType]));
     if(sConnectionUrl.empty())
     {
-        return false;
+        return CreateCurlResponse(408, "Control endpoint not found");
     }
 
-    m_pCurl->GetAsync(sConnectionUrl, (long)eType, bJson);
-    return true;
+    if(bAsync)
+    {
+        m_pCurl->GetAsync(sConnectionUrl, (long)eType, bJson);
+        return CreateCurlResponse(202, "Request actioned");
+    }
+    else
+    {
+        return CurlRegister::Get(sConnectionUrl, bJson);
+    }
 }
 
-bool ClientApiImpl::RequestSenderStaged(const std::string& sSenderId)
+std::pair<curlResponse, std::experimental::optional<std::vector<ConstraintsSender>>> ClientApiImpl::RequestSenderConstraints(const std::string& sSenderId, bool bAsync)
 {
-    return RequestSender(sSenderId, enumConnection::SENDER_STAGED);
+    auto resp =  RequestSender(sSenderId, enumConnection::SENDER_CONSTRAINTS, bAsync);
+    if(resp.nCode != 200)
+    {
+        return {resp, {}};
+    }
+    else
+    {
+        return {resp, CreateConstraintsSender(ConvertToJson(resp.sResponse))};
+    }
 }
 
-bool ClientApiImpl::RequestSenderActive(const std::string& sSenderId)
+std::pair<curlResponse, std::experimental::optional<connectionSender>> ClientApiImpl::RequestSenderConnection(const std::string& sSenderId,enumConnection eType, bool bAsync)
 {
-    return RequestSender(sSenderId, enumConnection::SENDER_ACTIVE);
+    auto resp = RequestSender(sSenderId, eType, bAsync);
+    if(resp.nCode != 200)
+    {
+        return {resp, {}};
+    }
+    else
+    {
+        connectionSender con;
+        con.Patch(ConvertToJson(resp.sResponse));
+        return {resp, con};
+    }
 }
 
-bool ClientApiImpl::RequestSenderTransportFile(const std::string& sSenderId)
+std::pair<curlResponse, std::experimental::optional<connectionSender>> ClientApiImpl::RequestSenderStaged(const std::string& sSenderId, bool bAsync)
 {
-    return RequestSender(sSenderId, enumConnection::SENDER_TRANSPORTFILE, false);
+    return RequestSenderConnection(sSenderId, enumConnection::SENDER_STAGED, bAsync);
 }
 
-bool ClientApiImpl::RequestReceiverStaged(const std::string& sReceiverId)
+std::pair<curlResponse, std::experimental::optional<connectionSender>>  ClientApiImpl::RequestSenderActive(const std::string& sSenderId, bool bAsync)
 {
-    return RequestReceiver(sReceiverId, enumConnection::RECEIVER_STAGED);
+    return RequestSenderConnection(sSenderId, enumConnection::SENDER_ACTIVE, bAsync);
 }
 
-bool ClientApiImpl::RequestReceiverActive(const std::string& sReceiverId)
+std::pair<curlResponse, std::experimental::optional<std::string>>  ClientApiImpl::RequestSenderTransportFile(const std::string& sSenderId, bool bAsync)
 {
-    return RequestReceiver(sReceiverId, enumConnection::RECEIVER_ACTIVE);
+    auto resp = RequestSender(sSenderId, enumConnection::SENDER_TRANSPORTFILE, bAsync, false);
+    if(resp.nCode != 200)
+    {
+        return {resp, {}};
+    }
+    return {resp, resp.sResponse};
+}
+
+std::pair<curlResponse, std::experimental::optional<std::vector<ConstraintsReceiver>>> ClientApiImpl::RequestReceiverConstraints(const std::string& sReceiverId, bool bAsync)
+{
+    auto resp =  RequestReceiver(sReceiverId, enumConnection::RECEIVER_CONSTRAINTS, bAsync);
+    if(resp.nCode != 200)
+    {
+        return {resp, {}};
+    }
+    else
+    {
+        return {resp, CreateConstraintsRecevier(ConvertToJson(resp.sResponse))};
+    }
+}
+
+std::pair<curlResponse, std::experimental::optional<connectionReceiver>> ClientApiImpl::RequestReceiverConnection(const std::string& sReceiverId,enumConnection eType, bool bAsync)
+{
+    auto resp = RequestReceiver(sReceiverId, eType, bAsync);
+    if(resp.nCode != 200)
+    {
+        return {resp, {}};
+    }
+    else
+    {
+        connectionReceiver con;
+        con.Patch(ConvertToJson(resp.sResponse));
+        return {resp, con};
+    }
+}
+
+std::pair<curlResponse, std::experimental::optional<connectionReceiver>> ClientApiImpl::RequestReceiverStaged(const std::string& sReceiverId, bool bAsync)
+{
+    return RequestReceiverConnection(sReceiverId, enumConnection::RECEIVER_STAGED, bAsync);
+}
+
+std::pair<curlResponse, std::experimental::optional<connectionReceiver>> ClientApiImpl::RequestReceiverActive(const std::string& sReceiverId, bool bAsync)
+{
+    return RequestReceiverConnection(sReceiverId, enumConnection::RECEIVER_ACTIVE, bAsync);
 }
 
 
-bool ClientApiImpl::PatchSenderStaged(const std::string& sSenderId, const connectionSender& aConnection)
+std::pair<curlResponse, std::experimental::optional<connectionSender>> ClientApiImpl::PatchSenderStaged(const std::string& sSenderId, const connectionSender& aConnection, bool bAsync)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
     auto pSender = GetSender(sSenderId);
     if(!pSender)
     {
-        return false;
+        return {CreateCurlResponse(404, "Sender not found with id "+sSenderId), {}};
     }
 
     std::string sConnectionUrl(GetConnectionUrlSingle(pSender, "senders", STR_CONNECTION[enumConnection::SENDER_STAGED]));
     if(sConnectionUrl.empty())
     {
-        return false;
+        return {CreateCurlResponse(408, "Control endpoint not found"), {}};
     }
 
-    m_pCurl->PutPatchAsync(sConnectionUrl, ConvertFromJson(aConnection.GetJson(m_version)), static_cast<long>(enumConnection::SENDER_PATCH), false, sSenderId);
-
-    return true;
+    if(bAsync)
+    {
+        m_pCurl->PutPatchAsync(sConnectionUrl, ConvertFromJson(aConnection.GetJson(m_version)), static_cast<long>(enumConnection::SENDER_PATCH), false, sSenderId);
+        return {CreateCurlResponse(202, "Request actioned"), {}};
+    }
+    else
+    {
+        auto resp = CurlRegister::PutPatch(sConnectionUrl, ConvertFromJson(aConnection.GetJson(m_version)), false, sSenderId);
+        if(resp.nCode != 200)
+        {
+            return {resp, {}};
+        }
+        else
+        {
+            connectionSender con;
+            con.Patch(ConvertToJson(resp.sResponse));
+            return {resp, con};
+        }
+    }
 }
 
-bool ClientApiImpl::PatchReceiverStaged(const std::string& sReceiverId, const connectionReceiver& aConnection)
+std::pair<curlResponse, std::experimental::optional<connectionReceiver>> ClientApiImpl::PatchReceiverStaged(const std::string& sReceiverId, const connectionReceiver& aConnection, bool bAsync)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
     auto pReceiver = GetReceiver(sReceiverId);
     if(!pReceiver)
     {
-        return false;
+        return {CreateCurlResponse(404, "Receiver not found with id "+sReceiverId), {}};
     }
 
     std::string sConnectionUrl(GetConnectionUrlSingle(pReceiver, "receivers", STR_CONNECTION[enumConnection::SENDER_STAGED]));
     if(sConnectionUrl.empty())
     {
-        return false;
+        return {CreateCurlResponse(408, "Control endpoint not found"), {}};
     }
 
-    m_pCurl->PutPatchAsync(sConnectionUrl, ConvertFromJson(aConnection.GetJson(m_version)), static_cast<long>(enumConnection::RECEIVER_PATCH), false, sReceiverId);
+    if(bAsync)
+    {
+        m_pCurl->PutPatchAsync(sConnectionUrl, ConvertFromJson(aConnection.GetJson(m_version)), static_cast<long>(enumConnection::RECEIVER_PATCH), false, sReceiverId);
+        return {CreateCurlResponse(202, "Request actioned"), {}};
+    }
+    else
+    {
+        auto resp =  CurlRegister::PutPatch(sConnectionUrl, ConvertFromJson(aConnection.GetJson(m_version)), false, sReceiverId);
+        if(resp.nCode != 200)
+        {
+            return {resp, {}};
+        }
+        else
+        {
+            connectionReceiver con;
+            con.Patch(ConvertToJson(resp.sResponse));
+            return {resp, con};
+        }
+    }
 
-    return true;
 }
 
 
@@ -2666,7 +2816,7 @@ void ClientApiImpl::GetSubnetMasks()
                 std::string sInterface(temp_addr->ifa_name);
                 std::string sAddress(inet_ntoa(((sockaddr_in*)temp_addr->ifa_addr)->sin_addr));
 
-                m_mSubnetMasks.insert({sAddress, ((sockaddr_in*)temp_addr->ifa_netmask)->sin_addr.s_addr});
+                m_mSubnetMasks.insert({url(sAddress), ((sockaddr_in*)temp_addr->ifa_netmask)->sin_addr.s_addr});
             }
             // @todo AF_INET6
             temp_addr = temp_addr->ifa_next;

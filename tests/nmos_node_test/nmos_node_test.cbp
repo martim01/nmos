@@ -107,6 +107,7 @@
 			<Add option="-fexceptions" />
 			<Add directory="$(#json.include)" />
 			<Add directory="../../include" />
+			<Add directory="../../../Restgoose" />
 		</Compiler>
 		<Unit filename="main.cpp" />
 		<Unit filename="threadposter.cpp" />

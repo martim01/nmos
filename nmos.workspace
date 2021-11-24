@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_workspace_file>
 	<Workspace title="Workspace">
+		<Project filename="../log/log.cbp" />
+		<Project filename="../Restgoose/Restgoose.cbp" />
 		<Project filename="libnmos_base.cbp" />
 		<Project filename="libnmos_node.cbp" />
 		<Project filename="libnmos_client.cbp">
@@ -14,12 +16,5 @@
 			<Depends filename="libnmos_base.cbp" />
 			<Depends filename="libnmos_client.cbp" />
 		</Project>
-		<Project filename="../Restgoose/Restgoose.cbp" />
-		<Project filename="../pam/pam2/pam2.cbp">
-			<Depends filename="libnmos_base.cbp" />
-			<Depends filename="libnmos_node.cbp" />
-			<Depends filename="libnmos_client.cbp" />
-		</Project>
-		<Project filename="../log/log.cbp" />
 	</Workspace>
 </CodeBlocks_workspace_file>

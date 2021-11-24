@@ -15,8 +15,10 @@
 #include <thread>
 #include <functional>
 #include "clientapiposter.h"
-
+#include "optional.hpp"
 #include "clientemum.h"
+#include "curlregister.h"
+
 
 class WebSocketClient;
 namespace pml
@@ -31,6 +33,11 @@ namespace pml
         class ClientApiPoster;
         class ClientZCPoster;
         class ZCPoster;
+        struct curlResponse;
+        struct ConnectionSender;
+        struct ConnectionReceiver;
+        class ConstraintsSender;
+        class ConstraintsReceiver;
 
         class ClientApiImpl
         {
@@ -88,7 +95,7 @@ namespace pml
                 void SetInstanceResolved(std::shared_ptr<dnsInstance> pInstance);
                 void SetInstanceRemoved(std::shared_ptr<dnsInstance> pInstance);
                 void SetAllForNow(const std::string& sService);
-                void SetCurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId);
+                void SetCurlDone(const curlResponse& resp, unsigned long nType, const std::string& sResourceId);
                 enumSignal GetSignal();
                 void HandleInstanceResolved();
                 void HandleInstanceRemoved();
@@ -101,15 +108,17 @@ namespace pml
                 bool Subscribe(const std::string& sSenderId, const std::string& sReceiverId);
                 bool Unsubscribe(const std::string& sReceiverId);
 
-                bool RequestSenderStaged(const std::string& sSenderId);
-                bool RequestSenderActive(const std::string& sSenderId);
-                bool RequestSenderTransportFile(const std::string& sSenderId);
+                std::pair<curlResponse, std::experimental::optional<connectionSender>> RequestSenderStaged(const std::string& sSenderId, bool bAsync);
+                std::pair<curlResponse, std::experimental::optional<connectionSender>> RequestSenderActive(const std::string& sSenderId, bool bAsync);
+                std::pair<curlResponse, std::experimental::optional<std::string>> RequestSenderTransportFile(const std::string& sSenderId, bool bAsync);
+                std::pair<curlResponse, std::experimental::optional<std::vector<ConstraintsSender>>> RequestSenderConstraints(const std::string& sSenderId, bool bAsync);
 
-                bool RequestReceiverStaged(const std::string& sReceiverId);
-                bool RequestReceiverActive(const std::string& sReceiverId);
+                std::pair<curlResponse, std::experimental::optional<connectionReceiver>>  RequestReceiverStaged(const std::string& sReceiverId, bool bAsync);
+                std::pair<curlResponse, std::experimental::optional<connectionReceiver>>  RequestReceiverActive(const std::string& sReceiverId, bool bAsync);
+                std::pair<curlResponse, std::experimental::optional<std::vector<ConstraintsReceiver>>> RequestReceiverConstraints(const std::string& sReceiverId, bool bAsync);
 
-                bool PatchSenderStaged(const std::string& sSenderId, const connectionSender& aConnection);
-                bool PatchReceiverStaged(const std::string& sReceiverId, const connectionReceiver& aConnection);
+                std::pair<curlResponse, std::experimental::optional<connectionSender>> PatchSenderStaged(const std::string& sSenderId, const connectionSender& aConnection, bool bAsync);
+                std::pair<curlResponse, std::experimental::optional<connectionReceiver>> PatchReceiverStaged(const std::string& sReceiverId, const connectionReceiver& aConnection, bool bAsync);
 
                 bool Connect(const std::string& sSenderId, const std::string& sReceiverId);
                 bool Disconnect(const std::string& sReceiverId);
@@ -172,8 +181,11 @@ namespace pml
                 std::shared_ptr<Sender> GetSender(const std::string& sSenderId);
                 std::shared_ptr<Receiver> GetReceiver(const std::string& sSenderId);
 
-                bool RequestSender(const std::string& sSenderId, enumConnection eType, bool bJson=true);
-                bool RequestReceiver(const std::string& sReceiverId, enumConnection eType, bool bJson=true);
+                std::pair<curlResponse, std::experimental::optional<connectionSender>> RequestSenderConnection(const std::string& sSenderId, enumConnection eType,bool bAsync);
+                std::pair<curlResponse, std::experimental::optional<connectionReceiver>> RequestReceiverConnection(const std::string& sSenderId, enumConnection eType, bool bAsync);
+
+                curlResponse RequestSender(const std::string& sSenderId, enumConnection eType, bool bAsync = true, bool bJson=true);
+                curlResponse RequestReceiver(const std::string& sReceiverId, enumConnection eType, bool bAsync = true, bool bJson=true);
 
                 void HandleCurlDoneTarget();
                 void HandleCurlDonePatchSender();
@@ -249,9 +261,8 @@ namespace pml
 
                 std::shared_ptr<ClientApiPoster> m_pPoster;
 
-                unsigned long m_nCurlResult;
-                std::string m_sCurlResponse;
-                long m_nCurlType;
+                curlResponse m_asyncResponse;
+                unsigned long m_nCurlType;
                 std::string m_sCurlResourceId;
 
                 std::shared_ptr<ClientZCPoster> m_pClientZCPoster;
@@ -288,7 +299,7 @@ namespace pml
 
                 std::map<std::string, std::function<void(const std::string&, const Json::Value&)>> m_mGrainUpdate;
 
-                std::map<std::string, unsigned long> m_mSubnetMasks;
+                std::map<url, unsigned long> m_mSubnetMasks;
                 //std::map<std::string, ClientHolder<T>&> m_mGrainRemove;
 
 

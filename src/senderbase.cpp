@@ -22,6 +22,9 @@ Sender::Sender(const std::string& sLabel, const std::string& sDescription, const
     m_bReceiverActive(false),
     m_bActivateAllowed(false)
 {
+    m_Active.bClient = false;
+    m_Staged.bClient = false;
+
     AddInterfaceBinding(sInterface);
 
     m_vConstraints.push_back(ConstraintsSender(flagsTransport));

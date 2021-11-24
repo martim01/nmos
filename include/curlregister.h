@@ -28,7 +28,7 @@ namespace pml
 
             public:
                 ///< @brief constructor
-                CurlRegister(std::function<void(unsigned long, const std::string&, long, const std::string&)> pCallback);
+                CurlRegister(std::function<void(const curlResponse&, unsigned long, const std::string&)> pCallback);
 
                 ///< @brief Destructor
                 ~CurlRegister();
@@ -47,7 +47,7 @@ namespace pml
                 void PutPatchAsync(const std::string& sBaseUrl, const std::string& sJson, long nUserType, bool bPut, const std::string& sResourceId);
                 void GetAsync(const std::string& sUrl, long nUserType, bool bJson=false);
 
-                void Callback(unsigned long nResult, const std::string& sResult, long nUser, const std::string sResponse="");
+                void Callback(const curlResponse& resp, long nUser, const std::string sResponse="");
 
                 static const int TIMEOUT_CONNECT = 3;
                 static const int TIMEOUT_MSG = 2;
@@ -55,7 +55,7 @@ namespace pml
             private:
 
 
-                std::function<void(unsigned long, const std::string&, long, const std::string&)> m_pCallback;
+                std::function<void(const curlResponse&, unsigned long, const std::string&)> m_pCallback;
 
                 static const std::string STR_RESOURCE[7];
 

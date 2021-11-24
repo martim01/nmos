@@ -28,8 +28,10 @@ namespace pml
                 std::chrono::time_point<std::chrono::high_resolution_clock> tpActivation;
 
                 int nProperties;
-                bool bClient;
                 static const std::string STR_ACTIVATE[4];
+
+                protected:
+                    bool bClient;
             };
 
             struct NMOS_EXPOSE connectionSender : public connection
@@ -47,6 +49,8 @@ namespace pml
                 std::vector<TransportParamsRTPSender> tpSenders;
 
                 std::string sReceiverId;
+
+                friend class Sender;
 
 
             };
@@ -70,6 +74,7 @@ namespace pml
                 std::string sTransportFileData;
 
 
+                friend class Receiver;
         };
     };
 };

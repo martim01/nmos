@@ -10,7 +10,7 @@ connection::connection() :
     bMasterEnable(false),
     eActivate(connection::ACT_NULL),
     nProperties(connection::FP_ALL),
-    bClient(false)
+    bClient(true)
 {
 
 }

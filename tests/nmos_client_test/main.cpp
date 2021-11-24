@@ -22,8 +22,8 @@ int main()
     pml::nmos::ClientApi::Get().AddQuerySubscription(pml::nmos::ClientApi::DEVICES);
     pml::nmos::ClientApi::Get().AddQuerySubscription(pml::nmos::ClientApi::FLOWS); //"label=pi-ptp-node/flow/c4")
     pml::nmos::ClientApi::Get().AddQuerySubscription(pml::nmos::ClientApi::SOURCES);
-    pml::nmos::ClientApi::Get().AddQuerySubscription(pml::nmos::ClientApi::SENDERS);
-    pml::nmos::ClientApi::Get().AddQuerySubscription(pml::nmos::ClientApi::RECEIVERS);
+    pml::nmos::ClientApi::Get().AddQuerySubscription(pml::nmos::ClientApi::SENDERS, "transport=urn:x-nmos:transport:rtp.mcast");
+    pml::nmos::ClientApi::Get().AddQuerySubscription(pml::nmos::ClientApi::RECEIVERS, "transport=urn:x-nmos:transport:rtp.mcast");
     pml::nmos::ClientApi::Get().Start();
     pmlLog() << "Press Key To Target" ;
     getchar();
@@ -32,36 +32,59 @@ int main()
 
     if(itSender != pml::nmos::ClientApi::Get().GetSenders().end() && itReceiver != pml::nmos::ClientApi::Get().GetReceivers().end())
     {
-        pmlLog() << "TARGET" ;
-        pmlLog() << "-----------------------------------------------" ;
-        pml::nmos::ClientApi::Get().Subscribe(itSender->first, itReceiver->first);
-        pmlLog() << "Press Key To Park" ;
-        getchar();
-        pmlLog() << "PARK" ;
-        pmlLog() << "-----------------------------------------------" ;
-        pml::nmos::ClientApi::Get().Unsubscribe(itReceiver->first);
+//        pmlLog() << "TARGET" ;
+//        pmlLog() << "-----------------------------------------------" ;
+//        pml::nmos::ClientApi::Get().Subscribe(itSender->first, itReceiver->first);
+//        pmlLog() << "Press Key To Park" ;
+//        getchar();
+//        pmlLog() << "PARK" ;
+//        pmlLog() << "-----------------------------------------------" ;
+//        pml::nmos::ClientApi::Get().Unsubscribe(itReceiver->first);
 
         pmlLog() << "Press Key To Get Sender Staged" ;
         getchar();
+
         pmlLog() << "Sender Staged" ;
         pmlLog() << "-----------------------------------------------" ;
-        pml::nmos::ClientApi::Get().RequestSenderStaged(itSender->first);
-        getchar();
-        pmlLog() << "Sender Active" ;
-        pmlLog() << "-----------------------------------------------" ;
-        pml::nmos::ClientApi::Get().RequestSenderActive(itSender->first);
-        getchar();
-        pmlLog() << "Sender TransportFile" ;
-        pmlLog() << "-----------------------------------------------" ;
-        pml::nmos::ClientApi::Get().RequestSenderTransportFile(itSender->first);
+        auto resp = pml::nmos::ClientApi::Get().RequestSenderStaged(itSender->first, false);
+        pmlLog() << resp.nCode;
+        pmlLog() << resp.sResponse;
         getchar();
 
-        pmlLog() << "Sender Patch Staged" ;
+        pmlLog() << "Sender Active" ;
         pmlLog() << "-----------------------------------------------" ;
-        pml::nmos::connectionSender aConnection;
-        aConnection.eActivate = pml::nmos::connection::ACT_NOW;
-        aConnection.bMasterEnable = true;
-        aConnection.sReceiverId = itReceiver->first;
+        auto resp = pml::nmos::ClientApi::Get().RequestSenderActive(itSender->first, false);
+        pmlLog() << resp.nCode;
+        pmlLog() << resp.sResponse;
+        getchar();
+
+        pmlLog() << "Sender TransportFile" ;
+        pmlLog() << "-----------------------------------------------" ;
+        auto resp = pml::nmos::ClientApi::Get().RequestSenderTransportFile(itSender->first, false);
+        pmlLog() << resp.nCode;
+        pmlLog() << resp.sResponse;
+        getchar();
+
+        pmlLog() << "Sender Constraints" ;
+        pmlLog() << "-----------------------------------------------" ;
+        auto resp = pml::nmos::ClientApi::Get().RequestSenderConstraints(itSender->first, false);
+        pmlLog() << resp.nCode;
+        pmlLog() << resp.sResponse;
+
+        if(resp.nCode == 200)
+        {
+            pml::nmos::ConstraintsSender con;
+            con.UpdateFromJson(ConvertToJson(resp.sResponse));
+            getchar();
+
+            pmlLog() << "Sender Patch Staged" ;
+            pmlLog() << "-----------------------------------------------" ;
+
+            pml::nmos::connectionSender aConnection;
+            aConnection.eActivate = pml::nmos::connection::ACT_NOW;
+            aConnection.bMasterEnable = true;
+            aConnection.sReceiverId = itReceiver->first;
+            aConnection.tpSenders.resize(con.)
         //aConnection.tpSender.sDestinationIp =
         pml::nmos::ClientApi::Get().PatchSenderStaged(itSender->first, aConnection);
 

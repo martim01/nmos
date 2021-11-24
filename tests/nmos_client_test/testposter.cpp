@@ -207,46 +207,83 @@ void TestPoster::QuerySubscriptionRemoved(const std::string& sSubscriptionId)
 
 void TestPoster::RequestTargetResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
 {
-
+    pmlLog() << "++++++RequestTargetResult++++++" ;
+    pmlLog() << "Result = " << nResult;
+    pmlLog() << "Response = " << sResponse;
+    pmlLog() << "Resource = " << sResourceId;
+    pmlLog() << "++++++++++++++++++++++++" ;
 }
 
 void TestPoster::RequestPatchSenderResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
 {
-
+    pmlLog() << "++++++RequestPatchSenderResult++++++" ;
+    pmlLog() << "Result = " << nResult;
+    pmlLog() << "Response = " << sResponse;
+    pmlLog() << "Resource = " << sResourceId;
+    pmlLog() << "++++++++++++++++++++++++" ;
 }
 
 void TestPoster::RequestPatchReceiverResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
 {
-
+    pmlLog() << "++++++RequestPatchReceiverResult++++++" ;
+    pmlLog() << "Result = " << nResult;
+    pmlLog() << "Response = " << sResponse;
+    pmlLog() << "Resource = " << sResourceId;
+    pmlLog() << "++++++++++++++++++++++++" ;
 }
 
 void TestPoster::RequestConnectResult(const std::string& sSenderId, const std::string& sReceiverId, bool bSuccess, const std::string& sResponse)
 {
-
+    pmlLog() << "++++++RequestConnectResult++++++" ;
+    pmlLog() << "Sender = " << sSenderId;
+    pmlLog() << "Receiver = " << sReceiverId;
+    pmlLog() << "Result = " << bSuccess;
+    pmlLog() << "Response = " << sResponse;
+    pmlLog() << "++++++++++++++++++++++++" ;
 }
 
 void TestPoster::RequestGetSenderStagedResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
 {
-
+    pmlLog() << "++++++RequestGetSenderStagedResult++++++" ;
+    pmlLog() << "Result = " << nResult;
+    pmlLog() << "Response = " << sResponse;
+    pmlLog() << "Resource = " << sResourceId;
+    pmlLog() << "++++++++++++++++++++++++" ;
 }
 
 void TestPoster::RequestGetSenderActiveResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
 {
-
+    pmlLog() << "++++++RequestGetSenderActiveResult++++++" ;
+    pmlLog() << "Result = " << nResult;
+    pmlLog() << "Response = " << sResponse;
+    pmlLog() << "Resource = " << sResourceId;
+    pmlLog() << "++++++++++++++++++++++++" ;
 }
 
 void TestPoster::RequestGetSenderTransportFileResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
 {
-
+    pmlLog() << "++++++RequestGetSenderTransportFileResult++++++" ;
+    pmlLog() << "Result = " << nResult;
+    pmlLog() << "Response = " << sResponse;
+    pmlLog() << "Resource = " << sResourceId;
+    pmlLog() << "++++++++++++++++++++++++" ;
 }
 
 void TestPoster::RequestGetReceiverStagedResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
 {
-
+    pmlLog() << "++++++RequestGetReceiverStagedResult++++++" ;
+    pmlLog() << "Result = " << nResult;
+    pmlLog() << "Response = " << sResponse;
+    pmlLog() << "Resource = " << sResourceId;
+    pmlLog() << "++++++++++++++++++++++++" ;
 }
 
 void TestPoster::RequestGetReceiverActiveResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
 {
-
+    pmlLog() << "++++++RequestGetReceiverActiveResult++++++" ;
+    pmlLog() << "Result = " << nResult;
+    pmlLog() << "Response = " << sResponse;
+    pmlLog() << "Resource = " << sResourceId;
+    pmlLog() << "++++++++++++++++++++++++" ;
 }
 

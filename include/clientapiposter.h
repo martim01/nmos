@@ -5,7 +5,9 @@
 #include <set>
 #include <list>
 #include <algorithm>
-
+#include "curlregister.h"
+#include "optional.hpp"
+#include "connection.h"
 
 namespace pml
 {
@@ -17,6 +19,7 @@ namespace pml
         class Flow;
         class Sender;
         class Receiver;
+
 
         template<class T> struct resourcechanges
         {
@@ -52,13 +55,13 @@ namespace pml
 
 
                 void _RequestTargetResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
-                void _RequestPatchSenderResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
-                void _RequestPatchReceiverResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
-                void _RequestGetSenderStagedResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
-                void _RequestGetSenderActiveResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
-                void _RequestGetSenderTransportFileResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
-                void _RequestGetReceiverStagedResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
-                void _RequestGetReceiverActiveResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
+                void _RequestPatchSenderResult(const curlResponse& resp, const std::experimental::optional<connectionSender>& con, const std::string& sResourceId);
+                void _RequestPatchReceiverResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver>& con, const std::string& sResourceId);
+                void _RequestGetSenderStagedResult(const curlResponse& resp, const std::experimental::optional<connectionSender>& con, const std::string& sResourceId);
+                void _RequestGetSenderActiveResult(const curlResponse& resp, const std::experimental::optional<connectionSender>& con, const std::string& sResourceId);
+                void _RequestGetSenderTransportFileResult(const curlResponse& resp, const std::experimental::optional<std::string>& sTransportFile, const std::string& sResourceId);
+                void _RequestGetReceiverStagedResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver>& con, const std::string& sResourceId);
+                void _RequestGetReceiverActiveResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver>& con, const std::string& sResourceId);
 
                 void _RequestConnectResult(const std::string& sSenderId, const std::string& sReceiverId, bool bSuccess, const std::string& sResponse);
 
@@ -142,62 +145,17 @@ namespace pml
                 virtual void RequestTargetResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)=0;
 
 
-                /** @brief Called when a ClientAPI::PatchSenderStaged gets an answer for the target webserver
-                *   @param nResult the http result code
-                *   @param sResonse on success this will contain the raw json, on failure this will contain a message with the reason for failure
-                *   @param sResourceId contains the uuId of the Sender
-                **/
-                virtual void RequestPatchSenderResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)=0;
+                virtual void RequestPatchSenderResult(const curlResponse& resp, const std::experimental::optional<connectionSender>& con, const std::string& sResourceId) = 0;
+                virtual void RequestPatchReceiverResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver>& con, const std::string& sResourceId) = 0;
+                virtual void RequestGetSenderStagedResult(const curlResponse& resp, const std::experimental::optional<connectionSender>& con, const std::string& sResourceId) = 0;
+                virtual void RequestGetSenderActiveResult(const curlResponse& resp, const std::experimental::optional<connectionSender>& con, const std::string& sResourceId) = 0;
+                virtual void RequestGetSenderTransportFileResult(const curlResponse& resp, const std::experimental::optional<std::string>& sTransportFile, const std::string& sResourceId) = 0;
+                virtual void RequestGetReceiverStagedResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver>& con, const std::string& sResourceId) = 0;
+                virtual void RequestGetReceiverActiveResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver>& con, const std::string& sResourceId) = 0;
 
-                /** @brief Called when a ClientAPI::PatchReceiverStaged gets an answer for the target webserver
-                *   @param nResult the http result code
-                *   @param sResonse on success this will contain the raw json, on failure this will contain a message with the reason for failure
-                *   @param sResourceId contains the uuId of the Sender
-                **/
-                virtual void RequestPatchReceiverResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)=0;
 
-                /** @brief Called when a ClientAPI::Connect or ClientApi::Disconnect finishes
-                *   @param sSenderId the uuid of the Sender that has been asked to be connected to
-                *   @param sReceiverId the uuid of the Receiver that is been connected
-                *   @param bSuccess true if the connection has been made, else false
-                *   @param sResponse on failure this will contain a message describing the fault. On success it will contain the staged state of the receiver
-                **/
                 virtual void RequestConnectResult(const std::string& sSenderId, const std::string& sReceiverId, bool bSuccess, const std::string& sResponse)=0;
 
-                /** @brief Called when a ClientAPI::RequestSenderStaged gets an answer for the target webserver
-                *   @param nResult the http result code
-                *   @param sResonse on success this will contain the raw json, on failure this will contain a message with the reason for failure
-                *   @param sResourceId contains the uuId of the Sender
-                **/
-                virtual void RequestGetSenderStagedResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)=0;
-
-                /** @brief Called when a ClientAPI::RequestSenderActive gets an answer for the target webserver
-                *   @param nResult the http result code
-                *   @param sResonse on success this will contain the raw json, on failure this will contain a message with the reason for failure
-                *   @param sResourceId contains the uuId of the Sender
-                **/
-                virtual void RequestGetSenderActiveResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)=0;
-
-                /** @brief Called when a ClientAPI::RequestSenderTransportFile gets an answer for the target webserver
-                *   @param nResult the http result code
-                *   @param sResonse on success this will contain the raw sdp, on failure this will contain a message with the reason for failure
-                *   @param sResourceId contains the uuId of the Sender
-                **/
-                virtual void RequestGetSenderTransportFileResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)=0;
-
-                /** @brief Called when a ClientAPI::RequestReceiverStaged gets an answer for the target webserver
-                *   @param nResult the http result code
-                *   @param sResonse on success this will contain the raw json, on failure this will contain a message with the reason for failure
-                *   @param sResourceId contains the uuId of the Receiver
-                **/
-                virtual void RequestGetReceiverStagedResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)=0;
-
-                /** @brief Called when a ClientAPI::RequestReceiverActive gets an answer for the target webserver
-                *   @param nResult the http result code
-                *   @param sResonse on success this will contain the raw json, on failure this will contain a message with the reason for failure
-                *   @param sResourceId contains the uuId of the Receiver
-                **/
-                virtual void RequestGetReceiverActiveResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)=0;
 
             private:
 

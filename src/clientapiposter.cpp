@@ -55,14 +55,14 @@ void ClientApiPoster::_RequestTargetResult(unsigned long nResult, const std::str
     RequestTargetResult(nResult, sResponse, sResourceId);
 }
 
-void ClientApiPoster::_RequestPatchSenderResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+void ClientApiPoster::_RequestPatchSenderResult(const curlResponse& resp, const std::experimental::optional<connectionSender>& con, const std::string& sResourceId)
 {
-    RequestPatchSenderResult(nResult, sResponse, sResourceId);
+    RequestPatchSenderResult(resp, con, sResourceId);
 }
 
-void ClientApiPoster::_RequestPatchReceiverResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+void ClientApiPoster::_RequestPatchReceiverResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver>& con, const std::string& sResourceId)
 {
-    RequestPatchReceiverResult(nResult, sResponse, sResourceId);
+    RequestPatchReceiverResult(resp, con, sResourceId);
 }
 
 void ClientApiPoster::_RequestConnectResult(const std::string& sSenderId, const std::string& sReceiverId, bool bSuccess, const std::string& sResponse)
@@ -71,29 +71,29 @@ void ClientApiPoster::_RequestConnectResult(const std::string& sSenderId, const 
 }
 
 
-void ClientApiPoster::_RequestGetSenderStagedResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+void ClientApiPoster::_RequestGetSenderStagedResult(const curlResponse& resp, const std::experimental::optional<connectionSender>& con, const std::string& sResourceId)
 {
-    RequestGetSenderStagedResult(nResult, sResponse, sResourceId);
+    RequestGetSenderStagedResult(resp, con, sResourceId);
 }
 
-void ClientApiPoster::_RequestGetSenderActiveResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+void ClientApiPoster::_RequestGetSenderActiveResult(const curlResponse& resp, const std::experimental::optional<connectionSender>& con, const std::string& sResourceId)
 {
-    RequestGetSenderActiveResult(nResult, sResponse, sResourceId);
+    RequestGetSenderActiveResult(resp, con, sResourceId);
 }
 
-void ClientApiPoster::_RequestGetSenderTransportFileResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+void ClientApiPoster::_RequestGetSenderTransportFileResult(const curlResponse& resp, const std::experimental::optional<std::string>& sTransportFile, const std::string& sResourceId)
 {
-    RequestGetSenderTransportFileResult(nResult, sResponse, sResourceId);
+    RequestGetSenderTransportFileResult(resp, sTransportFile, sResourceId);
 }
 
-void ClientApiPoster::_RequestGetReceiverStagedResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+void ClientApiPoster::_RequestGetReceiverStagedResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver>& con, const std::string& sResourceId)
 {
-    RequestGetReceiverStagedResult(nResult, sResponse, sResourceId);
+    RequestGetReceiverStagedResult(resp, con, sResourceId);
 }
 
-void ClientApiPoster::_RequestGetReceiverActiveResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+void ClientApiPoster::_RequestGetReceiverActiveResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver>& con, const std::string& sResourceId)
 {
-    RequestGetReceiverActiveResult(nResult, sResponse, sResourceId);
+    RequestGetReceiverActiveResult(resp, con, sResourceId);
 }
 
 

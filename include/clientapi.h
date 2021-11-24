@@ -4,6 +4,7 @@
 #include <map>
 #include <memory>
 #include "connection.h"
+#include "optional.hpp"
 
 namespace pml
 {
@@ -17,6 +18,11 @@ namespace pml
         class Receiver;
         class ClientApiPoster;
         class ClientApiImpl;
+        struct curlResponse;
+        struct connectionSender;
+        struct connectionReceiver;
+        class ConstraintsSender;
+        class ConstraintsReceiver;
 
         class NMOS_EXPOSE ClientApi
         {
@@ -74,28 +80,34 @@ namespace pml
                 *   @return <i>bool</i> true if a sender with the given uuIds are found and it the url of is-05 connection api for the sender can be found, otherwise false
                 *   @note the request is performed asynchronoulsy and the user should handle ClientApiPoster::RequestSenderStageResult for the response
                 **/
-                bool RequestSenderStaged(const std::string& sSenderId);
+                std::pair<curlResponse, std::experimental::optional<connectionSender>> RequestSenderStaged(const std::string& sSenderId, bool bAsync);
 
                 /** @brief Requests the IS-05 active parameters from the given sender
                 *   @param sSenderId the uuId of the Sender
                 *   @return <i>bool</i> true if a sender with the given uuIds are found and it the url of is-05 connection api for the sender can be found, otherwise false
                 *   @note the request is performed asynchronoulsy and the user should handle ClientApiPoster::RequestSenderActiveResult for the response
                 **/
-                bool RequestSenderActive(const std::string& sSenderId);
+                std::pair<curlResponse, std::experimental::optional<connectionSender>> RequestSenderActive(const std::string& sSenderId, bool bAsync);
+
 
                 /** @brief Requests the IS-05 transport file from the given sender
                 *   @param sSenderId the uuId of the Sender
                 *   @return <i>bool</i> true if a sender with the given uuIds are found and it the url of is-05 connection api for the sender can be found, otherwise false
                 *   @note the request is performed asynchronoulsy and the user should handle ClientApiPoster::RequestSenderTransportFileResult for the response
                 **/
-                bool RequestSenderTransportFile(const std::string& sSenderId);
+                 std::pair<curlResponse, std::experimental::optional<std::string>> RequestSenderTransportFile(const std::string& sSenderId, bool bAsync);
+
+
+                std::pair<curlResponse, std::experimental::optional<std::vector<ConstraintsSender>>> RequestSenderConstraints(const std::string& sSenderId, bool bAsync);
+
 
                 /** @brief Requests the IS-05 staged parameters from the given Receiver
                 *   @param sReceiverId the uuId of the Receiver
                 *   @return <i>bool</i> true if a Receiver with the given uuIds are found and it the url of is-05 connection api for the Receiver can be found, otherwise false
                 *   @note the request is performed asynchronoulsy and the user should handle ClientApiPoster::RequestReceiverStageResult for the response
                 **/
-                bool RequestReceiverStaged(const std::string& sReceiverId);
+                std::pair<curlResponse, std::experimental::optional<connectionReceiver>>  RequestReceiverStaged(const std::string& sReceiverId, bool bAsync);
+
 
 
                 /** @brief Requests the IS-05 active parameters from the given Receiver
@@ -103,7 +115,10 @@ namespace pml
                 *   @return <i>bool</i> true if a Receiver with the given uuIds are found and it the url of is-05 connection api for the Receiver can be found, otherwise false
                 *   @note the request is performed asynchronoulsy and the user should handle ClientApiPoster::RequestReceiverActiveResult for the response
                 **/
-                bool RequestReceiverActive(const std::string& sReceiverId);
+                std::pair<curlResponse, std::experimental::optional<connectionReceiver>>  RequestReceiverActive(const std::string& sReceiverId, bool bAsync);
+
+                std::pair<curlResponse, std::experimental::optional<std::vector<ConstraintsReceiver>>>  RequestReceiverConstraints(const std::string& sReceiverId, bool bAsync);
+
 
 
                 /** @brief Attempts to patch a sender's staged parameters
@@ -112,7 +127,7 @@ namespace pml
                 *   @return <i>bool</i> true if a Sender with the given uuIds are found and it the url of is-05 connection api for the Sender can be found, otherwise false
                 *   @note the request is performed asynchronoulsy and the user should handle ClientApiPoster::RequestPatchSenderResult for the response
                 **/
-                bool PatchSenderStaged(const std::string& sSenderId, const connectionSender& aConnection);
+                std::pair<curlResponse, std::experimental::optional<connectionSender>> PatchSenderStaged(const std::string& sSenderId, const connectionSender& aConnection, bool bAsync);
 
                 /** @brief Attempts to patch a Receiver's staged parameters
                 *   @param sReceiverId the uuId of the Receiver
@@ -120,7 +135,7 @@ namespace pml
                 *   @return <i>bool</i> true if a Receiver with the given uuIds are found and if the url of is-05 connection api for the Receiver can be found, otherwise false
                 *   @note the request is performed asynchronoulsy and the user should handle ClientApiPoster::RequestPatchReceiverResult for the response
                 **/
-                bool PatchReceiverStaged(const std::string& sReceiverId, const connectionReceiver& aConnection);
+                std::pair<curlResponse, std::experimental::optional<connectionReceiver>> PatchReceiverStaged(const std::string& sReceiverId, const connectionReceiver& aConnection, bool bAsync);
 
                 /** @brief Attempts to connect a receiver to a sender using IS-05 connection. This function will stage and activate the sender with the given connection parameters, download the transport file from the sender and stage and activate the given transport file to the receiver.
                 *   @param sSenderId the uuId of the sender

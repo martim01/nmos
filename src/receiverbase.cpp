@@ -22,6 +22,8 @@ Receiver::Receiver(const std::string& sLabel, const std::string& sDescription, e
     m_eType(eFormat),
     m_bActivateAllowed(false)
 {
+    m_Active.bClient = false;
+    m_Staged.bClient = false;
     m_vConstraints.push_back(ConstraintsReceiver(flagsTransport));
 
     if(flagsTransport & TransportParamsRTP::REDUNDANT)

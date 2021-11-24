@@ -157,6 +157,7 @@
 		<Unit filename="include/mdns.h" />
 		<Unit filename="include/nmosapiversion.h" />
 		<Unit filename="include/nmosdlldefine.h" />
+		<Unit filename="include/optional.hpp" />
 		<Unit filename="include/receiverbase.h" />
 		<Unit filename="include/resource.h" />
 		<Unit filename="include/sdp.h" />
