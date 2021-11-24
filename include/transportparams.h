@@ -2,6 +2,7 @@
 #include <string>
 #include "json/json.h"
 #include "nmosapiversion.h"
+#include "optional.hpp"
 
 namespace pml
 {
@@ -14,6 +15,8 @@ namespace pml
                 virtual ~TransportParams(){}
                 virtual bool Patch(const Json::Value& jsData)=0;
                 virtual Json::Value GetJson(const ApiVersion& version) const=0;
+
+
         };
 
         struct TransportParamsRTP : public TransportParams
@@ -34,21 +37,27 @@ namespace pml
 
             TransportParamsRTP& operator=(const TransportParamsRTP& other);
 
+            virtual void FecAllowed();
+            virtual void RtcpAllowed();
+
             std::string sSourceIp;
             unsigned short nDestinationPort;
             bool bFecEnabled;
-            std::string sFecDestinationIp;
-            enumFecMode eFecMode;
-            unsigned short nFec1DDestinationPort;
-            unsigned short nFec2DDestinationPort;
-            bool bRtcpEnabled;
-            std::string sRtcpDestinationIp;
-            unsigned short nRtcpDestinationPort;
+
+            std::experimental::optional<std::string> sFecDestinationIp;
+            std::experimental::optional<enumFecMode> eFecMode;
+            std::experimental::optional<unsigned short> nFec1DDestinationPort;
+            std::experimental::optional<unsigned short> nFec2DDestinationPort;
+
+            std::experimental::optional<bool> bRtcpEnabled;
+            std::experimental::optional<std::string> sRtcpDestinationIp;
+            std::experimental::optional<unsigned short> nRtcpDestinationPort;
+
             bool bRtpEnabled;
 
-            enumTParams eFec;
-            enumTParams eRTCP;
-            enumTParams eMulticast;
+            //std::experimental::optional<enumTParams eFec;
+            //std::experimental::optional<enumTParams eRTCP;
+            //enumTParams eMulticast;
             static const std::string STR_FEC_MODE[2];
 
         };
@@ -56,7 +65,7 @@ namespace pml
         struct TransportParamsRTPReceiver : public TransportParamsRTP
         {
 
-            std::string sMulticastIp;
+            std::experimental::optional<std::string> sMulticastIp;
             std::string sInterfaceIp;
 
             TransportParamsRTPReceiver();
@@ -65,6 +74,8 @@ namespace pml
             Json::Value GetJson(const ApiVersion& version) const override;
             void Actualize(const std::string& sInterfaceIp);
             TransportParamsRTPReceiver& operator=(const TransportParamsRTPReceiver& other);
+
+
         };
 
 
@@ -82,15 +93,16 @@ namespace pml
 
             TransportParamsRTPSender& operator=(const TransportParamsRTPSender& other);
 
+            void FecAllowed() override;
+
             std::string sDestinationIp;
             unsigned short nSourcePort;
-            enumFecType eFecType;
-            unsigned char nFecBlockWidth;
-            unsigned char nFecBlockHeight;
-            unsigned short nFec1DSourcePort;
-            unsigned short nFec2DSourcePort;
-            unsigned short nRtcpSourcePort;
-
+            std::experimental::optional<enumFecType> eFecType;
+            std::experimental::optional<unsigned char> nFecBlockWidth;
+            std::experimental::optional<unsigned char> nFecBlockHeight;
+            std::experimental::optional<unsigned short> nFec1DSourcePort;
+            std::experimental::optional<unsigned short> nFec2DSourcePort;
+            std::experimental::optional<unsigned short> nRtcpSourcePort;
 
 
 

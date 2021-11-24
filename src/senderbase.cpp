@@ -40,36 +40,27 @@ Sender::Sender(const std::string& sLabel, const std::string& sDescription, const
     {
         if(flagsTransport & TransportParamsRTP::FEC)
         {
-            m_Staged.tpSenders[i].eFec = TransportParamsRTP::TP_SUPPORTED;
-            m_Active.tpSenders[i].eFec = TransportParamsRTP::TP_SUPPORTED;
+            m_Staged.tpSenders[i].FecAllowed();
+            m_Active.tpSenders[i].FecAllowed();
         }
-        else
-        {
-            m_Staged.tpSenders[i].eFec = TransportParamsRTP::TP_NOT_SUPPORTED;
-            m_Active.tpSenders[i].eFec = TransportParamsRTP::TP_NOT_SUPPORTED;
         }
 
         if(flagsTransport & TransportParamsRTP::RTCP)
         {
-            m_Staged.tpSenders[i].eRTCP = TransportParamsRTP::TP_SUPPORTED;
-            m_Active.tpSenders[i].eRTCP = TransportParamsRTP::TP_SUPPORTED;
-        }
-        else
-        {
-            m_Staged.tpSenders[i].eRTCP = TransportParamsRTP::TP_NOT_SUPPORTED;
-            m_Active.tpSenders[i].eRTCP = TransportParamsRTP::TP_NOT_SUPPORTED;
-        }
-        if(flagsTransport & TransportParamsRTP::MULTICAST)
-        {
-            m_Staged.tpSenders[i].eMulticast = TransportParamsRTP::TP_SUPPORTED;
-            m_Active.tpSenders[i].eMulticast = TransportParamsRTP::TP_SUPPORTED;
-        }
-        else
-        {
-            m_Staged.tpSenders[i].eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
-            m_Active.tpSenders[i].eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
+            m_Staged.tpSenders[i].RtcpAllowed();
+            m_Active.tpSenders[i].RtcpAllowed()
         }
 
+//        if(flagsTransport & TransportParamsRTP::MULTICAST)
+//        {
+//            m_Staged.tpSenders[i].eMulticast = TransportParamsRTP::TP_SUPPORTED;
+//            m_Active.tpSenders[i].eMulticast = TransportParamsRTP::TP_SUPPORTED;
+//        }
+//        else
+//        {
+//            m_Staged.tpSenders[i].eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
+//            m_Active.tpSenders[i].eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
+//        }
 
     }
 

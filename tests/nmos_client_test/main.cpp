@@ -47,54 +47,73 @@ int main()
         pmlLog() << "Sender Staged" ;
         pmlLog() << "-----------------------------------------------" ;
         auto resp = pml::nmos::ClientApi::Get().RequestSenderStaged(itSender->first, false);
-        pmlLog() << resp.nCode;
-        pmlLog() << resp.sResponse;
+        pmlLog() << resp.first.nCode;
+        if(resp.second)
+        {
+            pmlLog() << (*resp.second).GetJson(pml::nmos::ApiVersion(1,2));
+        }
+
+        pmlLog() << "-----------------------------------------------" ;
+        pmlLog() << "Press Key To Get Sender Active" ;
         getchar();
 
         pmlLog() << "Sender Active" ;
         pmlLog() << "-----------------------------------------------" ;
-        auto resp = pml::nmos::ClientApi::Get().RequestSenderActive(itSender->first, false);
-        pmlLog() << resp.nCode;
-        pmlLog() << resp.sResponse;
+        auto respSA = pml::nmos::ClientApi::Get().RequestSenderActive(itSender->first, false);
+        pmlLog() << respSA.first.nCode;
+        if(respSA.second)
+        {
+            pmlLog() << (*respSA.second).GetJson(pml::nmos::ApiVersion(1,2));
+        }
+
+        pmlLog() << "-----------------------------------------------" ;
+        pmlLog() << "Press Key To Get Sender Transportfile" ;
         getchar();
 
         pmlLog() << "Sender TransportFile" ;
         pmlLog() << "-----------------------------------------------" ;
-        auto resp = pml::nmos::ClientApi::Get().RequestSenderTransportFile(itSender->first, false);
-        pmlLog() << resp.nCode;
-        pmlLog() << resp.sResponse;
+        auto respST = pml::nmos::ClientApi::Get().RequestSenderTransportFile(itSender->first, false);
+        pmlLog() << respST.first.nCode;
+        if(respST.second)
+        {
+            pmlLog() << (*respST.second);
+        }
+
+        pmlLog() << "-----------------------------------------------" ;
+        pmlLog() << "Press Key To Get Sender Constraints" ;
         getchar();
 
         pmlLog() << "Sender Constraints" ;
         pmlLog() << "-----------------------------------------------" ;
-        auto resp = pml::nmos::ClientApi::Get().RequestSenderConstraints(itSender->first, false);
-        pmlLog() << resp.nCode;
-        pmlLog() << resp.sResponse;
-
-        if(resp.nCode == 200)
+        auto respSC = pml::nmos::ClientApi::Get().RequestSenderConstraints(itSender->first, false);
+        pmlLog() << respSC.first.nCode;
+        if(respSC.second)
         {
-            pml::nmos::ConstraintsSender con;
-            con.UpdateFromJson(ConvertToJson(resp.sResponse));
-            getchar();
+            for(const auto con : (*respSC.second))
+            {
+                pmlLog() << con.GetJson(pml::nmos::ApiVersion(1,2));
+            }
 
-            pmlLog() << "Sender Patch Staged" ;
-            pmlLog() << "-----------------------------------------------" ;
-
-            pml::nmos::connectionSender aConnection;
-            aConnection.eActivate = pml::nmos::connection::ACT_NOW;
-            aConnection.bMasterEnable = true;
-            aConnection.sReceiverId = itReceiver->first;
-            aConnection.tpSenders.resize(con.)
-        //aConnection.tpSender.sDestinationIp =
-        pml::nmos::ClientApi::Get().PatchSenderStaged(itSender->first, aConnection);
-
-        pmlLog() << "Sender Active" ;
+        }
         pmlLog() << "-----------------------------------------------" ;
-        pml::nmos::ClientApi::Get().RequestSenderActive(itSender->first);
-        getchar();
+//        pmlLog() << "Patch Sender" ;
+//        pmlLog() << "-----------------------------------------------" ;
+//
+//        auto resp = pml::nmos::ClientApi::Get().PatchSenderStaged(itSender->first, aConnection);
+//        pmlLog() << resp.first.nCode;
+//        if(resp.second)
+//        {
+//          pmlLog() << (*resp.second).GetJson(ApiVersion(1,2));
+//        }
+//
+//        pmlLog() << "Sender Active" ;
+//        pmlLog() << "-----------------------------------------------" ;
+//        pml::nmos::ClientApi::Get().RequestSenderActive(itSender->first);
+//        getchar();
 
 
     }
+    pmlLog()<< "Finished: Press key to exit";
     getchar();
 
     pml::nmos::ClientApi::Get().Stop();

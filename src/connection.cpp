@@ -221,20 +221,30 @@ bool connectionSender::Patch(const Json::Value& jsData)
     if(bIsOk)
     {
 
-        if(jsData["transport_params"].size() == tpSenders.size())
+        if(jsData["transport_params"].empty() == false)
         {
-            nProperties |= FP_TRANSPORT_PARAMS;
-            for(size_t i = 0; i < tpSenders.size(); i++)
+            if(jsData["transport_params"].size() != tpSenders.size())
             {
-                bIsOk &= tpSenders[i].Patch(jsData["transport_params"][i]);
-                tpSenders[i].bRtpEnabled = bMasterEnable;   //this should be settable if 2 or more transportparams
+                if(bClient)
+                {
+                    tpSenders.resize(jsData["transport_params"].size());
+                }
+                else
+                {
+                     pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: transport_params not an array or is wrong size. " << jsData["transport_params"].size() << ":" << tpSenders.size();
+                    pmlLog(pml::LOG_DEBUG) << jsData;
+                    bIsOk = false;
+                }
             }
-        }
-        else if(jsData["transport_params"].empty() == false)
-        {
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: transport_params not an array or is wrong size. " << jsData["transport_params"].size() << ":" << tpSenders.size();
-            pmlLog(pml::LOG_DEBUG) << jsData;
-            bIsOk = false;
+            if(jsData["transport_params"].size() == tpSenders.size())
+            {
+                nProperties |= FP_TRANSPORT_PARAMS;
+                for(size_t i = 0; i < tpSenders.size(); i++)
+                {
+                    bIsOk &= tpSenders[i].Patch(jsData["transport_params"][i]);
+                    tpSenders[i].bRtpEnabled = bMasterEnable;   //this should be settable if 2 or more transportparams
+                }
+            }
         }
 
 

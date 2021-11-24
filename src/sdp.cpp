@@ -108,7 +108,7 @@ bool SdpManager::ParseConnectionIp4(const std::string& sAddress, std::vector<Tra
             pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager::ParseConnectionIp4: " << sAddress.substr(0, nTTL) << " multicast" ; //@todo do we care about TTL and possible address grouping??
             return true;
         case IP4_UNI:
-            tpReceivers[nMedia].sMulticastIp.clear();
+            (*tpReceivers[nMedia].sMulticastIp).clear();
             pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager::ParseConnectionIp4: " << sAddress << " unicast" ; //@todo do we care about TTL and possible address grouping??
             return true;
         default:
@@ -128,7 +128,7 @@ bool SdpManager::ParseConnectionIp6(const std::string& sAddress, std::vector<Tra
             //@todo do we care about TTL and possible address grouping??
             return true;
         case IP6_UNI:
-            tpReceivers[nMedia].sMulticastIp.clear();
+            (*tpReceivers[nMedia].sMulticastIp).clear();
             //tpReceiver.sSourceIp = sAddress.substr(0, nGrouping);
             //@todo do we care about TTL and possible address grouping??
             return true;

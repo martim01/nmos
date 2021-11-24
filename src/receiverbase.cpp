@@ -38,35 +38,20 @@ Receiver::Receiver(const std::string& sLabel, const std::string& sDescription, e
     {
         if(flagsTransport & TransportParamsRTP::FEC)
         {
-            m_Staged.tpReceivers[i].eFec = TransportParamsRTP::TP_SUPPORTED;
-            m_Active.tpReceivers[i].eFec = TransportParamsRTP::TP_SUPPORTED;
+            m_Staged.tpReceivers[i].FecAllowed();
+            m_Active.tpReceivers[i].FecAllowed();
         }
-        else
-        {
-            m_Staged.tpReceivers[i].eFec = TransportParamsRTP::TP_NOT_SUPPORTED;
-            m_Active.tpReceivers[i].eFec = TransportParamsRTP::TP_NOT_SUPPORTED;
-        }
-
         if(flagsTransport & TransportParamsRTP::RTCP)
         {
-            m_Staged.tpReceivers[i].eRTCP = TransportParamsRTP::TP_SUPPORTED;
-            m_Active.tpReceivers[i].eRTCP = TransportParamsRTP::TP_SUPPORTED;
-        }
-        else
-        {
-            m_Staged.tpReceivers[i].eRTCP = TransportParamsRTP::TP_NOT_SUPPORTED;
-            m_Active.tpReceivers[i].eRTCP = TransportParamsRTP::TP_NOT_SUPPORTED;
+            m_Staged.tpReceivers[i].RtcpAllowed();
+            m_Active.tpReceivers[i].RtcpAllowed();
         }
         if(flagsTransport & TransportParamsRTP::MULTICAST)
         {
-            m_Staged.tpReceivers[i].eMulticast = TransportParamsRTP::TP_SUPPORTED;
-            m_Active.tpReceivers[i].eMulticast = TransportParamsRTP::TP_SUPPORTED;
+            m_Staged.tpReceivers[i].sMulticastIp = std::string();
+            m_Active.tpReceivers[i].sMulticastIp = std::string();
         }
-        else
-        {
-            m_Staged.tpReceivers[i].eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
-            m_Active.tpReceivers[i].eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
-        }
+
         m_Active.tpReceivers[i].nDestinationPort = 5004;
         m_Active.tpReceivers[i].sInterfaceIp = "127.0.0.1";
 
