@@ -104,11 +104,11 @@ bool SdpManager::ParseConnectionIp4(const std::string& sAddress, std::vector<Tra
     switch(ValidateIp4Address(sAddress.substr(0, nTTL)))
     {
         case IP4_MULTI:
-            tpReceivers[nMedia].sMulticastIp = sAddress.substr(0, nTTL);
+            tpReceivers[nMedia].SetMulticastIp(sAddress.substr(0, nTTL));
             pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager::ParseConnectionIp4: " << sAddress.substr(0, nTTL) << " multicast" ; //@todo do we care about TTL and possible address grouping??
             return true;
         case IP4_UNI:
-            (*tpReceivers[nMedia].sMulticastIp).clear();
+            tpReceivers[nMedia].SetMulticastIp("");
             pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager::ParseConnectionIp4: " << sAddress << " unicast" ; //@todo do we care about TTL and possible address grouping??
             return true;
         default:
@@ -124,11 +124,11 @@ bool SdpManager::ParseConnectionIp6(const std::string& sAddress, std::vector<Tra
     switch(ValidateIp6Address(sAddress.substr(0, nGrouping)))
     {
         case IP6_MULTI:
-            tpReceivers[nMedia].sMulticastIp = sAddress.substr(0, nGrouping);
+            tpReceivers[nMedia].SetMulticastIp(sAddress.substr(0, nGrouping));
             //@todo do we care about TTL and possible address grouping??
             return true;
         case IP6_UNI:
-            (*tpReceivers[nMedia].sMulticastIp).clear();
+            tpReceivers[nMedia].SetMulticastIp("");
             //tpReceiver.sSourceIp = sAddress.substr(0, nGrouping);
             //@todo do we care about TTL and possible address grouping??
             return true;
@@ -146,13 +146,13 @@ bool SdpManager::ParseOriginIp4(const std::string& sAddress, std::vector<Transpo
         case IP4_MULTI:
             for(auto& tpReceiver : tpReceivers)
             {
-                tpReceiver.sSourceIp.clear();
+                tpReceiver.SetSourceIp(std::string());
             }
             return false;
         case IP4_UNI:
             for(auto& tpReceiver : tpReceivers)
             {
-                tpReceiver.sSourceIp = sAddress;
+                tpReceiver.SetSourceIp(sAddress);
             }
             return true;
         default:
@@ -168,13 +168,13 @@ bool SdpManager::ParseOriginIp6(const std::string& sAddress, std::vector<Transpo
         case IP6_MULTI:
            for(auto& tpReceiver : tpReceivers)
            {
-               tpReceiver.sSourceIp.clear();
+               tpReceiver.SetSourceIp(std::string());
            }
            return false;
         case IP6_UNI:
             for(auto& tpReceiver : tpReceivers)
             {
-                tpReceiver.sSourceIp = sAddress;
+                tpReceiver.SetSourceIp(sAddress);
             }
             return true;
         default:
@@ -273,12 +273,12 @@ bool SdpManager::ParseSourceFilter(const std::string& sLine, std::vector<Transpo
         {
             if(vSplit[2] == "IP4" && ValidateIp4Address(vSplit[3]) == IP4_MULTI && ValidateIp4Address(vSplit[4]) == IP4_UNI)
             {
-                tpReceivers[nMedia].sSourceIp = vSplit[4];
+                tpReceivers[nMedia].SetSourceIp(vSplit[4]);
                 return true;
             }
             else if(vSplit[2] == "IP6" && ValidateIp6Address(vSplit[3]) == IP6_MULTI && ValidateIp6Address(vSplit[4]) == IP6_UNI)
             {
-                tpReceivers[nMedia].sSourceIp = vSplit[4];
+                tpReceivers[nMedia].SetSourceIp(vSplit[4]);
                 return true;
             }
         }
@@ -299,7 +299,7 @@ bool SdpManager::ParseRTCP(const std::string& sLine, std::vector<TransportParams
             long nPort = stol(vSplit[0]);
             if(nPort > 0 && nPort < 65536)
             {
-                tpReceivers[nMedia].nRtcpDestinationPort = nPort;
+                tpReceivers[nMedia].SetRtcpDestinationPort(nPort);
             }
             else
             {
@@ -319,12 +319,12 @@ bool SdpManager::ParseRTCP(const std::string& sLine, std::vector<TransportParams
         {
             if(vSplit[2] == "IP4" && ValidateIp4Address(vSplit[3]) != IP_INVALID)
             {
-                tpReceivers[nMedia].sRtcpDestinationIp = vSplit[3];
+                tpReceivers[nMedia].SetRtcpDestinationIp(vSplit[3]);
                 return true;
             }
             else if(vSplit[2] == "IP6" && ValidateIp6Address(vSplit[3]) != IP_INVALID)
             {
-                tpReceivers[nMedia].sRtcpDestinationIp = vSplit[3];
+                tpReceivers[nMedia].SetRtcpDestinationIp(vSplit[3]);
                 return true;
             }
         }
@@ -346,7 +346,7 @@ bool SdpManager::ParseMediaLine(const std::string& sLine, std::vector<TransportP
             nPort = stol(vSplit[1]);
             if(nPort > 0 && nPort < 65536)
             {
-                tpReceivers[nMedia].nDestinationPort = nPort;
+                tpReceivers[nMedia].SetDestinationPort(nPort);
                 return true;
             }
         }

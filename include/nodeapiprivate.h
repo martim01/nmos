@@ -12,7 +12,8 @@
 #include <atomic>
 #include "activator.h"
 #include "RestGoose.h"
-
+#include "connection.h"
+#include "activation.h"
 
 namespace pml
 {
@@ -39,8 +40,6 @@ namespace pml
         class dnsInstance;
         class IS04Server;
         class IS05Server;
-        struct connectionSender;
-        struct connectionReceiver;
         struct TransportParamsRTPSender;
 
         class NodeApiPrivate
@@ -265,11 +264,11 @@ namespace pml
 
                 void Activate(bool bImmediate, std::shared_ptr<Sender> pSender);
                 void CommitActivation(std::shared_ptr<Sender> pSender);
-                bool Stage(const connectionSender& conRequest, std::shared_ptr<Sender> pSender);
+                bool Stage(const connectionSender<activationResponse>& conRequest, std::shared_ptr<Sender> pSender);
 
                 void Activate(bool bImmediate, std::shared_ptr<Receiver> pReceiver);
                 void CommitActivation(std::shared_ptr<Receiver> pReceiver);
-                bool Stage(const connectionReceiver& conRequest, std::shared_ptr<Receiver> pReceiver);
+                bool Stage(const connectionReceiver<activationResponse>& conRequest, std::shared_ptr<Receiver> pReceiver);
 
                 void SetSender(std::shared_ptr<Receiver> pReceiver, const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp);
 

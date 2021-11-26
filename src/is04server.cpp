@@ -250,25 +250,26 @@ response IS04Server::PutNmosReceiver(const query& theQuery, const postData& theD
     else
     {
         Json::Value jsRequest = ConvertToJson(theData.Get());
-    //does the sender have a manifest??
+        //does the sender have a manifest??
         std::string sSdp("");
         std::string sSenderId("");
         std::shared_ptr<Sender> pRemoteSender(0);
         //Have we been sent a sender??
         if(jsRequest.isObject() && jsRequest["id"].isString())
         {
-            pRemoteSender = std::make_shared<Sender>();
-            pRemoteSender->UpdateFromJson(jsRequest);
-
-            sSenderId = pRemoteSender->GetId();
-            if(pRemoteSender->GetManifestHref().empty() == false)
-            {
-                auto curlresp = CurlRegister::Get(pRemoteSender->GetManifestHref());
-                if(curlresp.nCode == 200)
-                {
-                    sSdp = curlresp.sResponse;
-                }
-            }
+            //@todo PUT
+//            pRemoteSender = std::make_shared<Sender>();
+//            pRemoteSender->UpdateFromJson(jsRequest);
+//
+//            sSenderId = pRemoteSender->GetId();
+//            if(pRemoteSender->GetManifestHref().empty() == false)
+//            {
+//                auto curlresp = CurlRegister::Get(pRemoteSender->GetManifestHref());
+//                if(curlresp.nCode == 200)
+//                {
+//                    sSdp = curlresp.sResponse;
+//                }
+//            }
         }
         if(m_pPoster)
         {

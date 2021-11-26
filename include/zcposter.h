@@ -9,8 +9,6 @@ namespace pml
     {
         struct dnsInstance;
         class Sender;
-        class connectionSender;
-        class connectionReceiver;
 
         class ZCPoster
         {

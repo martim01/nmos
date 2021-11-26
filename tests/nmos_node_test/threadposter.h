@@ -34,8 +34,8 @@ class ThreadPoster : public pml::nmos::EventPoster
     protected:
 
         void Target(const std::string& sReceiverId, const std::string& sTransportFile, unsigned short nPort) override;
-        void PatchSender(const std::string& sSenderId, const pml::nmos::connectionSender& conPatch, unsigned short nPort) override;
-        void PatchReceiver(const std::string& sReceiverId, const pml::nmos::connectionReceiver& conPatch, unsigned short nPort) override;
+        void PatchSender(const std::string& sSenderId, const pml::nmos::connectionSender<pml::nmos::activationResponse>& conPatch, unsigned short nPort) override;
+        void PatchReceiver(const std::string& sReceiverId, const pml::nmos::connectionReceiver<pml::nmos::activationResponse>& conPatch, unsigned short nPort) override;
         void SenderActivated(const std::string& sSenderId) override;
         void ReceiverActivated(const std::string& sReceiverId) override;
 

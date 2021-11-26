@@ -4,276 +4,313 @@
 
 using namespace pml::nmos;
 
-const std::string TransportParamsRTP::STR_FEC_MODE[2] = {"1D", "2D"};
-const std::string TransportParamsRTPSender::STR_FEC_TYPE[2] = {"XOR", "Reed-Solomon"};
+//const std::string TransportParamsRTP::STR_FEC_MODE[2] = {"1D", "2D"};
+const std::string STR_FEC_TYPE_XOR  = "XOR";
+const std::string STR_FEC_TYPE_REED = "Reed-Solomon";
 
-TransportParamsRTP::TransportParamsRTP() :
-    sSourceIp(""),
-    nDestinationPort(0),
-    bRtpEnabled(false)
+const std::string AUTO                  = "auto";
+const std::string SOURCE_IP             = "source_ip";
+const std::string SOURCE_PORT           = "source_port";
+const std::string DESTINATION_PORT      = "destination_port";
+const std::string DESTINATION_IP        = "destination_ip";
+const std::string MULTICAST_IP          = "multicast_ip";
+const std::string INTERFACE_IP          = "interface_ip";
+const std::string RTP_ENABLED           = "rtp_enabled";
+const std::string FEC_ENABLED           = "fec_enabled";
+const std::string FEC_DESTINATION_IP    = "fec_destination_ip";
+const std::string FEC_MODE              = "fec_mode";
+const std::string FEC_1DDESTINATION_PORT= "fec1D_destination_port";
+const std::string FEC_2DDESTINATION_PORT= "fec2D_destination_port";
+const std::string FEC_TYPE              = "fec_type";
+const std::string FEC_BLOCK_WIDTH       = "fec_block_width";
+const std::string FEC_BLOCK_HEIGHT      = "fec_block_height";
+const std::string FEC_1DSOURCE_PORT     = "fec1D_source_port";
+const std::string FEC_2DSOURCE_PORT     = "fec2D_source_port";
+
+const std::string RTCP_ENABLED          = "rtcp_enabled";
+const std::string RTCP_DESTINATION_IP   = "rtcp_destination_ip";
+const std::string RTCP_DESTINATION_PORT = "rtcp_destination_port";
+const std::string RTCP_SOURCE_PORT      = "rtcp_source_port";
+
+
+
+TransportParams::TransportParams(const TransportParams& tp) :
+    m_json(tp.GetJson())
 {
 
 }
 
 
-TransportParamsRTP::TransportParamsRTP(const TransportParamsRTP& tp) :
-    sSourceIp(tp.sSourceIp),
-    nDestinationPort(tp.nDestinationPort),
-    bFecEnabled(tp.bFecEnabled),
-    sFecDestinationIp(tp.sFecDestinationIp),
-    eFecMode(tp.eFecMode),
-    nFec1DDestinationPort(tp.nFec1DDestinationPort),
-    nFec2DDestinationPort(tp.nFec2DDestinationPort),
-    bRtcpEnabled(tp.bRtcpEnabled),
-    sRtcpDestinationIp(tp.sRtcpDestinationIp),
-    nRtcpDestinationPort(tp.nRtcpDestinationPort),
-    bRtpEnabled(tp.bRtpEnabled)
+TransportParams& TransportParams::operator=(const TransportParams& other)
 {
+    if(&other != this)
+    {
+        m_json = other.GetJson();
+    }
+    return *this;
+}
+
+
+
+
+TransportParamsRTP::TransportParamsRTP() : TransportParams()
+{
+    m_json[SOURCE_IP] = AUTO;
+    m_json[DESTINATION_PORT] = AUTO;
+    m_json[RTP_ENABLED] = false;
+}
+
+
+TransportParamsRTP::TransportParamsRTP(const TransportParamsRTP& tp) : TransportParams(tp)
+{
+
 }
 
 
 TransportParamsRTP& TransportParamsRTP::operator=(const TransportParamsRTP& other)
 {
-    sSourceIp = other.sSourceIp;
-    nDestinationPort = other.nDestinationPort;
-    bFecEnabled = other.bFecEnabled;
-    sFecDestinationIp  = other.sFecDestinationIp;
-    eFecMode = other.eFecMode;
-    nFec1DDestinationPort = other.nFec1DDestinationPort;
-    nFec2DDestinationPort = other.nFec2DDestinationPort;
-    bRtcpEnabled = other.bRtcpEnabled;
-    sRtcpDestinationIp = other.sRtcpDestinationIp;
-    nRtcpDestinationPort = other.nRtcpDestinationPort;
-    bRtpEnabled = other.bRtpEnabled;
-
+    TransportParams::operator=(other);
     return *this;
+}
+
+void TransportParamsRTP::SetSourceIp(const std::string& sAddress)
+{
+    if(sAddress.empty())
+    {
+        m_json[SOURCE_IP] = Json::Value::null;
+    }
+    else
+    {
+        m_json[SOURCE_IP] = sAddress;
+    }
+}
+
+void TransportParamsRTP::SetPort(const std::string& sKey, unsigned short nPort)
+{
+    if(m_json.isMember(sKey))
+    {
+        if(nPort != 0)
+        {
+            m_json[sKey] = nPort;
+        }
+        else
+        {
+            m_json[sKey] = AUTO;
+        }
+    }
+}
+
+void TransportParamsRTP::SetRtcpDestinationPort(unsigned short nPort)
+{
+    SetPort(RTCP_DESTINATION_PORT, nPort);
+}
+
+void TransportParamsRTP::SetDestinationPort(unsigned short nPort)
+{
+        SetPort(DESTINATION_PORT, nPort);
+}
+
+void TransportParamsRTP::SetRtcpDestinationIp(const std::string& sAddress)
+{
+    if(m_json.isMember(RTCP_DESTINATION_IP))
+    {
+        if(sAddress.empty())
+        {
+            m_json[RTCP_DESTINATION_IP] = AUTO;
+        }
+        else
+        {
+            m_json[RTCP_DESTINATION_IP] = sAddress;
+        }
+    }
 }
 
 void TransportParamsRTP::FecAllowed()
 {
-    bFecEnabled = false;
-    sFecDestinationIp = "";
-    eFecMode = (char)ONED;
-    nFec1DDestinationPort = 0;
-    nFec2DDestinationPort = 0;
+    m_json[FEC_ENABLED] = false;
+    m_json[FEC_DESTINATION_IP] = AUTO;
+    m_json[FEC_MODE] = AUTO;
+    m_json[FEC_1DDESTINATION_PORT] = AUTO;
+    m_json[FEC_2DDESTINATION_PORT] = AUTO;
 }
 
 void TransportParamsRTP::RtcpAllowed()
 {
-    bRtcpEnabled = false;
-    sRtcpDestinationIp = "";
-    nRtcpDestinationPort = 0;
+    m_json[RTCP_ENABLED] = false;
+    m_json[RTCP_DESTINATION_PORT] = AUTO;
+    m_json[RTCP_DESTINATION_IP] = AUTO;
 }
 
 bool TransportParamsRTP::Patch(const Json::Value& jsData)
 {
-    bool bIsOk(true);
-    if(jsData.isObject())
+    if(CheckJsonOptional(jsData,{ {SOURCE_IP, {jsondatatype::_STRING, jsondatatype::_NULL}},
+                                  {DESTINATION_PORT, {jsondatatype::_INTEGER, jsondatatype::_STRING}},
+                                  {RTP_ENABLED, {jsondatatype::_BOOLEAN}}}) == false)
     {
-
-        if(jsData["source_ip"].isString())
+        return false;
+    }
+    if(m_json.isMember(FEC_ENABLED) == false)
+    {
+        if(CheckJsonNotAllowed(jsData, {FEC_ENABLED, FEC_DESTINATION_IP, FEC_MODE, FEC_1DDESTINATION_PORT, FEC_2DDESTINATION_PORT}) == false)
         {
-            if(jsData["source_ip"].asString() != "auto")
-            {
-                sSourceIp = jsData["source_ip"].asString();
-            }
-        }
-        else if(JsonMemberExistsAndIsNull(jsData, "source_ip"))
-        {
-            sSourceIp.clear();
-        }
-        else if(jsData["source_ip"].empty()== false)
-        {
-            bIsOk = false;
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: source_ip incorrect type" ;
-        }
-
-        bIsOk &= DecodePort(jsData, "destination_port", nDestinationPort);
-
-        if(jsData["fec_enabled"].isBool())
-        {
-            bFecEnabled = jsData["fec_enabled"].asBool();
-        }
-        else if(jsData["fec_enabled"].empty() == false)
-        {
-            bIsOk = false;
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: fec_enabled incorrect type" ;
-        }
-
-        if(jsData["fec_destination_ip"].isString())
-        {
-            sFecDestinationIp = jsData["fec_destination_ip"].asString();
-        }
-        else if(jsData["fec_destination_ip"].empty() == false)
-        {
-            bIsOk = false;
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: fec_destination_ip incorrect type" ;
-        }
-
-        if(jsData["fec_mode"].isString())
-        {
-            if(jsData["fec_mode"] == STR_FEC_MODE[ONED])
-            {
-                eFecMode = ONED;
-            }
-            else if(jsData["fec_mode"] == STR_FEC_MODE[TWOD])
-            {
-                eFecMode = TWOD;
-            }
-            else
-            {
-                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: fec_mode not found" ;
-                bIsOk = false;
-            }
-        }
-        else if(jsData["fec_mode"].empty() == false)
-        {
-            bIsOk = false;
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: fec_mode incorrect type" ;
-        }
-
-        bIsOk &= DecodePort(jsData, "fec1D_destination_port", nFec1DDestinationPort);
-        bIsOk &= DecodePort(jsData, "fec2D_destination_port", nFec2DDestinationPort);
-
-        if(jsData["rtcp_enabled"].isBool())
-        {
-            bRtcpEnabled = jsData["rtcp_enabled"].asBool();
-        }
-        else if(jsData["rtcp_enabled"].empty() == false)
-        {
-            bIsOk = false;
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: rtcp_enabled incorrect type" ;
-        }
-
-        if(jsData["rtcp_destination_ip"].isString())
-        {
-            sRtcpDestinationIp = jsData["rtcp_destination_ip"].asString();
-        }
-        else if(jsData["rtcp_destination_ip"].empty() == false)
-        {
-            bIsOk = false;
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: rtcp_destination_ip incorrect type" ;
-        }
-
-        bIsOk &= DecodePort(jsData, "rtcp_destination_port", nRtcpDestinationPort);
-
-        if(jsData["rtp_enabled"].isBool())
-        {
-
-            bRtpEnabled = jsData["rtp_enabled"].asBool();
-
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: transport_params rtp_enabled " << bRtpEnabled ;
-        }
-        else if(jsData["rtp_enabled"].empty() == false)
-        {
-            bIsOk = false;
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: rtp_enabled incorrect type" ;
+            return false;
         }
     }
-    else if(jsData.empty() == false)
+    else if(CheckJsonOptional(jsData,{{FEC_ENABLED, {jsondatatype::_BOOLEAN}},
+                                      {FEC_DESTINATION_IP, {jsondatatype::_STRING}},
+                                      {FEC_MODE, {jsondatatype::_STRING}},
+                                      {FEC_1DDESTINATION_PORT, {jsondatatype::_STRING, jsondatatype::_INTEGER}},
+                                      {FEC_2DDESTINATION_PORT, {jsondatatype::_STRING, jsondatatype::_INTEGER}}}) == false)
     {
-        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: transport_params is not an object" ;
-        bIsOk = false;
+        return false;
     }
-    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: TransportParamsRTP: " << bIsOk ;
-    //else
-    //{
-    //    pmlLog(pml::LOG_DEBUG) << "Patch: transport_params is not an object" ;
-    //    bIsOk = false;
-   // }
-    return bIsOk;
+
+    if(m_json.isMember(RTCP_ENABLED) == false)
+    {
+        if(CheckJsonNotAllowed(jsData, {RTCP_ENABLED, RTCP_DESTINATION_IP, RTCP_DESTINATION_PORT}) == false)
+        {
+            return false;
+        }
+    }
+    else if(CheckJsonOptional(jsData,{{RTCP_ENABLED, {jsondatatype::_BOOLEAN}},
+                                      {RTCP_DESTINATION_IP, {jsondatatype::_STRING}},
+                                      {RTCP_DESTINATION_PORT, {jsondatatype::_STRING, jsondatatype::_INTEGER}}}) == false)
+    {
+        return false;
+    }
+    PatchJson(m_json, jsData);
+    return true;
 }
 
-Json::Value TransportParamsRTP::GetJson(const ApiVersion& version) const
+
+std::string TransportParamsRTP::GetSourceIP() const
 {
-    Json::Value jsTp;
+    if(m_json[SOURCE_IP].isString())
+    {
+        m_json[SOURCE_IP].asString();
+    }
+    return std::string();
+}
 
-    if(sSourceIp.empty() == false)
-    {
-        jsTp["source_ip"] = sSourceIp;
-    }
-    else
-    {
-        jsTp["source_ip"] = Json::nullValue;
-    }
+unsigned short TransportParamsRTP::GetDestinationPort() const
+{
+    return m_json[DESTINATION_PORT].asUInt();
+}
 
-    SetPort(jsTp, "destination_port",nDestinationPort);
-    if(bFecEnabled)
-    {
-        jsTp["fec_enabled"] = (*bFecEnabled);
-        jsTp["fec_destination_ip"] = (*sFecDestinationIp);
-        jsTp["fec_mode"] = STR_FEC_MODE[*eFecMode];
-        SetPort(jsTp, "fec1D_destination_port", *nFec1DDestinationPort);
-        SetPort(jsTp, "fec2D_destination_port", *nFec2DDestinationPort);
-    }
-    if(bRtcpEnabled)
-    {
-        jsTp["rtcp_enabled"] = (*bRtcpEnabled);
-        jsTp["rtcp_destination_ip"] = *sRtcpDestinationIp;
-        SetPort(jsTp, "rtcp_destination_port", *nRtcpDestinationPort);
-    }
-    jsTp["rtp_enabled"] = bRtpEnabled;
-    return jsTp;
+bool TransportParamsRTP::IsRtpEnabled() const
+{
+    return m_json[RTP_ENABLED].asBool();
+}
+
+std::experimental::optional<bool> TransportParamsRTP::IsFecEnabled() const
+{
+    return GetBool(m_json, FEC_ENABLED);
+}
+
+std::experimental::optional<std::string> TransportParamsRTP::GetFecDestinationIp() const
+{
+    return GetString(m_json, FEC_DESTINATION_IP);
+}
+
+std::experimental::optional<std::string> TransportParamsRTP::GetFecMode() const
+{
+    return GetString(m_json, FEC_MODE);
+}
+
+std::experimental::optional<uint32_t> TransportParamsRTP::GetFec1DDestinationPort() const
+{
+    return GetUInt(m_json, FEC_1DDESTINATION_PORT);
+}
+
+std::experimental::optional<uint32_t> TransportParamsRTP::GetFec2DDestinationPort() const
+{
+    return GetUInt(m_json, FEC_2DDESTINATION_PORT);
+}
+
+std::experimental::optional<bool> TransportParamsRTP::IsRtcpEnabled() const
+{
+    return GetBool(m_json, RTCP_ENABLED);
+}
+
+std::experimental::optional<std::string> TransportParamsRTP::GetRtcpDestinationIp() const
+{
+    return GetString(m_json, RTCP_DESTINATION_IP);
+}
+
+std::experimental::optional<uint32_t> TransportParamsRTP::GetRtcpDestinationPort() const
+{
+    return GetUInt(m_json, RTCP_DESTINATION_PORT);
 }
 
 
-
-void TransportParamsRTP::SetPort(Json::Value& js, const std::string& sPort, unsigned short nPort) const
+void TransportParamsRTP::ActualizePort(const std::string& sKey, unsigned short nPort)
 {
-    if(nPort == 0)
+    auto port = GetInt(m_json, sKey);
+    if(!port || *port == 0)
     {
-        js[sPort] = "auto";
-    }
-    else
-    {
-        js[sPort] = nPort;
+        m_json[sKey] = nPort;
     }
 }
 
-bool TransportParamsRTP::DecodePort(const Json::Value& jsData, const std::string& sPort, unsigned short& nPort)
+void TransportParamsRTP::ActualizeIp(const std::string& sKey, const std::string& sIp)
 {
-    bool bOk(false);
-    if(jsData[sPort].isString())
+    auto ip = GetString(m_json, sKey);
+    if(!ip || *ip == AUTO)
     {
-        if(jsData[sPort].asString() == "auto")
+        if(sIp.empty() == false)
         {
-            nPort = 0;
-            bOk = true;
+            m_json[sKey] = sIp;
+        }
+        else
+        {
+            m_json[sKey] = Json::Value::null;
         }
     }
-    else if(jsData[sPort].isInt())
-    {
-        nPort = jsData[sPort].asInt();
-        bOk = true;
-    }
-    else if(jsData[sPort].empty())
-    {
-        bOk = true;
-        nPort = 0;
-    }
-    else
-    {
-        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: " << sPort << " not valid" ;
-    }
-    return bOk;
 }
 
-TransportParamsRTPSender::TransportParamsRTPSender() : TransportParamsRTP(),
-    sDestinationIp("auto"),
-    nSourcePort(0)
+void TransportParamsRTP::Actualize()
 {
-    sSourceIp = "auto"; //sender sourceIp defaults to auto. receiver to null
+    if(m_json[DESTINATION_PORT] == AUTO)
+    {
+        m_json[DESTINATION_PORT] = 5004;
+    }
+
+    if(m_json.isMember(FEC_ENABLED) && m_json[FEC_ENABLED].asBool())
+    {
+        ActualizePort(FEC_1DDESTINATION_PORT, m_json[DESTINATION_PORT].asUInt()+2);
+        ActualizePort(FEC_2DDESTINATION_PORT, m_json[DESTINATION_PORT].asUInt()+4);
+    }
+
+    if(m_json.isMember(RTCP_ENABLED) && m_json[RTCP_ENABLED].asBool())
+    {
+        ActualizePort(RTCP_DESTINATION_PORT, m_json[DESTINATION_PORT].asUInt()+1);
+    }
 }
 
-TransportParamsRTPSender::TransportParamsRTPSender(const TransportParamsRTPSender& tp) : TransportParamsRTP(tp),
-    sDestinationIp(tp.sDestinationIp),
-    nSourcePort(tp.nSourcePort),
-    eFecType(tp.eFecType),
-    nFecBlockWidth(tp.nFecBlockWidth),
-    nFecBlockHeight(tp.nFecBlockHeight),
-    nFec1DSourcePort(tp.nFec1DSourcePort),
-    nFec2DSourcePort(tp.nFec2DSourcePort),
-    nRtcpSourcePort(tp.nRtcpSourcePort)
+
+void TransportParamsRTP::EnableRtp(bool bEnable)
+{
+    m_json[RTP_ENABLED] = bEnable;
+}
+
+
+
+
+/** SENDER
+**/
+
+
+
+
+
+
+TransportParamsRTPSender::TransportParamsRTPSender() : TransportParamsRTP()
+{
+    m_json[DESTINATION_IP] = AUTO;
+    m_json[SOURCE_PORT] = AUTO;
+}
+
+TransportParamsRTPSender::TransportParamsRTPSender(const TransportParamsRTPSender& tp) : TransportParamsRTP(tp)
 {
 
 }
@@ -282,159 +319,72 @@ TransportParamsRTPSender::TransportParamsRTPSender(const TransportParamsRTPSende
 TransportParamsRTPSender& TransportParamsRTPSender::operator=(const TransportParamsRTPSender& other)
 {
     TransportParamsRTP::operator=(other);
-    sDestinationIp = other.sDestinationIp;
-    nSourcePort = other.nSourcePort;
-    eFecType = other.eFecType;
-    nFecBlockWidth = other.nFecBlockWidth;
-    nFecBlockHeight = other.nFecBlockHeight;
-    nFec1DSourcePort = other.nFec1DSourcePort;
-    nFec2DSourcePort = other.nFec2DSourcePort;
-    nRtcpSourcePort = other.nRtcpSourcePort;
     return *this;
 }
 
-void TransportParamsRTP::Actualize()
+
+void TransportParamsRTPSender::FecAllowed()
 {
-    if(0 == nDestinationPort)
-    {
-        nDestinationPort = 5004;
-    }
-
-    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Actualize Destination Port = " << nDestinationPort ;
-
-    if(bFecEnabled && *bFecEnabled)
-    {
-        if(!nFec1DDestinationPort || *nFec1DDestinationPort == 0)
-        {
-            nFec1DDestinationPort = nDestinationPort+2;
-        }
-        if(!nFec2DDestinationPort  || *nFec2DDestinationPort == 0)
-        {
-            nFec2DDestinationPort = nDestinationPort+4;
-        }
-
-    }
-    if(bRtcpEnabled && *bRtcpEnabled)
-    {
-        if(!nRtcpDestinationPort || *nRtcpDestinationPort==0)
-        {
-            if(0 == nDestinationPort%2)
-            {
-                nRtcpDestinationPort = nDestinationPort+1;
-            }
-            else
-            {
-                nRtcpDestinationPort = nDestinationPort+2;
-            }
-        }
-
-    }
+    TransportParamsRTP::FecAllowed();
+    m_json[FEC_TYPE] = STR_FEC_TYPE_REED;
+    m_json[FEC_BLOCK_WIDTH] = 4;
+    m_json[FEC_BLOCK_HEIGHT] = 4;
+    m_json[FEC_1DSOURCE_PORT] = AUTO;
+    m_json[FEC_2DSOURCE_PORT] = AUTO;
 }
+
 
 bool TransportParamsRTPSender::Patch(const Json::Value& jsData)
 {
-    bool bIsOk = TransportParamsRTP::Patch(jsData);
-    if(bIsOk && jsData.isObject())
+    if(CheckJsonOptional(jsData, { {DESTINATION_IP, {jsondatatype::_STRING}},
+                                   {SOURCE_PORT, {jsondatatype::_STRING, jsondatatype::_INTEGER}}}) == false)
     {
-        if(jsData["destination_ip"].isString())
-        {
-            sDestinationIp = jsData["destination_ip"].asString();
-        }
-        else if(jsData["destination_ip"].empty() == false)
-        {
-            bIsOk = false;
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: destination_ip incorrect type" ;
-        }
-
-        bIsOk &= DecodePort(jsData, "source_port", nSourcePort);
-
-        if(jsData["fec_type"].isString())
-        {
-            if(jsData["fec_type"].asString() == STR_FEC_TYPE[XOR])
-            {
-                eFecType = XOR;
-            }
-            else if(jsData["fec_type"].asString() == STR_FEC_TYPE[REED])
-            {
-                eFecType = REED;
-            }
-            else
-            {
-                bIsOk = false;
-                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: fec_type not found" ;
-            }
-        }
-        else if(jsData["fec_type"].empty() == false)
-        {
-            bIsOk = false;
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: fec_type incorrect type" ;
-        }
-
-        if(jsData["fec_block_width"].isInt())
-        {
-            nFecBlockWidth = jsData["fec_block_width"].asInt();
-            bIsOk &= (nFecBlockWidth >= 4 && nFecBlockWidth <= 200);
-        }
-        else if(jsData["fec_block_width"].empty() == false)
-        {
-            bIsOk = false;
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: fec_block_width incorrect type" ;
-        }
-
-        if(jsData["fec_block_height"].isInt())
-        {
-            nFecBlockHeight = jsData["fec_block_height"].asInt();
-            bIsOk &= (nFecBlockHeight >= 4 && nFecBlockHeight <= 200);
-        }
-        else if(jsData["fec_block_height"].empty() == false)
-        {
-            bIsOk = false;
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: fec_block_height incorrect type" ;
-        }
-
-        if(!DecodePort(jsData, "fec1D_source_port", nFec1DSourcePort) || !DecodePort(jsData, "fec2D_source_port", nFec2DSourcePort))
-        {
-            bIsOk = false;
-        }
-
-        if(!DecodePort(jsData, "rtcp_source_port", nRtcpSourcePort))
-        {
-            bIsOk = false;
-        }
+        return false;
     }
 
-    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: TransportParamsRTPSender: " << bIsOk ;
-    return bIsOk;
-}
-
-Json::Value TransportParamsRTPSender::GetJson(const ApiVersion& version) const
-{
-    Json::Value jsTp(TransportParamsRTP::GetJson(version));
-
-    if(sDestinationIp.empty() == false)
+    if(m_json.isMember(FEC_ENABLED) == false)
     {
-        jsTp["destination_ip"] = sDestinationIp;
+        if(CheckJsonNotAllowed(jsData, {FEC_TYPE, FEC_BLOCK_WIDTH, FEC_BLOCK_HEIGHT, FEC_1DSOURCE_PORT, FEC_2DSOURCE_PORT}) == false)
+        {
+            return false;
+        }
     }
-    else
+    else if(CheckJsonOptional(jsData,{{FEC_TYPE, {jsondatatype::_STRING}},
+                                      {FEC_BLOCK_WIDTH, {jsondatatype::_INTEGER}},
+                                      {FEC_BLOCK_WIDTH, {jsondatatype::_INTEGER}},
+                                      {FEC_1DSOURCE_PORT, {jsondatatype::_STRING, jsondatatype::_INTEGER}},
+                                      {FEC_2DSOURCE_PORT, {jsondatatype::_STRING, jsondatatype::_INTEGER}}}) == false)
     {
-        jsTp["destination_ip"] = Json::nullValue;
+        return false;
     }
-    SetPort(jsTp, "source_port", nSourcePort);
 
-    if(eFecType)
+    if(m_json.isMember(RTCP_ENABLED) == false)
     {
-        jsTp["fec_type"] = STR_FEC_TYPE[*eFecType];
-        jsTp["fec_block_width"] = *nFecBlockWidth;
-        jsTp["fec_block_height"] = *nFecBlockHeight;
+        if(CheckJsonNotAllowed(jsData, {RTCP_SOURCE_PORT}) == false)
+        {
+            return false;
+        }
+    }
+    else if(CheckJsonOptional(jsData,{{RTCP_SOURCE_PORT, {jsondatatype::_STRING, jsondatatype::_INTEGER}}}) == false)
+    {
+        return false;
+    }
 
-        SetPort(jsTp, "fec1D_source_port", *nFec1DSourcePort);
-        SetPort(jsTp, "fec2D_source_port", *nFec2DSourcePort);
-    }
-    if(nRtcpSourcePort)
+    //check some constraints
+    if(jsData[FEC_TYPE].isString() && (jsData[FEC_TYPE] != STR_FEC_TYPE_XOR && jsData[FEC_TYPE] != STR_FEC_TYPE_REED))
     {
-        SetPort(jsTp, "rtcp_source_port", *nRtcpSourcePort);
+        return false;
     }
-    return jsTp;
+
+    if(jsData[FEC_BLOCK_WIDTH].isInt() && (jsData[FEC_BLOCK_WIDTH].asInt() < 4 || jsData[FEC_BLOCK_WIDTH].asInt() > 200))
+    {
+        return false;
+    }
+    if(jsData[FEC_BLOCK_HEIGHT].isInt() && (jsData[FEC_BLOCK_HEIGHT].asInt() < 4 || jsData[FEC_BLOCK_HEIGHT].asInt() > 200))
+    {
+        return false;
+    }
+    return TransportParamsRTP::Patch(jsData);
 }
 
 
@@ -442,68 +392,82 @@ void TransportParamsRTPSender::Actualize(const std::string& sSource, const std::
 {
     TransportParamsRTP::Actualize();
 
-    if(sSourceIp == "auto" || sSourceIp.empty())
-    {
-        sSourceIp =sSource;
-    }
-    if(sDestinationIp == "auto" || sDestinationIp.empty())
-    {
-        sDestinationIp = sDestination;
-    }
 
-    if(nSourcePort == 0)
-    {
-        nSourcePort = 5004;
-    }
+    ActualizeIp(SOURCE_IP, sDestination);
+    ActualizeIp(DESTINATION_IP, sDestination);
+    ActualizePort(SOURCE_PORT, 5004);
 
-    if(bFecEnabled && &bFecEnabled)
-    {
-        if(!sFecDestinationIp || *sFecDestinationIp == "auto")
-        {
-            sFecDestinationIp = sDestinationIp;
-        }
-        if(!nFec1DSourcePort || *nFec1DSourcePort == 0)
-        {
-            nFec1DSourcePort = nSourcePort+2;
-        }
-        if(!nFec2DSourcePort || *nFec2DSourcePort == 0)
-        {
-            nFec2DSourcePort = nSourcePort+4;
-        }
-    }
 
-    if(bRtcpEnabled && *bRtcpEnabeld)
+    if(m_json.isMember(FEC_ENABLED) && m_json[FEC_ENABLED].asBool())
     {
-        if(!nRtcpSourcePort || *nRtcpSourcePort == 0)
-        {
-            if(nSourcePort%2 == 0)
-            {
-                nRtcpSourcePort = nSourcePort+1;
-            }
-            else
-            {
-                nRtcpSourcePort = nSourcePort+2;
-            }
-        }
-        if(!sRtcpDestinationIp || *sRtcpDestinationIp == "auto")
-        {
-            sRtcpDestinationIp = sDestinationIp;
-        }
+        ActualizeIp(FEC_DESTINATION_IP, m_json[DESTINATION_IP].asString());
+        ActualizePort(FEC_1DSOURCE_PORT, m_json[SOURCE_PORT].asUInt()+2);
+        ActualizePort(FEC_2DSOURCE_PORT, m_json[SOURCE_PORT].asUInt()+4);
+    }
+    if(m_json.isMember(RTCP_ENABLED) && m_json[RTCP_ENABLED].asBool())
+    {
+        ActualizePort(RTCP_SOURCE_PORT, m_json[SOURCE_PORT].asUInt()+1);
+        ActualizeIp(RTCP_DESTINATION_IP, m_json[DESTINATION_IP].asString());
     }
 
 }
 
-
-TransportParamsRTPReceiver::TransportParamsRTPReceiver() : TransportParamsRTP(),
-    sInterfaceIp("auto")
-
+void TransportParamsRTPSender::SetDestinationIp(const std::string& sAddress)
 {
+    m_json[DESTINATION_IP] = sAddress;
 }
 
-TransportParamsRTPReceiver::TransportParamsRTPReceiver(const TransportParamsRTPReceiver& tp) : TransportParamsRTP(tp),
-    sMulticastIp(tp.sMulticastIp),
-    sInterfaceIp(tp.sInterfaceIp)
+std::string TransportParamsRTPSender::GetDestinationIp() const
+{
+    return m_json[DESTINATION_IP].asString();
+}
 
+unsigned short TransportParamsRTPSender::GetSourcePort() const
+{
+    return m_json[SOURCE_PORT].asUInt();
+}
+
+std::experimental::optional<std::string> TransportParamsRTPSender::GetFecType() const
+{
+    return GetString(m_json, FEC_TYPE);
+}
+
+std::experimental::optional<uint32_t> TransportParamsRTPSender::GetFecBlockWidth() const
+{
+    return GetUInt(m_json, FEC_BLOCK_WIDTH);
+}
+
+std::experimental::optional<uint32_t> TransportParamsRTPSender::GetFecBlockHeight() const
+{
+    return GetUInt(m_json, FEC_BLOCK_HEIGHT);
+}
+
+std::experimental::optional<uint32_t> TransportParamsRTPSender::GetFec1DSourcePort() const
+{
+    return GetUInt(m_json, FEC_1DSOURCE_PORT);
+}
+
+std::experimental::optional<uint32_t> TransportParamsRTPSender::GetFec2DSourcePort() const
+{
+    return GetUInt(m_json, FEC_2DSOURCE_PORT);
+}
+
+std::experimental::optional<uint32_t> TransportParamsRTPSender::GetRtcpSourcePort() const
+{
+    return GetUInt(m_json, RTCP_SOURCE_PORT);
+}
+
+
+
+
+
+
+TransportParamsRTPReceiver::TransportParamsRTPReceiver() : TransportParamsRTP()
+{
+    m_json[INTERFACE_IP] = AUTO;
+}
+
+TransportParamsRTPReceiver::TransportParamsRTPReceiver(const TransportParamsRTPReceiver& tp) : TransportParamsRTP(tp)
 {
 
 }
@@ -511,96 +475,44 @@ TransportParamsRTPReceiver::TransportParamsRTPReceiver(const TransportParamsRTPR
 
 bool TransportParamsRTPReceiver::Patch(const Json::Value& jsData)
 {
-    bool bIsOk = TransportParamsRTP::Patch(jsData);
-    if(bIsOk && jsData.isObject())
+    if(CheckJsonOptional(jsData, {{MULTICAST_IP, {jsondatatype::_STRING}},
+                              {INTERFACE_IP, {jsondatatype::_STRING}}}) == false)
     {
-        if(jsData["multicast_ip"].isString())
-        {
-            eMulticast = TP_SUPPORTED;
-            if(jsData["multicast_ip"].asString() != "auto")
-            {
-                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "TransportParamsRTPReceiver::Patch: Multicast=" << jsData["multicast_ip"].asString() ;
-                sMulticastIp = jsData["multicast_ip"].asString();
-            }
-        }
-        else if(JsonMemberExistsAndIsNull(jsData, "multicast_ip"))
-        {
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "TransportParamsRTPReceiver::Patch: Multicast=null" ;
-            sMulticastIp = "";
-        }
-        else if(jsData["multicast_ip"].empty() == false)
-        {
-            bIsOk = false;
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: multicast_ip incorrect type" ;
-        }
-        if(jsData["interface_ip"].isString())
-        {
-            if(jsData["interface_ip"].asString() != "auto")
-            {
-                sInterfaceIp = jsData["interface_ip"].asString();
-            }
-        }
-        else if(jsData["interface_ip"].empty() == false)
-        {
-            bIsOk = false;
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: interface_ip incorrect type" ;
-        }
-    }
-    return bIsOk;
-}
-
-Json::Value TransportParamsRTPReceiver::GetJson(const ApiVersion& version) const
-{
-    Json::Value jsTp(TransportParamsRTP::GetJson(version));
-    if(sMulticastIp)
-    {
-        if((*sMulticastIp).empty() == false)
-        {
-            jsTp["multicast_ip"] = *sMulticastIp;
-        }
-        else
-        {
-            jsTp["multicast_ip"] = Json::nullValue;
-        }
+        return false;
     }
 
-    jsTp["interface_ip"] = sInterfaceIp;
-    return jsTp;
+    return TransportParamsRTP::Patch(jsData);
 }
 
 
 void TransportParamsRTPReceiver::Actualize(const std::string& sInterface)
 {
     TransportParamsRTP::Actualize();
-    sInterfaceIp = sInterface;
+    m_json[INTERFACE_IP] = sInterface;
 
-    if(bFecEnabled && *bFecEnabled)
+    ActualizeIp(SOURCE_IP, "");
+
+    if(m_json.isMember(FEC_ENABLED))
     {
-        if(!sFecDestinationIp || *sFecDestinationIp == "auto")
+        if(m_json.isMember(MULTICAST_IP) == false || m_json[MULTICAST_IP].isNull())
         {
-            if(!sMulticastIp || (*sMulticastIp).empty())
-            {
-                sFecDestinationIp = sInterfaceIp;
-            }
-            else
-            {
-                sFecDestinationIp = sMulticastIp;
-            }
+            ActualizeIp(FEC_DESTINATION_IP, m_json[INTERFACE_IP].asString());
+        }
+        else
+        {
+            ActualizeIp(FEC_DESTINATION_IP, m_json[MULTICAST_IP].asString());
         }
     }
 
-    if(bRtcpEnabled && *bRtcpEnabled)
+    if(m_json.isMember(RTCP_ENABLED))
     {
-        if(!sRtcpDestinationIp || *sRtcpDestinationIp == "auto")
+        if(m_json.isMember(MULTICAST_IP) == false || m_json[MULTICAST_IP].isNull())
         {
-            if(!sMulticastIp || (*sMulticastIp).empty())
-            {
-                sRtcpDestinationIp = sInterfaceIp;
-            }
-            else
-            {
-                sRtcpDestinationIp = sMulticastIp;
-            }
+            ActualizeIp(RTCP_DESTINATION_IP, m_json[INTERFACE_IP].asString());
+        }
+        else
+        {
+            ActualizeIp(RTCP_DESTINATION_IP, m_json[MULTICAST_IP].asString());
         }
     }
 }
@@ -609,19 +521,30 @@ void TransportParamsRTPReceiver::Actualize(const std::string& sInterface)
 TransportParamsRTPReceiver& TransportParamsRTPReceiver::operator=(const TransportParamsRTPReceiver& other)
 {
     TransportParamsRTP::operator=(other);
-    sMulticastIp = other.sMulticastIp;
-    sInterfaceIp = other.sInterfaceIp;
     return *this;
 }
 
-void TransportParamsRTPSender::FecAllowed()
+
+
+std::experimental::optional<std::string> TransportParamsRTPReceiver::GetMulticastIp() const
 {
-    TransportParamsRTP::FecAllowed();
-    eFecType = REED;
-    nFecBlockWidth = 0;
-    nFecBlockHeight= 0;
-    nFec1DSourcePort= 0;
-    nFec2DSourcePort= 0;
-    nRtcpSourcePort= 0;
+    return GetString(m_json, MULTICAST_IP);
+}
+
+std::string TransportParamsRTPReceiver::GetInterfaceIp() const
+{
+    return m_json[INTERFACE_IP].asString();
+}
+
+void TransportParamsRTPReceiver::SetMulticastIp(const std::string& sAddress)
+{
+    if(sAddress.empty() == false)
+    {
+        m_json[MULTICAST_IP] = sAddress;
+    }
+    else
+    {
+        m_json[MULTICAST_IP] = Json::Value::null;
+    }
 }
 

@@ -39,7 +39,7 @@ void ThreadPoster::Target(const std::string& sReceiverId, const std::string& sTr
     LaunchThread();
 }
 
-void ThreadPoster::PatchSender(const std::string& sSenderId, const pml::nmos::connectionSender& conPatch, unsigned short nPort)
+void ThreadPoster::PatchSender(const std::string& sSenderId, const pml::nmos::connectionSender<pml::nmos::activationResponse>& conPatch, unsigned short nPort)
 {
     SetReason(PATCH_SENDER);
     m_sString = sSenderId;
@@ -48,7 +48,7 @@ void ThreadPoster::PatchSender(const std::string& sSenderId, const pml::nmos::co
     LaunchThread();
 }
 
-void ThreadPoster::PatchReceiver(const std::string& sReceiverId, const pml::nmos::connectionReceiver& conPatch, unsigned short nPort)
+void ThreadPoster::PatchReceiver(const std::string& sReceiverId, const pml::nmos::connectionReceiver<pml::nmos::activationResponse>& conPatch, unsigned short nPort)
 {
     SetReason(PATCH_RECEIVER);
     m_sString = sReceiverId;

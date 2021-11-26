@@ -121,6 +121,7 @@
 		<Unit filename="external/uuid/guid.h" />
 		<Unit filename="external/uuid/md5.cpp" />
 		<Unit filename="external/uuid/md5.h" />
+		<Unit filename="include/activation.h" />
 		<Unit filename="include/avahibrowser.h">
 			<Option target="Linux Debug" />
 			<Option target="Linux Release" />
@@ -170,6 +171,7 @@
 		<Unit filename="include/transportparams.h" />
 		<Unit filename="include/utils.h" />
 		<Unit filename="include/zcposter.h" />
+		<Unit filename="src/activation.cpp" />
 		<Unit filename="src/connection.cpp" />
 		<Unit filename="src/constraint.cpp" />
 		<Unit filename="src/curlregister.cpp" />

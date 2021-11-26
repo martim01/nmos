@@ -4,77 +4,94 @@
 #include "nmosdlldefine.h"
 #include <chrono>
 
+
 namespace pml
 {
     namespace nmos
     {
-            struct NMOS_EXPOSE connection
+            template<typename T> class NMOS_EXPOSE connection
             {
-                enum enumActivate {ACT_NULL, ACT_NOW, ACT_ABSOLUTE, ACT_RELATIVE};
-                enum {FP_ACTIVATION=1, FP_ENABLE=2, FP_TRANSPORT_PARAMS=4, FP_TRANSPORT_FILE=8, FP_ID=16, FP_ALL=31};
-                connection();
+                public:
+                    connection(std::experimental::optional<bool> masterEnable);
+                    connection(const connection& conReq);
+                    connection& operator=(const connection& other);
 
-                connection(int flagProperties);
-                connection(const connection& conReq);
-                connection& operator=(const connection& other);
-                virtual bool Patch(const Json::Value& jsData);
-                virtual Json::Value GetJson(const ApiVersion& version) const;
+                    bool Patch(const Json::Value& jsData);
+                    virtual Json::Value GetJson() const;
+
+                    std::experimental::optional<bool> GetMasterEnable() const;
+                    void MasterEnable(bool bEnable);
+
+                    T& GetActivation() { return m_activation; }
+                    const T& GetConstActivation() const { return m_activation; }
 
 
-                bool bMasterEnable;
-                enumActivate eActivate;
-                std::string sRequestedTime;
-                std::string sActivationTime;
-                std::chrono::time_point<std::chrono::high_resolution_clock> tpActivation;
-
-                int nProperties;
-                static const std::string STR_ACTIVATE[4];
 
                 protected:
-                    bool bClient;
+                    virtual bool DoPatch(const Json::Value& jsData);
+
+                    Json::Value m_json;
+                    T m_activation;
             };
 
-            struct NMOS_EXPOSE connectionSender : public connection
+            template<typename T> class NMOS_EXPOSE connectionSender : public connection<T>
             {
+                public:
+                    connectionSender(std::experimental::optional<bool> masterEnable, size_t nTPLegs);
+                    connectionSender(const connectionSender& conReq);
+                    connectionSender& operator=(const connectionSender& other);
+                    Json::Value GetJson() const override;
 
-                connectionSender();
-                connectionSender(int flagProperties);
-                connectionSender(const connectionSender& conReq);
-                connectionSender& operator=(const connectionSender& other);
-                virtual bool Patch(const Json::Value& jsData);
+                    const std::vector<TransportParamsRTPSender>& GetTransportParams() const { return m_vTransportParams;}
 
-                virtual Json::Value GetJson(const ApiVersion& version) const;
+                    void Actualize(const std::string& sSourceIp, const std::string& sDestinationIp);
 
-                // @todo we should have an array of senders for SMPTE2022
-                std::vector<TransportParamsRTPSender> tpSenders;
+                    void SetTPAllowed(int flagsTransport);
+                    std::experimental::optional<std::string> GetReceiverId() const;
 
-                std::string sReceiverId;
+                    void SetDestinationDetails(const std::string& sIp, unsigned short nPort);
 
-                friend class Sender;
+                    void Uninitialise();
 
+                protected:
+                    bool DoPatch(const Json::Value& jsData) override;
 
+                    std::vector<TransportParamsRTPSender> m_vTransportParams;
             };
 
             //Connection API
-            struct NMOS_EXPOSE connectionReceiver : public connection
+            template<typename T> class NMOS_EXPOSE connectionReceiver : public connection<T>
             {
-                connectionReceiver();
-                connectionReceiver(const connectionReceiver& conReq);
+                public:
+                    connectionReceiver(std::experimental::optional<bool> masterEnable, size_t nTPLegs);
+                    connectionReceiver(const connectionReceiver& conReq);
 
-                connectionReceiver(int flagProperties);
-                connectionReceiver& operator=(const connectionReceiver& other);
-                virtual bool Patch(const Json::Value& jsData);
+                    connectionReceiver(int flagProperties);
+                    connectionReceiver& operator=(const connectionReceiver& other);
 
-                virtual Json::Value GetJson(const ApiVersion& version) const;
+                    Json::Value GetJson() const;
+                    const std::vector<TransportParamsRTPReceiver>& GetTransportParams() const { return m_vTransportParams;}
 
-                // @todo we should have an array of TransportParamsRTPReceiver for SMPTE2022
-                std::vector<TransportParamsRTPReceiver> tpReceivers;
-                std::string sSenderId;
-                std::string sTransportFileType;
-                std::string sTransportFileData;
+                    void Actualize(const std::string& sInterfaceIp);
+                    void SetTPAllowed(int flagsTransport);
 
+                    std::experimental::optional<std::string> GetSenderId() const;
+                    std::experimental::optional<std::string> GetTransportFileType() const;
+                    std::experimental::optional<std::string> GetTransportFileData() const;
 
-                friend class Receiver;
+                    void SetSenderId(const std::experimental::optional<std::string>& id);
+                    void SetTransportFile(const std::experimental::optional<std::string>& type, const std::experimental::optional<std::string>& data);
+
+                    void Uninitialise();
+
+                protected:
+                    bool DoPatch(const Json::Value& jsData) override;
+                    std::vector<TransportParamsRTPReceiver> m_vTransportParams;
+
+                    //std::string sSenderId;
+                    //std::string sTransportFileType;
+                    //std::string sTransportFileData;
+
         };
     };
 };

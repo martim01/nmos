@@ -4,7 +4,9 @@
 		<Project filename="../log/log.cbp" />
 		<Project filename="../Restgoose/Restgoose.cbp" />
 		<Project filename="libnmos_base.cbp" />
-		<Project filename="libnmos_node.cbp" />
+		<Project filename="libnmos_node.cbp">
+			<Depends filename="libnmos_base.cbp" />
+		</Project>
 		<Project filename="libnmos_client.cbp">
 			<Depends filename="libnmos_base.cbp" />
 		</Project>

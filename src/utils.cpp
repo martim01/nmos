@@ -172,6 +172,17 @@ bool CheckJsonType(const Json::Value& jsValue, const std::set<jsondatatype>& set
     return true;
 }
 
+void PatchJson(Json::Value& jsObject, const Json::Value& jsPatch)
+{
+    for(auto itObject = jsPatch.begin(); itObject != jsPatch.end(); ++itObject)
+    {
+        if(jsObject.isMember(itObject.key().asString()))
+        {
+            jsObject[itObject.key().asString()] = (*itObject);
+        }
+    }
+}
+
 bool CheckJson(const Json::Value& jsObject, const std::map<std::string, std::set<jsondatatype>>& mKeys)
 {
     return CheckJsonAllowed(jsObject, mKeys) && CheckJsonRequired(jsObject, mKeys);
@@ -204,6 +215,34 @@ bool CheckJsonRequired(const Json::Value& jsObject, const std::map<std::string, 
             return false;
         }
         if(!CheckJsonType(jsObject[required.first], required.second))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool CheckJsonOptional(const Json::Value& jsObject, const std::map<std::string, std::set<jsondatatype>>& mOptional)
+{
+    //if the key exists then it must be of the given type
+    for(auto opt : mOptional)
+    {
+        if(jsObject.isMember(opt.first))
+        {
+            if(!CheckJsonType(jsObject[opt.first], opt.second))
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+bool CheckJsonNotAllowed(const Json::Value& jsObject, const std::set<std::string>& setNotAllowed)
+{
+    for(auto sKey : setNotAllowed)
+    {
+        if(jsObject.isMember(sKey))
         {
             return false;
         }
@@ -248,12 +287,73 @@ std::string ConvertFromJson(const Json::Value& jsValue)
     builder["commentStyle"] = "None";
     builder["indentation"] = "";
     return Json::writeString(builder, jsValue);
-    //std::stringstream ssJson;
-    //ssJson << jsValue;
-    //return ssJson.str();
 }
 
-bool ConvertTaiStringToTimePoint(const std::string& sTai, std::chrono::time_point<std::chrono::high_resolution_clock>& tp)
+std::experimental::optional<bool> GetBool(const Json::Value& jsObject, const std::string& sKey)
+{
+    if(jsObject.isMember(sKey) && jsObject[sKey].isConvertibleTo(Json::booleanValue))
+    {
+        return jsObject[sKey].asBool();
+    }
+    return {};
+}
+
+std::experimental::optional<std::string> GetString(const Json::Value& jsObject, const std::string& sKey)
+{
+    if(jsObject.isMember(sKey) && jsObject[sKey].isConvertibleTo(Json::stringValue))
+    {
+        return jsObject[sKey].asString();
+    }
+    return {};
+}
+
+std::experimental::optional<uint32_t> GetUInt(const Json::Value& jsObject, const std::string& sKey)
+{
+    if(jsObject.isMember(sKey) && jsObject[sKey].isConvertibleTo(Json::uintValue))
+    {
+        return jsObject[sKey].asUInt();
+    }
+    return {};
+}
+
+std::experimental::optional<int32_t> GetInt(const Json::Value& jsObject, const std::string& sKey)
+{
+    if(jsObject.isMember(sKey) && jsObject[sKey].isConvertibleTo(Json::intValue))
+    {
+        return jsObject[sKey].asInt();
+    }
+    return {};
+}
+std::experimental::optional<uint64_t> GetUInt64(const Json::Value& jsObject, const std::string& sKey)
+{
+    if(jsObject.isMember(sKey) && jsObject[sKey].isConvertibleTo(Json::uintValue))
+    {
+        return jsObject[sKey].asUInt64();
+    }
+    return {};
+}
+
+std::experimental::optional<int64_t> GetInt64(const Json::Value& jsObject, const std::string& sKey)
+{
+    if(jsObject.isMember(sKey) && jsObject[sKey].isConvertibleTo(Json::intValue))
+    {
+        return jsObject[sKey].asInt64();
+    }
+    return {};
+}
+
+std::experimental::optional<double> GetDouble(const Json::Value& jsObject, const std::string& sKey)
+{
+    if(jsObject.isMember(sKey) && jsObject[sKey].isConvertibleTo(Json::realValue))
+    {
+        return jsObject[sKey].asDouble();
+    }
+    return {};
+}
+
+
+
+std::experimental::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> ConvertTaiStringToTimePoint(const std::string& sTai)
 {
     std::istringstream f(sTai);
     std::string sSeconds;
@@ -266,15 +366,14 @@ bool ConvertTaiStringToTimePoint(const std::string& sTai, std::chrono::time_poin
             std::chrono::seconds sec(std::stoul(sSeconds));
             std::chrono::nanoseconds nano(std::stoul(sNano));
             nano += std::chrono::duration_cast<std::chrono::nanoseconds>(sec);
-            tp = std::chrono::time_point<std::chrono::high_resolution_clock>(nano);
-            return true;
+            return std::chrono::time_point<std::chrono::high_resolution_clock>(nano);
         }
         catch(std::invalid_argument& e)
         {
-            return false;
+            return {};
         }
     }
-    return false;
+    return {};
 }
 
 bool AddTaiStringToTimePoint(const std::string& sTai,std::chrono::time_point<std::chrono::high_resolution_clock>& tp)
@@ -297,3 +396,4 @@ bool AddTaiStringToTimePoint(const std::string& sTai,std::chrono::time_point<std
         return false;
     }
 }
+

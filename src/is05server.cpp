@@ -249,7 +249,7 @@ response IS05Server::GetNmosSingleSenderTransportfile(const query& theQuery, con
     auto pSender = GetSender(theUrl);
     if(pSender)
     {
-        if(pSender->GetActive().bMasterEnable)
+        if(pSender->GetActive().GetMasterEnable())
         {
             resp.sContentType = "application/sdp";
             resp.sData = pSender->GetTransportFile();
@@ -399,7 +399,7 @@ response IS05Server::PatchSender(std::shared_ptr<Sender> pSender, const Json::Va
     response resp;
 
 
-    connectionSender conRequest(pSender->GetStaged());
+    auto conRequest = pSender->GetStaged();
     //can we patch a connection from the json?
     if(conRequest.Patch(jsRequest) == false)
     {
@@ -416,7 +416,7 @@ response IS05Server::PatchSender(std::shared_ptr<Sender> pSender, const Json::Va
         resp = JsonError(400, "Request does not meet sender's constraints.", ssDebug.str());
         pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchSender: Request does not meet sender's constraints." ;
     }
-    else if(conRequest.eActivate != connection::ACT_NULL && pSender->IsLocked() == true)
+    else if(conRequest.GetActivation().GetMode() != activation::ACT_NULL && pSender->IsLocked() == true)
     {   //locked by previous staged activation
         resp = JsonError(423, "Sender had pending activation.");
     }
@@ -434,11 +434,11 @@ response IS05Server::PatchSender(std::shared_ptr<Sender> pSender, const Json::Va
             resp.nHttpCode = 202;
             resp.jsonData = pSender->GetConnectionStagedJson(m_version);
 
-            if(conRequest.eActivate == connection::ACT_NULL)
+            if(conRequest.GetActivation().GetMode() == activation::ACT_NULL)
             {
                 resp.nHttpCode = 200;
             }
-            else if(conRequest.eActivate == connection::ACT_NOW)
+            else if(conRequest.GetActivation().GetMode() == activation::ACT_NOW)
             {
                 resp.nHttpCode = 200;
                 m_api.CommitActivation(pSender);
@@ -473,8 +473,9 @@ response IS05Server::PatchReceiver(std::shared_ptr<Receiver> pReceiver, const Js
 {
     response resp;
 
-    connectionReceiver conRequest(pReceiver->GetStaged());
-    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchJsonReceiver: Staged SenderId = '" << pReceiver->GetStaged().sSenderId << "' request SenderId = '" << conRequest.sSenderId << "'";
+    auto conRequest = pReceiver->GetStaged();
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchJsonReceiver: Staged SenderId = '" << (pReceiver->GetStaged().GetSenderId() ? *pReceiver->GetStaged().GetSenderId() : "")
+                            << "' request SenderId = '" << (conRequest.GetSenderId() ? *conRequest.GetSenderId() : "") << "'";
     //can we patch a connection from the json?
     if(conRequest.Patch(jsRequest) == false)
     {
@@ -486,7 +487,7 @@ response IS05Server::PatchReceiver(std::shared_ptr<Receiver> pReceiver, const Js
         resp =JsonError(400, "Request does not meet Receiver's constraints.");
         pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchJsonReceiver: Request does not meet Receiver's constraints." ;
     }
-    else if(conRequest.eActivate != connection::ACT_NULL && pReceiver->IsLocked() == true)
+    else if(conRequest.GetActivation().GetMode() != activation::ACT_NULL && pReceiver->IsLocked() == true)
     {   //locked by previous staged activation
         resp =JsonError(423, "Receiver had pending activation.");
         pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchJsonReceiver: Receiver had pending activation." ;
@@ -503,11 +504,11 @@ response IS05Server::PatchReceiver(std::shared_ptr<Receiver> pReceiver, const Js
         {
             resp.nHttpCode = 202;
             resp.jsonData = pReceiver->GetConnectionStagedJson(m_version);
-            if(conRequest.eActivate == connection::ACT_NULL)
+            if(conRequest.GetActivation().GetMode() == activation::ACT_NULL)
             {
                 resp.nHttpCode = 200;
             }
-            else if(conRequest.eActivate == connection::ACT_NOW)
+            else if(conRequest.GetActivation().GetMode() == activation::ACT_NOW)
             {
                 resp.nHttpCode = 200;
                 m_api.CommitActivation(pReceiver);

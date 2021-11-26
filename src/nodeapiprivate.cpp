@@ -1104,6 +1104,14 @@ bool NodeApiPrivate::AddReceiver(shared_ptr<Receiver> pResource)
             {
                 pairServer.second->AddReceiverEndpoint(pResource->GetId());
             }
+
+            //actualize the receiver for IS05
+            auto itInterface = m_self.GetInterfaceBegin();
+            if(itInterface != m_self.GetInterfaceEnd())
+            {
+                pResource->ActualizeUnitialisedActive(itInterface->second.sMainIpAddress);
+            }
+
             return true;
         }
     }
@@ -1125,6 +1133,14 @@ bool NodeApiPrivate::AddSender(shared_ptr<Sender> pResource)
                 sstr << pResource->GetId() << "/transportfile";
                 pResource->SetManifestHref(sstr.str());
             }
+            //actualize the sender for IS05
+            auto itInterface = m_self.GetInterfaceBegin();
+            if(itInterface != m_self.GetInterfaceEnd())
+            {
+                // @todo should we create an SDP for those that need one??
+                pResource->ActualizeUnitialisedActive(itInterface->second.sMainIpAddress, itInterface->second.sMainIpAddress, std::string());
+            }
+
 
             //add the discovery endpoints
             for(const auto& pairServer : m_mDiscoveryServers)
@@ -1301,8 +1317,8 @@ std::string NodeApiPrivate::CreateFlowSdp(const std::string& sId, const Transpor
         auto pFlow = std::dynamic_pointer_cast<Flow>(itFlow->second);
         if(pFlow)
         {
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "CreateSDP Destination Port = " << tpSender.nDestinationPort ;
-            unsigned short nPort(tpSender.nDestinationPort);
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "CreateSDP Destination Port = " << tpSender.GetDestinationPort() ;
+            unsigned short nPort(tpSender.GetDestinationPort());
             if(nPort == 0)
             {
                 nPort = 5004;
@@ -1312,44 +1328,41 @@ std::string NodeApiPrivate::CreateFlowSdp(const std::string& sId, const Transpor
 
 
             //put in the destination unicast/multicast block
-            switch(SdpManager::CheckIpAddress(tpSender.sDestinationIp))
+            switch(SdpManager::CheckIpAddress(tpSender.GetDestinationIp()))
             {
                 case SdpManager::IP4_UNI:
-                    ssSDP << "c=IN IP4 " << tpSender.sDestinationIp << "\r\n";
+                    ssSDP << "c=IN IP4 " << tpSender.GetDestinationIp() << "\r\n";
                     ssSDP << "a=type:unicast\r\n";
                     break;
                 case SdpManager::IP4_MULTI:
-                    ssSDP << "c=IN IP4 " << tpSender.sDestinationIp << "/32\r\n";
-                    ssSDP << "a=source-filter:incl IN IP4 " << tpSender.sDestinationIp << " " << tpSender.sSourceIp << "\r\n";
+                    ssSDP << "c=IN IP4 " << tpSender.GetDestinationIp() << "/32\r\n";
+                    ssSDP << "a=source-filter:incl IN IP4 " << tpSender.GetDestinationIp() << " " << tpSender.GetSourceIP() << "\r\n";
                     ssSDP << "a=type:multicast\r\n";
                     break;
                 case SdpManager::IP6_UNI:
-                    ssSDP << "c=IN IP6 " << tpSender.sDestinationIp << "\r\n";
+                    ssSDP << "c=IN IP6 " << tpSender.GetDestinationIp() << "\r\n";
                     ssSDP << "a=type:unicast\r\n";
                     break;
                 case SdpManager::IP6_MULTI:
-                    ssSDP << "c=IN IP6 " << tpSender.sDestinationIp << "\r\n";
-                    ssSDP << "a=source-filter:incl IN IP6 " << tpSender.sDestinationIp << " " << tpSender.sSourceIp << "\r\n";
+                    ssSDP << "c=IN IP6 " << tpSender.GetDestinationIp() << "\r\n";
+                    ssSDP << "a=source-filter:incl IN IP6 " << tpSender.GetDestinationIp() << " " << tpSender.GetSourceIP() << "\r\n";
                     ssSDP << "a=type:multicast\r\n";
                     break;
                 case SdpManager::SdpManager::IP_INVALID:
-                    pmlLog(pml::LOG_WARN) << "NMOS: Sender can't create SDP - destination IP invalid '" << tpSender.sDestinationIp << "'";
+                    pmlLog(pml::LOG_WARN) << "NMOS: Sender can't create SDP - destination IP invalid '" << tpSender.GetDestinationIp() << "'";
                     break;
             }
-
-
-
-            if(tpSender.bRtcpEnabled)
+            if(tpSender.IsRtcpEnabled() && *tpSender.IsRtcpEnabled() && tpSender.GetRtcpDestinationIp() && tpSender.GetRtcpDestinationPort())
             {
-                switch(SdpManager::CheckIpAddress(tpSender.sRtcpDestinationIp))
+                switch(SdpManager::CheckIpAddress(*tpSender.GetRtcpDestinationIp()))
                 {
                     case SdpManager::IP4_UNI:
                     case SdpManager::IP4_MULTI:
-                        ssSDP << "a=rtcp:" << tpSender.nRtcpDestinationPort << " IN IP4 " << tpSender.sRtcpDestinationIp << "\r\n";
+                        ssSDP << "a=rtcp:" << *tpSender.GetRtcpDestinationPort() << " IN IP4 " << *tpSender.GetRtcpDestinationIp() << "\r\n";
                         break;
                     case SdpManager::IP6_UNI:
                     case SdpManager::IP6_MULTI:
-                        ssSDP << "a=rtcp:" << tpSender.nRtcpDestinationPort << " IN IP6 " << tpSender.sRtcpDestinationIp << "\r\n";
+                        ssSDP << "a=rtcp:" << *tpSender.GetRtcpDestinationPort() << " IN IP6 " << *tpSender.GetRtcpDestinationIp() << "\r\n";
                         break;
                     default:
                         break;
@@ -1384,7 +1397,7 @@ void NodeApiPrivate::CreateSDP(std::shared_ptr<Sender> pSender)
     std::stringstream ssSDP;
     ssSDP << "v=0\r\n";
     ssSDP << "o=- " << GetCurrentTaiTime(false) << " " << GetCurrentTaiTime(false) << " IN IP";
-    switch(SdpManager::CheckIpAddress(pSender->GetActive().tpSenders[0].sSourceIp))
+    switch(SdpManager::CheckIpAddress(pSender->GetActive().GetTransportParams()[0].GetSourceIP()))
     {
         case SdpManager::IP4_UNI:
         case SdpManager::IP4_MULTI:
@@ -1398,7 +1411,7 @@ void NodeApiPrivate::CreateSDP(std::shared_ptr<Sender> pSender)
             ssSDP << " ";
             break;
     }
-    ssSDP << pSender->GetActive().tpSenders[0].sSourceIp << "\r\n";    // @todo should check here if sSourceIp is not set to auto
+    ssSDP << pSender->GetActive().GetTransportParams()[0].GetSourceIP() << "\r\n";    // @todo should check here if sSourceIp is not set to auto
     ssSDP << "t=0 0 \r\n";
 
 //    std::map<std::string, std::shared_ptr<Device> >::const_iterator itDevice = GetDevices().FindNmosResource(pSender->GetDeviceId());
@@ -1412,7 +1425,7 @@ void NodeApiPrivate::CreateSDP(std::shared_ptr<Sender> pSender)
 //    }
     ssSDP << "s=:" << pSender->GetLabel() << "\r\n";
 
-    for(auto tpSender: pSender->GetActive().tpSenders)
+    for(const auto& tpSender: pSender->GetActive().GetTransportParams())
     {
         ssSDP << CreateFlowSdp(pSender->GetFlowId(), tpSender, pSender->GetInterfaces());
     }
@@ -1478,34 +1491,34 @@ void NodeApiPrivate::CommitActivation(std::shared_ptr<Sender> pSender)
     SenderActivated(pSender->GetId());
 }
 
-bool NodeApiPrivate::Stage(const connectionSender& conRequest, std::shared_ptr<Sender> pSender)
+bool NodeApiPrivate::Stage(const connectionSender<activationResponse>& conRequest, std::shared_ptr<Sender> pSender)
 {
     bool bOk = true;
     switch(pSender->Stage(conRequest))
     {
-        case connection::ACT_NULL:
-            if(pSender->GetStaged().sActivationTime.empty() == false)
+        case activation::ACT_NULL:
+            if(pSender->GetStaged().GetActivation().GetActivationTimePoint())
             {
-                m_activator.RemoveActivation(pSender->GetStaged().tpActivation, pSender);
+                m_activator.RemoveActivation(*(pSender->GetStaged().GetActivation().GetActivationTimePoint()), pSender);
                 pSender->RemoveStagedActivationTime();
             }
             pSender->SetActivationAllowed(false);
             break;
-        case connection::ACT_NOW:
+        case activation::ACT_NOW:
             pSender->SetStagedActivationTimePoint(GetTaiTimeNow());
             pSender->SetActivationAllowed(true);
             Activate(true, pSender);
             break;
-        case connection::ACT_ABSOLUTE:
+        case activation::ACT_ABSOLUTE:
             {
-                std::chrono::time_point<std::chrono::high_resolution_clock> tp;
-                if(ConvertTaiStringToTimePoint(pSender->GetStaged().sRequestedTime, tp))
+                auto tp = ConvertTaiStringToTimePoint((*pSender->GetStaged().GetActivation().GetRequestedTime()));
+                if(tp)
                 {
                     pSender->SetActivationAllowed(true);
-                    pSender->SetStagedActivationTimePoint(tp);
+                    pSender->SetStagedActivationTimePoint(*tp);
 
                     pmlLog(pml::LOG_DEBUG) << "NMOS: Sender  - add absolute activation";
-                    m_activator.AddActivation(tp, pSender);
+                    m_activator.AddActivation(*tp, pSender);
 
                 }
                 else
@@ -1515,11 +1528,11 @@ bool NodeApiPrivate::Stage(const connectionSender& conRequest, std::shared_ptr<S
                 }
             }
             break;
-        case connection::ACT_RELATIVE:
+        case activation::ACT_RELATIVE:
             // start a thread that will sleep for the given time period and then tell the main thread to do its stuff
             {
                 auto tp = std::chrono::high_resolution_clock::now();
-                if(AddTaiStringToTimePoint(pSender->GetStaged().sRequestedTime, tp))
+                if(AddTaiStringToTimePoint((*pSender->GetStaged().GetActivation().GetRequestedTime()), tp))
                 {
                     pSender->SetActivationAllowed(true);
                     pSender->SetStagedActivationTimePoint(tp);
@@ -1555,34 +1568,34 @@ void NodeApiPrivate::CommitActivation(std::shared_ptr<Receiver> pReceiver)
     SenderActivated(pReceiver->GetId());
 }
 
-bool NodeApiPrivate::Stage(const connectionReceiver& conRequest, std::shared_ptr<Receiver> pReceiver)
+bool NodeApiPrivate::Stage(const connectionReceiver<activationResponse>& conRequest, std::shared_ptr<Receiver> pReceiver)
 {
     bool bOk = true;
     switch(pReceiver->Stage(conRequest))
     {
-        case connection::ACT_NULL:
-            if(pReceiver->GetStaged().sActivationTime.empty() == false)
+        case activation::ACT_NULL:
+            if(pReceiver->GetStaged().GetActivation().GetActivationTime())
             {
-                m_activator.RemoveActivation(pReceiver->GetStaged().tpActivation, pReceiver);
+                m_activator.RemoveActivation((*pReceiver->GetStaged().GetActivation().GetActivationTimePoint()), pReceiver);
                 pReceiver->RemoveStagedActivationTime();
             }
             pReceiver->SetActivationAllowed(false);
             break;
-        case connection::ACT_NOW:
+        case activation::ACT_NOW:
             pReceiver->SetStagedActivationTimePoint(GetTaiTimeNow());
             pReceiver->SetActivationAllowed(true);
             Activate(true, pReceiver);
             break;
-        case connection::ACT_ABSOLUTE:
+        case activation::ACT_ABSOLUTE:
             {
-                std::chrono::time_point<std::chrono::high_resolution_clock> tp;
-                if(ConvertTaiStringToTimePoint(pReceiver->GetStaged().sRequestedTime, tp))
+                auto tp = ConvertTaiStringToTimePoint((*pReceiver->GetStaged().GetActivation().GetRequestedTime()));
+                if(tp)
                 {
                     pReceiver->SetActivationAllowed(true);
-                    pReceiver->SetStagedActivationTimePoint(tp);
+                    pReceiver->SetStagedActivationTimePoint(*tp);
 
                     pmlLog(pml::LOG_DEBUG) << "NMOS: Receiver  - add absolute activation";
-                    m_activator.AddActivation(tp, pReceiver);
+                    m_activator.AddActivation(*tp, pReceiver);
                 }
                 else
                 {
@@ -1591,11 +1604,11 @@ bool NodeApiPrivate::Stage(const connectionReceiver& conRequest, std::shared_ptr
                 }
             }
             break;
-        case connection::ACT_RELATIVE:
+        case activation::ACT_RELATIVE:
             // start a thread that will sleep for the given time period and then tell the main thread to do its stuff
             {
                 auto tp = std::chrono::high_resolution_clock::now();
-                if(AddTaiStringToTimePoint(pReceiver->GetStaged().sRequestedTime, tp))
+                if(AddTaiStringToTimePoint((*pReceiver->GetStaged().GetActivation().GetRequestedTime()), tp))
                 {
                     pReceiver->SetActivationAllowed(true);
                     pReceiver->SetStagedActivationTimePoint(tp);

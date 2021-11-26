@@ -4,6 +4,8 @@
 #include <thread>
 #include <mutex>
 #include "nmosapiversion.h"
+#include "connection.h"
+#include "activation.h"
 
 namespace pml
 {
@@ -11,8 +13,6 @@ namespace pml
     {
         struct dnsInstance;
         class Sender;
-        class connectionSender;
-        class connectionReceiver;
 
         class NMOS_EXPOSE EventPoster
         {
@@ -26,8 +26,8 @@ namespace pml
                 void _RegistrationChanged(const std::string& sUrl, enumRegState eState);
 
                 void _Target(const std::string& sReceiverId, const std::string& sTransportFile, unsigned short nPort);
-                void _PatchSender(const std::string& sSenderId, const connectionSender& conPatch, unsigned short nPort);
-                void _PatchReceiver(const std::string& sReceiverId, const connectionReceiver& conPatch, unsigned short nPort);
+                void _PatchSender(const std::string& sSenderId, const connectionSender<activationResponse>& conPatch, unsigned short nPort);
+                void _PatchReceiver(const std::string& sReceiverId, const connectionReceiver<activationResponse>& conPatch, unsigned short nPort);
                 void _SenderActivated(const std::string& sSenderId);
                 void _ReceiverActivated(const std::string& sReceiverId);
 
@@ -74,7 +74,7 @@ namespace pml
                 *   @param nPort - the Server port that the request came from
                 *   @note this is a blocking event. The target of this function should call the NodeApi::SenderPatchAllowed function once it is ready for the Server to continue
                 **/
-                virtual void PatchSender(const std::string& sSenderId, const connectionSender& conPatch, unsigned short nPort)=0;
+                virtual void PatchSender(const std::string& sSenderId, const connectionSender<activationResponse>& conPatch, unsigned short nPort)=0;
 
                 /** @brief Called by Server when a IS-05 Receiver/Staged PATCH is performed
                 *   @param sReceiverId the uuid of the Receiver to apply the patch to
@@ -82,7 +82,7 @@ namespace pml
                 *   @param nPort - the Server port that the request came from
                 *   @note this is a blocking event. The target of this function should call the NodeApi::ReceiverPatchAllowed function once it is ready for the Server to continue
                 **/
-                virtual void PatchReceiver(const std::string& sReceiverId, const connectionReceiver& conPatch, unsigned short nPort)=0;
+                virtual void PatchReceiver(const std::string& sReceiverId, const connectionReceiver<activationResponse>& conPatch, unsigned short nPort)=0;
 
                 /** @brief Called by ActivateThread telling the main thread that the sender's staged parameters have been activated - this is called at the point of the act of activation
                 *   @param sSenderId the Id of the sender to activate

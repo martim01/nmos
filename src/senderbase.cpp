@@ -20,56 +20,22 @@ Sender::Sender(const std::string& sLabel, const std::string& sDescription, const
     m_sDeviceId(sDeviceId),
     m_sReceiverId(""),
     m_bReceiverActive(false),
+    m_Staged(true, ((flagsTransport & TransportParamsRTP::REDUNDANT) ? 2 : 1)),
+    m_Active(true, ((flagsTransport & TransportParamsRTP::REDUNDANT) ? 2 : 1)),
     m_bActivateAllowed(false)
 {
-    m_Active.bClient = false;
-    m_Staged.bClient = false;
 
     AddInterfaceBinding(sInterface);
 
-    m_vConstraints.push_back(ConstraintsSender(flagsTransport));
-
-    if(flagsTransport & TransportParamsRTP::REDUNDANT)
+    for(size_t i = 0; i < m_Active.GetTransportParams().size(); i++)
     {
         m_vConstraints.push_back(ConstraintsSender(flagsTransport));
-        m_Staged.tpSenders.resize(2);
-        m_Active.tpSenders.resize(2);
     }
 
-    for(size_t i = 0; i < m_vConstraints.size(); i++)
-    {
-        if(flagsTransport & TransportParamsRTP::FEC)
-        {
-            m_Staged.tpSenders[i].FecAllowed();
-            m_Active.tpSenders[i].FecAllowed();
-        }
-        }
-
-        if(flagsTransport & TransportParamsRTP::RTCP)
-        {
-            m_Staged.tpSenders[i].RtcpAllowed();
-            m_Active.tpSenders[i].RtcpAllowed()
-        }
-
-//        if(flagsTransport & TransportParamsRTP::MULTICAST)
-//        {
-//            m_Staged.tpSenders[i].eMulticast = TransportParamsRTP::TP_SUPPORTED;
-//            m_Active.tpSenders[i].eMulticast = TransportParamsRTP::TP_SUPPORTED;
-//        }
-//        else
-//        {
-//            m_Staged.tpSenders[i].eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
-//            m_Active.tpSenders[i].eMulticast = TransportParamsRTP::TP_NOT_SUPPORTED;
-//        }
-
-    }
-
+    m_Staged.SetTPAllowed(flagsTransport);
+    m_Active.SetTPAllowed(flagsTransport);
 }
 
-Sender::Sender() : IOResource("sender")
-{
-
-}
 
 Sender::~Sender()
 {
@@ -182,13 +148,13 @@ void Sender::SetReceiverId(const std::string& sReceiverId, bool bActive)
 
 Json::Value Sender::GetConnectionStagedJson(const ApiVersion& version) const
 {
-    return m_Staged.GetJson(version);
+    return m_Staged.GetJson();
 }
 
 
 Json::Value Sender::GetConnectionActiveJson(const ApiVersion& version) const
 {
-    return m_Active.GetJson(version);
+    return m_Active.GetJson();
 }
 
 
@@ -206,33 +172,33 @@ Json::Value Sender::GetConnectionConstraintsJson(const ApiVersion& version) cons
 
 
 
-bool Sender::CheckConstraints(const connectionSender& conRequest)
+bool Sender::CheckConstraints(const connectionSender<activationResponse>& conRequest)
 {
-    bool bMeets = (m_vConstraints.size() == conRequest.tpSenders.size());
+    bool bMeets = (m_vConstraints.size() == conRequest.GetTransportParams().size());
     if(bMeets)
     {
         for(size_t i = 0; i < m_vConstraints.size(); i++)
         {
-            bMeets &= m_vConstraints[i].MeetsConstraint("destination_port", conRequest.tpSenders[i].nDestinationPort);
-            bMeets &= m_vConstraints[i].MeetsConstraint("fec_destination_ip", conRequest.tpSenders[i].sFecDestinationIp);
-            bMeets &= m_vConstraints[i].MeetsConstraint("fec_enabled", conRequest.tpSenders[i].bFecEnabled);
-            bMeets &= m_vConstraints[i].MeetsConstraint("fec_mode", TransportParamsRTP::STR_FEC_MODE[conRequest.tpSenders[i].eFecMode]);
-            bMeets &= m_vConstraints[i].MeetsConstraint("fec1D_destination_port", conRequest.tpSenders[i].nFec1DDestinationPort);
-            bMeets &= m_vConstraints[i].MeetsConstraint("fec2D_destination_port", conRequest.tpSenders[i].nFec2DDestinationPort);
-            bMeets &= m_vConstraints[i].MeetsConstraint("rtcp_destination_ip", conRequest.tpSenders[i].sRtcpDestinationIp);
-            bMeets &= m_vConstraints[i].MeetsConstraint("rtcp_destination_port", conRequest.tpSenders[i].nRtcpDestinationPort);
-
-            bMeets &= m_vConstraints[i].MeetsConstraint("destination_ip", conRequest.tpSenders[i].sDestinationIp);
-            bMeets &= m_vConstraints[i].MeetsConstraint("source_ip", conRequest.tpSenders[i].sSourceIp);
-            bMeets &= m_vConstraints[i].MeetsConstraint("source_port", conRequest.tpSenders[i].nSourcePort);
-            bMeets &= m_vConstraints[i].MeetsConstraint("fec_type", TransportParamsRTPSender::STR_FEC_TYPE[conRequest.tpSenders[i].eFecType]);
-            bMeets &= m_vConstraints[i].MeetsConstraint("fec_block_width", conRequest.tpSenders[i].nFecBlockWidth);
-            bMeets &= m_vConstraints[i].MeetsConstraint("fec_block_height", conRequest.tpSenders[i].nFecBlockHeight);
-            bMeets &= m_vConstraints[i].MeetsConstraint("fec1D_source_port", conRequest.tpSenders[i].nFec1DSourcePort);
-            bMeets &= m_vConstraints[i].MeetsConstraint("fec2D_source_port", conRequest.tpSenders[i].nFec2DSourcePort);
-            bMeets &= m_vConstraints[i].MeetsConstraint("rtcp_enabled", conRequest.tpSenders[i].bRtcpEnabled);
-            bMeets &= m_vConstraints[i].MeetsConstraint("rtcp_source_port", conRequest.tpSenders[i].nRtcpSourcePort);
-            bMeets &= m_vConstraints[i].MeetsConstraint("rtp_enabled", conRequest.tpSenders[i].bRtpEnabled);
+//            bMeets &= m_vConstraints[i].MeetsConstraint("destination_port", conRequest.tpSenders[i].nDestinationPort);
+//            bMeets &= m_vConstraints[i].MeetsConstraint("fec_destination_ip", conRequest.tpSenders[i].sFecDestinationIp);
+//            bMeets &= m_vConstraints[i].MeetsConstraint("fec_enabled", conRequest.tpSenders[i].bFecEnabled);
+//            bMeets &= m_vConstraints[i].MeetsConstraint("fec_mode", TransportParamsRTP::STR_FEC_MODE[conRequest.tpSenders[i].eFecMode]);
+//            bMeets &= m_vConstraints[i].MeetsConstraint("fec1D_destination_port", conRequest.tpSenders[i].nFec1DDestinationPort);
+//            bMeets &= m_vConstraints[i].MeetsConstraint("fec2D_destination_port", conRequest.tpSenders[i].nFec2DDestinationPort);
+//            bMeets &= m_vConstraints[i].MeetsConstraint("rtcp_destination_ip", conRequest.tpSenders[i].sRtcpDestinationIp);
+//            bMeets &= m_vConstraints[i].MeetsConstraint("rtcp_destination_port", conRequest.tpSenders[i].nRtcpDestinationPort);
+//
+//            bMeets &= m_vConstraints[i].MeetsConstraint("destination_ip", conRequest.tpSenders[i].sDestinationIp);
+//            bMeets &= m_vConstraints[i].MeetsConstraint("source_ip", conRequest.tpSenders[i].sSourceIp);
+//            bMeets &= m_vConstraints[i].MeetsConstraint("source_port", conRequest.tpSenders[i].nSourcePort);
+//            bMeets &= m_vConstraints[i].MeetsConstraint("fec_type", TransportParamsRTPSender::STR_FEC_TYPE[conRequest.tpSenders[i].eFecType]);
+//            bMeets &= m_vConstraints[i].MeetsConstraint("fec_block_width", conRequest.tpSenders[i].nFecBlockWidth);
+//            bMeets &= m_vConstraints[i].MeetsConstraint("fec_block_height", conRequest.tpSenders[i].nFecBlockHeight);
+//            bMeets &= m_vConstraints[i].MeetsConstraint("fec1D_source_port", conRequest.tpSenders[i].nFec1DSourcePort);
+//            bMeets &= m_vConstraints[i].MeetsConstraint("fec2D_source_port", conRequest.tpSenders[i].nFec2DSourcePort);
+//            bMeets &= m_vConstraints[i].MeetsConstraint("rtcp_enabled", conRequest.tpSenders[i].bRtcpEnabled);
+//            bMeets &= m_vConstraints[i].MeetsConstraint("rtcp_source_port", conRequest.tpSenders[i].nRtcpSourcePort);
+//            bMeets &= m_vConstraints[i].MeetsConstraint("rtp_enabled", conRequest.tpSenders[i].bRtpEnabled);
         }
     }
     return bMeets;
@@ -241,17 +207,18 @@ bool Sender::CheckConstraints(const connectionSender& conRequest)
 bool Sender::IsLocked()
 {
     std::lock_guard<std::mutex> lg(m_mutex);
-    return (m_Staged.eActivate == connection::ACT_ABSOLUTE || m_Staged.eActivate == connection::ACT_RELATIVE);
+    auto act = m_Staged.GetConstActivation().GetMode();
+    return (act == activation::ACT_ABSOLUTE || act == activation::ACT_RELATIVE);
 }
 
 
-connectionSender Sender::GetStaged()
+connectionSender<activationResponse> Sender::GetStaged()
 {
     std::lock_guard<std::mutex> lg(m_mutex);
     return m_Staged;
 }
 
-connectionSender Sender::GetActive()
+connectionSender<activationResponse> Sender::GetActive()
 {
     std::lock_guard<std::mutex> lg(m_mutex);
     return m_Active;
@@ -299,23 +266,30 @@ void Sender::Activate(const std::string& sSourceIp)
     }
 
     //Change auto settings to what they actually are
-    for(size_t i = 0;i < m_vConstraints.size(); i++)
-    {
-        m_Active.tpSenders[i].Actualize(m_sSourceIp, m_sDestinationIp);
-    }
+    m_Active.Actualize(m_sSourceIp, m_sDestinationIp);
 
     //@todo Set the flow to be whatever the flow is...
 
     //activate - set subscription, receiverId and active on master_enable.
-    if(m_Staged.bMasterEnable)
+    if(m_Staged.GetMasterEnable() && *m_Staged.GetMasterEnable())
     {
-        m_sReceiverId = m_Staged.sReceiverId;
+        auto receiver = m_Staged.GetReceiverId();
+        if(receiver)
+        {
+            m_sReceiverId = *receiver;
+        }
+        else
+        {
+            m_sReceiverId.clear();
+        }
+        m_bReceiverActive = true;
     }
     else
     {
         m_sReceiverId.clear();
+        m_bReceiverActive = false;
     }
-    m_bReceiverActive = m_Staged.bMasterEnable;
+
 
 }
 
@@ -323,9 +297,7 @@ void Sender::CommitActivation()
 {
     //reset the staged activation
     pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ActivateSender: Reset Staged activation parameters..." ;
-    m_Staged.eActivate = connection::ACT_NULL;
-    m_Staged.sActivationTime.clear();
-    m_Staged.sRequestedTime.clear();
+    m_Staged.GetActivation().Clear();
 
     UpdateVersionTime();
 
@@ -384,14 +356,21 @@ void Sender::SetupActivation(const std::string& sSourceIp, const std::string& sD
     m_sSDP = sSDP;
 }
 
+void Sender::ActualizeUnitialisedActive(const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP)
+{
+    m_sSourceIp = sSourceIp;
+    m_sDestinationIp = sDestinationIp;
+    m_sSDP = sSDP;
+    m_Active.Actualize(m_sSourceIp, m_sDestinationIp);
+}
+
 
 void Sender::SetDestinationDetails(const std::string& sDestinationIp, unsigned short nDestinationPort)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     for(size_t i = 0;i < m_vConstraints.size(); i++)
     {
-        m_Active.tpSenders[i].sDestinationIp = sDestinationIp;
-        m_Active.tpSenders[i].nDestinationPort = nDestinationPort;
+        m_Active.SetDestinationDetails(sDestinationIp, nDestinationPort);
     }
     //@todo create the SDP somehow         CreateSDP(api, m_Active);
 
@@ -401,21 +380,24 @@ void Sender::SetDestinationDetails(const std::string& sDestinationIp, unsigned s
 void Sender::MasterEnable(bool bEnable)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_Active.bMasterEnable = bEnable;
-    m_Staged.bMasterEnable = bEnable;
-    for(size_t i = 0;i < m_vConstraints.size(); i++)
-    {
-        m_Active.tpSenders[i].bRtpEnabled = bEnable;
-        m_Staged.tpSenders[i].bRtpEnabled = bEnable;
-    }
+    m_Active.MasterEnable(bEnable);
+    m_Staged.MasterEnable(bEnable);
+
+    //for(size_t i = 0;i < m_vConstraints.size(); i++)
+   // {
+    //    m_Active.tpSenders[i].EnableRtp(bEnable);
+     //   m_Staged.tpSenders[i].EnableRtp(bEnable);
+   // }
     UpdateVersionTime();
 }
 
-connection::enumActivate Sender::Stage(const connectionSender& conRequest)
+activation::enumActivate Sender::Stage(const connectionSender<activationResponse>& conRequest)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
-    m_Staged = conRequest;
-    return m_Staged.eActivate;
+
+    m_Staged = conRequest;  //we've already done the patching to make sure that only the bits than need changing are
+
+    return m_Staged.GetActivation().GetMode();
 }
 
 
@@ -426,12 +408,10 @@ void Sender::SetTransportFile(const std::string& sSDP)
 
 void Sender::RemoveStagedActivationTime()
 {
-    m_Staged.sActivationTime.clear();
-    m_Staged.tpActivation = std::chrono::time_point<std::chrono::high_resolution_clock>();
+    m_Staged.GetActivation().SetActivationTime({});
 }
 
 void Sender::SetStagedActivationTimePoint(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp)
 {
-    m_Staged.tpActivation = tp;
-    m_Staged.sActivationTime = ConvertTimeToString(tp);
+    m_Staged.GetActivation().SetActivationTime(tp);
 }

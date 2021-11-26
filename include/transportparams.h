@@ -11,102 +11,120 @@ namespace pml
         struct TransportParams
         {
             public:
-                TransportParams(){}
+
+                TransportParams() : m_json(Json::objectValue){}
+                TransportParams(const TransportParams& tp);
+                TransportParams& operator=(const TransportParams& tp);
+
                 virtual ~TransportParams(){}
                 virtual bool Patch(const Json::Value& jsData)=0;
-                virtual Json::Value GetJson(const ApiVersion& version) const=0;
+                const Json::Value& GetJson() const { return m_json;}
+
+            protected:
+                Json::Value m_json;
 
 
         };
 
         struct TransportParamsRTP : public TransportParams
         {
-            enum enumFecMode {ONED, TWOD};
-            enum enumTParams {TP_UNKNOWN = -1, TP_NOT_SUPPORTED=0, TP_SUPPORTED=1};
-            enum flagsTP {CORE=0, FEC=1, RTCP=2, MULTICAST=4, REDUNDANT=8};
-            TransportParamsRTP();
-            TransportParamsRTP(const TransportParamsRTP& tp);
+            public:
+                enum flagsTP { CORE, FEC=1, RTCP=2, MULTICAST=4, REDUNDANT=8};
 
-            virtual bool Patch(const Json::Value& jsData) override;
-            virtual Json::Value GetJson(const ApiVersion& version) const override;
+                TransportParamsRTP();
+                TransportParamsRTP(const TransportParamsRTP& tp);
+                TransportParamsRTP& operator=(const TransportParamsRTP& other);
 
-            void SetPort(Json::Value& js, const std::string& sPort, unsigned short nPort) const;
-            bool DecodePort(const Json::Value& jsData, const std::string& sPort, unsigned short& nPort);
 
-            void Actualize();
+                virtual bool Patch(const Json::Value& jsData) override;
 
-            TransportParamsRTP& operator=(const TransportParamsRTP& other);
 
-            virtual void FecAllowed();
-            virtual void RtcpAllowed();
+                void Actualize();
 
-            std::string sSourceIp;
-            unsigned short nDestinationPort;
-            bool bFecEnabled;
+                virtual void FecAllowed();
+                virtual void RtcpAllowed();
 
-            std::experimental::optional<std::string> sFecDestinationIp;
-            std::experimental::optional<enumFecMode> eFecMode;
-            std::experimental::optional<unsigned short> nFec1DDestinationPort;
-            std::experimental::optional<unsigned short> nFec2DDestinationPort;
+                std::string GetSourceIP() const;
+                unsigned short GetDestinationPort() const;
 
-            std::experimental::optional<bool> bRtcpEnabled;
-            std::experimental::optional<std::string> sRtcpDestinationIp;
-            std::experimental::optional<unsigned short> nRtcpDestinationPort;
+                bool IsRtpEnabled() const;
 
-            bool bRtpEnabled;
+                std::experimental::optional<bool> IsFecEnabled() const;
+                std::experimental::optional<std::string> GetFecDestinationIp() const;
+                std::experimental::optional<std::string> GetFecMode() const;
+                std::experimental::optional<uint32_t> GetFec1DDestinationPort() const;
+                std::experimental::optional<uint32_t> GetFec2DDestinationPort() const;
 
-            //std::experimental::optional<enumTParams eFec;
-            //std::experimental::optional<enumTParams eRTCP;
-            //enumTParams eMulticast;
-            static const std::string STR_FEC_MODE[2];
+                std::experimental::optional<bool> IsRtcpEnabled() const;
+                std::experimental::optional<std::string> GetRtcpDestinationIp() const;
+                std::experimental::optional<uint32_t> GetRtcpDestinationPort() const;
 
+
+                void EnableRtp(bool bEnable);
+                void SetSourceIp(const std::string& sAddress);
+                void SetDestinationPort(unsigned short nPort);
+
+                void SetRtcpDestinationPort(unsigned short nPort);
+                void SetRtcpDestinationIp(const std::string& sAddress);
+
+
+
+            protected:
+
+                void ActualizePort(const std::string& sKey, unsigned short nPort);
+                void ActualizeIp(const std::string& sKey, const std::string& sIp);
+
+                void SetPort(const std::string& sKey, unsigned short nPort);
         };
 
         struct TransportParamsRTPReceiver : public TransportParamsRTP
         {
 
-            std::experimental::optional<std::string> sMulticastIp;
-            std::string sInterfaceIp;
+            public:
+                TransportParamsRTPReceiver();
+                TransportParamsRTPReceiver(const TransportParamsRTPReceiver& tp);
+                TransportParamsRTPReceiver& operator=(const TransportParamsRTPReceiver& other);
 
-            TransportParamsRTPReceiver();
-            TransportParamsRTPReceiver(const TransportParamsRTPReceiver& tp);
-            bool Patch(const Json::Value& jsData) override;
-            Json::Value GetJson(const ApiVersion& version) const override;
-            void Actualize(const std::string& sInterfaceIp);
-            TransportParamsRTPReceiver& operator=(const TransportParamsRTPReceiver& other);
+                bool Patch(const Json::Value& jsData) override;
 
+                void Actualize(const std::string& sInterfaceIp);
+
+                std::experimental::optional<std::string> GetMulticastIp() const;
+                std::string GetInterfaceIp() const;
+
+                void SetMulticastIp(const std::string& sAddress);
 
         };
 
 
         struct TransportParamsRTPSender : public TransportParamsRTP
         {
-            enum enumFecType {XOR, REED};
+            public:
 
-            TransportParamsRTPSender();
-            TransportParamsRTPSender(const TransportParamsRTPSender& tp);
-            bool Patch(const Json::Value& jsData) override;
+                TransportParamsRTPSender();
+                TransportParamsRTPSender(const TransportParamsRTPSender& tp);
+                TransportParamsRTPSender& operator=(const TransportParamsRTPSender& other);
 
-            Json::Value GetJson(const ApiVersion& version) const override;
+                void FecAllowed() override;
 
-            void Actualize(const std::string& sSource, const std::string& sDestination);
+                bool Patch(const Json::Value& jsData) override;
 
-            TransportParamsRTPSender& operator=(const TransportParamsRTPSender& other);
-
-            void FecAllowed() override;
-
-            std::string sDestinationIp;
-            unsigned short nSourcePort;
-            std::experimental::optional<enumFecType> eFecType;
-            std::experimental::optional<unsigned char> nFecBlockWidth;
-            std::experimental::optional<unsigned char> nFecBlockHeight;
-            std::experimental::optional<unsigned short> nFec1DSourcePort;
-            std::experimental::optional<unsigned short> nFec2DSourcePort;
-            std::experimental::optional<unsigned short> nRtcpSourcePort;
+                void Actualize(const std::string& sSource, const std::string& sDestination);
 
 
+                std::string GetDestinationIp() const;
+                unsigned short GetSourcePort() const;
 
-            static const std::string STR_FEC_TYPE[2];
+                void SetDestinationIp(const std::string& sAddress);
+
+                std::experimental::optional<std::string> GetFecType() const;
+                std::experimental::optional<uint32_t> GetFecBlockWidth() const;
+                std::experimental::optional<uint32_t> GetFecBlockHeight() const;
+                std::experimental::optional<uint32_t> GetFec1DSourcePort() const;
+                std::experimental::optional<uint32_t> GetFec2DSourcePort() const;
+
+                std::experimental::optional<uint32_t> GetRtcpSourcePort() const;
+
         };
     };
 };

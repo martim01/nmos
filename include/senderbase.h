@@ -7,6 +7,7 @@
 #include "connection.h"
 #include "constraint.h"
 #include "ioresource.h"
+#include "activation.h"
 
 namespace pml
 {
@@ -19,7 +20,6 @@ namespace pml
             public:
                 Sender(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId, const std::string& sInterface,
                            TransportParamsRTP::flagsTP flagsTransport=TransportParamsRTP::CORE);
-                Sender();
                 virtual ~Sender();
 
                 /** @brief Set the active destination details to create an SDP. This will be overwritten by IS-05
@@ -41,18 +41,18 @@ namespace pml
                 virtual Json::Value GetConnectionActiveJson(const ApiVersion& version) const;
                 virtual Json::Value GetConnectionConstraintsJson(const ApiVersion& version) const;
 
-                virtual bool CheckConstraints(const connectionSender& conRequest);
+                virtual bool CheckConstraints(const connectionSender<activationResponse>& conRequest);
 
-                connectionSender GetStaged();
-                connectionSender GetActive();
+                connectionSender<activationResponse> GetStaged();
+                connectionSender<activationResponse> GetActive();
                 const std::string& GetTransportFile() const;
 
                 bool IsLocked();
                 bool IsActivateAllowed() const;
                 const std::string GetDestinationIp() const {return m_sDestinationIp;}
 
-                bool IsActiveMasterEnabled() const { return m_Active.bMasterEnable;}
-                bool IsStageMasterEnabled() const { return m_Active.bMasterEnable;}
+                bool IsActiveMasterEnabled() const { return (m_Active.GetMasterEnable() && *(m_Active.GetMasterEnable()));}
+                bool IsStageMasterEnabled() const { return (m_Staged.GetMasterEnable() && *(m_Staged.GetMasterEnable()));}
 
 
                 bool Commit(const ApiVersion& version) override;
@@ -67,7 +67,7 @@ namespace pml
                 friend class IS04Server;
                 friend class NodeApiPrivate;
 
-                connection::enumActivate Stage(const connectionSender& conRequest);
+                activation::enumActivate Stage(const connectionSender<activationResponse>& conRequest);
                 void CommitActivation();
                 void Activate(const std::string& sSourceIp);
 
@@ -79,6 +79,8 @@ namespace pml
 
                 void SetDestinationDetails(const std::string& sDestinationIp, unsigned short nDestinationPort);
 
+                void ActualizeUnitialisedActive(const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP);
+
                 std::string m_sFlowId;
                 enumTransport m_eTransport;
                 std::string m_sDeviceId;
@@ -87,8 +89,8 @@ namespace pml
                 bool m_bReceiverActive;
 
 
-                connectionSender m_Staged;
-                connectionSender m_Active;
+                connectionSender<activationResponse> m_Staged;
+                connectionSender<activationResponse> m_Active;
                 std::vector<ConstraintsSender> m_vConstraints;
 
                 std::string m_sTransportFile;

@@ -33,13 +33,13 @@ void EventPoster::_Target(const std::string& sReceiverId, const std::string& sTr
     Target(sReceiverId, sTransportFile, nPort);
 }
 
-void EventPoster::_PatchSender(const std::string& sSenderId, const connectionSender& conPatch, unsigned short nPort)
+void EventPoster::_PatchSender(const std::string& sSenderId, const connectionSender<activationResponse>& conPatch, unsigned short nPort)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
     PatchSender(sSenderId, conPatch, nPort);
 }
 
-void EventPoster::_PatchReceiver(const std::string& sReceiverId, const connectionReceiver& conPatch, unsigned short nPort)
+void EventPoster::_PatchReceiver(const std::string& sReceiverId, const connectionReceiver<activationResponse>& conPatch, unsigned short nPort)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
     PatchReceiver(sReceiverId, conPatch, nPort);
