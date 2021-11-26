@@ -433,6 +433,7 @@ response IS05Server::PatchSender(std::shared_ptr<Sender> pSender, const Json::Va
         {
             resp.nHttpCode = 202;
             resp.jsonData = pSender->GetConnectionStagedJson(m_version);
+            pmlLog(pml::LOG_DEBUG) << "NMOS: PatchSender: Response1 -" << resp.jsonData ;
 
             if(conRequest.GetActivation().GetMode() == activation::ACT_NULL)
             {
@@ -441,9 +442,10 @@ response IS05Server::PatchSender(std::shared_ptr<Sender> pSender, const Json::Va
             else if(conRequest.GetActivation().GetMode() == activation::ACT_NOW)
             {
                 resp.nHttpCode = 200;
+                pmlLog(pml::LOG_DEBUG) << "NMOS: PatchSender: Commit activation";
                 m_api.CommitActivation(pSender);
             }
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << resp.jsonData ;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: PatchSender: Response -" << resp.jsonData ;
         }
         else
         {
@@ -457,7 +459,7 @@ response IS05Server::PatchSender(std::shared_ptr<Sender> pSender, const Json::Va
         {
             resp.nHttpCode = 200;
             resp.jsonData = pSender->GetConnectionStagedJson(m_version);
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << resp.jsonData ;
+            pmlLog(pml::LOG_DEBUG) << "NMOS: : Response -" << resp.jsonData ;
         }
         else
         {

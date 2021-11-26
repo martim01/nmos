@@ -11,6 +11,11 @@ const string SdpManager::STR_RTCP = "a=rtcp:";
 
 bool SdpManager::SdpToTransportParams(const std::string& sSdp, std::vector<TransportParamsRTPReceiver>& tpReceivers)
 {
+    for(auto& tp : tpReceivers)
+    {
+        tp.EnableRtp(false);
+    }
+
     istringstream f(sSdp);
     string sLine;
     int nMedia = -1;
@@ -33,12 +38,14 @@ bool SdpManager::SdpToTransportParams(const std::string& sSdp, std::vector<Trans
             case 'c':
                 if(ParseConnectionLine(sLine, tpReceivers,nMedia) == false)
                 {
+                    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager:: ParseConnectionLine failed";
                     return false;
                 }
                 break;
             case 'a':
                 if(ParseAttributeLine(sLine, tpReceivers,nMedia) == false)
                 {
+                    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager:: ParseAttributeLine failed";
                     return false;
                 }
                 break;
@@ -46,6 +53,7 @@ bool SdpManager::SdpToTransportParams(const std::string& sSdp, std::vector<Trans
                 ++nMedia;
                 if(ParseMediaLine(sLine, tpReceivers,nMedia) == false)
                 {
+                    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager:: ParseMediaLine failed";
                     return false;
                 }
 
@@ -54,7 +62,10 @@ bool SdpManager::SdpToTransportParams(const std::string& sSdp, std::vector<Trans
 
     }
 
-
+    for(auto& tp : tpReceivers)
+    {
+        tp.EnableRtp(true);
+    }
     return true;
 }
 
@@ -189,6 +200,7 @@ SdpManager::enumIPType SdpManager::ValidateIp4Address(const std::string& sAddres
     SplitString(vSplit, sAddress, '.');
     if(vSplit.size() != 4)
     {
+        pmlLog() << "ValidateIp4Address: not enough bytes";
         return IP_INVALID;
     }
     vector<long> vValue;
@@ -200,6 +212,7 @@ SdpManager::enumIPType SdpManager::ValidateIp4Address(const std::string& sAddres
         {
             if(vSplit[i].empty())
             {
+                pmlLog() << "ValidateIp4Address: byte empty";
                 return IP_INVALID;
             }
             if(vSplit[i].length() > 1 && vSplit[i][0] == '0')
@@ -219,11 +232,13 @@ SdpManager::enumIPType SdpManager::ValidateIp4Address(const std::string& sAddres
             }
             if(vValue[i] < 0 || vValue[i] > 255)
             {
+                pmlLog() << "ValidateIp4Address: byte invalid " << vValue[i];
                 return IP_INVALID;
             }
         }
         catch(invalid_argument& ia)
         {
+            pmlLog() << "ValidateIp4Address: byte invalid: " << vSplit[i];
             return IP_INVALID;
         }
     }
@@ -268,9 +283,10 @@ bool SdpManager::ParseSourceFilter(const std::string& sLine, std::vector<Transpo
     SplitString(vSplit, sLine, ' ');
     if(vSplit.size() > 4)
     {
-        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager::ParseSourceFilter " << vSplit[0] << " " << vSplit[1] << " " << vSplit[2] ;
-        if(vSplit[0] == "IN" && vSplit[1] == "incl")
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager::ParseSourceFilter '" << vSplit[0] << "' '" << vSplit[1] << "' '" << vSplit[2] << "'";
+        if((vSplit[0] == "IN" && vSplit[1] == "incl") || (vSplit[1] == "IN" && vSplit[0] == "incl"))
         {
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager::ParseSourceFilter " << vSplit[3] << " and " << vSplit[4];
             if(vSplit[2] == "IP4" && ValidateIp4Address(vSplit[3]) == IP4_MULTI && ValidateIp4Address(vSplit[4]) == IP4_UNI)
             {
                 tpReceivers[nMedia].SetSourceIp(vSplit[4]);
@@ -281,6 +297,10 @@ bool SdpManager::ParseSourceFilter(const std::string& sLine, std::vector<Transpo
                 tpReceivers[nMedia].SetSourceIp(vSplit[4]);
                 return true;
             }
+        }
+        else
+        {
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager::ParseSourceFilter failed: " << sLine;
         }
     }
     pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager::ParseSourceFilter " << vSplit.size() ;

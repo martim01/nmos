@@ -61,6 +61,9 @@ namespace pml
                 void MasterEnable(bool bEnable);
                 void SetTransportFile(const std::string& sSDP);
 
+                bool AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
+                                   const std::vector<pairEnum_t>& vEnum, const std::experimental::optional<size_t>& tp) override;
+
             protected:
 
                 friend class IS05Server;
@@ -91,7 +94,6 @@ namespace pml
 
                 connectionSender<activationResponse> m_Staged;
                 connectionSender<activationResponse> m_Active;
-                std::vector<ConstraintsSender> m_vConstraints;
 
                 std::string m_sTransportFile;
                 bool m_bActivateAllowed;

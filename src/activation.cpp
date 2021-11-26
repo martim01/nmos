@@ -183,3 +183,16 @@ std::experimental::optional<std::chrono::time_point<std::chrono::high_resolution
     }
     return {};
 }
+
+
+bool activationRequest::CheckJson(const Json::Value& jsPatch)
+{
+    return (CheckJsonRequired(jsPatch, {{MODE, {jsondatatype::_STRING, jsondatatype::_NULL}}}) &&
+       CheckJsonAllowed(jsPatch, {{MODE, {jsondatatype::_STRING, jsondatatype::_NULL}}, {REQUESTED_TIME, {jsondatatype::_STRING, jsondatatype::_NULL}}}));
+}
+
+bool activationResponse::CheckJson(const Json::Value& jsPatch)
+{
+    return (CheckJsonRequired(jsPatch, {{MODE, {jsondatatype::_STRING, jsondatatype::_NULL}}}) &&
+       CheckJsonAllowed(jsPatch, {{MODE, {jsondatatype::_STRING, jsondatatype::_NULL}}, {REQUESTED_TIME, {jsondatatype::_STRING, jsondatatype::_NULL}}}));
+}

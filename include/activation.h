@@ -42,6 +42,8 @@ namespace pml
                 activationRequest(const activationRequest& other);
 
                 bool Patch(const Json::Value& jsData) override;
+
+                static bool CheckJson(const Json::Value& jsObject);
         };
 
         class activationResponse : public activation
@@ -58,6 +60,8 @@ namespace pml
                 void SetActivationTime(std::experimental::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> when);
 
                 void Clear() override;
+
+                static bool CheckJson(const Json::Value& jsObject);
         };
 
     };

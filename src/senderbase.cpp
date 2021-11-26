@@ -27,10 +27,6 @@ Sender::Sender(const std::string& sLabel, const std::string& sDescription, const
 
     AddInterfaceBinding(sInterface);
 
-    for(size_t i = 0; i < m_Active.GetTransportParams().size(); i++)
-    {
-        m_vConstraints.push_back(ConstraintsSender(flagsTransport));
-    }
 
     m_Staged.SetTPAllowed(flagsTransport);
     m_Active.SetTPAllowed(flagsTransport);
@@ -163,9 +159,9 @@ Json::Value Sender::GetConnectionActiveJson(const ApiVersion& version) const
 Json::Value Sender::GetConnectionConstraintsJson(const ApiVersion& version) const
 {
     Json::Value jsArray(Json::arrayValue);
-    for(const auto& con :m_vConstraints)
+    for(const auto& tp : m_Staged.GetTransportParams())
     {
-        jsArray.append(con.GetJson(version));
+        jsArray.append(tp.GetConstraints().GetJson());
     }
     return jsArray;
 }
@@ -174,34 +170,7 @@ Json::Value Sender::GetConnectionConstraintsJson(const ApiVersion& version) cons
 
 bool Sender::CheckConstraints(const connectionSender<activationResponse>& conRequest)
 {
-    bool bMeets = (m_vConstraints.size() == conRequest.GetTransportParams().size());
-    if(bMeets)
-    {
-        for(size_t i = 0; i < m_vConstraints.size(); i++)
-        {
-//            bMeets &= m_vConstraints[i].MeetsConstraint("destination_port", conRequest.tpSenders[i].nDestinationPort);
-//            bMeets &= m_vConstraints[i].MeetsConstraint("fec_destination_ip", conRequest.tpSenders[i].sFecDestinationIp);
-//            bMeets &= m_vConstraints[i].MeetsConstraint("fec_enabled", conRequest.tpSenders[i].bFecEnabled);
-//            bMeets &= m_vConstraints[i].MeetsConstraint("fec_mode", TransportParamsRTP::STR_FEC_MODE[conRequest.tpSenders[i].eFecMode]);
-//            bMeets &= m_vConstraints[i].MeetsConstraint("fec1D_destination_port", conRequest.tpSenders[i].nFec1DDestinationPort);
-//            bMeets &= m_vConstraints[i].MeetsConstraint("fec2D_destination_port", conRequest.tpSenders[i].nFec2DDestinationPort);
-//            bMeets &= m_vConstraints[i].MeetsConstraint("rtcp_destination_ip", conRequest.tpSenders[i].sRtcpDestinationIp);
-//            bMeets &= m_vConstraints[i].MeetsConstraint("rtcp_destination_port", conRequest.tpSenders[i].nRtcpDestinationPort);
-//
-//            bMeets &= m_vConstraints[i].MeetsConstraint("destination_ip", conRequest.tpSenders[i].sDestinationIp);
-//            bMeets &= m_vConstraints[i].MeetsConstraint("source_ip", conRequest.tpSenders[i].sSourceIp);
-//            bMeets &= m_vConstraints[i].MeetsConstraint("source_port", conRequest.tpSenders[i].nSourcePort);
-//            bMeets &= m_vConstraints[i].MeetsConstraint("fec_type", TransportParamsRTPSender::STR_FEC_TYPE[conRequest.tpSenders[i].eFecType]);
-//            bMeets &= m_vConstraints[i].MeetsConstraint("fec_block_width", conRequest.tpSenders[i].nFecBlockWidth);
-//            bMeets &= m_vConstraints[i].MeetsConstraint("fec_block_height", conRequest.tpSenders[i].nFecBlockHeight);
-//            bMeets &= m_vConstraints[i].MeetsConstraint("fec1D_source_port", conRequest.tpSenders[i].nFec1DSourcePort);
-//            bMeets &= m_vConstraints[i].MeetsConstraint("fec2D_source_port", conRequest.tpSenders[i].nFec2DSourcePort);
-//            bMeets &= m_vConstraints[i].MeetsConstraint("rtcp_enabled", conRequest.tpSenders[i].bRtcpEnabled);
-//            bMeets &= m_vConstraints[i].MeetsConstraint("rtcp_source_port", conRequest.tpSenders[i].nRtcpSourcePort);
-//            bMeets &= m_vConstraints[i].MeetsConstraint("rtp_enabled", conRequest.tpSenders[i].bRtpEnabled);
-        }
-    }
-    return bMeets;
+    return m_Staged.CheckConstraints(conRequest);
 }
 
 bool Sender::IsLocked()
@@ -271,9 +240,9 @@ void Sender::Activate(const std::string& sSourceIp)
     //@todo Set the flow to be whatever the flow is...
 
     //activate - set subscription, receiverId and active on master_enable.
-    if(m_Staged.GetMasterEnable() && *m_Staged.GetMasterEnable())
+    if(m_Active.GetMasterEnable() && *m_Active.GetMasterEnable())
     {
-        auto receiver = m_Staged.GetReceiverId();
+        auto receiver = m_Active.GetReceiverId();
         if(receiver)
         {
             m_sReceiverId = *receiver;
@@ -368,10 +337,8 @@ void Sender::ActualizeUnitialisedActive(const std::string& sSourceIp, const std:
 void Sender::SetDestinationDetails(const std::string& sDestinationIp, unsigned short nDestinationPort)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    for(size_t i = 0;i < m_vConstraints.size(); i++)
-    {
-        m_Active.SetDestinationDetails(sDestinationIp, nDestinationPort);
-    }
+    m_Active.SetDestinationDetails(sDestinationIp, nDestinationPort);
+
     //@todo create the SDP somehow         CreateSDP(api, m_Active);
 
     UpdateVersionTime();
@@ -383,11 +350,6 @@ void Sender::MasterEnable(bool bEnable)
     m_Active.MasterEnable(bEnable);
     m_Staged.MasterEnable(bEnable);
 
-    //for(size_t i = 0;i < m_vConstraints.size(); i++)
-   // {
-    //    m_Active.tpSenders[i].EnableRtp(bEnable);
-     //   m_Staged.tpSenders[i].EnableRtp(bEnable);
-   // }
     UpdateVersionTime();
 }
 
@@ -395,8 +357,10 @@ activation::enumActivate Sender::Stage(const connectionSender<activationResponse
 {
     std::lock_guard<std::mutex> lg(m_mutex);
 
+
     m_Staged = conRequest;  //we've already done the patching to make sure that only the bits than need changing are
 
+    pmlLog() << "Sender::Staged = " << m_Staged.GetJson();
     return m_Staged.GetActivation().GetMode();
 }
 
@@ -414,4 +378,12 @@ void Sender::RemoveStagedActivationTime()
 void Sender::SetStagedActivationTimePoint(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp)
 {
     m_Staged.GetActivation().SetActivationTime(tp);
+}
+
+
+bool Sender::AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
+                                   const std::vector<pairEnum_t>& vEnum, const std::experimental::optional<size_t>& tp)
+{
+    std::lock_guard<std::mutex> lg(m_mutex);
+    return m_Staged.AddConstraint(sKey, minValue, maxValue, pattern, vEnum, tp);
 }

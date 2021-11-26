@@ -3,6 +3,7 @@
 #include "json/json.h"
 #include "nmosapiversion.h"
 #include "optional.hpp"
+#include "constraint.h"
 
 namespace pml
 {
@@ -17,12 +18,20 @@ namespace pml
                 TransportParams& operator=(const TransportParams& tp);
 
                 virtual ~TransportParams(){}
-                virtual bool Patch(const Json::Value& jsData)=0;
+
                 const Json::Value& GetJson() const { return m_json;}
+
+                const Constraints& GetConstraints() const {return m_constraints;}
+                bool AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
+                                   const std::vector<pairEnum_t>& vEnum);
+
+               bool ClearConstraint(const std::string& sKey);
+
+               bool CheckConstraints(const TransportParams& tpRequest);
 
             protected:
                 Json::Value m_json;
-
+                Constraints m_constraints;
 
         };
 
@@ -34,10 +43,6 @@ namespace pml
                 TransportParamsRTP();
                 TransportParamsRTP(const TransportParamsRTP& tp);
                 TransportParamsRTP& operator=(const TransportParamsRTP& other);
-
-
-                virtual bool Patch(const Json::Value& jsData) override;
-
 
                 void Actualize();
 
@@ -67,6 +72,30 @@ namespace pml
                 void SetRtcpDestinationPort(unsigned short nPort);
                 void SetRtcpDestinationIp(const std::string& sAddress);
 
+                static const std::string STR_FEC_TYPE_XOR;
+                static const std::string STR_FEC_TYPE_REED;
+                static const std::string AUTO;
+                static const std::string SOURCE_IP;
+                static const std::string SOURCE_PORT;
+                static const std::string DESTINATION_PORT;
+                static const std::string DESTINATION_IP;
+                static const std::string MULTICAST_IP;
+                static const std::string INTERFACE_IP;
+                static const std::string RTP_ENABLED;
+                static const std::string FEC_ENABLED;
+                static const std::string FEC_DESTINATION_IP;
+                static const std::string FEC_MODE;
+                static const std::string FEC_1DDESTINATION_PORT;
+                static const std::string FEC_2DDESTINATION_PORT;
+                static const std::string FEC_TYPE;
+                static const std::string FEC_BLOCK_WIDTH;
+                static const std::string FEC_BLOCK_HEIGHT;
+                static const std::string FEC_1DSOURCE_PORT;
+                static const std::string FEC_2DSOURCE_PORT;
+                static const std::string RTCP_ENABLED;
+                static const std::string RTCP_DESTINATION_IP;
+                static const std::string RTCP_DESTINATION_PORT;
+                static const std::string RTCP_SOURCE_PORT;
 
 
             protected:
@@ -85,7 +114,7 @@ namespace pml
                 TransportParamsRTPReceiver(const TransportParamsRTPReceiver& tp);
                 TransportParamsRTPReceiver& operator=(const TransportParamsRTPReceiver& other);
 
-                bool Patch(const Json::Value& jsData) override;
+                bool Patch(const Json::Value& jsData);
 
                 void Actualize(const std::string& sInterfaceIp);
 
@@ -94,6 +123,7 @@ namespace pml
 
                 void SetMulticastIp(const std::string& sAddress);
 
+                static bool CheckJson(const Json::Value&  jsPatch);
         };
 
 
@@ -107,7 +137,7 @@ namespace pml
 
                 void FecAllowed() override;
 
-                bool Patch(const Json::Value& jsData) override;
+                bool Patch(const Json::Value& jsData);
 
                 void Actualize(const std::string& sSource, const std::string& sDestination);
 
@@ -124,6 +154,8 @@ namespace pml
                 std::experimental::optional<uint32_t> GetFec2DSourcePort() const;
 
                 std::experimental::optional<uint32_t> GetRtcpSourcePort() const;
+
+                static bool CheckJson(const Json::Value&  jsPatch);
 
         };
     };

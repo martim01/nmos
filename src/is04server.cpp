@@ -282,7 +282,7 @@ response IS04Server::PutNmosReceiver(const query& theQuery, const postData& theD
             if(m_pServer->IsOk())
             {   //this means the main thread has connected the receiver to the sender
                 resp.nHttpCode = 202;
-                m_api.SetSender(pReceiver, sSenderId, sSdp, m_pServer->GetSignalData());
+                m_api.SubscribeToSender(pReceiver, sSenderId, sSdp, m_pServer->GetSignalData());
 
 
                 if(pRemoteSender)
@@ -310,7 +310,7 @@ response IS04Server::PutNmosReceiver(const query& theQuery, const postData& theD
             {
                 resp.jsonData = Json::objectValue;
             }
-            m_api.SetSender(pReceiver, sSenderId, sSdp, "192.168.1.113"); //@todo work out ip address here
+            m_api.SubscribeToSender(pReceiver, sSenderId, sSdp, "192.168.1.113"); //@todo work out ip address here
         }
     }
     return resp;

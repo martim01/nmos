@@ -3,6 +3,8 @@
 #include <array>
 #include <set>
 #include <string>
+#include "constraint.h"
+#include "optional.hpp"
 
 namespace pml
 {
@@ -34,6 +36,9 @@ namespace pml
 
                 void AddInterfaceBinding(const std::string& sInterface);
                 void RemoveInterfaceBinding(const std::string& sInterface);
+
+                virtual bool AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
+                                   const std::vector<pairEnum_t>& vEnum, const std::experimental::optional<size_t>& tp)=0;
 
                 const std::set<std::string>& GetInterfaces() const { return m_setInterfaces;}
 

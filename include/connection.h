@@ -9,40 +9,17 @@ namespace pml
 {
     namespace nmos
     {
-            template<typename T> class NMOS_EXPOSE connection
-            {
-                public:
-                    connection(std::experimental::optional<bool> masterEnable);
-                    connection(const connection& conReq);
-                    connection& operator=(const connection& other);
-
-                    bool Patch(const Json::Value& jsData);
-                    virtual Json::Value GetJson() const;
-
-                    std::experimental::optional<bool> GetMasterEnable() const;
-                    void MasterEnable(bool bEnable);
-
-                    T& GetActivation() { return m_activation; }
-                    const T& GetConstActivation() const { return m_activation; }
-
-
-
-                protected:
-                    virtual bool DoPatch(const Json::Value& jsData);
-
-                    Json::Value m_json;
-                    T m_activation;
-            };
-
-            template<typename T> class NMOS_EXPOSE connectionSender : public connection<T>
+            template<typename T> class NMOS_EXPOSE connectionSender
             {
                 public:
                     connectionSender(std::experimental::optional<bool> masterEnable, size_t nTPLegs);
                     connectionSender(const connectionSender& conReq);
                     connectionSender& operator=(const connectionSender& other);
-                    Json::Value GetJson() const override;
+                    Json::Value GetJson() const;
 
                     const std::vector<TransportParamsRTPSender>& GetTransportParams() const { return m_vTransportParams;}
+
+                    bool Patch(const Json::Value& jsData);
 
                     void Actualize(const std::string& sSourceIp, const std::string& sDestinationIp);
 
@@ -53,14 +30,30 @@ namespace pml
 
                     void Uninitialise();
 
-                protected:
-                    bool DoPatch(const Json::Value& jsData) override;
+                    static bool CheckJson(const Json::Value& jsData);
+                    std::experimental::optional<bool> GetMasterEnable() const;
+                    void MasterEnable(bool bEnable);
 
+                    T& GetActivation() { return m_activation; }
+                    const T& GetConstActivation() const { return m_activation; }
+
+                    bool CheckConstraints(const connectionSender<T>& request);
+
+                    bool AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
+                                   const std::vector<pairEnum_t>& vEnum, const std::experimental::optional<size_t>& tp);
+
+                protected:
+                    const Json::Value& GetJsonToCopy() const { return m_json; }
+
+                    Json::Value m_json;
+                    T m_activation;
                     std::vector<TransportParamsRTPSender> m_vTransportParams;
+
+
             };
 
             //Connection API
-            template<typename T> class NMOS_EXPOSE connectionReceiver : public connection<T>
+            template<typename T> class NMOS_EXPOSE connectionReceiver
             {
                 public:
                     connectionReceiver(std::experimental::optional<bool> masterEnable, size_t nTPLegs);
@@ -69,11 +62,19 @@ namespace pml
                     connectionReceiver(int flagProperties);
                     connectionReceiver& operator=(const connectionReceiver& other);
 
+                    std::experimental::optional<bool> GetMasterEnable() const;
+                    void MasterEnable(bool bEnable);
+
+                    T& GetActivation() { return m_activation; }
+                    const T& GetConstActivation() const { return m_activation; }
+
                     Json::Value GetJson() const;
                     const std::vector<TransportParamsRTPReceiver>& GetTransportParams() const { return m_vTransportParams;}
 
                     void Actualize(const std::string& sInterfaceIp);
                     void SetTPAllowed(int flagsTransport);
+
+                    bool Patch(const Json::Value& jsData);
 
                     std::experimental::optional<std::string> GetSenderId() const;
                     std::experimental::optional<std::string> GetTransportFileType() const;
@@ -84,13 +85,19 @@ namespace pml
 
                     void Uninitialise();
 
-                protected:
-                    bool DoPatch(const Json::Value& jsData) override;
-                    std::vector<TransportParamsRTPReceiver> m_vTransportParams;
+                    static bool CheckJson(const Json::Value& jsData);
 
-                    //std::string sSenderId;
-                    //std::string sTransportFileType;
-                    //std::string sTransportFileData;
+                    bool CheckConstraints(const connectionReceiver<T>& request);
+
+                    bool AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
+                                   const std::vector<pairEnum_t>& vEnum, const std::experimental::optional<size_t>& tp);
+
+                protected:
+                    const Json::Value& GetJsonToCopy() const { return m_json; }
+
+                    Json::Value m_json;
+                    T m_activation;
+                    std::vector<TransportParamsRTPReceiver> m_vTransportParams;
 
         };
     };

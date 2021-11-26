@@ -5,32 +5,30 @@
 using namespace pml::nmos;
 
 //const std::string TransportParamsRTP::STR_FEC_MODE[2] = {"1D", "2D"};
-const std::string STR_FEC_TYPE_XOR  = "XOR";
-const std::string STR_FEC_TYPE_REED = "Reed-Solomon";
-
-const std::string AUTO                  = "auto";
-const std::string SOURCE_IP             = "source_ip";
-const std::string SOURCE_PORT           = "source_port";
-const std::string DESTINATION_PORT      = "destination_port";
-const std::string DESTINATION_IP        = "destination_ip";
-const std::string MULTICAST_IP          = "multicast_ip";
-const std::string INTERFACE_IP          = "interface_ip";
-const std::string RTP_ENABLED           = "rtp_enabled";
-const std::string FEC_ENABLED           = "fec_enabled";
-const std::string FEC_DESTINATION_IP    = "fec_destination_ip";
-const std::string FEC_MODE              = "fec_mode";
-const std::string FEC_1DDESTINATION_PORT= "fec1D_destination_port";
-const std::string FEC_2DDESTINATION_PORT= "fec2D_destination_port";
-const std::string FEC_TYPE              = "fec_type";
-const std::string FEC_BLOCK_WIDTH       = "fec_block_width";
-const std::string FEC_BLOCK_HEIGHT      = "fec_block_height";
-const std::string FEC_1DSOURCE_PORT     = "fec1D_source_port";
-const std::string FEC_2DSOURCE_PORT     = "fec2D_source_port";
-
-const std::string RTCP_ENABLED          = "rtcp_enabled";
-const std::string RTCP_DESTINATION_IP   = "rtcp_destination_ip";
-const std::string RTCP_DESTINATION_PORT = "rtcp_destination_port";
-const std::string RTCP_SOURCE_PORT      = "rtcp_source_port";
+const std::string TransportParamsRTP::STR_FEC_TYPE_XOR  = "XOR";
+const std::string TransportParamsRTP::STR_FEC_TYPE_REED = "Reed-Solomon";
+const std::string TransportParamsRTP::AUTO                  = "auto";
+const std::string TransportParamsRTP::SOURCE_IP             = "source_ip";
+const std::string TransportParamsRTP::SOURCE_PORT           = "source_port";
+const std::string TransportParamsRTP::DESTINATION_PORT      = "destination_port";
+const std::string TransportParamsRTP::DESTINATION_IP        = "destination_ip";
+const std::string TransportParamsRTP::MULTICAST_IP          = "multicast_ip";
+const std::string TransportParamsRTP::INTERFACE_IP          = "interface_ip";
+const std::string TransportParamsRTP::RTP_ENABLED           = "rtp_enabled";
+const std::string TransportParamsRTP::FEC_ENABLED           = "fec_enabled";
+const std::string TransportParamsRTP::FEC_DESTINATION_IP    = "fec_destination_ip";
+const std::string TransportParamsRTP::FEC_MODE              = "fec_mode";
+const std::string TransportParamsRTP::FEC_1DDESTINATION_PORT= "fec1D_destination_port";
+const std::string TransportParamsRTP::FEC_2DDESTINATION_PORT= "fec2D_destination_port";
+const std::string TransportParamsRTP::FEC_TYPE              = "fec_type";
+const std::string TransportParamsRTP::FEC_BLOCK_WIDTH       = "fec_block_width";
+const std::string TransportParamsRTP::FEC_BLOCK_HEIGHT      = "fec_block_height";
+const std::string TransportParamsRTP::FEC_1DSOURCE_PORT     = "fec1D_source_port";
+const std::string TransportParamsRTP::FEC_2DSOURCE_PORT     = "fec2D_source_port";
+const std::string TransportParamsRTP::RTCP_ENABLED          = "rtcp_enabled";
+const std::string TransportParamsRTP::RTCP_DESTINATION_IP   = "rtcp_destination_ip";
+const std::string TransportParamsRTP::RTCP_DESTINATION_PORT = "rtcp_destination_port";
+const std::string TransportParamsRTP::RTCP_SOURCE_PORT      = "rtcp_source_port";
 
 
 
@@ -51,13 +49,37 @@ TransportParams& TransportParams::operator=(const TransportParams& other)
 }
 
 
+bool TransportParams::AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
+                                    const std::vector<pairEnum_t>& vEnum)
+{
+    return m_constraints.AddConstraint(sKey, minValue, maxValue, pattern, vEnum);
+}
+
+bool TransportParams::ClearConstraint(const std::string& sKey)
+{
+    return m_constraints.ClearConstraint(sKey);
+}
+
+bool TransportParams::CheckConstraints(const TransportParams& tpRequest)
+{
+    for(auto itObject = tpRequest.GetJson().begin(); itObject != tpRequest.GetJson().end(); ++itObject)
+    {
+        if(m_constraints.MeetsConstraint(itObject.key().asString(), (*itObject)) == false)
+        {
+            return false;
+        }
+    }
+    return true;
+}
 
 
 TransportParamsRTP::TransportParamsRTP() : TransportParams()
 {
-    m_json[SOURCE_IP] = AUTO;
     m_json[DESTINATION_PORT] = AUTO;
     m_json[RTP_ENABLED] = false;
+
+    m_constraints.CreateEmptyConstraint(DESTINATION_PORT);
+    m_constraints.CreateEmptyConstraint(RTP_ENABLED);
 }
 
 
@@ -132,6 +154,13 @@ void TransportParamsRTP::FecAllowed()
     m_json[FEC_MODE] = AUTO;
     m_json[FEC_1DDESTINATION_PORT] = AUTO;
     m_json[FEC_2DDESTINATION_PORT] = AUTO;
+
+    m_constraints.CreateEmptyConstraint(FEC_ENABLED);
+    m_constraints.CreateEmptyConstraint(FEC_DESTINATION_IP);
+    m_constraints.CreateEmptyConstraint(FEC_MODE);
+    m_constraints.CreateEmptyConstraint(FEC_1DDESTINATION_PORT);
+    m_constraints.CreateEmptyConstraint(FEC_2DDESTINATION_PORT);
+
 }
 
 void TransportParamsRTP::RtcpAllowed()
@@ -139,48 +168,12 @@ void TransportParamsRTP::RtcpAllowed()
     m_json[RTCP_ENABLED] = false;
     m_json[RTCP_DESTINATION_PORT] = AUTO;
     m_json[RTCP_DESTINATION_IP] = AUTO;
+
+    m_constraints.CreateEmptyConstraint(RTCP_ENABLED);
+    m_constraints.CreateEmptyConstraint(RTCP_DESTINATION_PORT);
+    m_constraints.CreateEmptyConstraint(RTCP_DESTINATION_IP);
 }
 
-bool TransportParamsRTP::Patch(const Json::Value& jsData)
-{
-    if(CheckJsonOptional(jsData,{ {SOURCE_IP, {jsondatatype::_STRING, jsondatatype::_NULL}},
-                                  {DESTINATION_PORT, {jsondatatype::_INTEGER, jsondatatype::_STRING}},
-                                  {RTP_ENABLED, {jsondatatype::_BOOLEAN}}}) == false)
-    {
-        return false;
-    }
-    if(m_json.isMember(FEC_ENABLED) == false)
-    {
-        if(CheckJsonNotAllowed(jsData, {FEC_ENABLED, FEC_DESTINATION_IP, FEC_MODE, FEC_1DDESTINATION_PORT, FEC_2DDESTINATION_PORT}) == false)
-        {
-            return false;
-        }
-    }
-    else if(CheckJsonOptional(jsData,{{FEC_ENABLED, {jsondatatype::_BOOLEAN}},
-                                      {FEC_DESTINATION_IP, {jsondatatype::_STRING}},
-                                      {FEC_MODE, {jsondatatype::_STRING}},
-                                      {FEC_1DDESTINATION_PORT, {jsondatatype::_STRING, jsondatatype::_INTEGER}},
-                                      {FEC_2DDESTINATION_PORT, {jsondatatype::_STRING, jsondatatype::_INTEGER}}}) == false)
-    {
-        return false;
-    }
-
-    if(m_json.isMember(RTCP_ENABLED) == false)
-    {
-        if(CheckJsonNotAllowed(jsData, {RTCP_ENABLED, RTCP_DESTINATION_IP, RTCP_DESTINATION_PORT}) == false)
-        {
-            return false;
-        }
-    }
-    else if(CheckJsonOptional(jsData,{{RTCP_ENABLED, {jsondatatype::_BOOLEAN}},
-                                      {RTCP_DESTINATION_IP, {jsondatatype::_STRING}},
-                                      {RTCP_DESTINATION_PORT, {jsondatatype::_STRING, jsondatatype::_INTEGER}}}) == false)
-    {
-        return false;
-    }
-    PatchJson(m_json, jsData);
-    return true;
-}
 
 
 std::string TransportParamsRTP::GetSourceIP() const
@@ -306,8 +299,13 @@ void TransportParamsRTP::EnableRtp(bool bEnable)
 
 TransportParamsRTPSender::TransportParamsRTPSender() : TransportParamsRTP()
 {
+    m_json[SOURCE_IP] = AUTO;
     m_json[DESTINATION_IP] = AUTO;
     m_json[SOURCE_PORT] = AUTO;
+
+    m_constraints.CreateEmptyConstraint(SOURCE_IP);
+    m_constraints.CreateEmptyConstraint(DESTINATION_IP);
+    m_constraints.CreateEmptyConstraint(SOURCE_PORT);
 }
 
 TransportParamsRTPSender::TransportParamsRTPSender(const TransportParamsRTPSender& tp) : TransportParamsRTP(tp)
@@ -318,7 +316,10 @@ TransportParamsRTPSender::TransportParamsRTPSender(const TransportParamsRTPSende
 
 TransportParamsRTPSender& TransportParamsRTPSender::operator=(const TransportParamsRTPSender& other)
 {
-    TransportParamsRTP::operator=(other);
+    if(&other != this)
+    {
+        m_json = other.GetJson();
+    }
     return *this;
 }
 
@@ -331,60 +332,72 @@ void TransportParamsRTPSender::FecAllowed()
     m_json[FEC_BLOCK_HEIGHT] = 4;
     m_json[FEC_1DSOURCE_PORT] = AUTO;
     m_json[FEC_2DSOURCE_PORT] = AUTO;
+
+    m_constraints.CreateEmptyConstraint(FEC_TYPE);
+    m_constraints.CreateEmptyConstraint(FEC_BLOCK_WIDTH);
+    m_constraints.CreateEmptyConstraint(FEC_BLOCK_HEIGHT);
+    m_constraints.CreateEmptyConstraint(FEC_1DSOURCE_PORT);
+    m_constraints.CreateEmptyConstraint(FEC_2DSOURCE_PORT);
 }
 
+bool TransportParamsRTPSender::CheckJson(const Json::Value&  jsPatch)
+{
+    return CheckJsonAllowed(jsPatch, {{SOURCE_IP, {jsondatatype::_STRING}},
+                                      {DESTINATION_IP, {jsondatatype::_STRING}},
+                                      {SOURCE_PORT, {jsondatatype::_STRING, jsondatatype::_INTEGER}},
+                                      {DESTINATION_PORT, {jsondatatype::_STRING, jsondatatype::_INTEGER}},
+                                      {FEC_ENABLED, {jsondatatype::_BOOLEAN}},
+                                      {FEC_DESTINATION_IP, {jsondatatype::_STRING}},
+                                      {FEC_TYPE, {jsondatatype::_STRING}},
+                                      {FEC_MODE, {jsondatatype::_STRING}},
+                                      {FEC_BLOCK_WIDTH, {jsondatatype::_INTEGER}},
+                                      {FEC_BLOCK_HEIGHT, {jsondatatype::_INTEGER}},
+                                      {FEC_1DDESTINATION_PORT, {jsondatatype::_INTEGER,jsondatatype::_STRING}},
+                                      {FEC_2DDESTINATION_PORT, {jsondatatype::_INTEGER,jsondatatype::_STRING}},
+                                      {FEC_1DSOURCE_PORT, {jsondatatype::_INTEGER,jsondatatype::_STRING}},
+                                      {FEC_2DSOURCE_PORT, {jsondatatype::_INTEGER,jsondatatype::_STRING}},
+                                      {RTCP_ENABLED, {jsondatatype::_BOOLEAN}},
+                                      {RTCP_DESTINATION_IP, {jsondatatype::_STRING}},
+                                      {RTCP_DESTINATION_PORT, {jsondatatype::_INTEGER,jsondatatype::_STRING}},
+                                      {RTCP_SOURCE_PORT, {jsondatatype::_INTEGER,jsondatatype::_STRING}},
+                                      {RTP_ENABLED, {jsondatatype::_BOOLEAN}}});
+
+}
 
 bool TransportParamsRTPSender::Patch(const Json::Value& jsData)
 {
-    if(CheckJsonOptional(jsData, { {DESTINATION_IP, {jsondatatype::_STRING}},
-                                   {SOURCE_PORT, {jsondatatype::_STRING, jsondatatype::_INTEGER}}}) == false)
+    if(TransportParamsRTPSender::CheckJson(jsData) == false)
     {
         return false;
     }
 
-    if(m_json.isMember(FEC_ENABLED) == false)
-    {
-        if(CheckJsonNotAllowed(jsData, {FEC_TYPE, FEC_BLOCK_WIDTH, FEC_BLOCK_HEIGHT, FEC_1DSOURCE_PORT, FEC_2DSOURCE_PORT}) == false)
-        {
-            return false;
-        }
-    }
-    else if(CheckJsonOptional(jsData,{{FEC_TYPE, {jsondatatype::_STRING}},
-                                      {FEC_BLOCK_WIDTH, {jsondatatype::_INTEGER}},
-                                      {FEC_BLOCK_WIDTH, {jsondatatype::_INTEGER}},
-                                      {FEC_1DSOURCE_PORT, {jsondatatype::_STRING, jsondatatype::_INTEGER}},
-                                      {FEC_2DSOURCE_PORT, {jsondatatype::_STRING, jsondatatype::_INTEGER}}}) == false)
+    if(m_json.isMember(FEC_ENABLED) == false &&
+       CheckJsonNotAllowed(jsData, {FEC_TYPE, FEC_MODE, FEC_DESTINATION_IP, FEC_BLOCK_WIDTH, FEC_BLOCK_HEIGHT, FEC_1DSOURCE_PORT, FEC_1DDESTINATION_PORT, FEC_2DDESTINATION_PORT, FEC_2DSOURCE_PORT}) == false)
     {
         return false;
     }
 
-    if(m_json.isMember(RTCP_ENABLED) == false)
-    {
-        if(CheckJsonNotAllowed(jsData, {RTCP_SOURCE_PORT}) == false)
-        {
-            return false;
-        }
-    }
-    else if(CheckJsonOptional(jsData,{{RTCP_SOURCE_PORT, {jsondatatype::_STRING, jsondatatype::_INTEGER}}}) == false)
+    if(m_json.isMember(RTCP_ENABLED) == false && CheckJsonNotAllowed(jsData, {RTCP_SOURCE_PORT, RTCP_DESTINATION_IP, RTCP_DESTINATION_PORT}) == false)
     {
         return false;
     }
 
     //check some constraints
-    if(jsData[FEC_TYPE].isString() && (jsData[FEC_TYPE] != STR_FEC_TYPE_XOR && jsData[FEC_TYPE] != STR_FEC_TYPE_REED))
+    if(jsData.isMember(FEC_TYPE) &&  (jsData[FEC_TYPE].asString() != STR_FEC_TYPE_XOR && jsData[FEC_TYPE].asString() != STR_FEC_TYPE_REED))
     {
         return false;
     }
 
-    if(jsData[FEC_BLOCK_WIDTH].isInt() && (jsData[FEC_BLOCK_WIDTH].asInt() < 4 || jsData[FEC_BLOCK_WIDTH].asInt() > 200))
+    if(jsData.isMember(FEC_BLOCK_WIDTH) && (jsData[FEC_BLOCK_WIDTH].asInt() < 4 || jsData[FEC_BLOCK_WIDTH].asInt() > 200))
     {
         return false;
     }
-    if(jsData[FEC_BLOCK_HEIGHT].isInt() && (jsData[FEC_BLOCK_HEIGHT].asInt() < 4 || jsData[FEC_BLOCK_HEIGHT].asInt() > 200))
+    if(jsData.isMember(FEC_BLOCK_HEIGHT) &&  (jsData[FEC_BLOCK_HEIGHT].asInt() < 4 || jsData[FEC_BLOCK_HEIGHT].asInt() > 200))
     {
         return false;
     }
-    return TransportParamsRTP::Patch(jsData);
+    PatchJson(m_json, jsData);
+    return true;
 }
 
 
@@ -464,7 +477,11 @@ std::experimental::optional<uint32_t> TransportParamsRTPSender::GetRtcpSourcePor
 
 TransportParamsRTPReceiver::TransportParamsRTPReceiver() : TransportParamsRTP()
 {
+    m_json[SOURCE_IP] = Json::Value::null;
     m_json[INTERFACE_IP] = AUTO;
+
+    m_constraints.CreateEmptyConstraint(SOURCE_IP);
+    m_constraints.CreateEmptyConstraint(INTERFACE_IP);
 }
 
 TransportParamsRTPReceiver::TransportParamsRTPReceiver(const TransportParamsRTPReceiver& tp) : TransportParamsRTP(tp)
@@ -475,14 +492,45 @@ TransportParamsRTPReceiver::TransportParamsRTPReceiver(const TransportParamsRTPR
 
 bool TransportParamsRTPReceiver::Patch(const Json::Value& jsData)
 {
-    if(CheckJsonOptional(jsData, {{MULTICAST_IP, {jsondatatype::_STRING}},
-                              {INTERFACE_IP, {jsondatatype::_STRING}}}) == false)
+    if(TransportParamsRTPReceiver::CheckJson(jsData) == false)
+    {
+        return false;
+    }
+    if(m_json.isMember(FEC_ENABLED) == false &&
+       CheckJsonNotAllowed(jsData, {FEC_TYPE, FEC_MODE, FEC_DESTINATION_IP, FEC_BLOCK_WIDTH, FEC_BLOCK_HEIGHT, FEC_1DSOURCE_PORT, FEC_1DDESTINATION_PORT, FEC_2DDESTINATION_PORT, FEC_2DSOURCE_PORT}) == false)
     {
         return false;
     }
 
-    return TransportParamsRTP::Patch(jsData);
+    if(m_json.isMember(RTCP_ENABLED) == false && CheckJsonNotAllowed(jsData, {RTCP_SOURCE_PORT, RTCP_DESTINATION_IP, RTCP_DESTINATION_PORT}) == false)
+    {
+        return false;
+    }
+
+
+
+    PatchJson(m_json, jsData);
+    return true;
 }
+
+bool TransportParamsRTPReceiver::CheckJson(const Json::Value&  jsPatch)
+{
+    return CheckJsonAllowed(jsPatch, {{SOURCE_IP, {jsondatatype::_STRING, jsondatatype::_NULL}},
+                                      {MULTICAST_IP, {jsondatatype::_STRING, jsondatatype::_NULL}},
+                                      {INTERFACE_IP, {jsondatatype::_STRING}},
+                                      {DESTINATION_PORT, {jsondatatype::_STRING, jsondatatype::_INTEGER}},
+                                      {FEC_ENABLED, {jsondatatype::_BOOLEAN}},
+                                      {FEC_DESTINATION_IP, {jsondatatype::_STRING}},
+                                      {FEC_MODE, {jsondatatype::_STRING}},
+                                      {FEC_1DDESTINATION_PORT, {jsondatatype::_INTEGER,jsondatatype::_STRING}},
+                                      {FEC_2DDESTINATION_PORT, {jsondatatype::_INTEGER,jsondatatype::_STRING}},
+                                      {RTCP_ENABLED, {jsondatatype::_BOOLEAN}},
+                                      {RTCP_DESTINATION_IP, {jsondatatype::_STRING}},
+                                      {RTCP_DESTINATION_PORT, {jsondatatype::_INTEGER,jsondatatype::_STRING}},
+                                      {RTP_ENABLED, {jsondatatype::_BOOLEAN}}});
+
+}
+
 
 
 void TransportParamsRTPReceiver::Actualize(const std::string& sInterface)
@@ -520,7 +568,10 @@ void TransportParamsRTPReceiver::Actualize(const std::string& sInterface)
 
 TransportParamsRTPReceiver& TransportParamsRTPReceiver::operator=(const TransportParamsRTPReceiver& other)
 {
-    TransportParamsRTP::operator=(other);
+    if(&other != this)
+    {
+        m_json = other.GetJson();
+    }
     return *this;
 }
 
@@ -546,5 +597,6 @@ void TransportParamsRTPReceiver::SetMulticastIp(const std::string& sAddress)
     {
         m_json[MULTICAST_IP] = Json::Value::null;
     }
+    m_constraints.CreateEmptyConstraint(MULTICAST_IP);
 }
 

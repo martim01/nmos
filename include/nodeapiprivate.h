@@ -260,17 +260,17 @@ namespace pml
                 std::string CreateFlowSdp(const std::string& sId, const TransportParamsRTPSender& tpSender, const std::set<std::string>& setInterfaces);
 
                 void CreateSDP(std::shared_ptr<Sender> pSender);
-                void Activate(bool bImmediate, std::shared_ptr<IOResource> pResource);
+                void Activate(bool bCommit, std::shared_ptr<IOResource> pResource);
 
-                void Activate(bool bImmediate, std::shared_ptr<Sender> pSender);
+                void Activate(bool bCommit, std::shared_ptr<Sender> pSender);
                 void CommitActivation(std::shared_ptr<Sender> pSender);
                 bool Stage(const connectionSender<activationResponse>& conRequest, std::shared_ptr<Sender> pSender);
 
-                void Activate(bool bImmediate, std::shared_ptr<Receiver> pReceiver);
+                void Activate(bool bCommit, std::shared_ptr<Receiver> pReceiver);
                 void CommitActivation(std::shared_ptr<Receiver> pReceiver);
                 bool Stage(const connectionReceiver<activationResponse>& conRequest, std::shared_ptr<Receiver> pReceiver);
 
-                void SetSender(std::shared_ptr<Receiver> pReceiver, const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp);
+                void SubscribeToSender(std::shared_ptr<Receiver> pReceiver, const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp);
 
 
 

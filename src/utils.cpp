@@ -195,10 +195,12 @@ bool CheckJsonAllowed(const Json::Value& jsObject, const std::map<std::string, s
         auto itAllowed = mAllowed.find(itObject.key().asString()) ;
         if(itAllowed == mAllowed.end())
         {
+            pmlLog(pml::LOG_DEBUG) << "NMOS: CheckJsonAllowed: " << itObject.key().asString() << " not allowed";
             return false;
         }
         else if(CheckJsonType(*itObject, itAllowed->second) == false)
         {   //key allowed but not if this type
+            pmlLog(pml::LOG_DEBUG) << "NMOS: CheckJsonAllowed: " << itObject.key().asString() << " allowed but wrong type";
             return false;
         }
     }

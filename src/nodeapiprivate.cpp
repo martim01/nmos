@@ -50,6 +50,9 @@
 #include "flowdatajson.h"
 #include "flowmux.h"
 #include "flowsdpcreatornode.h"
+#include <algorithm>
+#include "optional.hpp"
+
 
 using namespace pml::nmos;
 using namespace std::placeholders;
@@ -1112,6 +1115,13 @@ bool NodeApiPrivate::AddReceiver(shared_ptr<Receiver> pResource)
                 pResource->ActualizeUnitialisedActive(itInterface->second.sMainIpAddress);
             }
 
+            //constrain the interface_ip to those that we have
+            std::vector<pairEnum_t> vEnum;
+            std::transform(m_self.GetInterfaceBegin(), m_self.GetInterfaceEnd(), std::back_inserter(vEnum),
+                           [](const std::pair<std::string, nodeinterface>& interface){ return pairEnum_t(jsondatatype::_STRING, interface.second.sMainIpAddress); });
+
+            pResource->AddConstraint(TransportParamsRTP::INTERFACE_IP, {},{},{},vEnum, {});
+
             return true;
         }
     }
@@ -1151,6 +1161,7 @@ bool NodeApiPrivate::AddSender(shared_ptr<Sender> pResource)
             {
                 pairServer.second->AddSenderEndpoint(pResource->GetId());
             }
+            pmlLog(pml::LOG_DEBUG) << "NodeApiPrivate::Activate from AddSender";
             Activate(true, pResource);
             return true;
         }
@@ -1317,6 +1328,7 @@ std::string NodeApiPrivate::CreateFlowSdp(const std::string& sId, const Transpor
         auto pFlow = std::dynamic_pointer_cast<Flow>(itFlow->second);
         if(pFlow)
         {
+            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "CreateSDP Destination TP: " << tpSender.GetJson();
             pmlLog(pml::LOG_DEBUG) << "NMOS: " << "CreateSDP Destination Port = " << tpSender.GetDestinationPort() ;
             unsigned short nPort(tpSender.GetDestinationPort());
             if(nPort == 0)
@@ -1394,10 +1406,11 @@ std::string NodeApiPrivate::CreateFlowSdp(const std::string& sId, const Transpor
 
 void NodeApiPrivate::CreateSDP(std::shared_ptr<Sender> pSender)
 {
+    auto active = pSender->GetActive();
     std::stringstream ssSDP;
     ssSDP << "v=0\r\n";
     ssSDP << "o=- " << GetCurrentTaiTime(false) << " " << GetCurrentTaiTime(false) << " IN IP";
-    switch(SdpManager::CheckIpAddress(pSender->GetActive().GetTransportParams()[0].GetSourceIP()))
+    switch(SdpManager::CheckIpAddress(active.GetTransportParams()[0].GetSourceIP()))
     {
         case SdpManager::IP4_UNI:
         case SdpManager::IP4_MULTI:
@@ -1411,7 +1424,7 @@ void NodeApiPrivate::CreateSDP(std::shared_ptr<Sender> pSender)
             ssSDP << " ";
             break;
     }
-    ssSDP << pSender->GetActive().GetTransportParams()[0].GetSourceIP() << "\r\n";    // @todo should check here if sSourceIp is not set to auto
+    ssSDP << active.GetTransportParams()[0].GetSourceIP() << "\r\n";    // @todo should check here if sSourceIp is not set to auto
     ssSDP << "t=0 0 \r\n";
 
 //    std::map<std::string, std::shared_ptr<Device> >::const_iterator itDevice = GetDevices().FindNmosResource(pSender->GetDeviceId());
@@ -1425,20 +1438,22 @@ void NodeApiPrivate::CreateSDP(std::shared_ptr<Sender> pSender)
 //    }
     ssSDP << "s=:" << pSender->GetLabel() << "\r\n";
 
-    for(const auto& tpSender: pSender->GetActive().GetTransportParams())
+    for(const auto& tpSender: active.GetTransportParams())
     {
+
         ssSDP << CreateFlowSdp(pSender->GetFlowId(), tpSender, pSender->GetInterfaces());
     }
 
     pSender->SetTransportFile(ssSDP.str());
 }
 
-void NodeApiPrivate::Activate(bool bImmediate, std::shared_ptr<IOResource> pResource)
+void NodeApiPrivate::Activate(bool bCommit, std::shared_ptr<IOResource> pResource)
 {
     auto pSender = std::dynamic_pointer_cast<Sender>(pResource);
     if(pSender)
     {
-        Activate(bImmediate, pSender);
+        pmlLog(pml::LOG_DEBUG) << "NodeApiPrivate::Activate from thread";
+        Activate(bCommit, pSender);
         return;
     }
 
@@ -1446,13 +1461,13 @@ void NodeApiPrivate::Activate(bool bImmediate, std::shared_ptr<IOResource> pReso
     auto pReceiver = std::dynamic_pointer_cast<Receiver>(pResource);
     if(pReceiver)
     {
-        Activate(bImmediate, pReceiver);
+        Activate(bCommit, pReceiver);
         return;
     }
 
 }
 
-void NodeApiPrivate::Activate(bool bImmediate, std::shared_ptr<Sender> pSender)
+void NodeApiPrivate::Activate(bool bCommit, std::shared_ptr<Sender> pSender)
 {
     //get the bound to interface source address
     std::string sSourceIp;
@@ -1478,8 +1493,9 @@ void NodeApiPrivate::Activate(bool bImmediate, std::shared_ptr<Sender> pSender)
     }
 
 
-    if(!bImmediate)
+    if(!bCommit)
     {
+        pmlLog(pml::LOG_DEBUG) << "NodeApiPrivate::Activate";
         CommitActivation(pSender);
     }
 
@@ -1487,6 +1503,7 @@ void NodeApiPrivate::Activate(bool bImmediate, std::shared_ptr<Sender> pSender)
 
 void NodeApiPrivate::CommitActivation(std::shared_ptr<Sender> pSender)
 {
+    pmlLog(pml::LOG_DEBUG) << "NodeApiPrivate::CommitActivation";
     pSender->CommitActivation();
     SenderActivated(pSender->GetId());
 }
@@ -1507,6 +1524,7 @@ bool NodeApiPrivate::Stage(const connectionSender<activationResponse>& conReques
         case activation::ACT_NOW:
             pSender->SetStagedActivationTimePoint(GetTaiTimeNow());
             pSender->SetActivationAllowed(true);
+            pmlLog(pml::LOG_DEBUG) << "NodeApiPrivate::Activate from stage";
             Activate(true, pSender);
             break;
         case activation::ACT_ABSOLUTE:
@@ -1552,10 +1570,10 @@ bool NodeApiPrivate::Stage(const connectionSender<activationResponse>& conReques
 }
 
 
-void NodeApiPrivate::Activate(bool bImmediate, std::shared_ptr<Receiver> pReceiver)
+void NodeApiPrivate::Activate(bool bCommit, std::shared_ptr<Receiver> pReceiver)
 {
     pReceiver->Activate();
-    if(!bImmediate)
+    if(!bCommit)
     {
         CommitActivation(pReceiver);
     }
@@ -1574,7 +1592,7 @@ bool NodeApiPrivate::Stage(const connectionReceiver<activationResponse>& conRequ
     switch(pReceiver->Stage(conRequest))
     {
         case activation::ACT_NULL:
-            if(pReceiver->GetStaged().GetActivation().GetActivationTime())
+            if(pReceiver->GetStaged().GetActivation().GetActivationTimePoint())
             {
                 m_activator.RemoveActivation((*pReceiver->GetStaged().GetActivation().GetActivationTimePoint()), pReceiver);
                 pReceiver->RemoveStagedActivationTime();
@@ -1628,9 +1646,9 @@ bool NodeApiPrivate::Stage(const connectionReceiver<activationResponse>& conRequ
     return bOk;
 }
 
-void NodeApiPrivate::SetSender(std::shared_ptr<Receiver> pReceiver, const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp)
+void NodeApiPrivate::SubscribeToSender(std::shared_ptr<Receiver> pReceiver, const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp)
 {
-    pReceiver->SetSender(sSenderId, sSdp, sInterfaceIp);
+    pReceiver->SubscribeToSender(sSenderId, sSdp, sInterfaceIp);
     Activate(false, pReceiver);
     pReceiver->UpdateVersionTime();
     Commit();

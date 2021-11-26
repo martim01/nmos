@@ -18,49 +18,65 @@ const std::string TRANSPORT_FILE_SDP  = "application/sdp";
 const std::string ACTIVATION = "activation";
 
 
-template<typename T> connection<T>::connection(std::experimental::optional<bool> masterEnable)
+
+template<typename T> void connectionSender<T>::MasterEnable(bool bEnable)
+{
+    m_json[MASTER_ENABLE] = bEnable;
+}
+
+template<typename T> void connectionReceiver<T>::MasterEnable(bool bEnable)
+{
+    m_json[MASTER_ENABLE] = bEnable;
+}
+
+
+template<typename T> std::experimental::optional<bool> connectionReceiver<T>::GetMasterEnable() const
+{
+    return GetBool(m_json, MASTER_ENABLE);
+}
+
+
+
+template<typename T> std::experimental::optional<bool> connectionSender<T>::GetMasterEnable() const
+{
+    return GetBool(m_json, MASTER_ENABLE);
+}
+
+
+template<typename T> connectionSender<T>::connectionSender(std::experimental::optional<bool> masterEnable, size_t nTPLegs) :
+  m_vTransportParams(nTPLegs)
 {
     if(masterEnable)
     {
         m_json[MASTER_ENABLE] = (*masterEnable);
     }
+
+    m_json[RECEIVER_ID] = Json::Value::null;
 }
 
 
-template<typename T> connection<T>::connection(const connection<T>& conReq) :
-    m_json(conReq.GetJson())
+template<typename T> connectionSender<T>::connectionSender(const connectionSender<T>& conReq) :
+    m_json(conReq.GetJsonToCopy()),
+    m_activation(conReq.GetConstActivation()),
+    m_vTransportParams(conReq.GetTransportParams())
 {
 
 }
 
-template<typename T> connection<T>& connection<T>::operator=(const connection<T>& con)
+template<typename T> connectionSender<T>& connectionSender<T>::operator=(const connectionSender<T>& other)
 {
-    m_json = con.GetJson();
+    m_json = other.GetJsonToCopy();
+    m_vTransportParams = other.GetTransportParams();
+    m_activation = other.GetConstActivation();
     return *this;
 }
 
-template<typename T> void connection<T>::MasterEnable(bool bEnable)
+template<typename T> bool connectionSender<T>::Patch(const Json::Value& jsData)
 {
-    m_json[MASTER_ENABLE] = bEnable;
-}
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: connectionSender: NOW" ;
+    pmlLog(pml::LOG_DEBUG) << jsData;
 
-template<typename T> bool connection<T>::Patch(const Json::Value& jsData)
-{
-    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: connection" ;
-
-    auto jsTemp = m_json;
-
-    if(!DoPatch(jsData))
-    {
-        m_json = jsTemp;
-        return false;
-    }
-    return true;
-}
-
-template<typename T> bool connection<T>::DoPatch(const Json::Value& jsData)
-{
-    if(CheckJsonOptional(jsData, {{MASTER_ENABLE, {jsondatatype::_BOOLEAN}}}) == false)
+    if(connectionSender<T>::CheckJson(jsData) == false)
     {
         return false;
     }
@@ -70,64 +86,12 @@ template<typename T> bool connection<T>::DoPatch(const Json::Value& jsData)
         return false;
     }
 
-    m_json[MASTER_ENABLE] = jsData[MASTER_ENABLE];
-
-    return true;
-}
-
-
-template<typename T> Json::Value connection<T>::GetJson() const
-{
-    Json::Value jsConnect = m_json;
-    jsConnect[ACTIVATION] = m_activation.GetJson();
-
-    return jsConnect;
-}
-
-
-template<typename T> std::experimental::optional<bool> connection<T>::GetMasterEnable() const
-{
-    return GetBool(m_json, MASTER_ENABLE);
-}
-
-
-template<typename T> connectionSender<T>::connectionSender(std::experimental::optional<bool> masterEnable, size_t nTPLegs) :
-  connection<T>(masterEnable),
-  m_vTransportParams(nTPLegs)
-{
-    connection<T>::m_json[RECEIVER_ID] = Json::Value::null;
-}
-
-
-template<typename T> connectionSender<T>::connectionSender(const connectionSender<T>& conReq) : connection<T>(conReq),
-    m_vTransportParams(conReq.GetTransportParams())
-{
-
-}
-
-template<typename T> connectionSender<T>& connectionSender<T>::operator=(const connectionSender<T>& other)
-{
-    connection<T>::m_json = other.GetJson();
-    m_vTransportParams = other.GetTransportParams();
-    return *this;
-}
-
-template<typename T> bool connectionSender<T>::DoPatch(const Json::Value& jsData)
-{
-    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: connectionSender: NOW" ;
-    pmlLog(pml::LOG_DEBUG) << jsData;
-
-    if(CheckJsonOptional(jsData, {{TRANSPORT_PARAMS, {jsondatatype::_ARRAY}},
-                                  {RECEIVER_ID, {jsondatatype::_STRING, jsondatatype::_NULL}}}) == false)
+    if(jsData.isMember(MASTER_ENABLE))
     {
-        return false;
-    }
-    if(!connection<T>::DoPatch(jsData))
-    {
-        return false;
+        m_json[MASTER_ENABLE] = jsData[MASTER_ENABLE];
     }
 
-    if(jsData[TRANSPORT_PARAMS].isArray())
+    if(jsData.isMember(TRANSPORT_PARAMS) && jsData[TRANSPORT_PARAMS].isArray())
     {
         if(jsData[TRANSPORT_PARAMS].size() != m_vTransportParams.size())
         {
@@ -141,17 +105,17 @@ template<typename T> bool connectionSender<T>::DoPatch(const Json::Value& jsData
             }
         }
     }
-
     if(jsData.isMember(RECEIVER_ID))
     {
-        connection<T>::m_json[RECEIVER_ID] = jsData[RECEIVER_ID];
+        m_json[RECEIVER_ID] = jsData[RECEIVER_ID];
     }
     return true;
 }
 
 template<typename T> Json::Value connectionSender<T>::GetJson() const
 {
-    Json::Value jsConnect(connection<T>::GetJson());
+    auto jsConnect = m_json;
+    jsConnect[ACTIVATION] = m_activation.GetJson();
 
     if(m_vTransportParams.empty() == false)
     {
@@ -189,63 +153,79 @@ template<typename T> void connectionSender<T>::SetTPAllowed(int flagsTransport)
 }
 
 template<typename T> connectionReceiver<T>::connectionReceiver(std::experimental::optional<bool> masterEnable, size_t nTPLegs) :
-  connection<T>(masterEnable),
   m_vTransportParams(nTPLegs)
 {
-    connection<T>::m_json[SENDER_ID] = Json::Value::null;
-    connection<T>::m_json[TRANSPORT_FILE][TRANSPORT_FILE_DATA] = Json::Value::null;
-    connection<T>::m_json[TRANSPORT_FILE][TRANSPORT_FILE_TYPE] = Json::Value::null;
+    if(masterEnable)
+    {
+        m_json[MASTER_ENABLE] = (*masterEnable);
+    }
+    m_json[SENDER_ID] = Json::Value::null;
+    m_json[TRANSPORT_FILE][TRANSPORT_FILE_DATA] = Json::Value::null;
+    m_json[TRANSPORT_FILE][TRANSPORT_FILE_TYPE] = Json::Value::null;
 }
 
 
-template<typename T> connectionReceiver<T>::connectionReceiver(const connectionReceiver<T>& conReq) : connection<T>(conReq),
+template<typename T> connectionReceiver<T>::connectionReceiver(const connectionReceiver<T>& conReq) : m_json(conReq.GetJson()),
+    m_activation(conReq.GetConstActivation()),
     m_vTransportParams(conReq.GetTransportParams())
 {
 
 }
 
-template<typename T> bool connectionReceiver<T>::DoPatch(const Json::Value& jsData)
+template<typename T> bool connectionReceiver<T>::Patch(const Json::Value& jsData)
 {
-    if(CheckJsonOptional(jsData, {{TRANSPORT_PARAMS,{jsondatatype::_ARRAY}},
-                                  {SENDER_ID,{jsondatatype::_STRING, jsondatatype::_NULL}},
-                                  {TRANSPORT_FILE, {jsondatatype::_OBJECT}}}) == false)
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Patch: connectionReceiver: NOW" ;
+    pmlLog(pml::LOG_DEBUG) << jsData;
+
+    if(connectionReceiver<T>::CheckJson(jsData) == false)
     {
+        pmlLog() << "CheckJson failed";
         return false;
     }
-    if(!connection<T>::DoPatch(jsData))
+
+
+    if(jsData[ACTIVATION].isObject() && m_activation.Patch(jsData[ACTIVATION]) == false)
     {
         return false;
     }
 
-    if(jsData[TRANSPORT_FILE].isObject())
+    if(jsData.isMember(MASTER_ENABLE))
     {
-        connection<T>::m_json[TRANSPORT_FILE] == jsData[TRANSPORT_FILE];
+        m_json[MASTER_ENABLE] = jsData[MASTER_ENABLE];
+    }
 
-        auto type = GetString(connection<T>::m_json[TRANSPORT_FILE], TRANSPORT_FILE_TYPE);
-        auto data = GetString(connection<T>::m_json[TRANSPORT_FILE], TRANSPORT_FILE_DATA);
+
+    if(jsData.isMember(TRANSPORT_FILE) && jsData[TRANSPORT_FILE].isObject())
+    {
+        m_json[TRANSPORT_FILE] = jsData[TRANSPORT_FILE];
+
+        auto type = GetString(m_json[TRANSPORT_FILE], TRANSPORT_FILE_TYPE);
+        auto data = GetString(m_json[TRANSPORT_FILE], TRANSPORT_FILE_DATA);
         if(type && *type == TRANSPORT_FILE_SDP && data)
         {
             SdpManager::SdpToTransportParams(*data, m_vTransportParams);
         }
     }
 
-    if(jsData[TRANSPORT_PARAMS].isArray())
+    if(jsData.isMember(TRANSPORT_PARAMS) && jsData[TRANSPORT_PARAMS].isArray())
     {
         if(jsData[TRANSPORT_PARAMS].size() != m_vTransportParams.size())
         {
+            pmlLog() << "Transport param array";
             return false;
         }
         for(size_t i = 0; i < jsData[TRANSPORT_PARAMS].size(); i++)
         {
             if(m_vTransportParams[i].Patch(jsData[TRANSPORT_PARAMS][i]) == false)
             {
+                pmlLog() << "Transport param patch failed";
                 return false;
             }
         }
     }
     if(jsData.isMember(SENDER_ID))
     {
-        connection<T>::m_json[SENDER_ID] = SENDER_ID;
+        m_json[SENDER_ID] = jsData[SENDER_ID];
     }
     return true;
 }
@@ -254,7 +234,8 @@ template<typename T> bool connectionReceiver<T>::DoPatch(const Json::Value& jsDa
 
 template<typename T> Json::Value connectionReceiver<T>::GetJson()  const
 {
-    Json::Value jsConnect(connection<T>::GetJson());
+    auto jsConnect = m_json;
+    jsConnect[ACTIVATION] = m_activation.GetJson();
 
     if(m_vTransportParams.empty() == false)
     {
@@ -298,33 +279,33 @@ template<typename T> void connectionReceiver<T>::SetTPAllowed(int flagsTransport
 
 template<typename T> std::experimental::optional<std::string> connectionSender<T>::GetReceiverId() const
 {
-    return GetString(connection<T>::m_json, SENDER_ID);
+    return GetString(m_json, RECEIVER_ID);
 }
 
 template<typename T> std::experimental::optional<std::string> connectionReceiver<T>::GetSenderId() const
 {
-    return GetString(connection<T>::m_json, RECEIVER_ID);
+    return GetString(m_json, SENDER_ID);
 }
 
 template<typename T> std::experimental::optional<std::string> connectionReceiver<T>::GetTransportFileType() const
 {
-    return GetString(connection<T>::m_json[TRANSPORT_FILE], TRANSPORT_FILE_TYPE);
+    return GetString(m_json[TRANSPORT_FILE], TRANSPORT_FILE_TYPE);
 }
 
 template<typename T> std::experimental::optional<std::string> connectionReceiver<T>::GetTransportFileData() const
 {
-    return GetString(connection<T>::m_json[TRANSPORT_FILE], TRANSPORT_FILE_DATA);
+    return GetString(m_json[TRANSPORT_FILE], TRANSPORT_FILE_DATA);
 }
 
 template<typename T> void connectionReceiver<T>::SetSenderId(const std::experimental::optional<std::string>& id)
 {
     if(id)
     {
-        connection<T>::m_json[SENDER_ID] = *id;
+        m_json[SENDER_ID] = *id;
     }
     else
     {
-        connection<T>::m_json[SENDER_ID] = Json::Value::null;
+        m_json[SENDER_ID] = Json::Value::null;
     }
 }
 
@@ -332,20 +313,20 @@ template<typename T> void connectionReceiver<T>::SetTransportFile(const std::exp
 {
     if(type)
     {
-        connection<T>::m_json[TRANSPORT_FILE][TRANSPORT_FILE_TYPE] = *type;
+        m_json[TRANSPORT_FILE][TRANSPORT_FILE_TYPE] = *type;
         if(data)
         {
-            connection<T>::m_json[TRANSPORT_FILE][TRANSPORT_FILE_DATA] = *data;
+            m_json[TRANSPORT_FILE][TRANSPORT_FILE_DATA] = *data;
         }
         else
         {
-            connection<T>::m_json[TRANSPORT_FILE][TRANSPORT_FILE_DATA] = Json::Value::null;
+            m_json[TRANSPORT_FILE][TRANSPORT_FILE_DATA] = Json::Value::null;
         }
     }
     else
     {
-        connection<T>::m_json[TRANSPORT_FILE][TRANSPORT_FILE_TYPE] = Json::Value::null;
-        connection<T>::m_json[TRANSPORT_FILE][TRANSPORT_FILE_DATA] = Json::Value::null;
+        m_json[TRANSPORT_FILE][TRANSPORT_FILE_TYPE] = Json::Value::null;
+        m_json[TRANSPORT_FILE][TRANSPORT_FILE_DATA] = Json::Value::null;
     }
 }
 
@@ -360,15 +341,151 @@ template<typename T>void connectionSender<T>::SetDestinationDetails(const std::s
 
 template<typename T> connectionReceiver<T>& connectionReceiver<T>::operator=(const connectionReceiver<T>& other)
 {
-    connection<T>::m_json = other.GetJson();
+    m_json = other.GetJsonToCopy();
     m_vTransportParams = other.GetTransportParams();
+    m_activation = other.GetConstActivation();
     return *this;
 }
 
 
+template<typename T> bool connectionSender<T>::CheckJson(const Json::Value& jsPatch)
+{
+    if (CheckJsonAllowed(jsPatch, {{RECEIVER_ID, {jsondatatype::_STRING, jsondatatype::_NULL}},
+                                 {MASTER_ENABLE, {jsondatatype::_BOOLEAN}},
+                                 {ACTIVATION , {jsondatatype::_OBJECT}},
+                                 {TRANSPORT_PARAMS, {jsondatatype::_ARRAY}}}) == false)
+    {
+        return false;
+    }
 
-template class connection<activationRequest>;
-template class connection<activationResponse>;
+    if(jsPatch.isMember(ACTIVATION) && T::CheckJson(jsPatch[ACTIVATION]) == false)
+    {
+        return false;
+    }
+    if(jsPatch.isMember(TRANSPORT_PARAMS))
+    {
+        for(Json::ArrayIndex ai = 0; ai < jsPatch[TRANSPORT_PARAMS].size(); ai++)
+        {
+            if(TransportParamsRTPSender::CheckJson(jsPatch[TRANSPORT_PARAMS][ai]) == false)
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+template<typename T> bool connectionReceiver<T>::CheckJson(const Json::Value& jsPatch)
+{
+    if (CheckJsonAllowed(jsPatch, {{SENDER_ID, {jsondatatype::_STRING, jsondatatype::_NULL}},
+                                 {MASTER_ENABLE, {jsondatatype::_BOOLEAN}},
+                                 {ACTIVATION , {jsondatatype::_OBJECT}},
+                                 {TRANSPORT_PARAMS, {jsondatatype::_ARRAY}},
+                                 {TRANSPORT_FILE, {jsondatatype::_OBJECT}}}) == false)
+    {
+        return false;
+    }
+    if(jsPatch.isMember(ACTIVATION) && T::CheckJson(jsPatch[ACTIVATION]) == false)
+    {
+        return false;
+    }
+    if(jsPatch.isMember(TRANSPORT_FILE) && CheckJsonAllowed(jsPatch[TRANSPORT_FILE], {{TRANSPORT_FILE_DATA, {jsondatatype::_STRING, jsondatatype::_NULL}},{TRANSPORT_FILE_TYPE, {jsondatatype::_STRING, jsondatatype::_NULL}}}) == false)
+    {
+        return false;
+    }
+    if(jsPatch.isMember(TRANSPORT_PARAMS))
+    {
+        for(Json::ArrayIndex ai = 0; ai < jsPatch[TRANSPORT_PARAMS].size(); ai++)
+        {
+            if(TransportParamsRTPReceiver::CheckJson(jsPatch[TRANSPORT_PARAMS][ai]) == false)
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+
+template<typename T> bool connectionSender<T>::CheckConstraints(const connectionSender<T>& request)
+{
+    if(request.GetTransportParams().size() != m_vTransportParams.size())
+    {
+        return false;
+    }
+    for(size_t i = 0; i < m_vTransportParams.size(); i++)
+    {
+        if(m_vTransportParams[i].CheckConstraints(request.GetTransportParams()[i]) == false)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+template<typename T> bool connectionReceiver<T>::CheckConstraints(const connectionReceiver<T>& request)
+{
+    if(request.GetTransportParams().size() != m_vTransportParams.size())
+    {
+        return false;
+    }
+    for(size_t i = 0; i < m_vTransportParams.size(); i++)
+    {
+        if(m_vTransportParams[i].CheckConstraints(request.GetTransportParams()[i]) == false)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+template<typename T> bool connectionSender<T>::AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
+                                   const std::vector<pairEnum_t>& vEnum, const std::experimental::optional<size_t>& tp)
+{
+    if(tp)
+    {
+        if(*tp < m_vTransportParams.size())
+        {
+            return m_vTransportParams[*tp].AddConstraint(sKey, minValue, maxValue, pattern, vEnum);
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else
+    {
+        for(auto& trans : m_vTransportParams)
+        {
+            trans.AddConstraint(sKey, minValue, maxValue, pattern, vEnum);
+        }
+        return true;
+    }
+}
+
+template<typename T> bool connectionReceiver<T>::AddConstraint( const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
+                                   const std::vector<pairEnum_t>& vEnum, const std::experimental::optional<size_t>& tp)
+{
+    if(tp)
+    {
+        if(*tp < m_vTransportParams.size())
+        {
+            return m_vTransportParams[*tp].AddConstraint(sKey, minValue, maxValue, pattern, vEnum);
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else
+    {
+        for(auto& trans : m_vTransportParams)
+        {
+            trans.AddConstraint(sKey, minValue, maxValue, pattern, vEnum);
+        }
+        return true;
+    }
+}
+
 template class connectionSender<activationRequest>;
 template class connectionSender<activationResponse>;
 template class connectionReceiver<activationResponse>;

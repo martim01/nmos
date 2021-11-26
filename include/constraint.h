@@ -4,23 +4,26 @@
 #include <vector>
 #include "nmosapiversion.h"
 #include "utils.h"
+#include "optional.hpp"
 
 namespace pml
 {
     namespace nmos
     {
+        typedef std::pair<jsondatatype, std::string> pairEnum_t;
+
         class constraint
         {
             public:
 
-                typedef std::pair<jsondatatype, std::string> pairEnum_t;
 
                 constraint(const std::string& sDescription="");
 
-                bool MeetsConstraint(const std::string& sValue);
-                bool MeetsConstraint(int nValue);
-                bool MeetsConstraint(double dValue);
-                bool MeetsConstraint(bool bValue);
+                bool MeetsConstraint(const std::string& value);
+                bool MeetsConstraint(const unsigned int value);
+                bool MeetsConstraint(const int value);
+                bool MeetsConstraint(const double value);
+                bool MeetsConstraint(const bool value);
 
                 void SetMinimum(int nMinimum);
                 void SetMaximum(int nMaximum);
@@ -33,17 +36,22 @@ namespace pml
                 void RemovePattern();
 
 
-                Json::Value GetJson(const ApiVersion& version) const;
+                Json::Value GetJson() const;
 
                 bool UpdateFromJson(const Json::Value& jsConstraint);
+
+                static const std::string MAXIMUM;
+                static const std::string MINIMUM;
+                static const std::string PATTERN;
+                static const std::string ENUM;
 
             private:
 
                 std::string m_sDescription;
-                std::pair<bool, int> m_pairMinimum;     // @todo min constraint can be a double as well
-                std::pair<bool, int> m_pairMaximum;     // @todo max constraint can be a double as well
+                std::experimental::optional<int> m_minimum; // @todo min constraint can be a double as well
+                std::experimental::optional<int> m_maximum; // @todo min constraint can be a double as well
+                std::experimental::optional<std::string> m_pattern;
                 std::vector<pairEnum_t> m_vEnum;
-                std::pair<bool, std::string> m_pairPattern;
 
 
         };
@@ -52,40 +60,26 @@ namespace pml
         class Constraints
         {
             public:
-                Constraints(int nSupported);
+                Constraints();
 
-                virtual Json::Value GetJson(const ApiVersion& version) const;
+                virtual Json::Value GetJson() const;
 
                 bool UpdateFromJson(const Json::Value& jsData);
 
-                bool MeetsConstraint(const std::string& sConstraint, const std::string& sValue);
-                bool MeetsConstraint(const std::string& sConstraint, int nValue);
-                bool MeetsConstraint(const std::string& sConstraint, double dValue);
-                bool MeetsConstraint(const std::string& sConstraint, bool bValue);
+                bool MeetsConstraint(const std::string& sKey, const Json::Value& jsCheck);
 
+                bool AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
+                                   const std::vector<pairEnum_t>& vEnum);
+                bool ClearConstraint(const std::string& sKey);
+
+                void CreateEmptyConstraint(const std::string& sKey);
 
             protected:
-                int m_nParamsSupported;
-
-
-            std::map<std::string, constraint> m_mConstraints;
+                std::map<std::string, constraint> m_mConstraints;
 
 
         };
 
-        class ConstraintsSender : public Constraints
-        {
-            public:
-                ConstraintsSender(int nSupported);
-
-
-        };
-
-
-        struct ConstraintsReceiver : public Constraints
-        {
-            ConstraintsReceiver(int nSupported);
-        };
 
     };
 };

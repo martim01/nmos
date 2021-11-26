@@ -55,13 +55,15 @@ namespace pml
                 void SetupActivation(const std::string& sInterfaceIp);
                 void MasterEnable(bool bEnable);
 
+                bool AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
+                                   const std::vector<pairEnum_t>& vEnum, const std::experimental::optional<size_t>& tp) override;
 
             private:
                 friend class IS05Server;
                 friend class IS04Server;
                 friend class NodeApiPrivate;
 
-                void SetSender(const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp);  //this is the IS-04 way of connecting
+                void SubscribeToSender(const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp);  //this is the IS-04 way of connecting
                 activation::enumActivate Stage(const connectionReceiver<activationResponse>& conRequest);
                 void CommitActivation();
                 void Activate();
@@ -86,7 +88,6 @@ namespace pml
 
                 connectionReceiver<activationResponse> m_Staged;
                 connectionReceiver<activationResponse> m_Active;
-                std::vector<ConstraintsReceiver> m_vConstraints;  // @todo constraints should be same parameters as connection
 
                 bool m_bActivateAllowed;
                 //std::string m_sSenderId;
