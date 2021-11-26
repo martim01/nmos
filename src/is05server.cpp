@@ -251,6 +251,7 @@ response IS05Server::GetNmosSingleSenderTransportfile(const query& theQuery, con
     {
         if(pSender->GetActive().GetMasterEnable())
         {
+            m_api.CreateSDP(pSender);
             resp.sContentType = "application/sdp";
             resp.sData = pSender->GetTransportFile();
         }

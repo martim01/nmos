@@ -1,6 +1,9 @@
 #include "constraint.h"
 #include <sstream>
 #include "transportparams.h"
+#include <algorithm>
+#include "log.h"
+
 
 using namespace std;
 using namespace pml::nmos;
@@ -113,6 +116,10 @@ Json::Value constraint::GetJson() const
 
 bool constraint::MeetsConstraint(const std::string& sValue)
 {
+    if(sValue == TransportParamsRTP::AUTO)
+    {
+        return true;
+    }
     bool bMeets = true;
     //is the min set
     if(m_minimum)
@@ -144,10 +151,16 @@ bool constraint::MeetsConstraint(const std::string& sValue)
 
     if(m_vEnum.empty() == false)
     {
+        bool bFound = false;
         for(size_t i = 0; i < m_vEnum.size(); i++)
         {
-            bMeets &= (m_vEnum[i].second == sValue);
+            if(m_vEnum[i].second == sValue)
+            {
+                bFound = true;
+                break;
+            }
         }
+        bMeets &= bFound;
     }
 
     if(m_pattern)
@@ -175,10 +188,16 @@ bool constraint::MeetsConstraint(int nValue)
         stringstream ss;
         ss << nValue;
 
+         bool bFound = false;
         for(size_t i = 0; i < m_vEnum.size(); i++)
         {
-            bMeets &= (m_vEnum[i].second == ss.str());
+            if(m_vEnum[i].second == ss.str())
+            {
+                bFound = true;
+                break;
+            }
         }
+        bMeets &= bFound;
     }
 
     if(m_pattern)
@@ -206,10 +225,16 @@ bool constraint::MeetsConstraint(unsigned int nValue)
         stringstream ss;
         ss << nValue;
 
+         bool bFound = false;
         for(size_t i = 0; i < m_vEnum.size(); i++)
         {
-            bMeets &= (m_vEnum[i].second == ss.str());
+            if(m_vEnum[i].second == ss.str())
+            {
+                bFound = true;
+                break;
+            }
         }
+        bMeets &= bFound;
     }
 
     if(m_pattern)
@@ -237,10 +262,16 @@ bool constraint::MeetsConstraint(double dValue)
         stringstream ss;
         ss << dValue;
 
+         bool bFound = false;
         for(size_t i = 0; i < m_vEnum.size(); i++)
         {
-            bMeets &= (m_vEnum[i].second == ss.str());
+            if(m_vEnum[i].second == ss.str())
+            {
+                bFound = true;
+                break;
+            }
         }
+        bMeets &= bFound;
     }
 
     if(m_pattern)
@@ -271,10 +302,16 @@ bool constraint::MeetsConstraint(bool bValue)
             sValue = "true";
         }
 
+         bool bFound = false;
         for(size_t i = 0; i < m_vEnum.size(); i++)
         {
-            bMeets &= (m_vEnum[i].second == sValue);
+            if(m_vEnum[i].second == sValue)
+            {
+                bFound = true;
+                break;
+            }
         }
+        bMeets &= bFound;
     }
 
     if(m_pattern)
@@ -372,10 +409,10 @@ bool Constraints::MeetsConstraint(const std::string& sKey, const Json::Value& js
     auto itConstraint = m_mConstraints.find(sKey);
     if(itConstraint != m_mConstraints.end())
     {
+        pmlLog() << sKey << " " << jsCheck.type() << " " << jsCheck.asString();
         switch(jsCheck.type())
         {
             case Json::ValueType::arrayValue:
-            case Json::ValueType::nullValue:
             case Json::ValueType::objectValue:
                 return false;
             case Json::ValueType::booleanValue:
@@ -387,6 +424,8 @@ bool Constraints::MeetsConstraint(const std::string& sKey, const Json::Value& js
                return itConstraint->second.MeetsConstraint(jsCheck.asDouble());
             case Json::ValueType::stringValue:
                 return itConstraint->second.MeetsConstraint(jsCheck.asString());
+            case Json::ValueType::nullValue:
+                return true;
         }
     }
     return true;

@@ -62,6 +62,7 @@ bool TransportParams::ClearConstraint(const std::string& sKey)
 
 bool TransportParams::CheckConstraints(const TransportParams& tpRequest)
 {
+    pmlLog() << "CheckConstraings: " << tpRequest.GetJson();
     for(auto itObject = tpRequest.GetJson().begin(); itObject != tpRequest.GetJson().end(); ++itObject)
     {
         if(m_constraints.MeetsConstraint(itObject.key().asString(), (*itObject)) == false)
