@@ -19,11 +19,11 @@ namespace pml
 
                 constraint(const std::string& sDescription="");
 
-                bool MeetsConstraint(const std::string& value);
-                bool MeetsConstraint(const unsigned int value);
-                bool MeetsConstraint(const int value);
-                bool MeetsConstraint(const double value);
-                bool MeetsConstraint(const bool value);
+                bool MeetsConstraint(const std::string& value) const;
+                bool MeetsConstraint(const unsigned int value) const;
+                bool MeetsConstraint(const int value) const;
+                bool MeetsConstraint(const double value) const;
+                bool MeetsConstraint(const bool value) const;
 
                 void SetMinimum(int nMinimum);
                 void SetMaximum(int nMaximum);
@@ -61,12 +61,13 @@ namespace pml
         {
             public:
                 Constraints();
+                Constraints(const Json::Value& jsTransport);
 
                 virtual Json::Value GetJson() const;
 
                 bool UpdateFromJson(const Json::Value& jsData);
 
-                bool MeetsConstraint(const std::string& sKey, const Json::Value& jsCheck);
+                bool MeetsConstraint(const std::string& sKey, const Json::Value& jsCheck) const;
 
                 bool AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
                                    const std::vector<pairEnum_t>& vEnum);

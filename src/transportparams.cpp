@@ -49,29 +49,6 @@ TransportParams& TransportParams::operator=(const TransportParams& other)
 }
 
 
-bool TransportParams::AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
-                                    const std::vector<pairEnum_t>& vEnum)
-{
-    return m_constraints.AddConstraint(sKey, minValue, maxValue, pattern, vEnum);
-}
-
-bool TransportParams::ClearConstraint(const std::string& sKey)
-{
-    return m_constraints.ClearConstraint(sKey);
-}
-
-bool TransportParams::CheckConstraints(const TransportParams& tpRequest)
-{
-    pmlLog() << "CheckConstraings: " << tpRequest.GetJson();
-    for(auto itObject = tpRequest.GetJson().begin(); itObject != tpRequest.GetJson().end(); ++itObject)
-    {
-        if(m_constraints.MeetsConstraint(itObject.key().asString(), (*itObject)) == false)
-        {
-            return false;
-        }
-    }
-    return true;
-}
 
 
 TransportParamsRTP::TransportParamsRTP() : TransportParams()
@@ -79,8 +56,6 @@ TransportParamsRTP::TransportParamsRTP() : TransportParams()
     m_json[DESTINATION_PORT] = AUTO;
     m_json[RTP_ENABLED] = false;
 
-    m_constraints.CreateEmptyConstraint(DESTINATION_PORT);
-    m_constraints.CreateEmptyConstraint(RTP_ENABLED);
 }
 
 
@@ -156,11 +131,6 @@ void TransportParamsRTP::FecAllowed()
     m_json[FEC_1DDESTINATION_PORT] = AUTO;
     m_json[FEC_2DDESTINATION_PORT] = AUTO;
 
-    m_constraints.CreateEmptyConstraint(FEC_ENABLED);
-    m_constraints.CreateEmptyConstraint(FEC_DESTINATION_IP);
-    m_constraints.CreateEmptyConstraint(FEC_MODE);
-    m_constraints.CreateEmptyConstraint(FEC_1DDESTINATION_PORT);
-    m_constraints.CreateEmptyConstraint(FEC_2DDESTINATION_PORT);
 
 }
 
@@ -170,9 +140,6 @@ void TransportParamsRTP::RtcpAllowed()
     m_json[RTCP_DESTINATION_PORT] = AUTO;
     m_json[RTCP_DESTINATION_IP] = AUTO;
 
-    m_constraints.CreateEmptyConstraint(RTCP_ENABLED);
-    m_constraints.CreateEmptyConstraint(RTCP_DESTINATION_PORT);
-    m_constraints.CreateEmptyConstraint(RTCP_DESTINATION_IP);
 }
 
 
@@ -298,15 +265,21 @@ void TransportParamsRTP::EnableRtp(bool bEnable)
 
 
 
-TransportParamsRTPSender::TransportParamsRTPSender() : TransportParamsRTP()
+TransportParamsRTPSender::TransportParamsRTPSender(flagsTP allowed) : TransportParamsRTP()
 {
     m_json[SOURCE_IP] = AUTO;
     m_json[DESTINATION_IP] = AUTO;
     m_json[SOURCE_PORT] = AUTO;
 
-    m_constraints.CreateEmptyConstraint(SOURCE_IP);
-    m_constraints.CreateEmptyConstraint(DESTINATION_IP);
-    m_constraints.CreateEmptyConstraint(SOURCE_PORT);
+    if(allowed & flagsTP::FEC)
+    {
+        FecAllowed();
+    }
+    if(allowed & flagsTP::RTCP)
+    {
+        RtcpAllowed();
+    }
+
 }
 
 TransportParamsRTPSender::TransportParamsRTPSender(const TransportParamsRTPSender& tp) : TransportParamsRTP(tp)
@@ -334,11 +307,6 @@ void TransportParamsRTPSender::FecAllowed()
     m_json[FEC_1DSOURCE_PORT] = AUTO;
     m_json[FEC_2DSOURCE_PORT] = AUTO;
 
-    m_constraints.CreateEmptyConstraint(FEC_TYPE);
-    m_constraints.CreateEmptyConstraint(FEC_BLOCK_WIDTH);
-    m_constraints.CreateEmptyConstraint(FEC_BLOCK_HEIGHT);
-    m_constraints.CreateEmptyConstraint(FEC_1DSOURCE_PORT);
-    m_constraints.CreateEmptyConstraint(FEC_2DSOURCE_PORT);
 }
 
 bool TransportParamsRTPSender::CheckJson(const Json::Value&  jsPatch)
@@ -476,13 +444,23 @@ std::experimental::optional<uint32_t> TransportParamsRTPSender::GetRtcpSourcePor
 
 
 
-TransportParamsRTPReceiver::TransportParamsRTPReceiver() : TransportParamsRTP()
+TransportParamsRTPReceiver::TransportParamsRTPReceiver(flagsTP allowed) : TransportParamsRTP()
 {
     m_json[SOURCE_IP] = Json::Value::null;
     m_json[INTERFACE_IP] = AUTO;
 
-    m_constraints.CreateEmptyConstraint(SOURCE_IP);
-    m_constraints.CreateEmptyConstraint(INTERFACE_IP);
+    if(allowed & flagsTP::FEC)
+    {
+        FecAllowed();
+    }
+    if(allowed & flagsTP::RTCP)
+    {
+        RtcpAllowed();
+    }
+    if(allowed & flagsTP::MULTICAST)
+    {
+        m_json[MULTICAST_IP] = Json::Value::null;
+    }
 }
 
 TransportParamsRTPReceiver::TransportParamsRTPReceiver(const TransportParamsRTPReceiver& tp) : TransportParamsRTP(tp)
@@ -598,6 +576,5 @@ void TransportParamsRTPReceiver::SetMulticastIp(const std::string& sAddress)
     {
         m_json[MULTICAST_IP] = Json::Value::null;
     }
-    m_constraints.CreateEmptyConstraint(MULTICAST_IP);
 }
 

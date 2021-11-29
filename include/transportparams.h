@@ -21,17 +21,10 @@ namespace pml
 
                 const Json::Value& GetJson() const { return m_json;}
 
-                const Constraints& GetConstraints() const {return m_constraints;}
-                bool AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
-                                   const std::vector<pairEnum_t>& vEnum);
 
-               bool ClearConstraint(const std::string& sKey);
-
-               bool CheckConstraints(const TransportParams& tpRequest);
 
             protected:
                 Json::Value m_json;
-                Constraints m_constraints;
 
         };
 
@@ -110,7 +103,7 @@ namespace pml
         {
 
             public:
-                TransportParamsRTPReceiver();
+                TransportParamsRTPReceiver(flagsTP allowed);
                 TransportParamsRTPReceiver(const TransportParamsRTPReceiver& tp);
                 TransportParamsRTPReceiver& operator=(const TransportParamsRTPReceiver& other);
 
@@ -131,7 +124,7 @@ namespace pml
         {
             public:
 
-                TransportParamsRTPSender();
+                TransportParamsRTPSender(flagsTP allowed);
                 TransportParamsRTPSender(const TransportParamsRTPSender& tp);
                 TransportParamsRTPSender& operator=(const TransportParamsRTPSender& other);
 

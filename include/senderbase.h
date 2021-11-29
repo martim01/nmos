@@ -18,8 +18,8 @@ namespace pml
         class NMOS_EXPOSE Sender : public IOResource
         {
             public:
-                Sender(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId, const std::string& sInterface,
-                           TransportParamsRTP::flagsTP flagsTransport=TransportParamsRTP::CORE);
+                Sender(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId,
+                const std::string& sInterface, TransportParamsRTP::flagsTP flagsTransport=TransportParamsRTP::CORE);
                 virtual ~Sender();
 
                 /** @brief Set the active destination details to create an SDP. This will be overwritten by IS-05
@@ -39,7 +39,7 @@ namespace pml
 
                 virtual Json::Value GetConnectionStagedJson(const ApiVersion& version) const;
                 virtual Json::Value GetConnectionActiveJson(const ApiVersion& version) const;
-                virtual Json::Value GetConnectionConstraintsJson(const ApiVersion& version) const;
+
 
                 virtual bool CheckConstraints(const connectionSender<activationResponse>& conRequest);
 
@@ -61,8 +61,6 @@ namespace pml
                 void MasterEnable(bool bEnable);
                 void SetTransportFile(const std::string& sSDP);
 
-                bool AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
-                                   const std::vector<pairEnum_t>& vEnum, const std::experimental::optional<size_t>& tp) override;
 
             protected:
 

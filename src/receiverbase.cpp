@@ -14,20 +14,21 @@ const std::array<std::string,4> Receiver::STR_TYPE = {"urn:x-nmos:format:audio",
 
 
 
-Receiver::Receiver(const std::string& sLabel, const std::string& sDescription, enumTransport eTransport, const std::string& sDeviceId, enumType eFormat, int flagsTransport) :
+Receiver::Receiver(const std::string& sLabel, const std::string& sDescription, enumTransport eTransport, const std::string& sDeviceId, enumType eFormat, TransportParamsRTP::flagsTP flagsTransport) :
     IOResource("receiver", sLabel, sDescription, eTransport),
     m_sDeviceId(sDeviceId),
     m_sSenderId(""),
     m_bSenderActive(false),
     m_eType(eFormat),
-    m_Staged(true, ((flagsTransport & TransportParamsRTP::REDUNDANT) ? 2 : 1)),
-    m_Active(true, ((flagsTransport & TransportParamsRTP::REDUNDANT) ? 2 : 1)),
+    m_Staged(true, flagsTransport),
+    m_Active(true, flagsTransport),
     m_bActivateAllowed(false)
 {
 
     m_Staged.SetTPAllowed(flagsTransport);
     m_Active.SetTPAllowed(flagsTransport);
 
+    CreateConstraints(m_Staged.GetJson());
 
 }
 
@@ -350,20 +351,11 @@ const std::string& Receiver::GetSender() const
 
 
 
-Json::Value Receiver::GetConnectionConstraintsJson(const ApiVersion& version) const
-{
-    Json::Value jsArray(Json::arrayValue);
-    for(const auto& tp : m_Staged.GetTransportParams())
-    {
-        jsArray.append(tp.GetConstraints().GetJson());
-    }
-    return jsArray;
-}
 
 
 bool Receiver::CheckConstraints(const connectionReceiver<activationResponse>& conRequest)
 {
-    return m_Staged.CheckConstraints(conRequest);
+    return IOResource::CheckConstraints(conRequest.GetJson());
 
 }
 
@@ -509,9 +501,3 @@ void Receiver::SetStagedActivationTimePoint(const std::chrono::time_point<std::c
     m_Staged.GetActivation().SetActivationTime(tp);
 }
 
-bool Receiver::AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
-                                   const std::vector<pairEnum_t>& vEnum, const std::experimental::optional<size_t>& tp)
-{
-    std::lock_guard<std::mutex> lg(m_mutex);
-    return m_Staged.AddConstraint(sKey, minValue, maxValue, pattern, vEnum,tp);
-}

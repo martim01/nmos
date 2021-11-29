@@ -41,7 +41,7 @@ int main()
 
     auto pSender = make_shared<pml::nmos::Sender>("TestSender", "Description", pFlow->GetId(), pml::nmos::Sender::RTP_MCAST, pDevice->GetId(), "eth0");
     auto pReceiver = make_shared<pml::nmos::Receiver>("Test Receiver", "TestDescription", pml::nmos::Receiver::RTP_MCAST, pDevice->GetId(), pml::nmos::Receiver::AUDIO,
-    pml::nmos::TransportParamsRTP::CORE | pml::nmos::TransportParamsRTP::MULTICAST);
+    (pml::nmos::TransportParamsRTP::flagsTP(pml::nmos::TransportParamsRTP::CORE | pml::nmos::TransportParamsRTP::MULTICAST)));
 
     //pSender->CreateSDP();
     pSender->MasterEnable(true);

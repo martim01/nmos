@@ -4,6 +4,8 @@
 #include "log.h"
 #include <thread>
 #include "eventposter.h"
+#include "threadpool.h"
+
 
 using namespace pml::nmos;
 
@@ -108,8 +110,8 @@ CurlRegister::~CurlRegister()
 
 void CurlRegister::PostAsync(const std::string& sBaseUrl, const std::string& sJson, long nUserType)
 {
-    std::thread threadPost(PostThreaded, sBaseUrl, sJson, this, nUserType);
-    threadPost.detach();
+    ThreadPool::Get().Submit([&](){PostThreaded(sBaseUrl, sJson, this, nUserType);});
+    //threadPost.detach();
 }
 
 
@@ -153,8 +155,9 @@ curlResponse CurlRegister::Post(const std::string& sUrl, const std::string& sJso
 
 void CurlRegister::DeleteAsync(const std::string& sUrl, const std::string& sType, const std::string& sId, long nUserType)
 {
-    std::thread threadPost(DeleteThreaded, sUrl, sType, sId, this, nUserType);
-    threadPost.detach();
+    //std::thread threadPost(DeleteThreaded, sUrl, sType, sId, this, nUserType);
+    //threadPost.detach();
+    ThreadPool::Get().Submit([&](){DeleteThreaded(sUrl, sType, sId, this, nUserType);});
 }
 
 
@@ -188,8 +191,10 @@ curlResponse CurlRegister::Delete(const std::string& sUrl, const std::string& sT
 
 void CurlRegister::GetAsync(const std::string& sUrl, long nUserType, bool bJson)
 {
-    std::thread threadGet(GetThreaded, sUrl, this, nUserType, bJson);
-    threadGet.detach();
+    //std::thread threadGet(GetThreaded, sUrl, this, nUserType, bJson);
+    //threadGet.detach();
+
+    ThreadPool::Get().Submit([&](){GetThreaded(sUrl, this, nUserType,bJson);});
 }
 
 curlResponse CurlRegister::Get(const std::string& sUrl, bool bJson)
@@ -216,8 +221,10 @@ curlResponse CurlRegister::Get(const std::string& sUrl, bool bJson)
 
 void CurlRegister::PutPatchAsync(const std::string& sBaseUrl, const std::string& sJson, long nUserType, bool bPut, const std::string& sResourceId)
 {
-    std::thread threadPut(PutThreaded, sBaseUrl, sJson, this, nUserType, bPut, sResourceId);
-    threadPut.detach();
+    //std::thread threadPut(PutThreaded, sBaseUrl, sJson, this, nUserType, bPut, sResourceId);
+    //threadPut.detach();
+
+    ThreadPool::Get().Submit([&](){PutThreaded(sBaseUrl, sJson, this, nUserType, bPut, sResourceId);});
 }
 
 curlResponse CurlRegister::PutPatch(const std::string& sUrl, const std::string& sJson, bool bPut, const std::string& sResourceId)

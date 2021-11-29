@@ -20,16 +20,13 @@ Sender::Sender(const std::string& sLabel, const std::string& sDescription, const
     m_sDeviceId(sDeviceId),
     m_sReceiverId(""),
     m_bReceiverActive(false),
-    m_Staged(true, ((flagsTransport & TransportParamsRTP::REDUNDANT) ? 2 : 1)),
-    m_Active(true, ((flagsTransport & TransportParamsRTP::REDUNDANT) ? 2 : 1)),
+    m_Staged(true, flagsTransport),
+    m_Active(true, flagsTransport),
     m_bActivateAllowed(false)
 {
-
     AddInterfaceBinding(sInterface);
 
-
-    m_Staged.SetTPAllowed(flagsTransport);
-    m_Active.SetTPAllowed(flagsTransport);
+    CreateConstraints(m_Staged.GetJson());
 }
 
 
@@ -154,23 +151,9 @@ Json::Value Sender::GetConnectionActiveJson(const ApiVersion& version) const
 }
 
 
-
-
-Json::Value Sender::GetConnectionConstraintsJson(const ApiVersion& version) const
-{
-    Json::Value jsArray(Json::arrayValue);
-    for(const auto& tp : m_Staged.GetTransportParams())
-    {
-        jsArray.append(tp.GetConstraints().GetJson());
-    }
-    return jsArray;
-}
-
-
-
 bool Sender::CheckConstraints(const connectionSender<activationResponse>& conRequest)
 {
-    return m_Staged.CheckConstraints(conRequest);
+    return IOResource::CheckConstraints(conRequest.GetJson());
 }
 
 bool Sender::IsLocked()
@@ -380,10 +363,3 @@ void Sender::SetStagedActivationTimePoint(const std::chrono::time_point<std::chr
     m_Staged.GetActivation().SetActivationTime(tp);
 }
 
-
-bool Sender::AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
-                                   const std::vector<pairEnum_t>& vEnum, const std::experimental::optional<size_t>& tp)
-{
-    std::lock_guard<std::mutex> lg(m_mutex);
-    return m_Staged.AddConstraint(sKey, minValue, maxValue, pattern, vEnum, tp);
-}

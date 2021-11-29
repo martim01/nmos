@@ -168,6 +168,7 @@
 		<Unit filename="include/source.h" />
 		<Unit filename="include/sourceaudio.h" />
 		<Unit filename="include/sourcegeneric.h" />
+		<Unit filename="include/threadpool.h" />
 		<Unit filename="include/transportparams.h" />
 		<Unit filename="include/utils.h" />
 		<Unit filename="include/zcposter.h" />
@@ -207,6 +208,7 @@
 		<Unit filename="src/source.cpp" />
 		<Unit filename="src/sourceaudio.cpp" />
 		<Unit filename="src/sourcegeneric.cpp" />
+		<Unit filename="src/threadpool.cpp" />
 		<Unit filename="src/transportparams.cpp" />
 		<Unit filename="src/utils.cpp" />
 		<Unit filename="src/windows/bonjourbrowser.cpp">

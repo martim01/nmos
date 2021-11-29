@@ -19,7 +19,8 @@ namespace pml
 
                 enum enumType {AUDIO, VIDEO, DATA, MUX};
 
-                Receiver(const std::string& sLabel, const std::string& sDescription, enumTransport eTransport, const std::string& sDeviceId, enumType eType, int flagsTransport=TransportParamsRTP::CORE);
+                Receiver(const std::string& sLabel, const std::string& sDescription, enumTransport eTransport, const std::string& sDeviceId, enumType eType,
+                TransportParamsRTP::flagsTP flagsTransport=TransportParamsRTP::CORE);
                 virtual ~Receiver();
                 //Receiver();
 
@@ -38,7 +39,6 @@ namespace pml
 
                 Json::Value GetConnectionStagedJson(const ApiVersion& version) const;
                 Json::Value GetConnectionActiveJson(const ApiVersion& version) const;
-                Json::Value GetConnectionConstraintsJson(const ApiVersion& version) const;
 
                 const std::string& GetSender() const;
 
@@ -55,8 +55,6 @@ namespace pml
                 void SetupActivation(const std::string& sInterfaceIp);
                 void MasterEnable(bool bEnable);
 
-                bool AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
-                                   const std::vector<pairEnum_t>& vEnum, const std::experimental::optional<size_t>& tp) override;
 
             private:
                 friend class IS05Server;

@@ -914,8 +914,9 @@ void ClientApiImpl::GetNodeDetails()
         m_nCurlThreadCount++;
         //need to get all the node details.
         //lets launch a thread that will ask for self, devices, sources, flows, senders, receivers
-        std::thread th(NodeBrowser, this, m_lstResolve.front());
-        th.detach();    //@todo better to wait on the thread at close down
+        ThreadPool::Get().Submit([&](){NodeBrowser(this, m_lstResolve.front());});
+        //std::thread th(NodeBrowser, this, m_lstResolve.front());
+        //th.detach();    //@todo better to wait on the thread at close down
         m_lstResolve.erase(m_lstResolve.begin());
     }
 }
@@ -2048,9 +2049,9 @@ bool ClientApiImpl::Connect(const std::string& sSenderId, const std::string& sRe
         return false;
     }
 
-
-    std::thread th(ConnectThread, this, sSenderId, sReceiverId, sSenderUrl, sReceiverUrl);
-    th.detach();
+    ThreadPool::Get().Submit([&](){ConnectThread(this, sSenderId, sReceiverId, sSenderUrl, sReceiverUrl);});
+    //std::thread th(ConnectThread, this, sSenderId, sReceiverId, sSenderUrl, sReceiverUrl);
+    //th.detach();
     return true;
 }
 
@@ -2084,8 +2085,9 @@ bool ClientApiImpl::Disconnect( const std::string& sReceiverId)
         return false;
     }
 
-    std::thread th(DisconnectThread, this, pSender->GetId(), sReceiverId, sSenderStageUrl, sSenderTransportUrl, sReceiverStageUrl);
-    th.detach();
+    ThreadPool::Get().Submit([&](){DisconnectThread(this, pSender->GetId(), sReceiverId, sSenderStageUrl, sSenderTransportUrl, sReceiverStageUrl);});
+    //std::thread th(DisconnectThread, this, pSender->GetId(), sReceiverId, sSenderStageUrl, sSenderTransportUrl, sReceiverStageUrl);
+    //th.detach();
     return true;
 }
 

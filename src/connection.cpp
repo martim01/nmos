@@ -43,8 +43,7 @@ template<typename T> std::experimental::optional<bool> connectionSender<T>::GetM
 }
 
 
-template<typename T> connectionSender<T>::connectionSender(std::experimental::optional<bool> masterEnable, size_t nTPLegs) :
-  m_vTransportParams(nTPLegs)
+template<typename T> connectionSender<T>::connectionSender(std::experimental::optional<bool> masterEnable,TransportParamsRTP::flagsTP allowed)
 {
     if(masterEnable)
     {
@@ -52,6 +51,12 @@ template<typename T> connectionSender<T>::connectionSender(std::experimental::op
     }
 
     m_json[RECEIVER_ID] = Json::Value::null;
+
+    m_vTransportParams.push_back(TransportParamsRTPSender(allowed));
+    if(allowed & TransportParamsRTP::REDUNDANT)
+    {
+        m_vTransportParams.push_back(TransportParamsRTPSender(allowed));
+    }
 }
 
 
@@ -152,8 +157,7 @@ template<typename T> void connectionSender<T>::SetTPAllowed(int flagsTransport)
     }
 }
 
-template<typename T> connectionReceiver<T>::connectionReceiver(std::experimental::optional<bool> masterEnable, size_t nTPLegs) :
-  m_vTransportParams(nTPLegs)
+template<typename T> connectionReceiver<T>::connectionReceiver(std::experimental::optional<bool> masterEnable, TransportParamsRTP::flagsTP allowed)
 {
     if(masterEnable)
     {
@@ -162,6 +166,12 @@ template<typename T> connectionReceiver<T>::connectionReceiver(std::experimental
     m_json[SENDER_ID] = Json::Value::null;
     m_json[TRANSPORT_FILE][TRANSPORT_FILE_DATA] = Json::Value::null;
     m_json[TRANSPORT_FILE][TRANSPORT_FILE_TYPE] = Json::Value::null;
+
+    m_vTransportParams.push_back(TransportParamsRTPReceiver(allowed));
+    if(allowed & TransportParamsRTP::REDUNDANT)
+    {
+        m_vTransportParams.push_back(TransportParamsRTPReceiver(allowed));
+    }
 }
 
 
@@ -407,84 +417,7 @@ template<typename T> bool connectionReceiver<T>::CheckJson(const Json::Value& js
 }
 
 
-template<typename T> bool connectionSender<T>::CheckConstraints(const connectionSender<T>& request)
-{
-    if(request.GetTransportParams().size() != m_vTransportParams.size())
-    {
-        return false;
-    }
-    for(size_t i = 0; i < m_vTransportParams.size(); i++)
-    {
-        if(m_vTransportParams[i].CheckConstraints(request.GetTransportParams()[i]) == false)
-        {
-            return false;
-        }
-    }
-    return true;
-}
-template<typename T> bool connectionReceiver<T>::CheckConstraints(const connectionReceiver<T>& request)
-{
-    if(request.GetTransportParams().size() != m_vTransportParams.size())
-    {
-        return false;
-    }
-    for(size_t i = 0; i < m_vTransportParams.size(); i++)
-    {
-        if(m_vTransportParams[i].CheckConstraints(request.GetTransportParams()[i]) == false)
-        {
-            return false;
-        }
-    }
-    return true;
-}
 
-template<typename T> bool connectionSender<T>::AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
-                                   const std::vector<pairEnum_t>& vEnum, const std::experimental::optional<size_t>& tp)
-{
-    if(tp)
-    {
-        if(*tp < m_vTransportParams.size())
-        {
-            return m_vTransportParams[*tp].AddConstraint(sKey, minValue, maxValue, pattern, vEnum);
-        }
-        else
-        {
-            return false;
-        }
-    }
-    else
-    {
-        for(auto& trans : m_vTransportParams)
-        {
-            trans.AddConstraint(sKey, minValue, maxValue, pattern, vEnum);
-        }
-        return true;
-    }
-}
-
-template<typename T> bool connectionReceiver<T>::AddConstraint( const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
-                                   const std::vector<pairEnum_t>& vEnum, const std::experimental::optional<size_t>& tp)
-{
-    if(tp)
-    {
-        if(*tp < m_vTransportParams.size())
-        {
-            return m_vTransportParams[*tp].AddConstraint(sKey, minValue, maxValue, pattern, vEnum);
-        }
-        else
-        {
-            return false;
-        }
-    }
-    else
-    {
-        for(auto& trans : m_vTransportParams)
-        {
-            trans.AddConstraint(sKey, minValue, maxValue, pattern, vEnum);
-        }
-        return true;
-    }
-}
 
 template class connectionSender<activationRequest>;
 template class connectionSender<activationResponse>;

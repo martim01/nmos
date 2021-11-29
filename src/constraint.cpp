@@ -114,7 +114,7 @@ Json::Value constraint::GetJson() const
 }
 
 
-bool constraint::MeetsConstraint(const std::string& sValue)
+bool constraint::MeetsConstraint(const std::string& sValue) const
 {
     if(sValue == TransportParamsRTP::AUTO)
     {
@@ -170,7 +170,7 @@ bool constraint::MeetsConstraint(const std::string& sValue)
     return bMeets;
 }
 
-bool constraint::MeetsConstraint(int nValue)
+bool constraint::MeetsConstraint(int nValue) const
 {
     bool bMeets = true;
     //is the min set
@@ -207,7 +207,7 @@ bool constraint::MeetsConstraint(int nValue)
     return bMeets;
 }
 
-bool constraint::MeetsConstraint(unsigned int nValue)
+bool constraint::MeetsConstraint(unsigned int nValue) const
 {
     bool bMeets = true;
     //is the min set
@@ -244,7 +244,7 @@ bool constraint::MeetsConstraint(unsigned int nValue)
     return bMeets;
 }
 
-bool constraint::MeetsConstraint(double dValue)
+bool constraint::MeetsConstraint(double dValue) const
 {
     bool bMeets = true;
     //is the min set
@@ -281,7 +281,7 @@ bool constraint::MeetsConstraint(double dValue)
     return bMeets;
 }
 
-bool constraint::MeetsConstraint(bool bValue)
+bool constraint::MeetsConstraint(bool bValue) const
 {
     bool bMeets = true;
     //is the min set
@@ -404,7 +404,7 @@ bool Constraints::UpdateFromJson(const Json::Value& jsData)
     return true;
 }
 
-bool Constraints::MeetsConstraint(const std::string& sKey, const Json::Value& jsCheck)
+bool Constraints::MeetsConstraint(const std::string& sKey, const Json::Value& jsCheck) const
 {
     auto itConstraint = m_mConstraints.find(sKey);
     if(itConstraint != m_mConstraints.end())
@@ -478,4 +478,12 @@ bool Constraints::ClearConstraint(const std::string& sKey)
 void Constraints::CreateEmptyConstraint(const std::string& sKey)
 {
     m_mConstraints.insert({sKey, constraint()});
+}
+
+Constraints::Constraints(const Json::Value& jsTransport)
+{
+    for(auto itObject = jsTransport.begin(); itObject != jsTransport.end(); ++itObject)
+    {
+        CreateEmptyConstraint(itObject.key().asString());
+    }
 }

@@ -12,7 +12,7 @@ namespace pml
             template<typename T> class NMOS_EXPOSE connectionSender
             {
                 public:
-                    connectionSender(std::experimental::optional<bool> masterEnable, size_t nTPLegs);
+                    connectionSender(std::experimental::optional<bool> masterEnable, TransportParamsRTP::flagsTP allowed);
                     connectionSender(const connectionSender& conReq);
                     connectionSender& operator=(const connectionSender& other);
                     Json::Value GetJson() const;
@@ -37,10 +37,6 @@ namespace pml
                     T& GetActivation() { return m_activation; }
                     const T& GetConstActivation() const { return m_activation; }
 
-                    bool CheckConstraints(const connectionSender<T>& request);
-
-                    bool AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
-                                   const std::vector<pairEnum_t>& vEnum, const std::experimental::optional<size_t>& tp);
 
                 protected:
                     const Json::Value& GetJsonToCopy() const { return m_json; }
@@ -56,7 +52,7 @@ namespace pml
             template<typename T> class NMOS_EXPOSE connectionReceiver
             {
                 public:
-                    connectionReceiver(std::experimental::optional<bool> masterEnable, size_t nTPLegs);
+                    connectionReceiver(std::experimental::optional<bool> masterEnable, TransportParamsRTP::flagsTP allowed);
                     connectionReceiver(const connectionReceiver& conReq);
 
                     connectionReceiver(int flagProperties);
@@ -86,11 +82,6 @@ namespace pml
                     void Uninitialise();
 
                     static bool CheckJson(const Json::Value& jsData);
-
-                    bool CheckConstraints(const connectionReceiver<T>& request);
-
-                    bool AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
-                                   const std::vector<pairEnum_t>& vEnum, const std::experimental::optional<size_t>& tp);
 
                 protected:
                     const Json::Value& GetJsonToCopy() const { return m_json; }
