@@ -14,12 +14,13 @@ using namespace pml::nmos;
 
 
 
-Sender::Sender(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId, const std::string& sInterface, TransportParamsRTP::flagsTP flagsTransport) :
+Sender::Sender(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId, const std::string& sInterface,
+               TransportParamsRTP::flagsTP flagsTransport,const std::experimental::optional<std::string>& multicastIp) :
     IOResource("sender", sLabel, sDescription, eTransport),
     m_sFlowId(sFlowId),
     m_sDeviceId(sDeviceId),
     m_sReceiverId(""),
-    m_bReceiverActive(false),
+    m_bSendingToReceiver(false),
     m_Staged(true, flagsTransport),
     m_Active(true, flagsTransport),
     m_bActivateAllowed(false)
@@ -27,8 +28,32 @@ Sender::Sender(const std::string& sLabel, const std::string& sDescription, const
     AddInterfaceBinding(sInterface);
 
     CreateConstraints(m_Staged.GetJson());
+
+    if((m_eTransport & enumTransport::RTP_MCAST) && multicastIp)
+    {
+        m_sDestinationIp = *multicastIp;
+    }
 }
 
+Sender::Sender() :
+    IOResource("sender"),
+    m_bSendingToReceiver(false),
+    m_Staged(true, TransportParamsRTP::CORE),
+    m_Active(true, TransportParamsRTP::CORE),
+    m_bActivateAllowed(false)
+{
+    CreateConstraints(m_Staged.GetJson());
+}
+
+std::shared_ptr<Sender> Sender::Create(const Json::Value& jsResponse)
+{
+    auto pResource  = std::make_shared<Sender>();
+    if(pResource->UpdateFromJson(jsResponse))
+    {
+        return pResource;
+    }
+    return nullptr;
+}
 
 Sender::~Sender()
 {
@@ -122,7 +147,7 @@ bool Sender::UpdateFromJson(const Json::Value& jsData)
         {
             m_sReceiverId = jsData["subscription"]["receiver_id"].asString();
         }
-        m_bReceiverActive = jsData["subscription"]["active"].asBool();
+        m_bSendingToReceiver = jsData["subscription"]["active"].asBool();
     }
     return m_bIsOk;
 }
@@ -131,7 +156,7 @@ bool Sender::UpdateFromJson(const Json::Value& jsData)
 void Sender::SetReceiverId(const std::string& sReceiverId, bool bActive)
 {
     m_sReceiverId = sReceiverId;
-    m_bReceiverActive = bActive;
+    m_bSendingToReceiver = bActive;
 
 }
 
@@ -229,17 +254,19 @@ void Sender::Activate(const std::string& sSourceIp)
         if(receiver)
         {
             m_sReceiverId = *receiver;
+            m_bSendingToReceiver = true;
         }
         else
         {
             m_sReceiverId.clear();
+            m_bSendingToReceiver = false;
         }
-        m_bReceiverActive = true;
+
     }
     else
     {
         m_sReceiverId.clear();
-        m_bReceiverActive = false;
+        m_bSendingToReceiver = false;
     }
 
 
@@ -287,7 +314,7 @@ bool Sender::Commit(const ApiVersion& version)
             m_json["subscription"]["receiver_id"] = m_sReceiverId;
         }
 
-        if(m_bReceiverActive)
+        if(m_bSendingToReceiver)
         {
             m_json["subscription"]["active"] = true;
         }
@@ -308,11 +335,9 @@ void Sender::SetupActivation(const std::string& sSourceIp, const std::string& sD
     m_sSDP = sSDP;
 }
 
-void Sender::ActualizeUnitialisedActive(const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP)
+void Sender::ActualizeUnitialisedActive(const std::string& sSourceIp)
 {
     m_sSourceIp = sSourceIp;
-    m_sDestinationIp = sDestinationIp;
-    m_sSDP = sSDP;
     m_Active.Actualize(m_sSourceIp, m_sDestinationIp);
 }
 

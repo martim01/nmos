@@ -15,6 +15,9 @@ namespace pml
                 Flow(const std::string& sLabel, const std::string& sDescription, const std::string& sFormat, const std::string& sSourceId, const std::string& sDeviceId);
                 virtual ~Flow(){}
                 Flow(const std::string& sFormat);
+
+
+
                 virtual bool UpdateFromJson(const Json::Value& jsData);
                 void AddParentId(const std::string& sId);
                 void RemoveParentId(const std::string& sId);

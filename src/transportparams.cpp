@@ -71,7 +71,19 @@ TransportParamsRTP& TransportParamsRTP::operator=(const TransportParamsRTP& othe
     return *this;
 }
 
-void TransportParamsRTP::SetSourceIp(const std::string& sAddress)
+void TransportParamsRTPSender::SetSourceIp(const std::string& sAddress)
+{
+    if(sAddress.empty())
+    {
+        m_json[SOURCE_IP] = AUTO;
+    }
+    else
+    {
+        m_json[SOURCE_IP] = sAddress;
+    }
+}
+
+void TransportParamsRTPReceiver::SetSourceIp(const std::string& sAddress)
 {
     if(sAddress.empty())
     {
@@ -144,11 +156,11 @@ void TransportParamsRTP::RtcpAllowed()
 
 
 
-std::string TransportParamsRTP::GetSourceIP() const
+std::string TransportParamsRTP::GetSourceIp() const
 {
     if(m_json[SOURCE_IP].isString())
     {
-        m_json[SOURCE_IP].asString();
+        return m_json[SOURCE_IP].asString();
     }
     return std::string();
 }
@@ -309,6 +321,14 @@ void TransportParamsRTPSender::FecAllowed()
 
 }
 
+TransportParamsRTPSender::TransportParamsRTPSender(const Json::Value& jsResponse)
+{
+    if(CheckJson(jsResponse))
+    {
+        m_json = jsResponse;
+    }
+}
+
 bool TransportParamsRTPSender::CheckJson(const Json::Value&  jsPatch)
 {
     return CheckJsonAllowed(jsPatch, {{SOURCE_IP, {jsondatatype::_STRING}},
@@ -375,7 +395,7 @@ void TransportParamsRTPSender::Actualize(const std::string& sSource, const std::
     TransportParamsRTP::Actualize();
 
 
-    ActualizeIp(SOURCE_IP, sDestination);
+    ActualizeIp(SOURCE_IP, sSource);
     ActualizeIp(DESTINATION_IP, sDestination);
     ActualizePort(SOURCE_PORT, 5004);
 
@@ -468,6 +488,13 @@ TransportParamsRTPReceiver::TransportParamsRTPReceiver(const TransportParamsRTPR
 
 }
 
+TransportParamsRTPReceiver::TransportParamsRTPReceiver(const Json::Value& jsResponse)
+{
+    if(CheckJson(jsResponse))
+    {
+        m_json = jsResponse;
+    }
+}
 
 bool TransportParamsRTPReceiver::Patch(const Json::Value& jsData)
 {

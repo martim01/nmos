@@ -11,6 +11,7 @@ namespace pml
             public:
 
                 SourceAudio(const std::string& sLabel, const std::string& sDescription, const std::string& sDeviceId);
+                static std::shared_ptr<SourceAudio> Create(const Json::Value& jsResponse);
                 SourceAudio();
                 virtual bool UpdateFromJson(const Json::Value& jsData);
                 void AddChannel(const std::string& sLabel, const std::string& sSymbol);
@@ -25,6 +26,7 @@ namespace pml
 
 
             private:
+
                 std::map<std::string, std::string> m_mChannel;
                 size_t m_nCommitedChannelCount;
         };

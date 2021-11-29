@@ -118,4 +118,12 @@ bool FlowVideoRaw::Commit(const ApiVersion& version)
     return false;
 }
 
-
+std::shared_ptr<FlowVideoRaw> FlowVideoRaw::Create(const Json::Value& jsResponse)
+{
+    auto pResource  = std::make_shared<FlowVideoRaw>();
+    if(pResource->UpdateFromJson(jsResponse))
+    {
+        return pResource;
+    }
+    return nullptr;
+}

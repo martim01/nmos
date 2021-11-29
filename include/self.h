@@ -57,6 +57,7 @@ namespace pml
         {
             public:
                 Self(const std::string& sHostname, const std::string& sUrl,const std::string& sLabel, const std::string& sDescription);
+                static std::shared_ptr<Self> Create(const Json::Value& jsResponse);
                 Self() : Resource("node"){}
                 bool UpdateFromJson(const Json::Value& jsData);
                 ~Self();

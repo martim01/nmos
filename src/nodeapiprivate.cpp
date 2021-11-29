@@ -1148,9 +1148,15 @@ bool NodeApiPrivate::AddSender(shared_ptr<Sender> pResource)
             if(itInterface != m_self.GetInterfaceEnd())
             {
                 // @todo should we create an SDP for those that need one??
-                pResource->ActualizeUnitialisedActive(itInterface->second.sMainIpAddress, itInterface->second.sMainIpAddress, std::string());
+                pResource->ActualizeUnitialisedActive(itInterface->second.sMainIpAddress);
             }
 
+            //constrain the source_ip to those that we have
+            std::vector<pairEnum_t> vEnum;
+            std::transform(m_self.GetInterfaceBegin(), m_self.GetInterfaceEnd(), std::back_inserter(vEnum),
+                           [](const std::pair<std::string, nodeinterface>& interface){ return pairEnum_t(jsondatatype::_STRING, interface.second.sMainIpAddress); });
+
+            pResource->AddConstraint(TransportParamsRTP::SOURCE_IP, {},{},{},vEnum, {});
 
             //add the discovery endpoints
             for(const auto& pairServer : m_mDiscoveryServers)
@@ -1336,34 +1342,13 @@ std::string NodeApiPrivate::CreateFlowSdp(const std::string& sId, const Transpor
                 nPort = 5004;
             }
 
-            ssSDP << CreateFlowSdpLines(*this, pFlow, nPort);
+
+
+            ssSDP << CreateFlowSdpLines(*this, pFlow, nPort, CreateConnectionLine(tpSender));
 
 
             //put in the destination unicast/multicast block
-            switch(SdpManager::CheckIpAddress(tpSender.GetDestinationIp()))
-            {
-                case SdpManager::IP4_UNI:
-                    ssSDP << "c=IN IP4 " << tpSender.GetDestinationIp() << "\r\n";
-                    ssSDP << "a=type:unicast\r\n";
-                    break;
-                case SdpManager::IP4_MULTI:
-                    ssSDP << "c=IN IP4 " << tpSender.GetDestinationIp() << "/32\r\n";
-                    ssSDP << "a=source-filter:incl IN IP4 " << tpSender.GetDestinationIp() << " " << tpSender.GetSourceIP() << "\r\n";
-                    ssSDP << "a=type:multicast\r\n";
-                    break;
-                case SdpManager::IP6_UNI:
-                    ssSDP << "c=IN IP6 " << tpSender.GetDestinationIp() << "\r\n";
-                    ssSDP << "a=type:unicast\r\n";
-                    break;
-                case SdpManager::IP6_MULTI:
-                    ssSDP << "c=IN IP6 " << tpSender.GetDestinationIp() << "\r\n";
-                    ssSDP << "a=source-filter:incl IN IP6 " << tpSender.GetDestinationIp() << " " << tpSender.GetSourceIP() << "\r\n";
-                    ssSDP << "a=type:multicast\r\n";
-                    break;
-                case SdpManager::SdpManager::IP_INVALID:
-                    pmlLog(pml::LOG_WARN) << "NMOS: Sender can't create SDP - destination IP invalid '" << tpSender.GetDestinationIp() << "'";
-                    break;
-            }
+
             if(tpSender.IsRtcpEnabled() && *tpSender.IsRtcpEnabled() && tpSender.GetRtcpDestinationIp() && tpSender.GetRtcpDestinationPort())
             {
                 switch(SdpManager::CheckIpAddress(*tpSender.GetRtcpDestinationIp()))
@@ -1407,10 +1392,11 @@ std::string NodeApiPrivate::CreateFlowSdp(const std::string& sId, const Transpor
 void NodeApiPrivate::CreateSDP(std::shared_ptr<Sender> pSender)
 {
     auto active = pSender->GetActive();
+
     std::stringstream ssSDP;
     ssSDP << "v=0\r\n";
     ssSDP << "o=- " << GetCurrentTaiTime(false) << " " << GetCurrentTaiTime(false) << " IN IP";
-    switch(SdpManager::CheckIpAddress(active.GetTransportParams()[0].GetSourceIP()))
+    switch(SdpManager::CheckIpAddress(active.GetTransportParams()[0].GetSourceIp()))
     {
         case SdpManager::IP4_UNI:
         case SdpManager::IP4_MULTI:
@@ -1424,8 +1410,8 @@ void NodeApiPrivate::CreateSDP(std::shared_ptr<Sender> pSender)
             ssSDP << " ";
             break;
     }
-    ssSDP << active.GetTransportParams()[0].GetSourceIP() << "\r\n";    // @todo should check here if sSourceIp is not set to auto
-    ssSDP << "t=0 0 \r\n";
+    ssSDP << active.GetTransportParams()[0].GetSourceIp() << "\r\n";    // @todo should check here if sSourceIp is not set to auto
+
 
 //    std::map<std::string, std::shared_ptr<Device> >::const_iterator itDevice = GetDevices().FindNmosResource(pSender->GetDeviceId());
 //    if(itDevice != GetDevices().GetResourceEnd())
@@ -1436,8 +1422,9 @@ void NodeApiPrivate::CreateSDP(std::shared_ptr<Sender> pSender)
 //    {
 //        ssSDP << "s=-:";
 //    }
-    ssSDP << "s=:" << pSender->GetLabel() << "\r\n";
+    ssSDP << "s=" << pSender->GetLabel() << "\r\n";
 
+    ssSDP << "t=0 0 \r\n";
     for(const auto& tpSender: active.GetTransportParams())
     {
 

@@ -46,4 +46,12 @@ void FlowMux::SetMediaType(const std::string& sMediaType)
     UpdateVersionTime();
 }
 
-
+std::shared_ptr<FlowMux> FlowMux::Create(const Json::Value& jsResponse)
+{
+    auto pResource  = std::make_shared<FlowMux>();
+    if(pResource->UpdateFromJson(jsResponse))
+    {
+        return pResource;
+    }
+    return nullptr;
+}

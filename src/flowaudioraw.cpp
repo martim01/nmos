@@ -98,3 +98,12 @@ void FlowAudioRaw::SetPacketTime(enumPacket ePacketTime)
     UpdateVersionTime();
 }
 
+std::shared_ptr<FlowAudioRaw> FlowAudioRaw::Create(const Json::Value& jsResponse)
+{
+    auto pResource  = std::make_shared<FlowAudioRaw>();
+    if(pResource->UpdateFromJson(jsResponse))
+    {
+        return pResource;
+    }
+    return nullptr;
+}

@@ -42,4 +42,12 @@ bool FlowDataJson::Commit(const ApiVersion& version)
 }
 
 
-
+std::shared_ptr<FlowDataJson> FlowDataJson::Create(const Json::Value& jsResponse)
+{
+    auto pResource  = std::make_shared<FlowDataJson>();
+    if(pResource->UpdateFromJson(jsResponse))
+    {
+        return pResource;
+    }
+    return nullptr;
+}

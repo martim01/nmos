@@ -31,6 +31,16 @@ Self::~Self()
 {
 }
 
+std::shared_ptr<Self> Self::Create(const Json::Value& jsResponse)
+{
+    auto pResource  = std::make_shared<Self>();
+    if(pResource->UpdateFromJson(jsResponse))
+    {
+        return pResource;
+    }
+    return nullptr;
+}
+
 void Self::Init(const string& sHostname, const string& sUrl,const string& sLabel, const string& sDescription)
 {
     m_sHostname = sHostname;

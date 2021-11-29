@@ -10,13 +10,14 @@ namespace pml
         {
             public:
                 FlowMux(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId, const std::string& sMediaType);
-                FlowMux();
+                static std::shared_ptr<FlowMux> Create(const Json::Value& jsResponse);
                 virtual bool UpdateFromJson(const Json::Value& jsData);
                 virtual bool Commit(const ApiVersion& version);
                 void SetMediaType(const std::string& sMediaType);
-
+                FlowMux();
             private:
                 std::string m_sMediaType;
+
         };
     };
 };

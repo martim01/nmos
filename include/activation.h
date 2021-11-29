@@ -37,6 +37,7 @@ namespace pml
         {
             public:
                 activationRequest();
+                activationRequest(const Json::Value& jsResponse);
                 void Setup(activation::enumActivate eMode, std::experimental::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> when);
 
                 activationRequest(const activationRequest& other);
@@ -51,6 +52,7 @@ namespace pml
             public:
                 activationResponse();
                 activationResponse(const activationResponse& other);
+                activationResponse(const Json::Value& jsResponse);
 
                 bool Patch(const Json::Value& jsData) override;
 

@@ -14,8 +14,9 @@ namespace pml
 
                 FlowAudioRaw(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId, unsigned int nSampleRate, enumFormat eFormat);
                 virtual bool Commit(const ApiVersion& version);
-
+                static std::shared_ptr<FlowAudioRaw> Create(const Json::Value& jsResponse);
                 FlowAudioRaw();
+
                 virtual bool UpdateFromJson(const Json::Value& jsData);
                 void SetFormat(enumFormat eFormat);
                 void SetPacketTime(enumPacket ePacketTime);
@@ -23,6 +24,7 @@ namespace pml
                 enumFormat GetFormat() const { return m_eFormat;}
                 enumPacket GetPacketTime() const { return m_ePacketTime;}
             private:
+
                 enumFormat m_eFormat;
                 enumPacket m_ePacketTime;
         };

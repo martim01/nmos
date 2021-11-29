@@ -155,6 +155,16 @@ activationResponse::activationResponse(const activationResponse& other) : activa
 {
 }
 
+activationResponse::activationResponse(const Json::Value& jsResponse)
+{
+    if(::CheckJson(jsResponse, {{MODE, {jsondatatype::_STRING, jsondatatype::_NULL}},
+                                  {REQUESTED_TIME, {jsondatatype::_STRING, jsondatatype::_NULL}},
+                                  {ACTIVATED_TIME, {jsondatatype::_STRING, jsondatatype::_NULL}}}))
+    {
+        m_json = jsResponse;
+    }
+
+}
 
 bool activationResponse::Patch(const Json::Value& jsData)
 {
@@ -184,7 +194,14 @@ std::experimental::optional<std::chrono::time_point<std::chrono::high_resolution
     return {};
 }
 
+activationRequest::activationRequest(const Json::Value& jsResponse)
+{
+    if(CheckJson(jsResponse))
+    {
+        m_json = jsResponse;
+    }
 
+}
 bool activationRequest::CheckJson(const Json::Value& jsPatch)
 {
     return (CheckJsonRequired(jsPatch, {{MODE, {jsondatatype::_STRING, jsondatatype::_NULL}}}) &&
@@ -194,5 +211,5 @@ bool activationRequest::CheckJson(const Json::Value& jsPatch)
 bool activationResponse::CheckJson(const Json::Value& jsPatch)
 {
     return (CheckJsonRequired(jsPatch, {{MODE, {jsondatatype::_STRING, jsondatatype::_NULL}}}) &&
-       CheckJsonAllowed(jsPatch, {{MODE, {jsondatatype::_STRING, jsondatatype::_NULL}}, {REQUESTED_TIME, {jsondatatype::_STRING, jsondatatype::_NULL}}}));
+       CheckJsonAllowed(jsPatch, {{MODE, {jsondatatype::_STRING, jsondatatype::_NULL}}, {REQUESTED_TIME, {jsondatatype::_STRING, jsondatatype::_NULL}},{ACTIVATED_TIME, {jsondatatype::_STRING, jsondatatype::_NULL}}}));
 }

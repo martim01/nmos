@@ -51,7 +51,7 @@ bool SdpManager::SdpToTransportParams(const std::string& sSdp, std::vector<Trans
                 break;
             case 'm':
                 ++nMedia;
-                if(ParseMediaLine(sLine, tpReceivers,nMedia) == false)
+                if(nMedia < tpReceivers.size() && ParseMediaLine(sLine, tpReceivers,nMedia) == false)
                 {
                     pmlLog(pml::LOG_DEBUG) << "NMOS: " << "SdpManager:: ParseMediaLine failed";
                     return false;
@@ -200,7 +200,7 @@ SdpManager::enumIPType SdpManager::ValidateIp4Address(const std::string& sAddres
     SplitString(vSplit, sAddress, '.');
     if(vSplit.size() != 4)
     {
-        pmlLog() << "ValidateIp4Address: not enough bytes";
+        pmlLog() << "ValidateIp4Address: not enough bytes '" << sAddress << "'";
         return IP_INVALID;
     }
     vector<long> vValue;

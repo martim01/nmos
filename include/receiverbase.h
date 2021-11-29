@@ -22,7 +22,9 @@ namespace pml
                 Receiver(const std::string& sLabel, const std::string& sDescription, enumTransport eTransport, const std::string& sDeviceId, enumType eType,
                 TransportParamsRTP::flagsTP flagsTransport=TransportParamsRTP::CORE);
                 virtual ~Receiver();
-                //Receiver();
+                Receiver();
+
+                static std::shared_ptr<Receiver> Create(const Json::Value& jsResponse);
 
                 bool UpdateFromJson(const Json::Value& jsData) override;
 

@@ -9,12 +9,17 @@ namespace pml
 {
     namespace nmos
     {
+            class Constraints;
+
             template<typename T> class NMOS_EXPOSE connectionSender
             {
                 public:
                     connectionSender(std::experimental::optional<bool> masterEnable, TransportParamsRTP::flagsTP allowed);
                     connectionSender(const connectionSender& conReq);
                     connectionSender& operator=(const connectionSender& other);
+
+                    connectionSender(const Json::Value& jsResponse);
+
                     Json::Value GetJson() const;
 
                     const std::vector<TransportParamsRTPSender>& GetTransportParams() const { return m_vTransportParams;}
@@ -23,7 +28,6 @@ namespace pml
 
                     void Actualize(const std::string& sSourceIp, const std::string& sDestinationIp);
 
-                    void SetTPAllowed(int flagsTransport);
                     std::experimental::optional<std::string> GetReceiverId() const;
 
                     void SetDestinationDetails(const std::string& sIp, unsigned short nPort);
@@ -37,9 +41,13 @@ namespace pml
                     T& GetActivation() { return m_activation; }
                     const T& GetConstActivation() const { return m_activation; }
 
+                    void EnableTransport(size_t nTP, bool bEnable);
+
 
                 protected:
                     const Json::Value& GetJsonToCopy() const { return m_json; }
+                    void SetTPAllowed(int flagsTransport);
+
 
                     Json::Value m_json;
                     T m_activation;
@@ -57,6 +65,8 @@ namespace pml
 
                     connectionReceiver(int flagProperties);
                     connectionReceiver& operator=(const connectionReceiver& other);
+                    connectionReceiver(const Json::Value& jsResponse);
+
 
                     std::experimental::optional<bool> GetMasterEnable() const;
                     void MasterEnable(bool bEnable);
@@ -68,7 +78,7 @@ namespace pml
                     const std::vector<TransportParamsRTPReceiver>& GetTransportParams() const { return m_vTransportParams;}
 
                     void Actualize(const std::string& sInterfaceIp);
-                    void SetTPAllowed(int flagsTransport);
+
 
                     bool Patch(const Json::Value& jsData);
 
@@ -82,9 +92,11 @@ namespace pml
                     void Uninitialise();
 
                     static bool CheckJson(const Json::Value& jsData);
+                    void EnableTransport(size_t nTP, bool bEnable);
 
                 protected:
                     const Json::Value& GetJsonToCopy() const { return m_json; }
+                    void SetTPAllowed(int flagsTransport);
 
                     Json::Value m_json;
                     T m_activation;

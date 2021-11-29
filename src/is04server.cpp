@@ -257,19 +257,19 @@ response IS04Server::PutNmosReceiver(const query& theQuery, const postData& theD
         //Have we been sent a sender??
         if(jsRequest.isObject() && jsRequest["id"].isString())
         {
-            //@todo PUT
-//            pRemoteSender = std::make_shared<Sender>();
-//            pRemoteSender->UpdateFromJson(jsRequest);
-//
-//            sSenderId = pRemoteSender->GetId();
-//            if(pRemoteSender->GetManifestHref().empty() == false)
-//            {
-//                auto curlresp = CurlRegister::Get(pRemoteSender->GetManifestHref());
-//                if(curlresp.nCode == 200)
-//                {
-//                    sSdp = curlresp.sResponse;
-//                }
-//            }
+            pRemoteSender = Sender::Create(jsRequest);
+            if(pRemoteSender)
+            {
+                sSenderId = pRemoteSender->GetId();
+                if(pRemoteSender->GetManifestHref().empty() == false)
+                {
+                    auto curlresp = CurlRegister::Get(pRemoteSender->GetManifestHref());
+                    if(curlresp.nCode == 200)
+                    {
+                        sSdp = curlresp.sResponse;
+                    }
+                }
+            }
         }
         if(m_pPoster)
         {

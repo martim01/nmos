@@ -14,7 +14,7 @@ namespace pml
         class IOResource : public Resource
         {
             public:
-                enum enumTransport {RTP, RTP_UCAST, RTP_MCAST, DASH, MQTT, WEBSOCKET, UNKNOWN_TRANSPORT};
+                enum enumTransport {RTP=0, RTP_UCAST, RTP_MCAST, DASH, MQTT, WEBSOCKET, UNKNOWN_TRANSPORT};
 
                 IOResource(const std::string& sType, const std::string& sLabel, const std::string& sDescription, enumTransport eTransport) : Resource(sType, sLabel, sDescription), m_eTransport(eTransport){}
                 IOResource(const std::string& sType) : Resource(sType){}

@@ -44,3 +44,12 @@ bool SourceGeneric::UpdateFromJson(const Json::Value& jsData)
     }
     return m_bIsOk;
 }
+std::shared_ptr<SourceGeneric> SourceGeneric::Create(const Json::Value& jsResponse)
+{
+    auto pResource  = std::make_shared<SourceGeneric>();
+    if(pResource->UpdateFromJson(jsResponse))
+    {
+        return pResource;
+    }
+    return nullptr;
+}

@@ -50,7 +50,7 @@ int main()
         pmlLog() << resp.first.nCode;
         if(resp.second)
         {
-            pmlLog() << (*resp.second).GetJson(pml::nmos::ApiVersion(1,2));
+            pmlLog() << (*resp.second).GetJson();
         }
 
         pmlLog() << "-----------------------------------------------" ;
@@ -63,7 +63,7 @@ int main()
         pmlLog() << respSA.first.nCode;
         if(respSA.second)
         {
-            pmlLog() << (*respSA.second).GetJson(pml::nmos::ApiVersion(1,2));
+            pmlLog() << (*respSA.second).GetJson();
         }
 
         pmlLog() << "-----------------------------------------------" ;
@@ -91,7 +91,7 @@ int main()
         {
             for(const auto con : (*respSC.second))
             {
-                pmlLog() << con.GetJson(pml::nmos::ApiVersion(1,2));
+                pmlLog() << con.GetJson();
             }
 
         }

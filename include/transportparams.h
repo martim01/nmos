@@ -42,7 +42,7 @@ namespace pml
                 virtual void FecAllowed();
                 virtual void RtcpAllowed();
 
-                std::string GetSourceIP() const;
+                std::string GetSourceIp() const;
                 unsigned short GetDestinationPort() const;
 
                 bool IsRtpEnabled() const;
@@ -59,7 +59,7 @@ namespace pml
 
 
                 void EnableRtp(bool bEnable);
-                void SetSourceIp(const std::string& sAddress);
+
                 void SetDestinationPort(unsigned short nPort);
 
                 void SetRtcpDestinationPort(unsigned short nPort);
@@ -106,13 +106,14 @@ namespace pml
                 TransportParamsRTPReceiver(flagsTP allowed);
                 TransportParamsRTPReceiver(const TransportParamsRTPReceiver& tp);
                 TransportParamsRTPReceiver& operator=(const TransportParamsRTPReceiver& other);
-
+                TransportParamsRTPReceiver(const Json::Value& jsResponse);
                 bool Patch(const Json::Value& jsData);
 
                 void Actualize(const std::string& sInterfaceIp);
 
                 std::experimental::optional<std::string> GetMulticastIp() const;
                 std::string GetInterfaceIp() const;
+                void SetSourceIp(const std::string& sAddress);
 
                 void SetMulticastIp(const std::string& sAddress);
 
@@ -127,6 +128,7 @@ namespace pml
                 TransportParamsRTPSender(flagsTP allowed);
                 TransportParamsRTPSender(const TransportParamsRTPSender& tp);
                 TransportParamsRTPSender& operator=(const TransportParamsRTPSender& other);
+                TransportParamsRTPSender(const Json::Value& jsResponse);
 
                 void FecAllowed() override;
 
@@ -137,6 +139,7 @@ namespace pml
 
                 std::string GetDestinationIp() const;
                 unsigned short GetSourcePort() const;
+                void SetSourceIp(const std::string& sAddress);
 
                 void SetDestinationIp(const std::string& sAddress);
 

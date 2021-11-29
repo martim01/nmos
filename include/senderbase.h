@@ -19,7 +19,11 @@ namespace pml
         {
             public:
                 Sender(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId,
-                const std::string& sInterface, TransportParamsRTP::flagsTP flagsTransport=TransportParamsRTP::CORE);
+                const std::string& sInterface, TransportParamsRTP::flagsTP flagsTransport=TransportParamsRTP::CORE, const std::experimental::optional<std::string>& multicastIp={});
+
+                static std::shared_ptr<Sender> Create(const Json::Value& jsResponse);
+                Sender();
+
                 virtual ~Sender();
 
                 /** @brief Set the active destination details to create an SDP. This will be overwritten by IS-05
@@ -68,9 +72,11 @@ namespace pml
                 friend class IS04Server;
                 friend class NodeApiPrivate;
 
+
                 activation::enumActivate Stage(const connectionSender<activationResponse>& conRequest);
                 void CommitActivation();
                 void Activate(const std::string& sSourceIp);
+
 
                 void SetupActivation(const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP);
                 void SetStagedActivationTime(const std::string& sTime);
@@ -80,14 +86,13 @@ namespace pml
 
                 void SetDestinationDetails(const std::string& sDestinationIp, unsigned short nDestinationPort);
 
-                void ActualizeUnitialisedActive(const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP);
+                void ActualizeUnitialisedActive(const std::string& sSourceIp);
 
                 std::string m_sFlowId;
-                enumTransport m_eTransport;
                 std::string m_sDeviceId;
                 std::string m_sManifest;
                 std::string m_sReceiverId;
-                bool m_bReceiverActive;
+                bool m_bSendingToReceiver;
 
 
                 connectionSender<activationResponse> m_Staged;

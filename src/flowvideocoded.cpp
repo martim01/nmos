@@ -29,4 +29,13 @@ bool FlowVideoCoded::Commit(const ApiVersion& version)
 }
 
 
+std::shared_ptr<FlowVideoCoded> FlowVideoCoded::Create(const Json::Value& jsResponse)
+{
+    auto pResource  = std::make_shared<FlowVideoCoded>();
+    if(pResource->UpdateFromJson(jsResponse))
+    {
+        return pResource;
+    }
+    return nullptr;
+}
 

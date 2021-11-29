@@ -92,6 +92,16 @@ bool SourceAudio::Commit(const ApiVersion& version)
     return false;
 }
 
+std::shared_ptr<SourceAudio> SourceAudio::Create(const Json::Value& jsResponse)
+{
+    auto pResource  = std::make_shared<SourceAudio>();
+    if(pResource->UpdateFromJson(jsResponse))
+    {
+        return pResource;
+    }
+    return nullptr;
+}
+
 size_t SourceAudio::GetNumberOfChannels() const
 {
     return m_nCommitedChannelCount;

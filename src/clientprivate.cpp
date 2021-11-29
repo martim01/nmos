@@ -37,9 +37,12 @@
 #include <numeric>
 #include "websocketclient.h"
 #include "clientposter.h"
+#include "activation.h"
+#include "threadpool.h"
 
 using namespace pml::nmos;
 using namespace std::placeholders;
+
 
 const std::array<std::string, 6> ClientApiImpl::STR_RESOURCE = {"node", "device", "source", "flow", "sender", "receiver"};
 const std::array<std::string, 7> ClientApiImpl::STR_CONNECTION = {"staged", "active", "transportfile","constraints", "staged", "active", "constraint"};
@@ -53,7 +56,7 @@ std::vector<Constraints> CreateConstraints(const Json::Value& jsData)
         {
             if(jsData[i].isObject())
             {
-                Constraints con(TransportParamsRTP::CORE);
+                Constraints con;
                 if(con.UpdateFromJson(jsData[i]))
                 {
                     vConstraints.push_back(con);
@@ -64,45 +67,6 @@ std::vector<Constraints> CreateConstraints(const Json::Value& jsData)
     return vConstraints;
 }
 
-std::vector<ConstraintsSender> CreateConstraintsSender(const Json::Value& jsData)
-{
-    std::vector<ConstraintsSender> vConstraints;
-    if(jsData.isArray() != false)
-    {
-        for(size_t i = 0; i < jsData.size(); i++)
-        {
-            if(jsData[i].isObject())
-            {
-                ConstraintsSender con(TransportParamsRTP::CORE);
-                if(con.UpdateFromJson(jsData[i]))
-                {
-                    vConstraints.push_back(con);
-                }
-            }
-        }
-    }
-    return vConstraints;
-}
-
-std::vector<ConstraintsReceiver> CreateConstraintsRecevier(const Json::Value& jsData)
-{
-    std::vector<ConstraintsReceiver> vConstraints;
-    if(jsData.isArray() != false)
-    {
-        for(size_t i = 0; i < jsData.size(); i++)
-        {
-            if(jsData[i].isObject())
-            {
-                ConstraintsReceiver con(TransportParamsRTP::CORE);
-                if(con.UpdateFromJson(jsData[i]))
-                {
-                    vConstraints.push_back(con);
-                }
-            }
-        }
-    }
-    return vConstraints;
-}
 
 bool CheckSubnet(const url& address1, const url& address2, unsigned long  nSubnet)
 {
@@ -333,6 +297,7 @@ void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std:
     // @todo ConnectTrhead = multiple versions of connecting
 
     //get the constraints
+
     auto curlResp = CurlRegister::Get(sSenderUrl + "/single/senders/"+sSenderId+"/"+ClientApiImpl::STR_CONNECTION[enumConnection::SENDER_CONSTRAINTS], true);
     if(curlResp.nCode != 200)
     {
@@ -361,15 +326,12 @@ void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std:
 
     //@todo check that what we want to do will meet the constraints
 
-    connectionSender aCon(connection::FP_ACTIVATION | connection::FP_ENABLE | connection::FP_TRANSPORT_PARAMS);
-    aCon.eActivate = connection::ACT_NOW;
-    aCon.bMasterEnable = true;
-    aCon.tpSenders.resize(vSenderConstraints.size());
-    aCon.tpSenders[0].bRtpEnabled = true;
+    connectionSender<activationRequest> aCon(true, (TransportParamsRTP::flagsTP)(TransportParamsRTP::CORE | (vSenderConstraints.size()>1 ? TransportParamsRTP::REDUNDANT : 0)));
+    aCon.GetActivation().SetMode(activation::ACT_NOW);
 
     for(size_t i = 1; i < vSenderConstraints.size(); i++)
     {
-        aCon.tpSenders[i].bRtpEnabled = (i < vReceiverConstraints.size());
+        aCon.EnableTransport(i, (i < vReceiverConstraints.size()));
     }
 
 
@@ -377,7 +339,7 @@ void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std:
     auto sSenderTransportUrl = sSenderUrl + "/single/senders/"+sSenderId+"/"+ClientApiImpl::STR_CONNECTION[enumConnection::SENDER_TRANSPORTFILE];
     auto sReceiverStageUrl = sReceiverUrl + "/single/receivers/"+sReceiverId+"/"+ClientApiImpl::STR_CONNECTION[enumConnection::RECEIVER_STAGED];
 
-    curlResp = CurlRegister::PutPatch(sSenderStageUrl, ConvertFromJson(aCon.GetJson(pApi->GetVersion())), false, "");
+    curlResp = CurlRegister::PutPatch(sSenderStageUrl, ConvertFromJson(aCon.GetJson()), false, "");
     if(curlResp.nCode != 200)
     {
         pmlLog(pml::LOG_WARN) << "NMOS: ConnectThread Patch Sender failed: " << curlResp.nCode << " " << curlResp.sResponse;
@@ -385,20 +347,6 @@ void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std:
     }
     else
     {
-        connectionReceiver aConR(connection::FP_TRANSPORT_FILE | connection::FP_ACTIVATION | connection::FP_ENABLE | connection::FP_ID | connection::FP_TRANSPORT_PARAMS);
-        aConR.eActivate = connection::ACT_NOW;
-        aConR.bMasterEnable = true;
-        aConR.tpReceivers.resize(vReceiverConstraints.size());
-        aConR.tpReceivers[0].bRtpEnabled = true;
-        for(size_t i = 1; i < vReceiverConstraints.size(); i++)
-        {
-            aConR.tpReceivers[i].bRtpEnabled = (i < vSenderConstraints.size());
-        }
-
-        aConR.sTransportFileType = "application/sdp";
-        aConR.sSenderId = sSenderId;
-
-
         curlResp = CurlRegister::Get(sSenderTransportUrl, false);
         if(curlResp.nCode != 200)
         {
@@ -407,9 +355,17 @@ void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std:
         }
         else
         {
-            aConR.sTransportFileData = curlResp.sResponse;
+            connectionReceiver<activationResponse> aConR(true, (TransportParamsRTP::flagsTP)(TransportParamsRTP::CORE | (vReceiverConstraints.size()>1 ? TransportParamsRTP::REDUNDANT : 0)));
+            aConR.GetActivation().SetMode(activation::ACT_NOW);
+            aConR.SetSenderId(sSenderId);
+            for(size_t i = 1; i < vSenderConstraints.size(); i++)
+            {
+                aConR.EnableTransport(i, (i < vReceiverConstraints.size()));
+            }
 
-            std::string sData(ConvertFromJson(aConR.GetJson(pApi->GetVersion())));
+            aConR.SetTransportFile(std::string("application/sdp"), curlResp.sResponse);
+
+            std::string sData(ConvertFromJson(aConR.GetJson()));
             curlResp = CurlRegister::PutPatch(sReceiverStageUrl, sData, false, "");
             if(curlResp.nCode != 200)
             {
@@ -431,12 +387,10 @@ void DisconnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const s
     int nResult(200);
     if(false)
     {// @todo ConnectThread - if a unicast stream then tell the sender to stop sending stuff
-        connectionSender aCon(connection::FP_ACTIVATION | connection::FP_ENABLE | connection::FP_TRANSPORT_PARAMS);
-        aCon.eActivate = connection::ACT_NOW;
-        aCon.bMasterEnable = true;
-        aCon.tpSenders[0].bRtpEnabled = true;   //@todo need the other stream as well I guess - also should the be true here??
+        connectionSender<activationRequest> aCon(true, TransportParamsRTP::CORE);
+        aCon.GetActivation().SetMode(activation::enumActivate::ACT_NOW);
 
-        auto curlresp = CurlRegister::PutPatch(sSenderStage, ConvertFromJson(aCon.GetJson(ApiVersion(1,0))), false, "");
+        auto curlresp = CurlRegister::PutPatch(sSenderStage, ConvertFromJson(aCon.GetJson()), false, "");
         if(curlresp.nCode != 200)
         {
             pApi->HandleConnect(sSenderId, sReceiverId, false, curlresp.sResponse);
@@ -444,15 +398,16 @@ void DisconnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const s
         }
     }
 
-    connectionReceiver aConR(connection::FP_TRANSPORT_FILE | connection::FP_ACTIVATION | connection::FP_ENABLE | connection::FP_ID | connection::FP_TRANSPORT_PARAMS);
-    aConR.eActivate = connection::ACT_NOW;
-    aConR.bMasterEnable = false;
-    aConR.tpReceivers[0].bRtpEnabled = false;   //@todo need the other stream as well I guess
-    aConR.sTransportFileType = "application/sdp";
-    aConR.sTransportFileData = "";
-    aConR.sSenderId = "";
+    connectionReceiver<activationResponse> aConR(true, TransportParamsRTP::CORE);
+    aConR.GetActivation().SetMode(activation::enumActivate::ACT_NOW);
+    aConR.SetSenderId({});
 
-    auto curlresp = CurlRegister::PutPatch(sReceiverStage, ConvertFromJson(aConR.GetJson(ApiVersion(1,0))), false, "");
+//    aConR.bMasterEnable = false;
+//    aConR.tpReceivers[0].bRtpEnabled = false;   //@todo need the other stream as well I guess
+//    aConR.sTransportFileType = "application/sdp";
+//    aConR.sTransportFileData = "";
+
+    auto curlresp = CurlRegister::PutPatch(sReceiverStage, ConvertFromJson(aConR.GetJson()), false, "");
     if(curlresp.nCode != 200)
     {
         pApi->HandleConnect("", sReceiverId, false, curlresp.sResponse);
@@ -808,8 +763,7 @@ void ClientApiImpl::HandleCurlDonePatchSender()
 {
     if(m_asyncResponse.nCode == 200 || m_asyncResponse.nCode == 202)
     {
-        connectionSender con;
-        con.Patch(ConvertToJson(m_asyncResponse.sResponse));
+        connectionSender<activationResponse> con(ConvertToJson(m_asyncResponse.sResponse));
         m_pPoster->_RequestPatchSenderResult(m_asyncResponse, con, m_sCurlResourceId);
     }
     else
@@ -822,8 +776,7 @@ void ClientApiImpl::HandleCurlDonePatchReceiver()
 {
     if(m_asyncResponse.nCode == 200 || m_asyncResponse.nCode == 202)
     {
-        connectionReceiver con;
-        con.Patch(ConvertToJson(m_asyncResponse.sResponse));
+        connectionReceiver<activationResponse> con(ConvertToJson(m_asyncResponse.sResponse));
         m_pPoster->_RequestPatchReceiverResult(m_asyncResponse, con, m_sCurlResourceId);
     }
     else
@@ -836,8 +789,7 @@ void ClientApiImpl::HandleCurlDoneGetSenderStaged()
 {
     if(m_asyncResponse.nCode == 200)
     {
-        connectionSender con;
-        con.Patch(ConvertToJson(m_asyncResponse.sResponse));
+        connectionSender<activationResponse> con(ConvertToJson(m_asyncResponse.sResponse));
         m_pPoster->_RequestGetSenderStagedResult(m_asyncResponse, con, m_sCurlResourceId);
     }
     else
@@ -850,8 +802,7 @@ void ClientApiImpl::HandleCurlDoneGetSenderActive()
 {
     if(m_asyncResponse.nCode == 200)
     {
-        connectionSender con;
-        con.Patch(ConvertToJson(m_asyncResponse.sResponse));
+        connectionSender<activationResponse> con(ConvertToJson(m_asyncResponse.sResponse));
         m_pPoster->_RequestGetSenderActiveResult(m_asyncResponse, con, m_sCurlResourceId);
     }
     else
@@ -876,8 +827,7 @@ void ClientApiImpl::HandleCurlDoneGetReceiverStaged()
 {
     if(m_asyncResponse.nCode == 200)
     {
-        connectionReceiver con;
-        con.Patch(ConvertToJson(m_asyncResponse.sResponse));
+        connectionReceiver<activationResponse> con(ConvertToJson(m_asyncResponse.sResponse));
         m_pPoster->_RequestGetReceiverStagedResult(m_asyncResponse, con, m_sCurlResourceId);
     }
     else
@@ -890,8 +840,7 @@ void ClientApiImpl::HandleCurlDoneGetReceiverActive()
 {
     if(m_asyncResponse.nCode == 200)
     {
-        connectionReceiver con;
-        con.Patch(ConvertToJson(m_asyncResponse.sResponse));
+        connectionReceiver<activationResponse> con(ConvertToJson(m_asyncResponse.sResponse));
         m_pPoster->_RequestGetReceiverActiveResult(m_asyncResponse, con, m_sCurlResourceId);
     }
     else
@@ -914,7 +863,7 @@ void ClientApiImpl::GetNodeDetails()
         m_nCurlThreadCount++;
         //need to get all the node details.
         //lets launch a thread that will ask for self, devices, sources, flows, senders, receivers
-        ThreadPool::Get().Submit([&](){NodeBrowser(this, m_lstResolve.front());});
+        pml::ThreadPool::Get().Submit([=]{NodeBrowser(this, m_lstResolve.front());});
         //std::thread th(NodeBrowser, this, m_lstResolve.front());
         //th.detach();    //@todo better to wait on the thread at close down
         m_lstResolve.erase(m_lstResolve.begin());
@@ -939,8 +888,8 @@ resourcechanges<Self> ClientApiImpl::AddNode(const std::string& sIpAddress, cons
         auto pSelf = m_nodes.UpdateResource(jsData);
         if(!pSelf)
         {
-            pSelf = std::make_shared<Self>();
-            if(pSelf->UpdateFromJson(jsData))
+            pSelf = Self::Create(jsData);
+            if(pSelf)
             {
                 m_nodes.AddResource(sIpAddress, pSelf);
                 changed.lstAdded.push_back(pSelf);
@@ -996,8 +945,8 @@ resourcechanges<Device> ClientApiImpl::AddDevice(const std::string& sIpAddress,c
     auto pResource = m_devices.UpdateResource(jsData);
     if(!pResource)
     {
-        pResource = std::make_shared<Device>();
-        if(pResource->UpdateFromJson(jsData))
+        pResource = Device::Create(jsData);
+        if(pResource)
         {
             m_devices.AddResource(sIpAddress, pResource);
             changed.lstAdded.push_back(pResource);
@@ -1050,8 +999,8 @@ resourcechanges<Source> ClientApiImpl::AddSource(const std::string& sIpAddress, 
     {
         if(jsData["format"].asString().find("urn:x-nmos:format:audio") != std::string::npos)
         {   //Audio
-            auto pResource = std::make_shared<SourceAudio>();
-            if(pResource->UpdateFromJson(jsData))
+            auto pResource = SourceAudio::Create(jsData);
+            if(pResource)
             {
                 m_sources.AddResource(sIpAddress, pResource);
                 changed.lstAdded.push_back(pResource);
@@ -1064,8 +1013,8 @@ resourcechanges<Source> ClientApiImpl::AddSource(const std::string& sIpAddress, 
         }
         else
         {   //Generic
-            auto pResource = std::make_shared<SourceGeneric>();
-            if(pResource->UpdateFromJson(jsData))
+            auto pResource = SourceGeneric::Create(jsData);
+            if(pResource)
             {
                 m_sources.AddResource(sIpAddress, pResource);
 
@@ -1178,8 +1127,8 @@ std::shared_ptr<const Flow> ClientApiImpl::CreateFlowAudio(const Json::Value& js
 
 std::shared_ptr<const Flow> ClientApiImpl::CreateFlowAudioCoded(const Json::Value& jsData, const std::string& sIpAddress)
 {
-    auto pResource = std::make_shared<FlowAudioCoded>();
-    if(pResource->UpdateFromJson(jsData))
+    auto pResource = FlowAudioCoded::Create(jsData);
+    if(pResource)
     {
         m_flows.AddResource(sIpAddress, pResource);
         pmlLog(pml::LOG_INFO) << "NMOS: " << "FlowAudioCoded: " << pResource->GetId() << " found at " << sIpAddress ;
@@ -1194,8 +1143,8 @@ std::shared_ptr<const Flow> ClientApiImpl::CreateFlowAudioCoded(const Json::Valu
 
 std::shared_ptr<const Flow> ClientApiImpl::CreateFlowAudioRaw(const Json::Value& jsData, const std::string& sIpAddress)
 {
-    auto pResource = std::make_shared<FlowAudioRaw>();
-    if(pResource->UpdateFromJson(jsData))
+    auto pResource = FlowAudioRaw::Create(jsData);
+    if(pResource)
     {
         m_flows.AddResource(sIpAddress, pResource);
         pmlLog(pml::LOG_INFO) << "NMOS: " << "FlowAudioRaw: " << pResource->GetId() << " found at " << sIpAddress ;
@@ -1227,8 +1176,8 @@ std::shared_ptr<const Flow> ClientApiImpl::CreateFlowVideo(const Json::Value& js
 
 std::shared_ptr<const Flow> ClientApiImpl::CreateFlowVideoRaw(const Json::Value& jsData, const std::string& sIpAddress)
 {
-    auto pResource = std::make_shared<FlowVideoRaw>();
-    if(pResource->UpdateFromJson(jsData))
+    auto pResource = FlowVideoRaw::Create(jsData);
+    if(pResource)
     {
         m_flows.AddResource(sIpAddress, pResource);
         pmlLog(pml::LOG_INFO) << "NMOS: " << "FlowVideoRaw: " << pResource->GetId() << " found at " << sIpAddress ;
@@ -1243,8 +1192,8 @@ std::shared_ptr<const Flow> ClientApiImpl::CreateFlowVideoRaw(const Json::Value&
 
 std::shared_ptr<const Flow> ClientApiImpl::CreateFlowVideoCoded(const Json::Value& jsData, const std::string& sIpAddress)
 {
-    auto pResource = std::make_shared<FlowVideoCoded>(jsData["media_type"].asString());
-    if(pResource->UpdateFromJson(jsData))
+    auto pResource = FlowVideoCoded::Create(jsData);
+    if(pResource)
     {
         m_flows.AddResource(sIpAddress, pResource);
         pmlLog(pml::LOG_INFO) << "NMOS: " << "FlowVideoCoded: " << pResource->GetId() << " found at " << sIpAddress ;
@@ -1261,8 +1210,8 @@ std::shared_ptr<const Flow> ClientApiImpl::CreateFlowData(const Json::Value& jsD
 {
     if(jsData["media_type"] == "video/smpte291")
     {
-        auto pResource = std::make_shared<FlowDataSdiAnc>();
-        if(pResource->UpdateFromJson(jsData))
+        auto pResource = FlowDataSdiAnc::Create(jsData);
+        if(pResource)
         {
             m_flows.AddResource(sIpAddress, pResource);
             pmlLog(pml::LOG_INFO) << "NMOS: " << "FlowDataSdiAnc: " << pResource->GetId() << " found at " << sIpAddress ;
@@ -1276,8 +1225,8 @@ std::shared_ptr<const Flow> ClientApiImpl::CreateFlowData(const Json::Value& jsD
     }
     else if(jsData["media_type"] == "application/json")
     {
-        auto pResource = std::make_shared<FlowDataJson>();
-        if(pResource->UpdateFromJson(jsData))
+        auto pResource = FlowDataJson::Create(jsData);
+        if(pResource)
         {
             m_flows.AddResource(sIpAddress, pResource);
             pmlLog(pml::LOG_INFO) << "NMOS: " << "FlowDataSdiAnc: " << pResource->GetId() << " found at " << sIpAddress ;
@@ -1298,8 +1247,8 @@ std::shared_ptr<const Flow> ClientApiImpl::CreateFlowData(const Json::Value& jsD
 std::shared_ptr<const Flow> ClientApiImpl::CreateFlowMux(const Json::Value& jsData, const std::string& sIpAddress)
 {
     //Mux only at the momemnt
-    auto pResource = std::make_shared<FlowMux>();
-    if(pResource->UpdateFromJson(jsData))
+    auto pResource = FlowMux::Create(jsData);
+    if(pResource)
     {
         m_flows.AddResource(sIpAddress, pResource);
         pmlLog(pml::LOG_INFO) << "NMOS: " << "FlowMux: " << pResource->GetId() << " found at " << sIpAddress ;
@@ -1344,8 +1293,8 @@ resourcechanges<Sender> ClientApiImpl::AddSender(const std::string& sIpAddress, 
     auto pResource = m_senders.UpdateResource(jsData);
     if(!pResource)
     {
-        pResource = std::make_shared<Sender>();
-        if(pResource->UpdateFromJson(jsData))
+        pResource = Sender::Create(jsData);
+        if(pResource)
         {
             m_senders.AddResource(sIpAddress, pResource);
             changed.lstAdded.push_back(pResource);
@@ -1394,8 +1343,8 @@ resourcechanges<Receiver> ClientApiImpl::AddReceiver(const std::string& sIpAddre
     auto pResource = m_receivers.UpdateResource(jsData);
     if(!pResource)
     {
-        pResource = std::make_shared<Receiver>();
-        if(pResource->UpdateFromJson(jsData))
+        pResource = Receiver::Create(jsData);
+        if(pResource)
         {
             m_receivers.AddResource(sIpAddress, pResource);
             changed.lstAdded.push_back(pResource);
@@ -1784,7 +1733,7 @@ curlResponse ClientApiImpl::RequestReceiver(const std::string& sReceiverId, enum
     }
 }
 
-std::pair<curlResponse, std::experimental::optional<std::vector<ConstraintsSender>>> ClientApiImpl::RequestSenderConstraints(const std::string& sSenderId, bool bAsync)
+std::pair<curlResponse, std::experimental::optional<std::vector<Constraints>>> ClientApiImpl::RequestSenderConstraints(const std::string& sSenderId, bool bAsync)
 {
     auto resp =  RequestSender(sSenderId, enumConnection::SENDER_CONSTRAINTS, bAsync);
     if(resp.nCode != 200)
@@ -1793,11 +1742,11 @@ std::pair<curlResponse, std::experimental::optional<std::vector<ConstraintsSende
     }
     else
     {
-        return {resp, CreateConstraintsSender(ConvertToJson(resp.sResponse))};
+        return {resp, CreateConstraints(ConvertToJson(resp.sResponse))};
     }
 }
 
-std::pair<curlResponse, std::experimental::optional<connectionSender>> ClientApiImpl::RequestSenderConnection(const std::string& sSenderId,enumConnection eType, bool bAsync)
+std::pair<curlResponse, std::experimental::optional<connectionSender<activationResponse>>> ClientApiImpl::RequestSenderConnection(const std::string& sSenderId,enumConnection eType, bool bAsync)
 {
     auto resp = RequestSender(sSenderId, eType, bAsync);
     if(resp.nCode != 200)
@@ -1806,18 +1755,16 @@ std::pair<curlResponse, std::experimental::optional<connectionSender>> ClientApi
     }
     else
     {
-        connectionSender con;
-        con.Patch(ConvertToJson(resp.sResponse));
-        return {resp, con};
+        return {resp, connectionSender<activationResponse>(ConvertToJson(resp.sResponse))};
     }
 }
 
-std::pair<curlResponse, std::experimental::optional<connectionSender>> ClientApiImpl::RequestSenderStaged(const std::string& sSenderId, bool bAsync)
+std::pair<curlResponse, std::experimental::optional<connectionSender<activationResponse>>> ClientApiImpl::RequestSenderStaged(const std::string& sSenderId, bool bAsync)
 {
     return RequestSenderConnection(sSenderId, enumConnection::SENDER_STAGED, bAsync);
 }
 
-std::pair<curlResponse, std::experimental::optional<connectionSender>>  ClientApiImpl::RequestSenderActive(const std::string& sSenderId, bool bAsync)
+std::pair<curlResponse, std::experimental::optional<connectionSender<activationResponse>>>  ClientApiImpl::RequestSenderActive(const std::string& sSenderId, bool bAsync)
 {
     return RequestSenderConnection(sSenderId, enumConnection::SENDER_ACTIVE, bAsync);
 }
@@ -1832,7 +1779,7 @@ std::pair<curlResponse, std::experimental::optional<std::string>>  ClientApiImpl
     return {resp, resp.sResponse};
 }
 
-std::pair<curlResponse, std::experimental::optional<std::vector<ConstraintsReceiver>>> ClientApiImpl::RequestReceiverConstraints(const std::string& sReceiverId, bool bAsync)
+std::pair<curlResponse, std::experimental::optional<std::vector<Constraints>>> ClientApiImpl::RequestReceiverConstraints(const std::string& sReceiverId, bool bAsync)
 {
     auto resp =  RequestReceiver(sReceiverId, enumConnection::RECEIVER_CONSTRAINTS, bAsync);
     if(resp.nCode != 200)
@@ -1841,11 +1788,11 @@ std::pair<curlResponse, std::experimental::optional<std::vector<ConstraintsRecei
     }
     else
     {
-        return {resp, CreateConstraintsRecevier(ConvertToJson(resp.sResponse))};
+        return {resp, CreateConstraints(ConvertToJson(resp.sResponse))};
     }
 }
 
-std::pair<curlResponse, std::experimental::optional<connectionReceiver>> ClientApiImpl::RequestReceiverConnection(const std::string& sReceiverId,enumConnection eType, bool bAsync)
+std::pair<curlResponse, std::experimental::optional<connectionReceiver<activationResponse>>> ClientApiImpl::RequestReceiverConnection(const std::string& sReceiverId,enumConnection eType, bool bAsync)
 {
     auto resp = RequestReceiver(sReceiverId, eType, bAsync);
     if(resp.nCode != 200)
@@ -1854,24 +1801,22 @@ std::pair<curlResponse, std::experimental::optional<connectionReceiver>> ClientA
     }
     else
     {
-        connectionReceiver con;
-        con.Patch(ConvertToJson(resp.sResponse));
-        return {resp, con};
+        return {resp, connectionReceiver<activationResponse>(ConvertToJson(resp.sResponse))};
     }
 }
 
-std::pair<curlResponse, std::experimental::optional<connectionReceiver>> ClientApiImpl::RequestReceiverStaged(const std::string& sReceiverId, bool bAsync)
+std::pair<curlResponse, std::experimental::optional<connectionReceiver<activationResponse>>> ClientApiImpl::RequestReceiverStaged(const std::string& sReceiverId, bool bAsync)
 {
     return RequestReceiverConnection(sReceiverId, enumConnection::RECEIVER_STAGED, bAsync);
 }
 
-std::pair<curlResponse, std::experimental::optional<connectionReceiver>> ClientApiImpl::RequestReceiverActive(const std::string& sReceiverId, bool bAsync)
+std::pair<curlResponse, std::experimental::optional<connectionReceiver<activationResponse>>> ClientApiImpl::RequestReceiverActive(const std::string& sReceiverId, bool bAsync)
 {
     return RequestReceiverConnection(sReceiverId, enumConnection::RECEIVER_ACTIVE, bAsync);
 }
 
 
-std::pair<curlResponse, std::experimental::optional<connectionSender>> ClientApiImpl::PatchSenderStaged(const std::string& sSenderId, const connectionSender& aConnection, bool bAsync)
+std::pair<curlResponse, std::experimental::optional<connectionSender<activationResponse>>> ClientApiImpl::PatchSenderStaged(const std::string& sSenderId, const connectionSender<activationRequest>& aConnection, bool bAsync)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
     auto pSender = GetSender(sSenderId);
@@ -1888,26 +1833,24 @@ std::pair<curlResponse, std::experimental::optional<connectionSender>> ClientApi
 
     if(bAsync)
     {
-        m_pCurl->PutPatchAsync(sConnectionUrl, ConvertFromJson(aConnection.GetJson(m_version)), static_cast<long>(enumConnection::SENDER_PATCH), false, sSenderId);
+        m_pCurl->PutPatchAsync(sConnectionUrl, ConvertFromJson(aConnection.GetJson()), static_cast<long>(enumConnection::SENDER_PATCH), false, sSenderId);
         return {CreateCurlResponse(202, "Request actioned"), {}};
     }
     else
     {
-        auto resp = CurlRegister::PutPatch(sConnectionUrl, ConvertFromJson(aConnection.GetJson(m_version)), false, sSenderId);
+        auto resp = CurlRegister::PutPatch(sConnectionUrl, ConvertFromJson(aConnection.GetJson()), false, sSenderId);
         if(resp.nCode != 200)
         {
             return {resp, {}};
         }
         else
         {
-            connectionSender con;
-            con.Patch(ConvertToJson(resp.sResponse));
-            return {resp, con};
+            return {resp, connectionSender<activationResponse>(ConvertToJson(resp.sResponse))};
         }
     }
 }
 
-std::pair<curlResponse, std::experimental::optional<connectionReceiver>> ClientApiImpl::PatchReceiverStaged(const std::string& sReceiverId, const connectionReceiver& aConnection, bool bAsync)
+std::pair<curlResponse, std::experimental::optional<connectionReceiver<activationResponse>>> ClientApiImpl::PatchReceiverStaged(const std::string& sReceiverId, const connectionReceiver<activationRequest>& aConnection, bool bAsync)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
     auto pReceiver = GetReceiver(sReceiverId);
@@ -1924,21 +1867,19 @@ std::pair<curlResponse, std::experimental::optional<connectionReceiver>> ClientA
 
     if(bAsync)
     {
-        m_pCurl->PutPatchAsync(sConnectionUrl, ConvertFromJson(aConnection.GetJson(m_version)), static_cast<long>(enumConnection::RECEIVER_PATCH), false, sReceiverId);
+        m_pCurl->PutPatchAsync(sConnectionUrl, ConvertFromJson(aConnection.GetJson()), static_cast<long>(enumConnection::RECEIVER_PATCH), false, sReceiverId);
         return {CreateCurlResponse(202, "Request actioned"), {}};
     }
     else
     {
-        auto resp =  CurlRegister::PutPatch(sConnectionUrl, ConvertFromJson(aConnection.GetJson(m_version)), false, sReceiverId);
+        auto resp =  CurlRegister::PutPatch(sConnectionUrl, ConvertFromJson(aConnection.GetJson()), false, sReceiverId);
         if(resp.nCode != 200)
         {
             return {resp, {}};
         }
         else
         {
-            connectionReceiver con;
-            con.Patch(ConvertToJson(resp.sResponse));
-            return {resp, con};
+            return {resp, connectionReceiver<activationResponse>(ConvertToJson(resp.sResponse))};
         }
     }
 
@@ -2049,7 +1990,7 @@ bool ClientApiImpl::Connect(const std::string& sSenderId, const std::string& sRe
         return false;
     }
 
-    ThreadPool::Get().Submit([&](){ConnectThread(this, sSenderId, sReceiverId, sSenderUrl, sReceiverUrl);});
+    pml::ThreadPool::Get().Submit([=]{ConnectThread(this, sSenderId, sReceiverId, sSenderUrl, sReceiverUrl);});
     //std::thread th(ConnectThread, this, sSenderId, sReceiverId, sSenderUrl, sReceiverUrl);
     //th.detach();
     return true;
@@ -2085,7 +2026,7 @@ bool ClientApiImpl::Disconnect( const std::string& sReceiverId)
         return false;
     }
 
-    ThreadPool::Get().Submit([&](){DisconnectThread(this, pSender->GetId(), sReceiverId, sSenderStageUrl, sSenderTransportUrl, sReceiverStageUrl);});
+    pml::ThreadPool::Get().Submit([=]{DisconnectThread(this, pSender->GetId(), sReceiverId, sSenderStageUrl, sSenderTransportUrl, sReceiverStageUrl);});
     //std::thread th(DisconnectThread, this, pSender->GetId(), sReceiverId, sSenderStageUrl, sSenderTransportUrl, sReceiverStageUrl);
     //th.detach();
     return true;

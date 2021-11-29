@@ -20,7 +20,7 @@ int main()
 
     auto pPoster = std::make_shared<ThreadPoster>();
 
-    pml::nmos::NodeApi::Get().Init(pPoster, 8080, 8080, "host Label", "host Description");
+    pml::nmos::NodeApi::Get().Init(pPoster, 8080, 8080, "MattTest", "host Description");
     pml::nmos::NodeApi::Get().SetHeartbeatTime(5000);
     pml::nmos::NodeApi::Get().GetSelf().AddInternalClock("clk0");
     pml::nmos::NodeApi::Get().GetSelf().AddPTPClock("clk1", false, "IEEE1588-2008", "08-00-11-ff-fe-21-e1-b0", true);
@@ -29,18 +29,18 @@ int main()
     pml::nmos::NodeApi::Get().GetSelf().AddTag("location", "MCR1");
     pml::nmos::NodeApi::Get().GetSelf().AddTag("Author", "Matt");
 
-    auto pDevice = make_shared<pml::nmos::Device>("TestDevice", "TestDescription", pml::nmos::Device::GENERIC,pml::nmos::NodeApi::Get().GetSelf().GetId());
+    auto pDevice = make_shared<pml::nmos::Device>("MattTest/Device/1", "TestDescription", pml::nmos::Device::GENERIC,pml::nmos::NodeApi::Get().GetSelf().GetId());
 
-    auto pSource = make_shared<pml::nmos::SourceAudio>("TestAudio", "TestDescription", pDevice->GetId());
+    auto pSource = make_shared<pml::nmos::SourceAudio>("MattTest/Source/Audio", "TestDescription", pDevice->GetId());
     pSource->AddChannel("Left", "L");
     pSource->AddChannel("Right", "R");
 
-    auto pFlow = make_shared<pml::nmos::FlowAudioRaw>("TestFlow", "TestDescription", pSource->GetId(), pDevice->GetId(),48000, pml::nmos::FlowAudioRaw::L24);
+    auto pFlow = make_shared<pml::nmos::FlowAudioRaw>("MattTest/Flow/AudioRaw", "TestDescription", pSource->GetId(), pDevice->GetId(),48000, pml::nmos::FlowAudioRaw::L24);
     pFlow->SetPacketTime(pml::nmos::FlowAudioRaw::US_125);
     pFlow->SetMediaClkOffset(0);
 
-    auto pSender = make_shared<pml::nmos::Sender>("TestSender", "Description", pFlow->GetId(), pml::nmos::Sender::RTP_MCAST, pDevice->GetId(), "eth0");
-    auto pReceiver = make_shared<pml::nmos::Receiver>("Test Receiver", "TestDescription", pml::nmos::Receiver::RTP_MCAST, pDevice->GetId(), pml::nmos::Receiver::AUDIO,
+    auto pSender = make_shared<pml::nmos::Sender>("MattTest/Sender/Audio", "Description", pFlow->GetId(), pml::nmos::Sender::RTP_MCAST, pDevice->GetId(), "eth0", pml::nmos::TransportParamsRTP::CORE, std::string("239.255.255.20"));
+    auto pReceiver = make_shared<pml::nmos::Receiver>("MattTest/Receiver/Audio", "TestDescription", pml::nmos::Receiver::RTP_MCAST, pDevice->GetId(), pml::nmos::Receiver::AUDIO,
     (pml::nmos::TransportParamsRTP::flagsTP(pml::nmos::TransportParamsRTP::CORE | pml::nmos::TransportParamsRTP::MULTICAST)));
 
     //pSender->CreateSDP();

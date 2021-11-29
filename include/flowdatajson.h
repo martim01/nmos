@@ -12,11 +12,14 @@ namespace pml
             public:
                 FlowDataJson(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId);
                 FlowDataJson();
+                static std::shared_ptr<FlowDataJson> Create(const Json::Value& jsResponse);
+
                 virtual bool UpdateFromJson(const Json::Value& jsData);
                 virtual bool Commit(const ApiVersion& version);
 
             private:
                 std::string m_sEventType;
+
 
         };
     };

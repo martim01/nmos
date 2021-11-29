@@ -57,6 +57,7 @@ template<typename T> connectionSender<T>::connectionSender(std::experimental::op
     {
         m_vTransportParams.push_back(TransportParamsRTPSender(allowed));
     }
+    SetTPAllowed(allowed);
 }
 
 
@@ -75,6 +76,39 @@ template<typename T> connectionSender<T>& connectionSender<T>::operator=(const c
     m_activation = other.GetConstActivation();
     return *this;
 }
+
+template<typename T> connectionSender<T>::connectionSender(const Json::Value& jsResponse)
+{
+    if(connectionSender<T>::CheckJson(jsResponse) == false)
+    {
+        return;
+    }
+
+    if(jsResponse.isMember(RECEIVER_ID))
+    {
+        m_json[RECEIVER_ID] = jsResponse[RECEIVER_ID];
+    }
+    if(jsResponse.isMember(MASTER_ENABLE))
+    {
+        m_json[MASTER_ENABLE] = jsResponse[MASTER_ENABLE];
+    }
+
+     if(jsResponse[ACTIVATION].isObject())
+    {
+        m_activation = T(jsResponse[ACTIVATION]);
+    }
+
+    if(jsResponse.isMember(TRANSPORT_PARAMS) && jsResponse[TRANSPORT_PARAMS].isArray())
+    {
+        m_vTransportParams.clear();
+        for(size_t i = 0; i < jsResponse[TRANSPORT_PARAMS].size(); i++)
+        {
+            m_vTransportParams.push_back(TransportParamsRTPSender(jsResponse[TRANSPORT_PARAMS][i]));
+        }
+    }
+}
+
+
 
 template<typename T> bool connectionSender<T>::Patch(const Json::Value& jsData)
 {
@@ -172,6 +206,7 @@ template<typename T> connectionReceiver<T>::connectionReceiver(std::experimental
     {
         m_vTransportParams.push_back(TransportParamsRTPReceiver(allowed));
     }
+    SetTPAllowed(allowed);
 }
 
 
@@ -180,6 +215,48 @@ template<typename T> connectionReceiver<T>::connectionReceiver(const connectionR
     m_vTransportParams(conReq.GetTransportParams())
 {
 
+}
+
+template<typename T> connectionReceiver<T>::connectionReceiver(const Json::Value& jsResponse)
+{
+    if(connectionReceiver<T>::CheckJson(jsResponse) == false)
+    {
+        return;
+    }
+
+    if(jsResponse.isMember(MASTER_ENABLE))
+    {
+        m_json[MASTER_ENABLE] = jsResponse[MASTER_ENABLE];
+    }
+
+    if(jsResponse.isMember(TRANSPORT_FILE) && jsResponse[TRANSPORT_FILE].isObject())
+    {
+        m_json[TRANSPORT_FILE] = jsResponse[TRANSPORT_FILE];
+
+        auto type = GetString(m_json[TRANSPORT_FILE], TRANSPORT_FILE_TYPE);
+        auto data = GetString(m_json[TRANSPORT_FILE], TRANSPORT_FILE_DATA);
+    }
+
+    if(jsResponse.isMember(SENDER_ID))
+    {
+        m_json[SENDER_ID] = jsResponse[SENDER_ID];
+    }
+
+
+    if(jsResponse[ACTIVATION].isObject())
+    {
+        m_activation = T(jsResponse[ACTIVATION]);
+    }
+
+
+    if(jsResponse.isMember(TRANSPORT_PARAMS) && jsResponse[TRANSPORT_PARAMS].isArray())
+    {
+        m_vTransportParams.clear();
+        for(size_t i = 0; i < jsResponse[TRANSPORT_PARAMS].size(); i++)
+        {
+            m_vTransportParams.push_back(TransportParamsRTPReceiver(jsResponse[TRANSPORT_PARAMS][i]));
+        }
+    }
 }
 
 template<typename T> bool connectionReceiver<T>::Patch(const Json::Value& jsData)
@@ -416,6 +493,21 @@ template<typename T> bool connectionReceiver<T>::CheckJson(const Json::Value& js
     return true;
 }
 
+template<typename T> void connectionSender<T>::EnableTransport(size_t nTP, bool bEnable)
+{
+    if(nTP < m_vTransportParams.size())
+    {
+        m_vTransportParams[nTP].EnableRtp(bEnable);
+    }
+}
+
+template<typename T> void connectionReceiver<T>::EnableTransport(size_t nTP, bool bEnable)
+{
+    if(nTP < m_vTransportParams.size())
+    {
+        m_vTransportParams[nTP].EnableRtp(bEnable);
+    }
+}
 
 
 

@@ -25,11 +25,18 @@ Receiver::Receiver(const std::string& sLabel, const std::string& sDescription, e
     m_bActivateAllowed(false)
 {
 
-    m_Staged.SetTPAllowed(flagsTransport);
-    m_Active.SetTPAllowed(flagsTransport);
 
     CreateConstraints(m_Staged.GetJson());
 
+}
+
+Receiver::Receiver() :
+    IOResource("receiver"),
+    m_Staged(true, TransportParamsRTP::CORE),
+    m_Active(true, TransportParamsRTP::CORE),
+    m_bActivateAllowed(false)
+{
+    CreateConstraints(m_Staged.GetJson());
 }
 
 Receiver::~Receiver()
@@ -85,8 +92,15 @@ void Receiver::RemoveCap(const std::string& sCap)
     UpdateVersionTime();
 }
 
-
-
+std::shared_ptr<Receiver> Receiver::Create(const Json::Value& jsResponse)
+{
+    auto pResource  = std::make_shared<Receiver>();
+    if(pResource->UpdateFromJson(jsResponse))
+    {
+        return pResource;
+    }
+    return nullptr;
+}
 
 void Receiver::SetType(enumType eType)
 {

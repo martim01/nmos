@@ -34,6 +34,16 @@ FlowAudioCoded::FlowAudioCoded() : FlowAudio()
 
 }
 
+std::shared_ptr<FlowAudioCoded> FlowAudioCoded::Create(const Json::Value& jsResponse)
+{
+    auto pResource = std::make_shared<FlowAudioCoded>();
+    if(pResource->UpdateFromJson(jsResponse))
+    {
+        return pResource;
+    }
+    return nullptr;
+}
+
 bool FlowAudioCoded::UpdateFromJson(const Json::Value& jsData)
 {
     FlowAudio::UpdateFromJson(jsData);

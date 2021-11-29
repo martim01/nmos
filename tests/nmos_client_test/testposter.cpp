@@ -215,25 +215,25 @@ void TestPoster::RequestTargetResult(unsigned long nResult, const std::string& s
     pmlLog() << "++++++++++++++++++++++++" ;
 }
 
-void TestPoster::RequestPatchSenderResult(const curlResponse& resp, const std::experimental::optional<connectionSender>& con, const std::string& sResourceId)
+void TestPoster::RequestPatchSenderResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId)
 {
     pmlLog() << "++++++RequestPatchSenderResult++++++" ;
     pmlLog() << "Result = " << resp.nCode;
     if(con)
     {
-        pmlLog() << "Response = " << (*con).GetJson(ApiVersion(1,2));
+        pmlLog() << "Response = " << (*con).GetJson();
     }
     pmlLog() << "Resource = " << sResourceId;
     pmlLog() << "++++++++++++++++++++++++" ;
 }
 
-void TestPoster::RequestPatchReceiverResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver>& con, const std::string& sResourceId)
+void TestPoster::RequestPatchReceiverResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId)
 {
     pmlLog() << "++++++RequestPatchReceiverResult++++++" ;
     pmlLog() << "Result = " << resp.nCode;
     if(con)
     {
-        pmlLog() << "Response = " << (*con).GetJson(ApiVersion(1,2));
+        pmlLog() << "Response = " << (*con).GetJson();
     }
     pmlLog() << "Resource = " << sResourceId;
     pmlLog() << "++++++++++++++++++++++++" ;
@@ -249,25 +249,25 @@ void TestPoster::RequestConnectResult(const std::string& sSenderId, const std::s
     pmlLog() << "++++++++++++++++++++++++" ;
 }
 
-void TestPoster::RequestGetSenderStagedResult(const curlResponse& resp, const std::experimental::optional<connectionSender>& con, const std::string& sResourceId)
+void TestPoster::RequestGetSenderStagedResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId)
 {
     pmlLog() << "++++++RequestGetSenderStagedResult++++++" ;
     pmlLog() << "Result = " << resp.nCode;
     if(con)
     {
-        pmlLog() << "Response = " << (*con).GetJson(ApiVersion(1,2));
+        pmlLog() << "Response = " << (*con).GetJson();
     }
     pmlLog() << "Resource = " << sResourceId;
     pmlLog() << "++++++++++++++++++++++++" ;
 }
 
-void TestPoster::RequestGetSenderActiveResult(const curlResponse& resp, const std::experimental::optional<connectionSender>& con, const std::string& sResourceId)
+void TestPoster::RequestGetSenderActiveResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId)
 {
     pmlLog() << "++++++RequestGetSenderActiveResult++++++" ;
     pmlLog() << "Result = " << resp.nCode;
     if(con)
     {
-        pmlLog() << "Response = " << (*con).GetJson(ApiVersion(1,2));
+        pmlLog() << "Response = " << (*con).GetJson();
     }
     pmlLog() << "Resource = " << sResourceId;
     pmlLog() << "++++++++++++++++++++++++" ;
@@ -285,25 +285,25 @@ void TestPoster::RequestGetSenderTransportFileResult(const curlResponse& resp, c
     pmlLog() << "++++++++++++++++++++++++" ;
 }
 
-void TestPoster::RequestGetReceiverStagedResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver>& con, const std::string& sResourceId)
+void TestPoster::RequestGetReceiverStagedResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId)
 {
     pmlLog() << "++++++RequestGetReceiverStagedResult++++++" ;
     pmlLog() << "Result = " << resp.nCode;
     if(con)
     {
-        pmlLog() << "Response = " << (*con).GetJson(ApiVersion(1,2));
+        pmlLog() << "Response = " << (*con).GetJson();
     }
     pmlLog() << "Resource = " << sResourceId;
     pmlLog() << "++++++++++++++++++++++++" ;
 }
 
-void TestPoster::RequestGetReceiverActiveResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver>& con, const std::string& sResourceId)
+void TestPoster::RequestGetReceiverActiveResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId)
 {
     pmlLog() << "++++++RequestGetReceiverActiveResult++++++" ;
     pmlLog() << "Result = " << resp.nCode;
     if(con)
     {
-        pmlLog() << "Response = " << (*con).GetJson(ApiVersion(1,2));
+        pmlLog() << "Response = " << (*con).GetJson();
     }
     pmlLog() << "Resource = " << sResourceId;
     pmlLog() << "++++++++++++++++++++++++" ;

@@ -11,11 +11,13 @@ namespace pml
         {
             public:
                 FlowDataSdiAnc(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId);
+                static std::shared_ptr<FlowDataSdiAnc> Create(const Json::Value& jsResponse);
                 FlowDataSdiAnc();
                 virtual bool UpdateFromJson(const Json::Value& jsData);
                 virtual bool Commit(const ApiVersion& version);
 
             private:
+
                 //@TODO identification words
                 std::list<std::pair<std::string, std::string> > m_lstWords;
         };

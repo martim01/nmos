@@ -1,4 +1,5 @@
 #include "threadpool.h"
+#include "log.h"
 
 using namespace pml;
 
@@ -12,6 +13,7 @@ ThreadPool::ThreadPool() :
     m_bDone(false)
 {
     auto nThreads = std::thread::hardware_concurrency();
+    pmlLog() << "pml ThreadPool: Creating " << nThreads << " threads";
     try
     {
         for(size_t i = 0; i < nThreads; i++)

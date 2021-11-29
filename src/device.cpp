@@ -20,6 +20,16 @@ Device::Device() : Resource("device")
 
 }
 
+std::shared_ptr<Device> Device::Create(const Json::Value& jsResponse)
+{
+    auto pResource  = std::make_shared<Device>();
+    if(pResource->UpdateFromJson(jsResponse))
+    {
+        return pResource;
+    }
+    return nullptr;
+}
+
 bool Device::UpdateFromJson(const Json::Value& jsData)
 {
     Resource::UpdateFromJson(jsData);

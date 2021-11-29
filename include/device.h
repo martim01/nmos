@@ -19,6 +19,8 @@ namespace pml
 
                 Device(const std::string& sLabel, const std::string& sDescription, enumType eType, const std::string& sNodeId);
                 Device();
+                static std::shared_ptr<Device> Create(const Json::Value& jsResponse);
+
                 virtual bool UpdateFromJson(const Json::Value& jsData);
 
                 virtual ~Device(){}

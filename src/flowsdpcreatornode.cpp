@@ -8,28 +8,31 @@
 #include "nodeapiprivate.h"
 #include <sstream>
 #include "sourceaudio.h"
+#include "transportparams.h"
+#include "sdp.h"
+#include "log.h"
 
 using namespace pml::nmos;
 
-std::string CreateFlowSdpLines(NodeApiPrivate& api, std::shared_ptr<Flow> pFlow, unsigned short nRtpPort)
+std::string CreateFlowSdpLines(NodeApiPrivate& api, std::shared_ptr<Flow> pFlow, unsigned short nRtpPort, const std::string& sConnectionLine)
 {
     //@todo this feels a bodge
     auto pfar = std::dynamic_pointer_cast<FlowAudioRaw>(pFlow);
     if(pfar)
     {
-        return CreateFlowSdpLines(api, pfar, nRtpPort);
+        return CreateFlowSdpLines(api, pfar, nRtpPort, sConnectionLine);
     }
 
     auto pfac = std::dynamic_pointer_cast<FlowAudioCoded>(pFlow);
     if(pfac)
     {
-        return CreateFlowSdpLines(api, pfac, nRtpPort);
+        return CreateFlowSdpLines(api, pfac, nRtpPort,sConnectionLine);
     }
 
     return std::string();
 }
 
-std::string CreateFlowSdpLines(NodeApiPrivate& api, std::shared_ptr<FlowAudioRaw> pFlow, unsigned short nRtpPort)
+std::string CreateFlowSdpLines(NodeApiPrivate& api, std::shared_ptr<FlowAudioRaw> pFlow, unsigned short nRtpPort, const std::string& sConnectionLine)
 {
     if(!pFlow)
         return "";
@@ -37,7 +40,7 @@ std::string CreateFlowSdpLines(NodeApiPrivate& api, std::shared_ptr<FlowAudioRaw
     std::stringstream sstr;
 
     sstr << "m=audio " << nRtpPort << " RTP/AVP 96\r\n";
-
+    sstr << sConnectionLine;
     sstr << "a=rtpmap:96 L";
     switch(pFlow->GetFormat())
     {
@@ -107,7 +110,7 @@ std::string CreateFlowSdpLines(NodeApiPrivate& api, std::shared_ptr<FlowAudioRaw
 }
 
 
-std::string CreateFlowSdpLines(NodeApiPrivate& api, std::shared_ptr<FlowAudioCoded> pFlow, unsigned short nRtpPort)
+std::string CreateFlowSdpLines(NodeApiPrivate& api, std::shared_ptr<FlowAudioCoded> pFlow, unsigned short nRtpPort, const std::string& sConnectionLine)
 {
     if(!pFlow)
         return "";
@@ -131,4 +134,35 @@ std::string CreateFlowSdpLines(NodeApiPrivate& api, std::shared_ptr<FlowAudioCod
     }
     */
     return sstr.str();
+}
+
+
+std::string CreateConnectionLine(const TransportParamsRTPSender& tpSender)
+{
+    std::stringstream ssSDP;
+    switch(SdpManager::CheckIpAddress(tpSender.GetDestinationIp()))
+    {
+        case SdpManager::IP4_UNI:
+            ssSDP << "c=IN IP4 " << tpSender.GetDestinationIp() << "\r\n";
+            //ssSDP << "a=type:unicast\r\n";
+            break;
+        case SdpManager::IP4_MULTI:
+            ssSDP << "c=IN IP4 " << tpSender.GetDestinationIp() << "/32\r\n";
+            ssSDP << "a=source-filter: incl IN IP4 " << tpSender.GetDestinationIp() << " " << tpSender.GetSourceIp() << "\r\n";
+            //ssSDP << "a=type:multicast\r\n";
+            break;
+        case SdpManager::IP6_UNI:
+            ssSDP << "c=IN IP6 " << tpSender.GetDestinationIp() << "\r\n";
+            //ssSDP << "a=type:unicast\r\n";
+            break;
+        case SdpManager::IP6_MULTI:
+            ssSDP << "c=IN IP6 " << tpSender.GetDestinationIp() << "\r\n";
+            ssSDP << "a=source-filter: incl IN IP6 " << tpSender.GetDestinationIp() << " " << tpSender.GetSourceIp() << "\r\n";
+            //ssSDP << "a=type:multicast\r\n";
+            break;
+        case SdpManager::SdpManager::IP_INVALID:
+            pmlLog(pml::LOG_WARN) << "NMOS: Sender can't create SDP - destination IP invalid '" << tpSender.GetDestinationIp() << "'";
+            break;
+    }
+    return ssSDP.str();
 }

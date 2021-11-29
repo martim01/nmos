@@ -8,6 +8,7 @@
 #include "curlregister.h"
 #include "optional.hpp"
 #include "connection.h"
+#include "activation.h"
 
 namespace pml
 {
@@ -55,13 +56,13 @@ namespace pml
 
 
                 void _RequestTargetResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
-                void _RequestPatchSenderResult(const curlResponse& resp, const std::experimental::optional<connectionSender>& con, const std::string& sResourceId);
-                void _RequestPatchReceiverResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver>& con, const std::string& sResourceId);
-                void _RequestGetSenderStagedResult(const curlResponse& resp, const std::experimental::optional<connectionSender>& con, const std::string& sResourceId);
-                void _RequestGetSenderActiveResult(const curlResponse& resp, const std::experimental::optional<connectionSender>& con, const std::string& sResourceId);
+                void _RequestPatchSenderResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId);
+                void _RequestPatchReceiverResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId);
+                void _RequestGetSenderStagedResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId);
+                void _RequestGetSenderActiveResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId);
                 void _RequestGetSenderTransportFileResult(const curlResponse& resp, const std::experimental::optional<std::string>& sTransportFile, const std::string& sResourceId);
-                void _RequestGetReceiverStagedResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver>& con, const std::string& sResourceId);
-                void _RequestGetReceiverActiveResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver>& con, const std::string& sResourceId);
+                void _RequestGetReceiverStagedResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId);
+                void _RequestGetReceiverActiveResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId);
 
                 void _RequestConnectResult(const std::string& sSenderId, const std::string& sReceiverId, bool bSuccess, const std::string& sResponse);
 
@@ -145,13 +146,13 @@ namespace pml
                 virtual void RequestTargetResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)=0;
 
 
-                virtual void RequestPatchSenderResult(const curlResponse& resp, const std::experimental::optional<connectionSender>& con, const std::string& sResourceId) = 0;
-                virtual void RequestPatchReceiverResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver>& con, const std::string& sResourceId) = 0;
-                virtual void RequestGetSenderStagedResult(const curlResponse& resp, const std::experimental::optional<connectionSender>& con, const std::string& sResourceId) = 0;
-                virtual void RequestGetSenderActiveResult(const curlResponse& resp, const std::experimental::optional<connectionSender>& con, const std::string& sResourceId) = 0;
+                virtual void RequestPatchSenderResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId) = 0;
+                virtual void RequestPatchReceiverResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId) = 0;
+                virtual void RequestGetSenderStagedResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId) = 0;
+                virtual void RequestGetSenderActiveResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId) = 0;
                 virtual void RequestGetSenderTransportFileResult(const curlResponse& resp, const std::experimental::optional<std::string>& sTransportFile, const std::string& sResourceId) = 0;
-                virtual void RequestGetReceiverStagedResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver>& con, const std::string& sResourceId) = 0;
-                virtual void RequestGetReceiverActiveResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver>& con, const std::string& sResourceId) = 0;
+                virtual void RequestGetReceiverStagedResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId) = 0;
+                virtual void RequestGetReceiverActiveResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId) = 0;
 
 
                 virtual void RequestConnectResult(const std::string& sSenderId, const std::string& sReceiverId, bool bSuccess, const std::string& sResponse)=0;

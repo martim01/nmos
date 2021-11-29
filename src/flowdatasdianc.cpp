@@ -69,3 +69,12 @@ bool FlowDataSdiAnc::Commit(const ApiVersion& version)
 }
 
 
+std::shared_ptr<FlowDataSdiAnc> FlowDataSdiAnc::Create(const Json::Value& jsResponse)
+{
+    auto pResource  = std::make_shared<FlowDataSdiAnc>();
+    if(pResource->UpdateFromJson(jsResponse))
+    {
+        return pResource;
+    }
+    return nullptr;
+}
