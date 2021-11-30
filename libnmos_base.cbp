@@ -150,7 +150,6 @@
 		<Unit filename="include/flowdatajson.h" />
 		<Unit filename="include/flowdatasdianc.h" />
 		<Unit filename="include/flowmux.h" />
-		<Unit filename="include/flowsdpcreator.h" />
 		<Unit filename="include/flowvideo.h" />
 		<Unit filename="include/flowvideocoded.h" />
 		<Unit filename="include/flowvideoraw.h" />
@@ -185,7 +184,6 @@
 		<Unit filename="src/flowdatajson.cpp" />
 		<Unit filename="src/flowdatasdianc.cpp" />
 		<Unit filename="src/flowmux.cpp" />
-		<Unit filename="src/flowsdpcreator.cpp" />
 		<Unit filename="src/flowvideo.cpp" />
 		<Unit filename="src/flowvideocoded.cpp" />
 		<Unit filename="src/flowvideoraw.cpp" />

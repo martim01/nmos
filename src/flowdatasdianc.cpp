@@ -78,3 +78,14 @@ std::shared_ptr<FlowDataSdiAnc> FlowDataSdiAnc::Create(const Json::Value& jsResp
     }
     return nullptr;
 }
+
+
+std::string FlowDataSdiAnc::CreateSDPMediaLine(unsigned short nPort) const
+{
+    return std::string();
+}
+
+std::string FlowDataSdiAnc::CreateSDPAttributeLines(std::shared_ptr<const Source> pSource) const
+{
+    return std::string();
+}

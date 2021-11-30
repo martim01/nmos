@@ -47,8 +47,8 @@ namespace pml
 
                 virtual bool CheckConstraints(const connectionSender<activationResponse>& conRequest);
 
-                connectionSender<activationResponse> GetStaged();
-                connectionSender<activationResponse> GetActive();
+                connectionSender<activationResponse> GetStaged() const;
+                connectionSender<activationResponse> GetActive() const;
                 const std::string& GetTransportFile() const;
 
                 bool IsLocked();

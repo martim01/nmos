@@ -49,7 +49,6 @@
 #include "flowdatasdianc.h"
 #include "flowdatajson.h"
 #include "flowmux.h"
-#include "flowsdpcreatornode.h"
 #include <algorithm>
 #include "optional.hpp"
 
@@ -303,9 +302,9 @@ void NodeApiPrivate::StopHttpServers()
     pmlLog(pml::LOG_DEBUG) << "NMOS: NodeApi - stop http servers - done";
 }
 
-bool NodeApiPrivate::StartmDNSServer()
+bool NodeApiPrivate::StartmDNSPublisher()
 {
-    StopmDNSServer();
+    StopmDNSPublisher();
     auto itEndpoint = m_self.GetEndpointsBegin();
     if(itEndpoint != m_self.GetEndpointsEnd())
     {
@@ -318,7 +317,7 @@ bool NodeApiPrivate::StartmDNSServer()
 
 }
 
-void NodeApiPrivate::StopmDNSServer()
+void NodeApiPrivate::StopmDNSPublisher()
 {
     pmlLog(pml::LOG_DEBUG) << "NMOS: NodeApi - stop dns-sd";
     if(m_pNodeApiPublisher)
@@ -332,7 +331,6 @@ void NodeApiPrivate::StopmDNSServer()
 
 bool NodeApiPrivate::StartServices()
 {
-
     m_pThread = std::make_unique<std::thread>(&NodeApiPrivate::Run, this);
 
     return true;
@@ -340,13 +338,8 @@ bool NodeApiPrivate::StartServices()
 
 void NodeApiPrivate::StopServices()
 {
-    if(m_pThread)
-    {
-        StopRun();
-        StopHttpServers();
-        StopmDNSServer();
-        StopRegistrationBrowser();
-    }
+    StopRun();
+
 }
 
 
@@ -587,7 +580,7 @@ void NodeApiPrivate::SignalServer(unsigned short nPort, bool bOk, const std::str
     }
 }
 
-void NodeApiPrivate::StopRegistrationBrowser()
+void NodeApiPrivate::StopRegistrationBrowsing()
 {
     pmlLog(pml::LOG_DEBUG) << "NMOS: NodeApi - stop registration browser";
     for(const auto& pairBrowser : m_mBrowser)
@@ -996,6 +989,8 @@ void NodeApiPrivate::StopRun()
         m_pThread->join();
         m_pThread = nullptr;
         pmlLog(pml::LOG_DEBUG) << "NMOS: NodeApi - stop done";
+
+        StopRegistrationBrowsing();
     }
 }
 
@@ -1220,7 +1215,7 @@ shared_ptr<Receiver> NodeApiPrivate::GetReceiver(const std::string& sId)
     {
         return itResource->second;
     }
-    return NULL;
+    return nullptr;
 }
 
 shared_ptr<Sender> NodeApiPrivate::GetSender(const std::string& sId)
@@ -1230,8 +1225,39 @@ shared_ptr<Sender> NodeApiPrivate::GetSender(const std::string& sId)
     {
         return itResource->second;
     }
-    return NULL;
+    return nullptr;
 }
+
+shared_ptr<Device> NodeApiPrivate::GetDevice(const std::string& sId)
+{
+    auto itResource = m_devices.GetResource(sId);
+    if(itResource != m_devices.GetResourceEnd())
+    {
+        return itResource->second;
+    }
+    return nullptr;
+}
+
+shared_ptr<Source> NodeApiPrivate::GetSource(const std::string& sId)
+{
+    auto itResource = m_sources.GetResource(sId);
+    if(itResource != m_sources.GetResourceEnd())
+    {
+        return itResource->second;
+    }
+    return nullptr;
+}
+
+shared_ptr<Flow> NodeApiPrivate::GetFlow(const std::string& sId)
+{
+    auto itResource = m_flows.GetResource(sId);
+    if(itResource != m_flows.GetResourceEnd())
+    {
+        return itResource->second;
+    }
+    return nullptr;
+}
+
 
 
 NodeApiPrivate::enumSignal NodeApiPrivate::GetSignal() const
@@ -1323,115 +1349,17 @@ bool NodeApiPrivate::RemoveBrowseDomain(const std::string& sDomain)
     return false;
 }
 
-
-std::string NodeApiPrivate::CreateFlowSdp(const std::string& sId, const TransportParamsRTPSender& tpSender, const std::set<std::string>& setInterfaces)
-{
-    std::stringstream ssSDP;
-    //now put in the flow media information
-    auto itFlow = GetFlows().FindNmosResource(sId);
-    if(itFlow != GetFlows().GetResourceEnd())
-    {
-        auto pFlow = std::dynamic_pointer_cast<Flow>(itFlow->second);
-        if(pFlow)
-        {
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "CreateSDP Destination TP: " << tpSender.GetJson();
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "CreateSDP Destination Port = " << tpSender.GetDestinationPort() ;
-            unsigned short nPort(tpSender.GetDestinationPort());
-            if(nPort == 0)
-            {
-                nPort = 5004;
-            }
-
-
-
-            ssSDP << CreateFlowSdpLines(*this, pFlow, nPort, CreateConnectionLine(tpSender));
-
-
-            //put in the destination unicast/multicast block
-
-            if(tpSender.IsRtcpEnabled() && *tpSender.IsRtcpEnabled() && tpSender.GetRtcpDestinationIp() && tpSender.GetRtcpDestinationPort())
-            {
-                switch(SdpManager::CheckIpAddress(*tpSender.GetRtcpDestinationIp()))
-                {
-                    case SdpManager::IP4_UNI:
-                    case SdpManager::IP4_MULTI:
-                        ssSDP << "a=rtcp:" << *tpSender.GetRtcpDestinationPort() << " IN IP4 " << *tpSender.GetRtcpDestinationIp() << "\r\n";
-                        break;
-                    case SdpManager::IP6_UNI:
-                    case SdpManager::IP6_MULTI:
-                        ssSDP << "a=rtcp:" << *tpSender.GetRtcpDestinationPort() << " IN IP6 " << *tpSender.GetRtcpDestinationIp() << "\r\n";
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-            //get clock name from source
-            auto itSource = GetSources().FindNmosResource(pFlow->GetSourceId());
-            if(itSource != GetSources().GetResourceEnd())
-            {
-                auto pSource = std::dynamic_pointer_cast<Source>(itSource->second);
-                auto sClock = pSource->GetClock();
-
-                //clock information is probably at the media level
-                if(setInterfaces.empty() || sClock.empty())
-                {
-                    ssSDP << GetSelf().CreateClockSdp(sClock, "");
-                }
-                else
-                {
-                    ssSDP << GetSelf().CreateClockSdp(sClock, *(setInterfaces.begin())); // @todo should we check all the intefaces for the clock mac address??
-                }
-            }
-        }
-    }
-    return ssSDP.str();
-}
-
-
 void NodeApiPrivate::CreateSDP(std::shared_ptr<Sender> pSender)
 {
-    auto active = pSender->GetActive();
-
-    std::stringstream ssSDP;
-    ssSDP << "v=0\r\n";
-    ssSDP << "o=- " << GetCurrentTaiTime(false) << " " << GetCurrentTaiTime(false) << " IN IP";
-    switch(SdpManager::CheckIpAddress(active.GetTransportParams()[0].GetSourceIp()))
+    auto pFlow = GetFlow(pSender->GetFlowId());
+    if(pFlow)
     {
-        case SdpManager::IP4_UNI:
-        case SdpManager::IP4_MULTI:
-            ssSDP << "4 ";
-            break;
-        case SdpManager::IP6_UNI:
-        case SdpManager::IP6_MULTI:
-            ssSDP << "6 ";
-            break;
-        case SdpManager::IP_INVALID:
-            ssSDP << " ";
-            break;
+        auto pSource = GetSource(pFlow->GetSourceId());
+        if(pSource)
+        {
+            pSender->SetTransportFile(SdpManager::TransportParamsToSdp(GetSelf(), pSender, pFlow, pSource));
+        }
     }
-    ssSDP << active.GetTransportParams()[0].GetSourceIp() << "\r\n";    // @todo should check here if sSourceIp is not set to auto
-
-
-//    std::map<std::string, std::shared_ptr<Device> >::const_iterator itDevice = GetDevices().FindNmosResource(pSender->GetDeviceId());
-//    if(itDevice != GetDevices().GetResourceEnd())
-//    {
-//        ssSDP << "s=" << itDevice->second->GetLabel() << ":";
-//    }
-//    else
-//    {
-//        ssSDP << "s=-:";
-//    }
-    ssSDP << "s=" << pSender->GetLabel() << "\r\n";
-
-    ssSDP << "t=0 0 \r\n";
-    for(const auto& tpSender: active.GetTransportParams())
-    {
-
-        ssSDP << CreateFlowSdp(pSender->GetFlowId(), tpSender, pSender->GetInterfaces());
-    }
-
-    pSender->SetTransportFile(ssSDP.str());
 }
 
 void NodeApiPrivate::Activate(bool bCommit, std::shared_ptr<IOResource> pResource)

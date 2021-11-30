@@ -12,7 +12,7 @@ void NodeApiPrivate::Run()
     //start the discovery and connection servers
     StartHttpServers();
     //start the DNS-SD publisher server
-    StartmDNSServer();
+    StartmDNSPublisher();
 
     //browse for an registry server this will now wait until all services have been browsed for,
 
@@ -39,6 +39,10 @@ void NodeApiPrivate::Run()
         }
     }while(IsRunning());
 
+    //now stop the discovery and connection servers
+    StopHttpServers();
+    //and the dns-sd publisher
+    StopmDNSPublisher();
 }
 
 bool NodeApiPrivate::FindRegisterNode()

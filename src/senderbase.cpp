@@ -189,13 +189,13 @@ bool Sender::IsLocked()
 }
 
 
-connectionSender<activationResponse> Sender::GetStaged()
+connectionSender<activationResponse> Sender::GetStaged() const
 {
     std::lock_guard<std::mutex> lg(m_mutex);
     return m_Staged;
 }
 
-connectionSender<activationResponse> Sender::GetActive()
+connectionSender<activationResponse> Sender::GetActive()  const
 {
     std::lock_guard<std::mutex> lg(m_mutex);
     return m_Active;

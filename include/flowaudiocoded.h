@@ -19,6 +19,9 @@ namespace pml
                 virtual bool UpdateFromJson(const Json::Value& jsData);
                 void SetMediaType(const std::string& sMediaType);
 
+                std::string CreateSDPMediaLine(unsigned short nPort) const override;
+                std::string CreateSDPAttributeLines(std::shared_ptr<const Source> pSource) const override;
+
             protected:
 
             private:

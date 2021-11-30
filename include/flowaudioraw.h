@@ -23,6 +23,10 @@ namespace pml
 
                 enumFormat GetFormat() const { return m_eFormat;}
                 enumPacket GetPacketTime() const { return m_ePacketTime;}
+
+                std::string CreateSDPMediaLine(unsigned short nPort) const override;
+                std::string CreateSDPAttributeLines(std::shared_ptr<const Source> pSource) const override;
+
             private:
 
                 enumFormat m_eFormat;

@@ -107,3 +107,74 @@ std::shared_ptr<FlowAudioRaw> FlowAudioRaw::Create(const Json::Value& jsResponse
     }
     return nullptr;
 }
+
+
+std::string FlowAudioRaw::CreateSDPMediaLine(unsigned short nPort) const
+{
+    std::stringstream ss;
+    ss << "m=audio " << nPort << " RTP/AVP 96\r\n";
+    return ss.str();
+}
+
+std::string FlowAudioRaw::CreateSDPAttributeLines(std::shared_ptr<const Source> pSource) const
+{
+    std::stringstream ssLines;
+    ssLines << "a=rtpmap:96 L";
+    switch(m_eFormat)
+    {
+        case enumFormat::L24:
+            ssLines << "24/";
+            break;
+        case enumFormat::L20:
+            ssLines << "20/";
+            break;
+        case enumFormat::L16:
+            ssLines << "16/";
+            break;
+        case enumFormat::L8:
+            ssLines << "8/";
+            break;
+    }
+
+    ssLines << m_nSampleRateNumerator << "/";
+
+    //Get the number of channels from the associated source
+    auto pAudioSource = std::dynamic_pointer_cast<const SourceAudio>(pSource);
+    if(pAudioSource)
+    {
+        ssLines << pAudioSource->GetNumberOfChannels() << "\r\n";
+    }
+    else
+    {
+        ssLines << "0\r\n";
+    }
+
+    // @todo channel order - needed in SMPTE2110. Not needed in AES67 but it shouldnt matter to include it
+
+
+    //packet time
+    switch(m_ePacketTime)
+    {
+        case enumPacket::US_125:
+            ssLines << "a=ptime:0.125\r\n";
+            break;
+        case enumPacket::US_250:
+            ssLines << "a=ptime:0.250\r\n";
+            break;
+        case enumPacket::US_333:
+            ssLines << "a=ptime:0.333\r\n";
+            break;
+        case enumPacket::US_1000:
+            ssLines << "a=ptime:1\r\n";
+            break;
+        case enumPacket::US_4000:
+            ssLines << "a=ptime:4\r\n";
+            break;
+    }
+
+    //mediaclk:direct=
+    ssLines << "a=mediaclk:direct=" << m_nMediaClkOffset << "\r\n";
+
+    return ssLines.str();
+
+}

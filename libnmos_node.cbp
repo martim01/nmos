@@ -120,7 +120,6 @@
 		</Linker>
 		<Unit filename="include/activator.h" />
 		<Unit filename="include/eventposter.h" />
-		<Unit filename="include/flowsdpcreatornode.h" />
 		<Unit filename="include/is04server.h" />
 		<Unit filename="include/is05server.h" />
 		<Unit filename="include/nmosdlldefine.h" />
@@ -132,7 +131,6 @@
 		<Unit filename="include/resourceholder.h" />
 		<Unit filename="src/activator.cpp" />
 		<Unit filename="src/eventposter.cpp" />
-		<Unit filename="src/flowsdpcreatornode.cpp" />
 		<Unit filename="src/is04server.cpp" />
 		<Unit filename="src/is05server.cpp" />
 		<Unit filename="src/nmosserver.cpp" />

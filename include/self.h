@@ -91,7 +91,7 @@ namespace pml
 
                 unsigned char GetDnsVersion() const;
 
-                std::string CreateClockSdp(const std::string& sClockName, const std::string& sInterface) const;
+                std::string CreateSDPClockLine(const std::string& sClockName, const std::string& sIpAddress) const;
 
                 std::set<ifendpoint>::const_iterator GetEndpointsBegin() const;
                 std::set<ifendpoint>::const_iterator GetEndpointsEnd() const;

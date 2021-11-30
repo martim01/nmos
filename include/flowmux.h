@@ -15,6 +15,9 @@ namespace pml
                 virtual bool Commit(const ApiVersion& version);
                 void SetMediaType(const std::string& sMediaType);
                 FlowMux();
+
+                std::string CreateSDPMediaLine(unsigned short nPort) const override;
+                std::string CreateSDPAttributeLines(std::shared_ptr<const Source> pSource) const override;
             private:
                 std::string m_sMediaType;
 

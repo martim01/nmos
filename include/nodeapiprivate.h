@@ -175,6 +175,24 @@ namespace pml
                 **/
                 std::shared_ptr<Sender> GetSender(const std::string& sId);
 
+                /** @brief Returns a pointer to the Flow with the given id if one exists or null.
+                *   @param sId the uuid of the Flow
+                *   @return <i>Flow*</i> pointer to the given Sender or null
+                **/
+                std::shared_ptr<Flow> GetFlow(const std::string& sId);
+
+                /** @brief Returns a pointer to the Source with the given id if one exists or null.
+                *   @param sId the uuid of the Source
+                *   @return <i>Source*</i> pointer to the given Sender or null
+                **/
+                std::shared_ptr<Source> GetSource(const std::string& sId);
+
+                /** @brief Returns a pointer to the Device with the given id if one exists or null.
+                *   @param sId the uuid of the Device
+                *   @return <i>Device*</i> pointer to the given Sender or null
+                **/
+                std::shared_ptr<Device> GetDevice(const std::string& sId);
+
 
                 /** @brief To be called by the main thread when an IS-04 connection is made. The server tread will have called Target
                 *   @param sInterfaceIp the ip address of the interface that is being used by the receiver to receive the flow
@@ -327,12 +345,12 @@ namespace pml
 
                 void StopHttpServers();
 
-                bool StartmDNSServer();
-                void StopmDNSServer();
+                bool StartmDNSPublisher();
+                void StopmDNSPublisher();
                 void SetmDNSTxt(bool bSecure);
 
 
-                void StopRegistrationBrowser();
+                void StopRegistrationBrowsing();
 
 
                 template<class T> long RegisterResources(ResourceHolder<T>& holder);

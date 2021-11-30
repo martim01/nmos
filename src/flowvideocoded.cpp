@@ -39,3 +39,13 @@ std::shared_ptr<FlowVideoCoded> FlowVideoCoded::Create(const Json::Value& jsResp
     return nullptr;
 }
 
+
+std::string FlowVideoCoded::CreateSDPMediaLine(unsigned short nPort) const
+{
+    return std::string();
+}
+
+std::string FlowVideoCoded::CreateSDPAttributeLines(std::shared_ptr<const Source> pSource) const
+{
+    return std::string();
+}

@@ -5,7 +5,6 @@ using namespace pml::nmos;
 Flow::Flow(const std::string& sLabel, const std::string& sDescription, const std::string& sFormat, const std::string& sSourceId, const std::string& sDeviceId) :
     Resource("flow", sLabel, sDescription),
     m_nMediaClkOffset(0),
-    m_pSdpCreator(nullptr),
     m_sFormat(sFormat),
     m_sSourceId(sSourceId),
     m_sDeviceId(sDeviceId)
@@ -98,21 +97,4 @@ void Flow::SetMediaClkOffset(unsigned long nOffset)
 const std::string& Flow::GetFormat() const
 {
     return m_sFormat;
-}
-
-std::string Flow::CreateSDPLines(unsigned short nRtpPort) const
-{
-    if(m_pSdpCreator)
-    {
-        return m_pSdpCreator->CreateLines(nRtpPort);
-    }
-    else
-    {
-        return "";
-    }
-}
-
-void Flow::SetSdpCreator(std::unique_ptr<FlowSdpCreator> pCreator)
-{
-    m_pSdpCreator = std::move(pCreator);
 }

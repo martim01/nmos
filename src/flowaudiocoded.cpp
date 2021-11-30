@@ -1,8 +1,5 @@
 #include "flowaudiocoded.h"
 
-#ifdef NMOS_NODE_API
-#include "flowsdpcreatornode.h"
-#endif // NMOS_NODE_API
 
 using namespace pml::nmos;
 
@@ -76,3 +73,13 @@ void FlowAudioCoded::SetMediaType(const std::string& sMediaType)
 }
 
 
+
+std::string FlowAudioCoded::CreateSDPMediaLine(unsigned short nPort) const
+{
+    return std::string();
+}
+
+std::string FlowAudioCoded::CreateSDPAttributeLines(std::shared_ptr<const Source> pSource) const
+{
+    return std::string();
+}

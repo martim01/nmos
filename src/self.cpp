@@ -331,38 +331,46 @@ void Self::GetAddresses(const std::string& sInterface, nodeinterface& anInterfac
 }
 
 
-std::string Self::CreateClockSdp(const std::string& sClockName, const std::string& sInterface) const
+std::string Self::CreateSDPClockLine(const std::string& sClockName, const std::string& sIpAddress) const
 {
-    std::stringstream ss;
+
+    std::string sLine = "a=ts-refclk:local\r\n";
+
     auto itClock = m_mClockCommited.find(sClockName);
     if(itClock != m_mClockCommited.end())
     {
         if(itClock->second.nType == clock::PTP)
         {
-            ss << "a=ts-refclk:ptp=";
+            sLine =  "a=ts-refclk:ptp=";
             if(itClock->second.bTraceable)
             {
-                ss << "traceable\r\n";
+                sLine += "traceable\r\n";
             }
             else
             {
-                ss << itClock->second.sVersion << ":" << itClock->second.sGmid << "\r\n";
+                sLine += itClock->second.sVersion + ":" + itClock->second.sGmid + "\r\n";
             }
         }
         else if(itClock->second.nType == clock::INTERNAL)
         {
-            auto itInterface = m_mInterface.find(sInterface);
-            if(itInterface != m_mInterface.end())
+            if(sIpAddress.empty())
             {
-                ss << "a=ts-refclk:localmac=" << itInterface->second.sPortMac << "\r\n";
+                return "a=ts-refclk:localmac=" + m_mInterface.begin()->second.sPortMac + "\r\n";
             }
-            else if(m_mInterface.empty())
+            else if(m_mInterface.empty() == false)
             {
-                ss << "a=ts-refclk:localmac=" << m_mInterface.begin()->second.sPortMac << "\r\n";
+                for(const auto& pairInterface : m_mInterface)
+                {
+                    if(pairInterface.second.sMainIpAddress == sIpAddress)
+                    {
+                        return "a=ts-refclk:localmac=" + pairInterface.second.sPortMac + "\r\n";
+                    }
+                }
+                return "a=ts-refclk:localmac=" + m_mInterface.begin()->second.sPortMac + "\r\n";
             }
         }
     }
-    return ss.str();
+    return sLine;
 }
 
 

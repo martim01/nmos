@@ -55,3 +55,13 @@ std::shared_ptr<FlowMux> FlowMux::Create(const Json::Value& jsResponse)
     }
     return nullptr;
 }
+
+std::string FlowMux::CreateSDPMediaLine(unsigned short nPort) const
+{
+    return std::string();
+}
+
+std::string FlowMux::CreateSDPAttributeLines(std::shared_ptr<const Source> pSource) const
+{
+    return std::string();
+}

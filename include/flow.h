@@ -3,12 +3,12 @@
 #include <set>
 #include "nmosdlldefine.h"
 
-#include "flowsdpcreator.h"
 
 namespace pml
 {
     namespace nmos
     {
+        class Source;
         class NMOS_EXPOSE Flow : public Resource
         {
             public:
@@ -37,13 +37,12 @@ namespace pml
                 unsigned long GetMediaClkOffset() const { return m_nMediaClkOffset;}
                 void SetMediaClkOffset(unsigned long nOffset);
 
-                std::string CreateSDPLines(unsigned short nRtpPort) const;
+                virtual std::string CreateSDPMediaLine(unsigned short nPort) const=0;
+                virtual std::string CreateSDPAttributeLines(std::shared_ptr<const Source> pSource) const=0;
 
-                void SetSdpCreator(std::unique_ptr<FlowSdpCreator> pCreator);
 
             protected:
                 unsigned long m_nMediaClkOffset;
-                std::unique_ptr<FlowSdpCreator> m_pSdpCreator;
 
             private:
                 std::string m_sFormat;

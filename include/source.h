@@ -23,7 +23,7 @@ namespace pml
                 void RemoveParentId(const std::string& sId);
 
                 void SetClock(const std::string& sClock);
-                const std::string& GetClock()
+                const std::string& GetClock() const
                 {   return m_sClock;    }
 
                 virtual bool Commit(const ApiVersion& version);

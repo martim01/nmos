@@ -17,6 +17,9 @@ namespace pml
                 virtual bool UpdateFromJson(const Json::Value& jsData);
                 virtual bool Commit(const ApiVersion& version);
 
+                std::string CreateSDPMediaLine(unsigned short nPort) const override;
+                std::string CreateSDPAttributeLines(std::shared_ptr<const Source> pSource) const override;
+
             private:
                 std::string m_sEventType;
 

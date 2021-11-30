@@ -127,3 +127,14 @@ std::shared_ptr<FlowVideoRaw> FlowVideoRaw::Create(const Json::Value& jsResponse
     }
     return nullptr;
 }
+
+
+std::string FlowVideoRaw::CreateSDPMediaLine(unsigned short nPort) const
+{
+    return std::string();
+}
+
+std::string FlowVideoRaw::CreateSDPAttributeLines(std::shared_ptr<const Source> pSource) const
+{
+    return std::string();
+}
