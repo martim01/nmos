@@ -3,7 +3,7 @@
 #include <chrono>
 #include "eventposter.h"
 #include "connection.h"
-
+#include <algorithm>
 #include "log.h"
 #include "utils.h"
 
@@ -50,8 +50,38 @@ Receiver::~Receiver()
 //}
 //
 
+bool Receiver::AddCaps(const std::set<std::string>& setCaps)
+{
+    for(const auto& sCap : setCaps)
+    {
+        //check that the caps are valid
+        if(CheckCap(sCap) == false)
+        {
+            return false;
+        }
+    }
+
+    std::copy(setCaps.begin(), setCaps.end(), std::inserter(m_setCaps, m_setCaps.begin()));
+
+    UpdateVersionTime();
+    return true;
+}
 
 bool Receiver::AddCap(const std::string& sCap)
+{
+    if(CheckCap(sCap))
+    {
+        m_setCaps.insert(sCap);
+        UpdateVersionTime();
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool Receiver::CheckCap(const std::string& sCap)
 {
     //check that the caps are valid
     switch(m_eType)
@@ -81,8 +111,6 @@ bool Receiver::AddCap(const std::string& sCap)
             }
             break;
     }
-    m_setCaps.insert(sCap);
-    UpdateVersionTime();
     return true;
 }
 

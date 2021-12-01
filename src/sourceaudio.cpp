@@ -1,4 +1,5 @@
 #include "sourceaudio.h"
+#include <algorithm>
 
 using namespace pml::nmos;
 
@@ -12,6 +13,11 @@ SourceAudio::SourceAudio(const std::string& sLabel, const std::string& sDescript
 SourceAudio::SourceAudio() : Source(Source::AUDIO)
 {
 
+}
+
+void SourceAudio::AddChannels(const std::map<std::string, std::string>& mChannels)
+{
+    m_mChannel.insert(mChannels.begin(), mChannels.end());
 }
 
 void SourceAudio::AddChannel(const std::string& sLabel, const std::string& sSymbol)

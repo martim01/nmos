@@ -31,6 +31,7 @@ namespace pml
                 void SetType(enumType eType);
 
 
+                bool AddCaps(const std::set<std::string>& setCaps);
                 bool AddCap(const std::string& sCap);
                 void RemoveCap(const std::string& sCap);
 
@@ -77,6 +78,7 @@ namespace pml
 
             protected:
 
+                bool CheckCap(const std::string& sCap);
                 std::string m_sDeviceId;
                 std::string m_sManifest;
                 std::string m_sSenderId;

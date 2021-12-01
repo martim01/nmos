@@ -11,6 +11,7 @@
 			<Depends filename="libnmos_base.cbp" />
 		</Project>
 		<Project filename="tests/nmos_node_test/nmos_node_test.cbp">
+			<Depends filename="../Restgoose/Restgoose.cbp" />
 			<Depends filename="libnmos_base.cbp" />
 			<Depends filename="libnmos_node.cbp" />
 		</Project>

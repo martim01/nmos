@@ -137,6 +137,7 @@ bool VersionChanged(std::shared_ptr<dnsInstance> pInstance, const std::string& s
 //NodeBrowse Thread  - started within main ClientThread
 static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<dnsInstance> pInstance)
 {
+    pmlLog() << "NODEBROWSER";
     if(pApi->GetMode() == ClientApiImpl::MODE_P2P)
     {
         auto itVersion = pInstance->mTxt.find("api_ver");
@@ -856,14 +857,14 @@ void ClientApiImpl::ConnectToQueryServer()
 
 void ClientApiImpl::GetNodeDetails()
 {
-    if(m_lstResolve.empty() == false && m_nCurlThreadCount < 4)
+    if(m_lstResolve.empty() == false)
     {
         pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApiImpl::GetNodeDetails" ;
 
-        m_nCurlThreadCount++;
         //need to get all the node details.
         //lets launch a thread that will ask for self, devices, sources, flows, senders, receivers
-        pml::ThreadPool::Get().Submit([=]{NodeBrowser(this, m_lstResolve.front());});
+        auto pInstance = m_lstResolve.front();
+        pml::ThreadPool::Get().Submit(NodeBrowser, this, pInstance);
         //std::thread th(NodeBrowser, this, m_lstResolve.front());
         //th.detach();    //@todo better to wait on the thread at close down
         m_lstResolve.erase(m_lstResolve.begin());
@@ -1990,7 +1991,7 @@ bool ClientApiImpl::Connect(const std::string& sSenderId, const std::string& sRe
         return false;
     }
 
-    pml::ThreadPool::Get().Submit([=]{ConnectThread(this, sSenderId, sReceiverId, sSenderUrl, sReceiverUrl);});
+    pml::ThreadPool::Get().Submit(ConnectThread, this, sSenderId, sReceiverId, sSenderUrl, sReceiverUrl);
     //std::thread th(ConnectThread, this, sSenderId, sReceiverId, sSenderUrl, sReceiverUrl);
     //th.detach();
     return true;
@@ -2026,7 +2027,7 @@ bool ClientApiImpl::Disconnect( const std::string& sReceiverId)
         return false;
     }
 
-    pml::ThreadPool::Get().Submit([=]{DisconnectThread(this, pSender->GetId(), sReceiverId, sSenderStageUrl, sSenderTransportUrl, sReceiverStageUrl);});
+    pml::ThreadPool::Get().Submit(DisconnectThread, this, pSender->GetId(), sReceiverId, sSenderStageUrl, sSenderTransportUrl, sReceiverStageUrl);
     //std::thread th(DisconnectThread, this, pSender->GetId(), sReceiverId, sSenderStageUrl, sSenderTransportUrl, sReceiverStageUrl);
     //th.detach();
     return true;
@@ -2755,7 +2756,6 @@ void ClientApiImpl::GetSubnetMasks()
         {
             if(temp_addr->ifa_addr->sa_family == AF_INET)
             {
-                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Interface: " << temp_addr->ifa_name ;
                 std::string sInterface(temp_addr->ifa_name);
                 std::string sAddress(inet_ntoa(((sockaddr_in*)temp_addr->ifa_addr)->sin_addr));
 

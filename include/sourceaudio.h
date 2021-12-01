@@ -14,6 +14,7 @@ namespace pml
                 static std::shared_ptr<SourceAudio> Create(const Json::Value& jsResponse);
                 SourceAudio();
                 virtual bool UpdateFromJson(const Json::Value& jsData);
+                void AddChannels(const std::map<std::string, std::string>& mChannels);
                 void AddChannel(const std::string& sLabel, const std::string& sSymbol);
                 void RemoveChannel(const std::string& sSymbol);
 

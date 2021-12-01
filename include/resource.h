@@ -26,7 +26,7 @@ namespace pml
 
                 virtual ~Resource(){}
                 void AddTag(const std::string& sKey, const std::string& sValue);
-
+                void AddTags(const std::list<std::pair<std::string, std::string>>& lstTags);
                 const std::string& GetId() const;
                 const std::string& GetLabel() const;
                 const std::string& GetDescription() const;

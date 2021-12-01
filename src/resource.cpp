@@ -98,6 +98,14 @@ void Resource::AddTag(const std::string& sKey, const std::string& sValue)
     UpdateVersionTime();
 }
 
+void Resource::AddTags(const std::list<std::pair<std::string, std::string>>& lstTags)
+{
+    for(const auto& tag : lstTags)
+    {
+        m_mmTag.insert(tag);
+    }
+}
+
 
 bool Resource::Commit(const ApiVersion& version)
 {

@@ -110,7 +110,7 @@ CurlRegister::~CurlRegister()
 
 void CurlRegister::PostAsync(const std::string& sBaseUrl, const std::string& sJson, long nUserType)
 {
-    ThreadPool::Get().Submit([=]{PostThreaded(sBaseUrl, sJson, this, nUserType);});
+    ThreadPool::Get().Submit(PostThreaded, sBaseUrl, sJson, this, nUserType);
     //threadPost.detach();
 }
 
@@ -157,7 +157,7 @@ void CurlRegister::DeleteAsync(const std::string& sUrl, const std::string& sType
 {
     //std::thread threadPost(DeleteThreaded, sUrl, sType, sId, this, nUserType);
     //threadPost.detach();
-    ThreadPool::Get().Submit([=]{DeleteThreaded(sUrl, sType, sId, this, nUserType);});
+    ThreadPool::Get().Submit(DeleteThreaded, sUrl, sType, sId, this, nUserType);
 }
 
 
@@ -194,7 +194,7 @@ void CurlRegister::GetAsync(const std::string& sUrl, long nUserType, bool bJson)
     //std::thread threadGet(GetThreaded, sUrl, this, nUserType, bJson);
     //threadGet.detach();
 
-    ThreadPool::Get().Submit([=]{GetThreaded(sUrl, this, nUserType,bJson);});
+    ThreadPool::Get().Submit(GetThreaded,sUrl, this, nUserType,bJson);
 }
 
 curlResponse CurlRegister::Get(const std::string& sUrl, bool bJson)
@@ -224,7 +224,7 @@ void CurlRegister::PutPatchAsync(const std::string& sBaseUrl, const std::string&
     //std::thread threadPut(PutThreaded, sBaseUrl, sJson, this, nUserType, bPut, sResourceId);
     //threadPut.detach();
 
-    ThreadPool::Get().Submit([=]{PutThreaded(sBaseUrl, sJson, this, nUserType, bPut, sResourceId);});
+    ThreadPool::Get().Submit(PutThreaded,sBaseUrl, sJson, this, nUserType, bPut, sResourceId);
 }
 
 curlResponse CurlRegister::PutPatch(const std::string& sUrl, const std::string& sJson, bool bPut, const std::string& sResourceId)

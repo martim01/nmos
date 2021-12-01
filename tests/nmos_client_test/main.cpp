@@ -7,6 +7,7 @@
 #include "receiverbase.h"
 #include "testposter.h"
 #include "log.h"
+#include "threadpool.h"
 
 using namespace std;
 
@@ -25,28 +26,19 @@ int main()
     pml::nmos::ClientApi::Get().AddQuerySubscription(pml::nmos::ClientApi::SENDERS, "transport=urn:x-nmos:transport:rtp.mcast");
     pml::nmos::ClientApi::Get().AddQuerySubscription(pml::nmos::ClientApi::RECEIVERS, "transport=urn:x-nmos:transport:rtp.mcast");
     pml::nmos::ClientApi::Get().Start();
-    pmlLog() << "Press Key To Target" ;
-    getchar();
+
     auto itSender = pml::nmos::ClientApi::Get().GetSenders().begin();
     auto itReceiver = pml::nmos::ClientApi::Get().GetReceivers().begin();
 
     if(itSender != pml::nmos::ClientApi::Get().GetSenders().end() && itReceiver != pml::nmos::ClientApi::Get().GetReceivers().end())
     {
-//        pmlLog() << "TARGET" ;
-//        pmlLog() << "-----------------------------------------------" ;
-//        pml::nmos::ClientApi::Get().Subscribe(itSender->first, itReceiver->first);
-//        pmlLog() << "Press Key To Park" ;
-//        getchar();
-//        pmlLog() << "PARK" ;
-//        pmlLog() << "-----------------------------------------------" ;
-//        pml::nmos::ClientApi::Get().Unsubscribe(itReceiver->first);
 
         pmlLog() << "Press Key To Get Sender Staged" ;
         getchar();
 
         pmlLog() << "Sender Staged" ;
         pmlLog() << "-----------------------------------------------" ;
-        auto resp = pml::nmos::ClientApi::Get().RequestSenderStaged(itSender->first, false);
+        auto resp = pml::nmos::ClientApi::Get().RequestSenderStaged(itSender->first, true);
         pmlLog() << resp.first.nCode;
         if(resp.second)
         {

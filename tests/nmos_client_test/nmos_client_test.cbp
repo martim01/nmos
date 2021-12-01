@@ -69,6 +69,9 @@
 					<Add option="`pkg-config --libs libcurl`" />
 					<Add library="libnmos_clientd" />
 					<Add library="pthread" />
+					<Add library="pml_logd" />
+					<Add library="libnmos_based" />
+					<Add library="restgoosed" />
 					<Add directory="$(#microhttp.lib)" />
 				</Linker>
 			</Target>
