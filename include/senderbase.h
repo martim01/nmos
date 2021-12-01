@@ -56,7 +56,7 @@ namespace pml
                 const std::string GetDestinationIp() const {return m_sDestinationIp;}
 
                 bool IsActiveMasterEnabled() const { return (m_Active.GetMasterEnable() && *(m_Active.GetMasterEnable()));}
-                bool IsStageMasterEnabled() const { return (m_Staged.GetMasterEnable() && *(m_Staged.GetMasterEnable()));}
+                bool IsStagedMasterEnabled() const { return (m_Staged.GetMasterEnable() && *(m_Staged.GetMasterEnable()));}
 
 
                 bool Commit(const ApiVersion& version) override;
@@ -65,6 +65,9 @@ namespace pml
                 void MasterEnable(bool bEnable);
                 void SetTransportFile(const std::string& sSDP);
 
+                void MarkRTPTransmissionAsActive(bool bActive, std::experimental::optional<size_t> tp);
+
+                void SetDestinationDetails(const std::string& sDestinationIp, unsigned short nDestinationPort);
 
             protected:
 
@@ -84,7 +87,7 @@ namespace pml
                 void RemoveStagedActivationTime();
                 void SetActivationAllowed(bool bAllowed) { m_bActivateAllowed = bAllowed;}
 
-                void SetDestinationDetails(const std::string& sDestinationIp, unsigned short nDestinationPort);
+
 
                 void ActualizeUnitialisedActive(const std::string& sSourceIp);
 

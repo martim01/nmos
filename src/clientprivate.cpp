@@ -723,11 +723,17 @@ void ClientApiImpl::HandleCurlDone()
             case enumConnection::SENDER_TRANSPORTFILE:
                 HandlCurlDoneGetSenderTransportFile();
                 break;
+            case enumConnection::SENDER_CONSTRAINTS:
+                HandleCurlDoneGetSenderConstraints();
+                break;
             case enumConnection::RECEIVER_STAGED:
                 HandleCurlDoneGetReceiverStaged();
                 break;
             case enumConnection::RECEIVER_ACTIVE:
                 void HandleCurlDoneGetReceiverActive();
+                break;
+            case enumConnection::RECEIVER_CONSTRAINTS:
+                HandleCurlDoneGetReceiverConstraints();
                 break;
             case enumConnection::SENDER_PATCH:
                 HandleCurlDonePatchSender();
@@ -812,6 +818,29 @@ void ClientApiImpl::HandleCurlDoneGetSenderActive()
     }
 }
 
+void ClientApiImpl::HandleCurlDoneGetSenderConstraints()
+{
+    if(m_asyncResponse.nCode == 200)
+    {
+        m_pPoster->_RequestGetSenderConstraintsResult(m_asyncResponse, CreateConstraints(ConvertToJson(m_asyncResponse.sResponse)), m_sCurlResourceId);
+    }
+    else
+    {
+        m_pPoster->_RequestGetSenderConstraintsResult(m_asyncResponse, {}, m_sCurlResourceId);
+    }
+}
+
+void ClientApiImpl::HandleCurlDoneGetReceiverConstraints()
+{
+    if(m_asyncResponse.nCode == 200)
+    {
+        m_pPoster->_RequestGetReceiverConstraintsResult(m_asyncResponse, CreateConstraints(ConvertToJson(m_asyncResponse.sResponse)), m_sCurlResourceId);
+    }
+    else
+    {
+        m_pPoster->_RequestGetReceiverConstraintsResult(m_asyncResponse, {}, m_sCurlResourceId);
+    }
+}
 void ClientApiImpl::HandlCurlDoneGetSenderTransportFile()
 {
     if(m_asyncResponse.nCode == 200)
@@ -899,7 +928,7 @@ resourcechanges<Self> ClientApiImpl::AddNode(const std::string& sIpAddress, cons
             }
             else
             {
-                pmlLog(pml::LOG_INFO) << "NMOS: " << "Found node but json data incorrect: " << pSelf->GetJsonParseError() ;
+                pmlLog(pml::LOG_INFO) << "NMOS: " << "Found node but json data incorrect: " << jsData;
             }
         }
         else
@@ -955,7 +984,7 @@ resourcechanges<Device> ClientApiImpl::AddDevice(const std::string& sIpAddress,c
         }
         else
         {
-            pmlLog(pml::LOG_INFO) << "NMOS: " << "Found device but json data incorrect: " << pResource->GetJsonParseError() ;
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "Found device but json data incorrect: " << jsData;
         }
     }
     else
@@ -1009,7 +1038,7 @@ resourcechanges<Source> ClientApiImpl::AddSource(const std::string& sIpAddress, 
             }
             else
             {
-                pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Source but json data incorrect: " << pResource->GetJsonParseError() ;
+                pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Source but json data incorrect: " << jsData;
             }
         }
         else
@@ -1024,7 +1053,7 @@ resourcechanges<Source> ClientApiImpl::AddSource(const std::string& sIpAddress, 
             }
             else
             {
-                pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Source but json data incorrect: " << pResource->GetJsonParseError() ;
+                pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Source but json data incorrect: " << jsData;
             }
         }
     }
@@ -1137,7 +1166,7 @@ std::shared_ptr<const Flow> ClientApiImpl::CreateFlowAudioCoded(const Json::Valu
     }
     else
     {
-        pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() ;
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << jsData;
         return nullptr;
     }
 }
@@ -1153,7 +1182,7 @@ std::shared_ptr<const Flow> ClientApiImpl::CreateFlowAudioRaw(const Json::Value&
     }
     else
     {
-        pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() ;
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << jsData;
         return nullptr;
     }
 
@@ -1186,7 +1215,7 @@ std::shared_ptr<const Flow> ClientApiImpl::CreateFlowVideoRaw(const Json::Value&
     }
     else
     {
-        pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() ;
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << jsData;
         return nullptr;
     }
 }
@@ -1202,7 +1231,7 @@ std::shared_ptr<const Flow> ClientApiImpl::CreateFlowVideoCoded(const Json::Valu
     }
     else
     {
-        pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() ;
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << jsData;
         return nullptr;
     }
 }
@@ -1220,7 +1249,7 @@ std::shared_ptr<const Flow> ClientApiImpl::CreateFlowData(const Json::Value& jsD
         }
         else
         {
-            pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() ;
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << jsData;
             return nullptr;
         }
     }
@@ -1235,7 +1264,7 @@ std::shared_ptr<const Flow> ClientApiImpl::CreateFlowData(const Json::Value& jsD
         }
         else
         {
-            pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() ;
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << jsData;
             return nullptr;
         }
     }
@@ -1257,7 +1286,7 @@ std::shared_ptr<const Flow> ClientApiImpl::CreateFlowMux(const Json::Value& jsDa
     }
     else
     {
-        pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << pResource->GetJsonParseError() ;
+        pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Flow but json data incorrect: " << jsData;
         return nullptr;
     }
 }
@@ -1303,7 +1332,7 @@ resourcechanges<Sender> ClientApiImpl::AddSender(const std::string& sIpAddress, 
         }
         else
         {
-            pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Sender but json data incorrect: " << pResource->GetJsonParseError() ;
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Sender but json data incorrect: " << jsData ;
         }
     }
     else
@@ -1353,7 +1382,7 @@ resourcechanges<Receiver> ClientApiImpl::AddReceiver(const std::string& sIpAddre
         }
         else
         {
-            pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Receiver but json data incorrect: " << pResource->GetJsonParseError() ;
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "Found Receiver but json data incorrect: " << jsData ;
         }
     }
     else
@@ -1734,7 +1763,7 @@ curlResponse ClientApiImpl::RequestReceiver(const std::string& sReceiverId, enum
     }
 }
 
-std::pair<curlResponse, std::experimental::optional<std::vector<Constraints>>> ClientApiImpl::RequestSenderConstraints(const std::string& sSenderId, bool bAsync)
+std::pair<curlResponse, std::vector<Constraints>> ClientApiImpl::RequestSenderConstraints(const std::string& sSenderId, bool bAsync)
 {
     auto resp =  RequestSender(sSenderId, enumConnection::SENDER_CONSTRAINTS, bAsync);
     if(resp.nCode != 200)
@@ -1780,7 +1809,7 @@ std::pair<curlResponse, std::experimental::optional<std::string>>  ClientApiImpl
     return {resp, resp.sResponse};
 }
 
-std::pair<curlResponse, std::experimental::optional<std::vector<Constraints>>> ClientApiImpl::RequestReceiverConstraints(const std::string& sReceiverId, bool bAsync)
+std::pair<curlResponse, std::vector<Constraints>> ClientApiImpl::RequestReceiverConstraints(const std::string& sReceiverId, bool bAsync)
 {
     auto resp =  RequestReceiver(sReceiverId, enumConnection::RECEIVER_CONSTRAINTS, bAsync);
     if(resp.nCode != 200)
@@ -1980,6 +2009,8 @@ bool ClientApiImpl::Connect(const std::string& sSenderId, const std::string& sRe
         return false;
     }
 
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ClientApiImpl::Connect Sender: " << sSenderId;
+
     auto sSenderUrl = GetConnectionUrl(pSender);
     if(sSenderUrl.empty())
     {
@@ -1992,8 +2023,7 @@ bool ClientApiImpl::Connect(const std::string& sSenderId, const std::string& sRe
     }
 
     pml::ThreadPool::Get().Submit(ConnectThread, this, sSenderId, sReceiverId, sSenderUrl, sReceiverUrl);
-    //std::thread th(ConnectThread, this, sSenderId, sReceiverId, sSenderUrl, sReceiverUrl);
-    //th.detach();
+
     return true;
 }
 
@@ -2009,10 +2039,12 @@ bool ClientApiImpl::Disconnect( const std::string& sReceiverId)
         pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ClientApiImpl::Disconnect No Receiver" ;
         return false;
     }
+
+
     auto pSender = GetSender(pReceiver->GetSender());
     if(!pSender)
     {
-        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ClientApiImpl::Disconnect No Sender" ;
+        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ClientApiImpl::Disconnect No Sender: " << pReceiver->GetSender();
         return false;
     }
 
@@ -2028,8 +2060,6 @@ bool ClientApiImpl::Disconnect( const std::string& sReceiverId)
     }
 
     pml::ThreadPool::Get().Submit(DisconnectThread, this, pSender->GetId(), sReceiverId, sSenderStageUrl, sSenderTransportUrl, sReceiverStageUrl);
-    //std::thread th(DisconnectThread, this, pSender->GetId(), sReceiverId, sSenderStageUrl, sSenderTransportUrl, sReceiverStageUrl);
-    //th.detach();
     return true;
 }
 

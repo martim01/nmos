@@ -202,8 +202,9 @@ template<typename T> connectionReceiver<T>::connectionReceiver(std::experimental
     m_json[TRANSPORT_FILE][TRANSPORT_FILE_TYPE] = Json::Value::null;
 
     m_vTransportParams.push_back(TransportParamsRTPReceiver(allowed));
-    if(allowed & TransportParamsRTP::REDUNDANT)
+    if((allowed & TransportParamsRTP::REDUNDANT))
     {
+        pmlLog() << "NMOS: connectionReceiver: Redundant stream";
         m_vTransportParams.push_back(TransportParamsRTPReceiver(allowed));
     }
     SetTPAllowed(allowed);

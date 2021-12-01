@@ -125,7 +125,7 @@ std::pair<curlResponse, std::experimental::optional<std::string>> ClientApi::Req
     return m_pApi->RequestSenderTransportFile(sSenderId, bAsync);
 }
 
-std::pair<curlResponse, std::experimental::optional<std::vector<Constraints>>> ClientApi::RequestSenderConstraints(const std::string& sSenderId, bool bAsync)
+std::pair<curlResponse, std::vector<Constraints>> ClientApi::RequestSenderConstraints(const std::string& sSenderId, bool bAsync)
 {
     return m_pApi->RequestSenderConstraints(sSenderId, bAsync);
 }
@@ -141,7 +141,7 @@ std::pair<curlResponse, std::experimental::optional<connectionReceiver<activatio
 }
 
 
-std::pair<curlResponse, std::experimental::optional<std::vector<Constraints>>> ClientApi::RequestReceiverConstraints(const std::string& sReceiverId, bool bAsync)
+std::pair<curlResponse, std::vector<Constraints>> ClientApi::RequestReceiverConstraints(const std::string& sReceiverId, bool bAsync)
 {
     return m_pApi->RequestReceiverConstraints(sReceiverId, bAsync);
 }

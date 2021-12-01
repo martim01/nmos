@@ -112,11 +112,11 @@ namespace pml
                 std::pair<curlResponse, std::experimental::optional<connectionSender<activationResponse>>> RequestSenderStaged(const std::string& sSenderId, bool bAsync);
                 std::pair<curlResponse, std::experimental::optional<connectionSender<activationResponse>>> RequestSenderActive(const std::string& sSenderId, bool bAsync);
                 std::pair<curlResponse, std::experimental::optional<std::string>> RequestSenderTransportFile(const std::string& sSenderId, bool bAsync);
-                std::pair<curlResponse, std::experimental::optional<std::vector<Constraints>>> RequestSenderConstraints(const std::string& sSenderId, bool bAsync);
+                std::pair<curlResponse, std::vector<Constraints>> RequestSenderConstraints(const std::string& sSenderId, bool bAsync);
 
                 std::pair<curlResponse, std::experimental::optional<connectionReceiver<activationResponse>>>  RequestReceiverStaged(const std::string& sReceiverId, bool bAsync);
                 std::pair<curlResponse, std::experimental::optional<connectionReceiver<activationResponse>>>  RequestReceiverActive(const std::string& sReceiverId, bool bAsync);
-                std::pair<curlResponse, std::experimental::optional<std::vector<Constraints>>> RequestReceiverConstraints(const std::string& sReceiverId, bool bAsync);
+                std::pair<curlResponse, std::vector<Constraints>> RequestReceiverConstraints(const std::string& sReceiverId, bool bAsync);
 
                 std::pair<curlResponse, std::experimental::optional<connectionSender<activationResponse>>> PatchSenderStaged(const std::string& sSenderId, const connectionSender<activationRequest>& aConnection, bool bAsync);
                 std::pair<curlResponse, std::experimental::optional<connectionReceiver<activationResponse>>> PatchReceiverStaged(const std::string& sReceiverId, const connectionReceiver<activationRequest>& aConnection, bool bAsync);
@@ -193,9 +193,11 @@ namespace pml
                 void HandleCurlDonePatchReceiver();
                 void HandleCurlDoneGetSenderStaged();
                 void HandleCurlDoneGetSenderActive();
+                void HandleCurlDoneGetSenderConstraints();
                 void HandlCurlDoneGetSenderTransportFile();
                 void HandleCurlDoneGetReceiverStaged();
                 void HandleCurlDoneGetReceiverActive();
+                void HandleCurlDoneGetReceiverConstraints();
 
                 bool AddQuerySubscriptionRegistry(int nResource, const std::string& sQuery, unsigned long nUpdateRate);
                 bool RemoveQuerySubscriptionRegistry(const std::string& sSubscriptionId);

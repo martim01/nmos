@@ -18,7 +18,6 @@ int main()
     pml::LogStream::AddOutput(make_unique<pml::LogOutput>());
     pml::LogStream::SetOutputLevel(pml::LOG_DEBUG);
 
-    pml::ThreadPool::Get().Create(2,3);
 
 
     auto pPoster = std::make_shared<ThreadPoster>();
@@ -33,8 +32,8 @@ int main()
     auto pDevice = make_shared<pml::nmos::Device>("MattTest/Device/1", "TestDescription", pml::nmos::Device::GENERIC,pml::nmos::NodeApi::Get().GetSelf().GetId());
 
     auto pSource = make_shared<pml::nmos::SourceAudio>("MattTest/Source/Audio", "TestDescription", pDevice->GetId());
-    pSource->AddChannels({{"Left", "L"},{"Right", "R"}});
-    pSource->SetClock("clk0");
+    pSource->AddChannels({{channelSymbol("L"), channelLabel("Left")},{channelSymbol("R"), channelLabel("Right")}});
+    pSource->SetClock("clk1");
 
     auto pFlow = make_shared<pml::nmos::FlowAudioRaw>("MattTest/Flow/AudioRaw", "TestDescription", pSource->GetId(), pDevice->GetId(),48000, pml::nmos::FlowAudioRaw::L24);
     pFlow->SetPacketTime(pml::nmos::FlowAudioRaw::US_125);

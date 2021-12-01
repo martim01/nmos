@@ -96,6 +96,15 @@ void ClientApiPoster::_RequestGetReceiverActiveResult(const curlResponse& resp, 
     RequestGetReceiverActiveResult(resp, con, sResourceId);
 }
 
+void ClientApiPoster::_RequestGetSenderConstraintsResult(const curlResponse& resp, const std::vector<Constraints>& vConstraints, const std::string& sResourceId)
+{
+    RequestGetSenderConstraintsResult(resp, vConstraints, sResourceId);
+}
+
+void ClientApiPoster::_RequestGetReceiverConstraintsResult(const curlResponse& resp, const std::vector<Constraints>& vConstraints, const std::string& sResourceId)
+{
+    RequestGetReceiverConstraintsResult(resp, vConstraints, sResourceId);
+}
 
 void ClientApiPoster::_QuerySubscription(const std::string& sSubscriptionId, int nResource, const std::string& sQuery)
 {

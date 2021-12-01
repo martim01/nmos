@@ -11,7 +11,7 @@
 #include "flowvideoraw.h"
 #include "flowdatasdianc.h"
 #include "flowmux.h"
-#include "sender.h"
-#include "receiver.h"
+#include "senderbase.h"
+#include "receiverbase.h"
 
 

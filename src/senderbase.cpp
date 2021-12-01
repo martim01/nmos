@@ -347,8 +347,6 @@ void Sender::SetDestinationDetails(const std::string& sDestinationIp, unsigned s
     std::lock_guard<std::mutex> lock(m_mutex);
     m_Active.SetDestinationDetails(sDestinationIp, nDestinationPort);
 
-    //@todo create the SDP somehow         CreateSDP(api, m_Active);
-
     UpdateVersionTime();
 }
 
@@ -388,3 +386,23 @@ void Sender::SetStagedActivationTimePoint(const std::chrono::time_point<std::chr
     m_Staged.GetActivation().SetActivationTime(tp);
 }
 
+void Sender::MarkRTPTransmissionAsActive(bool bActive, std::experimental::optional<size_t> tp)
+{
+//    if(tp)
+//    {
+//        if(*tp < m_Staged.GetTransportParams().size())
+//        {
+//             m_Staged.GetTransportParams()[*tp].EnableRtp(bActive);
+//             m_Active.GetTransportParams()[*tp].EnableRtp(bActive);
+//        }
+//    }
+//    else
+//    {
+//        for(size_t i = 0; i < m_Staged.GetTransportParams().size())
+//        {
+//            m_Staged.GetTransportParams()[i].EnableRtp(bActive);
+//            m_Active.GetTransportParams()[i].EnableRtp(bActive);
+//        }
+//    }
+
+}

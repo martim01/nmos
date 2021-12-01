@@ -377,7 +377,7 @@ const ResourceHolder<Sender>& NodeApiPrivate::GetSenders()
 bool NodeApiPrivate::Commit()
 {
     m_mutex.lock();
-    pmlLog(pml::LOG_INFO) << "NMOS: " << "Node: Commit" ;
+    pmlLog(pml::LOG_INFO) << "NMOS: " << "Node: Commit +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" ;
     bool bChange = m_self.Commit();
     bChange |= m_sources.Commit(m_self.GetApiVersions());
     bChange |= m_devices.Commit(m_self.GetApiVersions());
@@ -1089,7 +1089,8 @@ bool NodeApiPrivate::AddFlow(shared_ptr<Flow> pResource)
 
 bool NodeApiPrivate::AddReceiver(shared_ptr<Receiver> pResource)
 {
-    if(m_devices.ResourceExists(pResource->GetParentResourceId()))
+    auto pDevice = GetDevice(pResource->GetParentResourceId());
+    if(pDevice)
     {
         if(m_receivers.AddResource(pResource))
         {
@@ -1102,6 +1103,8 @@ bool NodeApiPrivate::AddReceiver(shared_ptr<Receiver> pResource)
             {
                 pairServer.second->AddReceiverEndpoint(pResource->GetId());
             }
+
+            pDevice->AddReceiver(pResource->GetId());
 
             //actualize the receiver for IS05
             auto itInterface = m_self.GetInterfaceBegin();
@@ -1126,10 +1129,13 @@ bool NodeApiPrivate::AddReceiver(shared_ptr<Receiver> pResource)
 bool NodeApiPrivate::AddSender(shared_ptr<Sender> pResource)
 {
 
-    if(m_devices.ResourceExists(pResource->GetParentResourceId()))
+    auto pDevice = GetDevice(pResource->GetParentResourceId());
+    if(pDevice)
     {
         if(m_senders.AddResource(pResource))
         {
+            pDevice->AddSender(pResource->GetId());
+
             //Make the IS-04 manifest href the same as the IS-05 control transportfile endpoint
             if(m_self.GetEndpointsBegin() != m_self.GetEndpointsEnd())
             {
@@ -1163,7 +1169,7 @@ bool NodeApiPrivate::AddSender(shared_ptr<Sender> pResource)
                 pairServer.second->AddSenderEndpoint(pResource->GetId());
             }
             pmlLog(pml::LOG_DEBUG) << "NodeApiPrivate::Activate from AddSender";
-            Activate(true, pResource);
+            Activate(false, pResource);
             return true;
         }
     }
@@ -1172,6 +1178,16 @@ bool NodeApiPrivate::AddSender(shared_ptr<Sender> pResource)
 
 void NodeApiPrivate::RemoveSender(const std::string& sId)
 {
+    auto pSender = GetSender(sId);
+    if(pSender)
+    {
+        auto pDevice = GetDevice(pSender->GetParentResourceId());
+        if(pDevice)
+        {
+            pDevice->RemoveSender(sId);
+        }
+    }
+
     m_senders.RemoveResource(sId);
     for(const auto& pairServer : m_mDiscoveryServers)
     {
@@ -1185,6 +1201,15 @@ void NodeApiPrivate::RemoveSender(const std::string& sId)
 
 void NodeApiPrivate::RemoveReceiver(const std::string& sId)
 {
+    auto pReceiver = GetReceiver(sId);
+    if(pReceiver)
+    {
+        auto pDevice = GetDevice(pReceiver->GetParentResourceId());
+        if(pDevice)
+        {
+            pDevice->RemoveReceiver(sId);
+        }
+    }
     m_receivers.RemoveResource(sId);
      for(const auto& pairServer : m_mDiscoveryServers)
     {
@@ -1408,9 +1433,8 @@ void NodeApiPrivate::Activate(bool bCommit, std::shared_ptr<Sender> pSender)
     }
 
 
-    if(!bCommit)
+    if(bCommit)
     {
-        pmlLog(pml::LOG_DEBUG) << "NodeApiPrivate::Activate";
         CommitActivation(pSender);
     }
 
@@ -1418,9 +1442,9 @@ void NodeApiPrivate::Activate(bool bCommit, std::shared_ptr<Sender> pSender)
 
 void NodeApiPrivate::CommitActivation(std::shared_ptr<Sender> pSender)
 {
-    pmlLog(pml::LOG_DEBUG) << "NodeApiPrivate::CommitActivation";
     pSender->CommitActivation();
     SenderActivated(pSender->GetId());
+    Commit();
 }
 
 bool NodeApiPrivate::Stage(const connectionSender<activationResponse>& conRequest, std::shared_ptr<Sender> pSender)
@@ -1440,7 +1464,7 @@ bool NodeApiPrivate::Stage(const connectionSender<activationResponse>& conReques
             pSender->SetStagedActivationTimePoint(GetTaiTimeNow());
             pSender->SetActivationAllowed(true);
             pmlLog(pml::LOG_DEBUG) << "NodeApiPrivate::Activate from stage";
-            Activate(true, pSender);
+            Activate(false, pSender);
             break;
         case activation::ACT_ABSOLUTE:
             {
@@ -1488,7 +1512,7 @@ bool NodeApiPrivate::Stage(const connectionSender<activationResponse>& conReques
 void NodeApiPrivate::Activate(bool bCommit, std::shared_ptr<Receiver> pReceiver)
 {
     pReceiver->Activate();
-    if(!bCommit)
+    if(bCommit)
     {
         CommitActivation(pReceiver);
     }
@@ -1498,7 +1522,8 @@ void NodeApiPrivate::Activate(bool bCommit, std::shared_ptr<Receiver> pReceiver)
 void NodeApiPrivate::CommitActivation(std::shared_ptr<Receiver> pReceiver)
 {
     pReceiver->CommitActivation();
-    SenderActivated(pReceiver->GetId());
+    ReceiverActivated(pReceiver->GetId());
+    Commit();
 }
 
 bool NodeApiPrivate::Stage(const connectionReceiver<activationResponse>& conRequest, std::shared_ptr<Receiver> pReceiver)

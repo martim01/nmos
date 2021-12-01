@@ -52,7 +52,8 @@ namespace pml
 
 
 
-                bool IsMasterEnabled() const;
+                bool IsActiveMasterEnabled() const { return (m_Active.GetMasterEnable() && *(m_Active.GetMasterEnable()));}
+                bool IsStagedMasterEnabled() const { return (m_Staged.GetMasterEnable() && *(m_Staged.GetMasterEnable()));}
                 bool IsActivateAllowed() const;
 
                 void SetupActivation(const std::string& sInterfaceIp);

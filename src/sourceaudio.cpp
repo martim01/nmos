@@ -1,7 +1,9 @@
 #include "sourceaudio.h"
 #include <algorithm>
 
+
 using namespace pml::nmos;
+
 
 SourceAudio::SourceAudio(const std::string& sLabel, const std::string& sDescription, const std::string& sDeviceId) :
     Source(sLabel, sDescription, sDeviceId, Source::AUDIO),
@@ -15,20 +17,20 @@ SourceAudio::SourceAudio() : Source(Source::AUDIO)
 
 }
 
-void SourceAudio::AddChannels(const std::map<std::string, std::string>& mChannels)
+void SourceAudio::AddChannels(const std::map<channelSymbol, channelLabel>& mChannels)
 {
     m_mChannel.insert(mChannels.begin(), mChannels.end());
 }
 
-void SourceAudio::AddChannel(const std::string& sLabel, const std::string& sSymbol)
+void SourceAudio::AddChannel(const channelSymbol& symbol, const channelLabel& label)
 {
-    m_mChannel.insert(make_pair(sSymbol, sLabel));
+    m_mChannel.insert(make_pair(symbol, label));
     UpdateVersionTime();
 }
 
-void SourceAudio::RemoveChannel(const std::string& sSymbol)
+void SourceAudio::RemoveChannel(const channelSymbol& symbol)
 {
-    m_mChannel.erase(sSymbol);
+    m_mChannel.erase(symbol);
     UpdateVersionTime();
 }
 
@@ -71,7 +73,7 @@ bool SourceAudio::UpdateFromJson(const Json::Value& jsData)
             else
             {
                 // @todo should we check the channel symbol is valid??
-                m_mChannel.insert(make_pair(jsData["channels"][ai]["symbol"].asString(), jsData["channels"][ai]["label"].asString()));
+                m_mChannel.insert(make_pair(channelSymbol(jsData["channels"][ai]["symbol"].asString()), channelLabel(jsData["channels"][ai]["label"].asString())));
             }
         }
     }
@@ -84,11 +86,11 @@ bool SourceAudio::Commit(const ApiVersion& version)
     {
         m_json["channels"] = Json::Value(Json::arrayValue);
 
-        for(std::map<std::string, std::string>::const_iterator itChannel = m_mChannel.begin(); itChannel != m_mChannel.end(); ++itChannel)
+        for(const auto& pairChannel : m_mChannel)
         {
             Json::Value jsChannel;
-            jsChannel["label"] = itChannel->second;
-            jsChannel["symbol"] =  itChannel->first;
+            jsChannel["label"] = pairChannel.second.Get();
+            jsChannel["symbol"] =  pairChannel.first.Get();
 
             m_json["channels"].append(jsChannel);
         }

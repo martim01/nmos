@@ -418,10 +418,6 @@ connectionReceiver<activationResponse> Receiver::GetStaged() const
 
 
 
-bool Receiver::IsMasterEnabled() const
-{
-    return (m_Active.GetMasterEnable() && *m_Active.GetMasterEnable());
-}
 
 
 bool Receiver::IsActivateAllowed() const
@@ -432,6 +428,7 @@ bool Receiver::IsActivateAllowed() const
 
 void Receiver::CommitActivation()
 {
+    pmlLog() << "++++++++++++++++++++++++++++++++RECEIVER COMMITACTIVATION ++++++++++++++++++++++++++++++++++++++++++++";
     m_Staged.GetActivation().Clear();
 
     UpdateVersionTime();

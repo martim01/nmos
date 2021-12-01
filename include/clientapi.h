@@ -99,7 +99,7 @@ namespace pml
                  std::pair<curlResponse, std::experimental::optional<std::string>> RequestSenderTransportFile(const std::string& sSenderId, bool bAsync);
 
 
-                std::pair<curlResponse, std::experimental::optional<std::vector<Constraints>>> RequestSenderConstraints(const std::string& sSenderId, bool bAsync);
+                std::pair<curlResponse, std::vector<Constraints>> RequestSenderConstraints(const std::string& sSenderId, bool bAsync);
 
 
                 /** @brief Requests the IS-05 staged parameters from the given Receiver
@@ -118,7 +118,7 @@ namespace pml
                 **/
                 std::pair<curlResponse, std::experimental::optional<connectionReceiver<activationResponse>>>  RequestReceiverActive(const std::string& sReceiverId, bool bAsync);
 
-                std::pair<curlResponse, std::experimental::optional<std::vector<Constraints>>>  RequestReceiverConstraints(const std::string& sReceiverId, bool bAsync);
+                std::pair<curlResponse, std::vector<Constraints>>  RequestReceiverConstraints(const std::string& sReceiverId, bool bAsync);
 
 
 

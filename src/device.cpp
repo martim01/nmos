@@ -188,3 +188,27 @@ void Device::RemovePreferredUrl(const control& type)
 {
     m_mPreferred.erase(type);
 }
+
+void Device::AddSender(const std::string& sId)
+{
+    m_setSenders.insert(sId);
+    UpdateVersionTime();
+}
+
+void Device::AddReceiver(const std::string& sId)
+{
+    m_setReceivers.insert(sId);
+    UpdateVersionTime();
+}
+
+void Device::RemoveSender(const std::string& sId)
+{
+    m_setSenders.erase(sId);
+    UpdateVersionTime();
+}
+
+void Device::RemoveReceiver(const std::string& sId)
+{
+    m_setReceivers.erase(sId);
+    UpdateVersionTime();
+}

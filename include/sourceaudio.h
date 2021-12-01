@@ -1,6 +1,11 @@
 #pragma once
 #include "source.h"
 #include "nmosdlldefine.h"
+#include "namedtype.h"
+
+using channelLabel = NamedType<std::string,  struct channelLabelParameter>;
+using channelSymbol = NamedType<std::string,  struct channelSymbolParameter>;
+
 
 namespace pml
 {
@@ -14,9 +19,9 @@ namespace pml
                 static std::shared_ptr<SourceAudio> Create(const Json::Value& jsResponse);
                 SourceAudio();
                 virtual bool UpdateFromJson(const Json::Value& jsData);
-                void AddChannels(const std::map<std::string, std::string>& mChannels);
-                void AddChannel(const std::string& sLabel, const std::string& sSymbol);
-                void RemoveChannel(const std::string& sSymbol);
+                void AddChannels(const std::map<channelSymbol, channelLabel>& mChannels);
+                void AddChannel(const channelSymbol& symbol, const channelLabel& label);
+                void RemoveChannel(const channelSymbol& symbol);
 
 
                 bool Commit(const ApiVersion& version);
@@ -28,7 +33,7 @@ namespace pml
 
             private:
 
-                std::map<std::string, std::string> m_mChannel;
+                std::map<channelSymbol, channelLabel> m_mChannel;
                 size_t m_nCommitedChannelCount;
         };
     };

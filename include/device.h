@@ -34,6 +34,11 @@ namespace pml
                 void RemovePreferredUrl(const control& type);
                 void SetPreferredUrl(const control& type, const url& Uri);
 
+                void AddSender(const std::string& sId);
+                void AddReceiver(const std::string& sId);
+
+                void RemoveSender(const std::string& sId);
+                void RemoveReceiver(const std::string& sId);
 
                 std::string GetParentResourceId() const
                 {
