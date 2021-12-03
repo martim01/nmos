@@ -275,7 +275,6 @@ void Sender::Activate(const std::string& sSourceIp)
 void Sender::CommitActivation()
 {
     //reset the staged activation
-    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "ActivateSender: Reset Staged activation parameters..." ;
     m_Staged.GetActivation().Clear();
 
     UpdateVersionTime();
@@ -366,7 +365,6 @@ activation::enumActivate Sender::Stage(const connectionSender<activationResponse
 
     m_Staged = conRequest;  //we've already done the patching to make sure that only the bits than need changing are
 
-    pmlLog() << "Sender::Staged = " << m_Staged.GetJson();
     return m_Staged.GetActivation().GetMode();
 }
 

@@ -326,7 +326,7 @@ namespace pml
                 int RegisterSimple();
                 int UnregisterSimple();
                 long RegistrationHeartbeat();
-                int UpdateRegisterSimple();
+                void UpdateRegisterSimple(bool bSelf, std::list<std::shared_ptr<Resource>> lstChanges);
 
                 struct regnode
                 {
@@ -355,6 +355,7 @@ namespace pml
 
                 template<class T> long RegisterResources(ResourceHolder<T>& holder);
                 template<class T> long ReregisterResources(ResourceHolder<T>& holder);
+                template<class T> long UpdateRegisterResources(ResourceHolder<T>& holder);
         //        template<class T> bool UnregisterResources(ResourceHolder<T>& holder);
 
 

@@ -322,7 +322,6 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
 }
 bool Receiver::Commit(const ApiVersion& version)
 {
-    pmlLog() << "Receiver::Commit: '" << m_sSenderId << "'";
     if(Resource::Commit(version))
     {
         m_json["device_id"] = m_sDeviceId;
@@ -428,7 +427,6 @@ bool Receiver::IsActivateAllowed() const
 
 void Receiver::CommitActivation()
 {
-    pmlLog() << "++++++++++++++++++++++++++++++++RECEIVER COMMITACTIVATION ++++++++++++++++++++++++++++++++++++++++++++";
     m_Staged.GetActivation().Clear();
 
     UpdateVersionTime();
@@ -444,7 +442,6 @@ activation::enumActivate Receiver::Stage(const connectionReceiver<activationResp
 
 void Receiver::Activate()
 {
-    pmlLog() << "Receiver::Activate: " << m_Staged.GetJson();
 
     m_bActivateAllowed = false;
     //move the staged parameters to active parameters
@@ -460,13 +457,11 @@ void Receiver::Activate()
         auto sender = m_Active.GetSenderId();
         if(sender)
         {
-            pmlLog() << "Receiver::Activate: " << *sender;
             m_sSenderId = *sender;
             m_bSenderActive = true;
         }
         else
         {
-            pmlLog() << "Receiver::Activate: ''";
             m_sSenderId.clear();
             m_bSenderActive = false;
         }
@@ -483,7 +478,6 @@ void Receiver::SubscribeToSender(const std::string& sSenderId, const std::string
 {
     if(sSenderId.empty() == false)
     {
-        pmlLog(pml::LOG_INFO) << "Receiver subscribe to sender " << sSenderId ;
         m_sSenderId = sSenderId;
 
         // need to update the IS-05 stage and active connection settings to match
@@ -495,7 +489,6 @@ void Receiver::SubscribeToSender(const std::string& sSenderId, const std::string
     }
     else
     {   //this means unsubscribe
-        pmlLog(pml::LOG_INFO) << "Receiver unssubscribe " ;
         m_sSenderId.clear();
 
         // need to update the IS-05 stage and active connection settings to match

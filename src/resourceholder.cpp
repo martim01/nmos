@@ -65,10 +65,10 @@ template<class T> void ResourceHolder<T>::RemoveResource(std::string sUuid)
     m_mResourceStaging.erase(sUuid);
 }
 
-template<class T> bool ResourceHolder<T>::Commit(const std::set<ApiVersion>& setVersion)
+template<class T> std::list<std::shared_ptr<Resource>> ResourceHolder<T>::Commit(const std::set<ApiVersion>& setVersion)
 {
     m_mResource = m_mResourceStaging;
-    m_mResourceChanged.clear();
+    std::list<std::shared_ptr<Resource>> lstChanged;
 
     for(auto version : setVersion)
     {
@@ -78,17 +78,17 @@ template<class T> bool ResourceHolder<T>::Commit(const std::set<ApiVersion>& set
         {
             if(pairResource.second->Commit(version))
             {
-                m_mResourceChanged.insert(pairResource);
+                pmlLog(pml::LOG_DEBUG) << "++++++++++ Commit " << m_sType << ": " << pairResource.first << " +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++";
+                lstChanged.push_back(pairResource.second);
             }
             m_json.append(pairResource.second->GetJson(version));
         }
     }
-    if(m_mResourceChanged.empty() == false)
+    if(lstChanged.empty() == false)
     {
         ResourceUpdated();
-        return true;
     }
-    return false;
+    return lstChanged;
 }
 
 template<class T> const Json::Value& ResourceHolder<T>::GetJson(const ApiVersion& version) const
@@ -145,20 +145,12 @@ template<class T> typename std::map<std::string, std::shared_ptr<T> >::const_ite
     return m_mResourceStaging.find(sUuid);
 }
 
-template<class T> typename std::map<std::string, std::shared_ptr<T> >::const_iterator ResourceHolder<T>::GetChangedResourceBegin() const
-{
-    return m_mResourceChanged.begin();
-}
-
-template<class T> typename std::map<std::string, std::shared_ptr<T> >::const_iterator ResourceHolder<T>::GetChangedResourceEnd() const
-{
-    return m_mResourceChanged.end();
-}
 
 
 template<class T> void ResourceHolder<T>::RemoveAllResources()
 {
     m_mResource.clear();
+    m_mResourceStaging.clear();
 }
 
 template<class T> size_t ResourceHolder<T>::GetResourceCount() const

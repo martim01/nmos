@@ -4,7 +4,7 @@
 #include <memory>
 #include "nmosapiversion.h"
 #include <set>
-
+#include <list>
 namespace pml
 {
     namespace nmos
@@ -34,7 +34,7 @@ namespace pml
 
                 void RemoveAllResources();
 
-                virtual bool Commit(const std::set<ApiVersion>& setVersion);
+                virtual typename std::list<std::shared_ptr<Resource>> Commit(const std::set<ApiVersion>& setVersion);
 
                 const Json::Value& GetJson(const ApiVersion& version) const;
                 Json::Value GetConnectionJson(const ApiVersion& version) const;
@@ -46,9 +46,6 @@ namespace pml
                 typename std::map<std::string, std::shared_ptr<T> >::const_iterator GetResourceEnd() const;
                 typename std::map<std::string, std::shared_ptr<T> >::const_iterator FindNmosResource(std::string sUuid) const;
                 typename std::map<std::string, std::shared_ptr<T> >::iterator GetResource(std::string sUuid,bool bCommited=true);
-
-                typename std::map<std::string, std::shared_ptr<T> >::const_iterator GetChangedResourceBegin() const;
-                typename std::map<std::string, std::shared_ptr<T> >::const_iterator GetChangedResourceEnd() const;
 
                 typename std::map<std::string, std::shared_ptr<T> >::const_iterator GetStagedResourceBegin() const;
                 typename std::map<std::string, std::shared_ptr<T> >::const_iterator GetStagedResourceEnd() const;
@@ -66,7 +63,7 @@ namespace pml
                 Json::Value m_json;
                 typename std::map<std::string, std::shared_ptr<T> > m_mResource;
                 typename std::map<std::string, std::shared_ptr<T> > m_mResourceStaging;
-                typename std::map<std::string, std::shared_ptr<T> > m_mResourceChanged;
+
 
 
         };

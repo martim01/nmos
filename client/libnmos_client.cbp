@@ -2,13 +2,13 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="libnmos_node" />
+		<Option title="libnmos_client" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Linux Debug">
 				<Option platforms="Unix;" />
-				<Option output="lib/nmos_noded" prefix_auto="1" extension_auto="1" />
+				<Option output="../lib/nmos_clientd" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -31,7 +31,7 @@
 			</Target>
 			<Target title="Linux Release">
 				<Option platforms="Unix;" />
-				<Option output="lib/nmos_node" prefix_auto="1" extension_auto="1" />
+				<Option output="../lib/nmos_client" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -56,7 +56,7 @@
 			</Target>
 			<Target title="Windows Debug">
 				<Option platforms="Windows;" />
-				<Option output="lib/libnmosd" prefix_auto="1" extension_auto="1" />
+				<Option output="../lib/libnmosd" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="3" />
 				<Option compiler="new_gnu_gcc_compiler" />
@@ -79,7 +79,7 @@
 			</Target>
 			<Target title="Windows Release">
 				<Option platforms="Windows;" />
-				<Option output="lib/libnmos" prefix_auto="1" extension_auto="1" />
+				<Option output="../lib/libnmos" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="3" />
 				<Option compiler="new_gnu_gcc_compiler" />
@@ -101,44 +101,35 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
-			<Add option="-std=c++1z" />
+			<Add option="-std=c++14" />
 			<Add option="-fexceptions" />
 			<Add option="-DNMOS_EXPORT" />
 			<Add option="-DMG_ENABLE_HTTP_STREAMING_MULTIPART" />
-			<Add option="-DNMOS_NODE_API" />
-			<Add directory="external/jsoncpp" />
-			<Add directory="include" />
-			<Add directory="external/uuid" />
-			<Add directory="external/mongoose" />
-			<Add directory="../Restgoose" />
-			<Add directory="../log/include" />
+			<Add option="-DNMOS_CLIENT_API" />
+			<Add directory="../external/jsoncpp" />
+			<Add directory="../include" />
+			<Add directory="../external/uuid" />
+			<Add directory="../external/mongoose" />
+			<Add directory="../../Restgoose" />
+			<Add directory="../../log/include" />
 		</Compiler>
 		<Linker>
-			<Add directory="../Restgoose/lib" />
-			<Add directory="../log/lib" />
-			<Add directory="lib" />
+			<Add directory="../../Restgoose/lib" />
+			<Add directory="../../log/lib" />
+			<Add directory="../lib" />
 		</Linker>
-		<Unit filename="include/activator.h" />
-		<Unit filename="include/eventposter.h" />
-		<Unit filename="include/is04server.h" />
-		<Unit filename="include/is05server.h" />
-		<Unit filename="include/nmosdlldefine.h" />
-		<Unit filename="include/nmosserver.h" />
-		<Unit filename="include/nmosthread.h" />
-		<Unit filename="include/nodeapi.h" />
-		<Unit filename="include/nodeapiprivate.h" />
-		<Unit filename="include/nodezcposter.h" />
-		<Unit filename="include/resourceholder.h" />
-		<Unit filename="src/activator.cpp" />
-		<Unit filename="src/eventposter.cpp" />
-		<Unit filename="src/is04server.cpp" />
-		<Unit filename="src/is05server.cpp" />
-		<Unit filename="src/nmosserver.cpp" />
-		<Unit filename="src/nmosthread.cpp" />
-		<Unit filename="src/nodeapi.cpp" />
-		<Unit filename="src/nodeapiprivate.cpp" />
-		<Unit filename="src/nodezcposter.cpp" />
-		<Unit filename="src/resourceholder.cpp" />
+		<Unit filename="../include/clientapi.h" />
+		<Unit filename="../include/clientapiposter.h" />
+		<Unit filename="../include/clientemum.h" />
+		<Unit filename="../include/clientholder.h" />
+		<Unit filename="../include/clientposter.h" />
+		<Unit filename="../include/clientprivate.h" />
+		<Unit filename="../src/clientapi.cpp" />
+		<Unit filename="../src/clientapiposter.cpp" />
+		<Unit filename="../src/clientenum.cpp" />
+		<Unit filename="../src/clientholder.cpp" />
+		<Unit filename="../src/clientposter.cpp" />
+		<Unit filename="../src/clientprivate.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />

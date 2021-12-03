@@ -36,7 +36,7 @@ namespace pml
                 void RemoveCap(const std::string& sCap);
 
 
-                virtual bool Commit(const ApiVersion& version);
+
 
                 std::string GetParentResourceId() const {   return m_sDeviceId; }
 
@@ -64,7 +64,9 @@ namespace pml
                 friend class IS05Server;
                 friend class IS04Server;
                 friend class NodeApiPrivate;
+                template <class T> friend class ResourceHolder;
 
+                virtual bool Commit(const ApiVersion& version);
                 void SubscribeToSender(const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp);  //this is the IS-04 way of connecting
                 activation::enumActivate Stage(const connectionReceiver<activationResponse>& conRequest);
                 void CommitActivation();

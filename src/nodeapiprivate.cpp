@@ -51,7 +51,7 @@
 #include "flowmux.h"
 #include <algorithm>
 #include "optional.hpp"
-
+#include "threadpool.h"
 
 using namespace pml::nmos;
 using namespace std::placeholders;
@@ -155,7 +155,6 @@ void NodeApiPrivate::Init(std::shared_ptr<EventPoster> pPoster, unsigned short n
         {
             if(temp_addr->ifa_addr->sa_family == AF_INET)
             {
-                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Interface: " << temp_addr->ifa_name ;
                 string sInterface(temp_addr->ifa_name);
                 string sAddress(inet_ntoa(((sockaddr_in*)temp_addr->ifa_addr)->sin_addr));
                 if(sAddress != "127.0.0.1")
@@ -168,7 +167,6 @@ void NodeApiPrivate::Init(std::shared_ptr<EventPoster> pPoster, unsigned short n
                     nodeinterface anInterface;
                     Self::GetAddresses(sInterface, anInterface);
                     Resource::s_sBase = anInterface.sPortMac;
-                    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Base: " << Resource::s_sBase ;
                 }
             }
             temp_addr = temp_addr->ifa_next;
@@ -319,13 +317,11 @@ bool NodeApiPrivate::StartmDNSPublisher()
 
 void NodeApiPrivate::StopmDNSPublisher()
 {
-    pmlLog(pml::LOG_DEBUG) << "NMOS: NodeApi - stop dns-sd";
     if(m_pNodeApiPublisher)
     {
         pmlLog(pml::LOG_INFO) << "NMOS: " << "Stop mDNS Publisher" ;
         m_pNodeApiPublisher->Stop();
     }
-    pmlLog(pml::LOG_DEBUG) << "NMOS: NodeApi - stop dns-sd - done";
 }
 
 
@@ -377,17 +373,17 @@ const ResourceHolder<Sender>& NodeApiPrivate::GetSenders()
 bool NodeApiPrivate::Commit()
 {
     m_mutex.lock();
-    pmlLog(pml::LOG_INFO) << "NMOS: " << "Node: Commit +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" ;
     bool bChange = m_self.Commit();
-    bChange |= m_sources.Commit(m_self.GetApiVersions());
-    bChange |= m_devices.Commit(m_self.GetApiVersions());
-    bChange |= m_flows.Commit(m_self.GetApiVersions());
-    bChange |= m_receivers.Commit(m_self.GetApiVersions());
-    bChange |= m_senders.Commit(m_self.GetApiVersions());
+
+    auto lstChanges = m_sources.Commit(m_self.GetApiVersions());
+    lstChanges.splice(lstChanges.end(), m_devices.Commit(m_self.GetApiVersions()));
+    lstChanges.splice(lstChanges.end(), m_flows.Commit(m_self.GetApiVersions()));
+    lstChanges.splice(lstChanges.end(), m_receivers.Commit(m_self.GetApiVersions()));
+    lstChanges.splice(lstChanges.end(), m_senders.Commit(m_self.GetApiVersions()));
     m_mutex.unlock();
 
 
-    if(bChange)
+    if(bChange || lstChanges.empty() == false)
     {
         if(m_sRegistrationNode.empty())
         {   //update the ver_ text records in peer-to-peer mode
@@ -396,9 +392,12 @@ bool NodeApiPrivate::Commit()
         else
         {
             //signal the register thread that we need to post resources
-            Signal(SIG_COMMIT);
+            //Signal(SIG_COMMIT);
+            //ThreadPool::Get().Submit([=]{UpdateRegisterSimple(bNode);});
+            UpdateRegisterSimple(bChange, lstChanges);
         }
     }
+
 
     return bChange;
 }
@@ -406,7 +405,6 @@ bool NodeApiPrivate::Commit()
 
 void NodeApiPrivate::ModifyTxtRecords()
 {
-    pmlLog(pml::LOG_TRACE) << "Nmos: NodeApi - ModifyTxRecords";
     auto itEndpoint = m_self.GetEndpointsBegin();
     if(itEndpoint != m_self.GetEndpointsEnd())
     {
@@ -443,7 +441,6 @@ void NodeApiPrivate::SetmDNSTxt(bool bSecure)
 
         if(m_sRegistrationNode.empty())
         {
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Peer to peer mode" ;
             m_pNodeApiPublisher->AddTxt("ver_slf", to_string(m_self.GetDnsVersion()),false);
             m_pNodeApiPublisher->AddTxt("ver_src", to_string(m_sources.GetVersion()),false);
             m_pNodeApiPublisher->AddTxt("ver_flw", to_string(m_flows.GetVersion()),false);
@@ -483,7 +480,6 @@ bool NodeApiPrivate::BrowseForRegistrationNode()
             pairBrowser.second->StartBrowser();
         }
 
-        pmlLog(pml::LOG_INFO) << "NMOS: " << "Browse for register nodes" ;
 
         m_bBrowsing = true;
     }
@@ -648,7 +644,6 @@ int NodeApiPrivate::RegisterSimple()
                 PostRegisterStatus();
                 return m_nRegistrationStatus;
             }
-            pmlLog(pml::LOG_INFO) << "NMOS: " << "RegisterResources: Done" ;
             m_nRegistrationStatus = REG_DONE;
         }
     }
@@ -656,14 +651,17 @@ int NodeApiPrivate::RegisterSimple()
     return m_nRegistrationStatus;
 }
 
-int NodeApiPrivate::UpdateRegisterSimple()
+void NodeApiPrivate::UpdateRegisterSimple(bool bSelf, std::list<std::shared_ptr<Resource>> lstChanges)
 {
-    long nResponse = RegisterResource("node", m_self.GetJson(m_versionRegistration));
-    ReregisterResources(m_devices);
-    ReregisterResources(m_sources);
-    ReregisterResources(m_flows);
-    ReregisterResources(m_senders);
-    return nResponse;
+    if(bSelf)
+    {
+        RegisterResource("node", m_self.GetJson(m_versionRegistration));
+    }
+    for(auto pResource : lstChanges)
+    {
+        RegisterResource(pResource->GetType(), pResource->GetJson(m_versionRegistration));
+    }
+
 }
 
 void NodeApiPrivate::HandleInstanceResolved(std::shared_ptr<dnsInstance> pInstance)
@@ -752,16 +750,12 @@ bool NodeApiPrivate::FindRegistrationNode()
     for(auto pairNode : m_mRegNode)
     {   //get the registration node with smallest priority number
 
-        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "NodeApi: Checkregistration node" << pairNode.first ;
-
         if(pairNode.second.bGood && pairNode.second.nPriority < nPriority)
         {//for now only doing v1.2
             nPriority = pairNode.second.nPriority;
             sRegNode = pairNode.first;
             version = pairNode.second.version;
-            pmlLog(pml::LOG_INFO) << "NMOS: " << "NodeApi: Register. Found nmos registration node with v1.2 and lower priority: " << sRegNode << " " << nPriority ;
         }
-
     }
     m_mutex.unlock();
 
@@ -805,7 +799,6 @@ template<class T> long NodeApiPrivate::RegisterResources(ResourceHolder<T>& hold
 {
     for(auto pairResource : holder.GetResources())
     {
-        pmlLog(pml::LOG_INFO) << "NMOS: " << "NodeApi: Register. " << holder.GetType() << " : " << pairResource.first ;
         long nResult = RegisterResource(holder.GetType(), pairResource.second->GetJson(m_versionRegistration));
         if(nResult != 201 && nResult != 200)
         {
@@ -819,7 +812,6 @@ template<class T> long NodeApiPrivate::ReregisterResources(ResourceHolder<T>& ho
 {
     for(auto pairResource : holder.GetResources())
     {
-        pmlLog(pml::LOG_INFO) << "NMOS: " << "NodeApi: Register. " << holder.GetType() << " : " << pairResource.first ;
         long nResult = RegisterResource(holder.GetType(), pairResource.second->GetJson(m_versionRegistration));
         if(nResult != 200 && nResult != 201)
         {
@@ -828,6 +820,7 @@ template<class T> long NodeApiPrivate::ReregisterResources(ResourceHolder<T>& ho
     }
     return 201;
 }
+
 
 long NodeApiPrivate::RegisterResource(const string& sType, const Json::Value& json)
 {
@@ -852,7 +845,6 @@ long NodeApiPrivate::RegistrationHeartbeat()
     m_tpHeartbeat = chrono::system_clock::now() + chrono::milliseconds(m_nHeartbeatTime);
 
     auto resp = CurlRegister::Post(m_sRegistrationNode+m_versionRegistration.GetVersionAsString()+"/health/nodes/"+m_self.GetId(), "");
-    pmlLog(pml::LOG_INFO) << "NMOS: " << "RegisterApi: Heartbeat: returned [" << resp.nCode << "] " << resp.sResponse ;
 
     if(resp.nCode == 500 || resp.nCode == 0)
     {
@@ -1168,7 +1160,6 @@ bool NodeApiPrivate::AddSender(shared_ptr<Sender> pResource)
             {
                 pairServer.second->AddSenderEndpoint(pResource->GetId());
             }
-            pmlLog(pml::LOG_DEBUG) << "NodeApiPrivate::Activate from AddSender";
             Activate(false, pResource);
             return true;
         }
@@ -1392,7 +1383,6 @@ void NodeApiPrivate::Activate(bool bCommit, std::shared_ptr<IOResource> pResourc
     auto pSender = std::dynamic_pointer_cast<Sender>(pResource);
     if(pSender)
     {
-        pmlLog(pml::LOG_DEBUG) << "NodeApiPrivate::Activate from thread";
         Activate(bCommit, pSender);
         return;
     }
@@ -1463,7 +1453,6 @@ bool NodeApiPrivate::Stage(const connectionSender<activationResponse>& conReques
         case activation::ACT_NOW:
             pSender->SetStagedActivationTimePoint(GetTaiTimeNow());
             pSender->SetActivationAllowed(true);
-            pmlLog(pml::LOG_DEBUG) << "NodeApiPrivate::Activate from stage";
             Activate(false, pSender);
             break;
         case activation::ACT_ABSOLUTE:
@@ -1474,7 +1463,6 @@ bool NodeApiPrivate::Stage(const connectionSender<activationResponse>& conReques
                     pSender->SetActivationAllowed(true);
                     pSender->SetStagedActivationTimePoint(*tp);
 
-                    pmlLog(pml::LOG_DEBUG) << "NMOS: Sender  - add absolute activation";
                     m_activator.AddActivation(*tp, pSender);
 
                 }
@@ -1494,7 +1482,6 @@ bool NodeApiPrivate::Stage(const connectionSender<activationResponse>& conReques
                     pSender->SetActivationAllowed(true);
                     pSender->SetStagedActivationTimePoint(tp);
                     m_activator.AddActivation(tp, pSender);
-                    pmlLog(pml::LOG_DEBUG) << "NMOS: Receiver  - add relative activation: " << ConvertTimeToString(tp);
                 }
                 else
                 {
@@ -1552,7 +1539,6 @@ bool NodeApiPrivate::Stage(const connectionReceiver<activationResponse>& conRequ
                     pReceiver->SetActivationAllowed(true);
                     pReceiver->SetStagedActivationTimePoint(*tp);
 
-                    pmlLog(pml::LOG_DEBUG) << "NMOS: Receiver  - add absolute activation";
                     m_activator.AddActivation(*tp, pReceiver);
                 }
                 else
@@ -1571,7 +1557,6 @@ bool NodeApiPrivate::Stage(const connectionReceiver<activationResponse>& conRequ
                     pReceiver->SetActivationAllowed(true);
                     pReceiver->SetStagedActivationTimePoint(tp);
                     m_activator.AddActivation(tp, pReceiver);
-                    pmlLog(pml::LOG_DEBUG) << "NMOS: Receiver  - add relative activation: " << ConvertTimeToString(tp);
                 }
                 else
                 {

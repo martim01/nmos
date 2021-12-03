@@ -80,9 +80,9 @@ bool NodeApiPrivate::RegisteredOperation()
             {
                 switch(GetSignal())
                 {
-                    case NodeApiPrivate::SIG_COMMIT:
-                        UpdateRegisterSimple();
-                        break;
+                    //case NodeApiPrivate::SIG_COMMIT:
+                    //    UpdateRegisterSimple();
+                    //    break;
                     case NodeApiPrivate::SIG_INSTANCE_REMOVED: //this means our reg node has gone
                         pmlLog(pml::LOG_INFO) << "NMOS: " << "Registration server gone" ;
                         m_nRegistrationStatus = REG_FAILED;
