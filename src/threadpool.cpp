@@ -18,7 +18,7 @@ ThreadPool::ThreadPool() :
 
 size_t ThreadPool::CreateWorkers(size_t nMinThreads, size_t nMaxThreads)
 {
-    auto nThreads = std::max(nMinThreads, std::min(nMaxThreads, std::thread::hardware_concurrency()));
+    auto nThreads = std::max(nMinThreads, std::min(nMaxThreads, (size_t)std::thread::hardware_concurrency()));
     if(nThreads > m_vThreads.size())
     {
         return AddWorkers(nThreads-m_vThreads.size());

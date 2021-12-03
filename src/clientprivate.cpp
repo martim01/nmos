@@ -52,7 +52,7 @@ std::vector<Constraints> CreateConstraints(const Json::Value& jsData)
     std::vector<Constraints> vConstraints;
     if(jsData.isArray() != false)
     {
-        for(size_t i = 0; i < jsData.size(); i++)
+        for(Json::ArrayIndex i = 0; i < jsData.size(); i++)
         {
             if(jsData[i].isObject())
             {

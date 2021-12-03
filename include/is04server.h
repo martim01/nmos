@@ -1,13 +1,11 @@
 #pragma once
 #include <string>
 #include <condition_variable>
-#include "microhttpd.h"
 #include <thread>
 #include <vector>
 #include "json/json.h"
 #include "nmosapiversion.h"
 #include "nmosserver.h"
-
 class RestGoose;
 
 namespace pml
