@@ -10,7 +10,7 @@ include_directories("../include")
 include_directories(${DIR_JSON}/dist)
 include_directories(${DIR_LOG}/include)
 include_directories("../external/uuid")
-include_directories(${DIR_RESTGOOSE})
+include_directories(${DIR_RESTGOOSE}/include)
 
 SET(SOURCES "../src/activator.cpp"
  "../src/eventposter.cpp"
