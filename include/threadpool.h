@@ -14,10 +14,6 @@ namespace pml
     {
         public:
             static ThreadPool& Get();
-            template<typename Callable, typename... Args> void Submit(Callable&& func, Args&&... args)
-            {
-                Submit([=]{func(args...);});
-            }
             template<typename FunctionType> void Submit(FunctionType f)
             {
                 {
@@ -26,6 +22,10 @@ namespace pml
                 }
                 m_condition.notify_one();
 
+            }
+            template<typename Callable, typename... Args> void Submit(Callable&& func, Args&&... args)
+            {
+                Submit([=]{func(args...);});
             }
 
             size_t CreateWorkers(size_t nMinThreads, size_t nMaxThreads);

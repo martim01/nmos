@@ -101,7 +101,7 @@ template<typename T> connectionSender<T>::connectionSender(const Json::Value& js
     if(jsResponse.isMember(TRANSPORT_PARAMS) && jsResponse[TRANSPORT_PARAMS].isArray())
     {
         m_vTransportParams.clear();
-        for(size_t i = 0; i < jsResponse[TRANSPORT_PARAMS].size(); i++)
+        for(Json::ArrayIndex i = 0; i < jsResponse[TRANSPORT_PARAMS].size(); i++)
         {
             m_vTransportParams.push_back(TransportParamsRTPSender(jsResponse[TRANSPORT_PARAMS][i]));
         }
@@ -136,7 +136,7 @@ template<typename T> bool connectionSender<T>::Patch(const Json::Value& jsData)
         {
             return false;
         }
-        for(size_t i = 0; i < jsData[TRANSPORT_PARAMS].size(); i++)
+        for(Json::ArrayIndex i = 0; i < jsData[TRANSPORT_PARAMS].size(); i++)
         {
             if(m_vTransportParams[i].Patch(jsData[TRANSPORT_PARAMS][i]) == false)
             {
@@ -253,7 +253,7 @@ template<typename T> connectionReceiver<T>::connectionReceiver(const Json::Value
     if(jsResponse.isMember(TRANSPORT_PARAMS) && jsResponse[TRANSPORT_PARAMS].isArray())
     {
         m_vTransportParams.clear();
-        for(size_t i = 0; i < jsResponse[TRANSPORT_PARAMS].size(); i++)
+        for(Json::ArrayIndex i = 0; i < jsResponse[TRANSPORT_PARAMS].size(); i++)
         {
             m_vTransportParams.push_back(TransportParamsRTPReceiver(jsResponse[TRANSPORT_PARAMS][i]));
         }
@@ -302,7 +302,7 @@ template<typename T> bool connectionReceiver<T>::Patch(const Json::Value& jsData
             pmlLog() << "Transport param array";
             return false;
         }
-        for(size_t i = 0; i < jsData[TRANSPORT_PARAMS].size(); i++)
+        for(Json::ArrayIndex i = 0; i < jsData[TRANSPORT_PARAMS].size(); i++)
         {
             if(m_vTransportParams[i].Patch(jsData[TRANSPORT_PARAMS][i]) == false)
             {
