@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 project(nmosworkspace)
 
-SET(DIR_RESTGOOSE $ENV{HOME}/Restgoose CACHE STRING "location of Restgoose")
-SET(DIR_JSON $ENV{HOME}/jsoncpp CACHE STRING "location of JsonCpp")
-SET(DIR_LOG $ENV{HOME}/log CACHE STRING "location of pml::log")
+SET(DIR_BASE $ENV{HOME} CACHE STRING "base location for libraries")
+SET(DIR_JSON ${DIR_BASE}/jsoncpp CACHE STRING "location of jsoncpp")
+SET(DIR_LOG ${DIR_BASE}/log CACHE STRING "location of pml log")
+SET(DIR_RESTGOOSE ${DIR_BASE}/Restgoose CACHE STRING "location of Restgoose")
 
 #Get Restgoose
 find_path(TEMP_DIR NAMES "CMakeLists.txt" PATHS ${DIR_RESTGOOSE})

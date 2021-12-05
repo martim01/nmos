@@ -46,6 +46,21 @@ set_target_properties(nmos_node
 	POSITION_INDEPENDENT_CODE 1)
 
 target_link_libraries(nmos_node nmos_base)
-target_compile_options(nmos_node PRIVATE -O3)
+
+set_target_properties(nmos_node PROPERTIES DEBUG_POSTFIX "d")
+
+list(APPEND flags "-fPIC" "-Wall" "-fpermissive" )
+
+if(CMAKE_BUILD_TYPE MATCHES Release)
+   list(APPEND flags "-O3")
+   target_compile_definitions(nmos_node PUBLIC NDEBUG DLL_EXPORTS _MSL_STDINT_H)
+else()
+   list(APPEND flags "-g")
+   target_compile_definitions(nmos_node PUBLIC DEBUG DLL_EXPORTS _MSL_STDINT_H)
+endif()
+
+target_compile_options(nmos_node PRIVATE ${flags})
+
+
 
 set_target_properties(nmos_node PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib/)
