@@ -17,12 +17,18 @@
 
 namespace pml
 {
+    namespace dnssd
+    {
+        struct dnsInstance;
+        class Browser;
+        class Publisher;
+    }
+
     namespace nmos
     {
         class NmosServer;
-        class ServiceBrowser;
-        class ServicePublisher;
-        class ServiceBrowserEvent;
+
+//        class ServiceBrowserEvent;
         class CurlRegister;
         class CurlEvent;
         class EventPoster;
@@ -37,7 +43,7 @@ namespace pml
         class Server;
         class NodeZCPoster;
 
-        class dnsInstance;
+
         class IS04Server;
         class IS05Server;
         struct TransportParamsRTPSender;
@@ -261,8 +267,8 @@ namespace pml
 
 
             protected:
-                friend class ServiceBrowser;
-                friend class Server;
+                //friend class Browser;
+                //friend class Server;
                 friend class NodeZCPoster;
                 friend class IS04Server;
                 friend class IS05Server;
@@ -312,8 +318,8 @@ namespace pml
                 enumSignal GetSignal() const;
 
 
-                void HandleInstanceResolved(std::shared_ptr<dnsInstance> pInstance);
-                void HandleInstanceRemoved(std::shared_ptr<dnsInstance> pInstance);
+                void HandleInstanceResolved(std::shared_ptr<pml::dnssd::dnsInstance> pInstance);
+                void HandleInstanceRemoved(std::shared_ptr<pml::dnssd::dnsInstance> pInstance);
 
                 bool Wait(unsigned long nMilliseconds);
                 bool WaitUntil(const std::chrono::system_clock::time_point& timeout_time);
@@ -380,19 +386,19 @@ namespace pml
                 ResourceHolder<Source> m_sources;
                 ResourceHolder<Flow> m_flows;
 
-                std::map<std::string, std::unique_ptr<ServiceBrowser>> m_mBrowser;
+                std::map<std::string, std::unique_ptr<pml::dnssd::Browser>> m_mBrowser;
 
 
                 std::string m_sRegistrationNode;
                 ApiVersion m_versionRegistration;
                 //std::string m_sQueryNode;
 
-                std::unique_ptr<ServicePublisher> m_pNodeApiPublisher;
+                std::unique_ptr<pml::dnssd::Publisher> m_pNodeApiPublisher;
 
                 unsigned int m_nRegistrationStatus;
 
                 mutable std::mutex m_mutex;
-                std::condition_variable m_cvBrowse; //sync between nmos thread and ServiceBrowser thread
+                std::condition_variable m_cvBrowse; //sync between nmos thread and Browser thread
                 std::condition_variable m_cvCommit; //sync between nmos thread and main thread (used to sleep until a Commit is called)
 
                 std::unique_ptr<std::thread> m_pThread;

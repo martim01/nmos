@@ -130,6 +130,16 @@ template<class T> typename std::map<std::string, std::shared_ptr<T> >::iterator 
     return m_mResourceStaging.find(sUuid);
 }
 
+template<class T> typename std::shared_ptr<T> ResourceHolder<T>::GetStagedResource(const std::string& sUuid) const
+{
+    auto itResource =  m_mResourceStaging.find(sUuid);
+    if(itResource != m_mResourceStaging.end())
+    {
+        return itResource->second;
+    }
+    return nullptr;
+}
+
 template<class T> typename std::map<std::string, std::shared_ptr<T> >::const_iterator ResourceHolder<T>::GetStagedResourceBegin() const
 {
     return m_mResourceStaging.begin();

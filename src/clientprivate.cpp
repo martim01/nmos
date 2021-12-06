@@ -5,7 +5,6 @@
 #include <thread>
 #include <set>
 #ifdef __GNU__
-#include "avahibrowser.h"
 #include <unistd.h>
 #include <sys/types.h>
 #include <ifaddrs.h>
@@ -15,7 +14,7 @@
 #include <arpa/inet.h>
 #endif // __GNU__
 #include "curlregister.h"
-
+#include "dnssd.h"
 #include "self.h"
 #include "device.h"
 #include "source.h"
@@ -115,7 +114,7 @@ void ClientThread(ClientApiImpl* pApi)
 }
 
 //Called in NodeBrowse Thread
-bool VersionChanged(std::shared_ptr<dnsInstance> pInstance, const std::string& sVersion)
+bool VersionChanged(std::shared_ptr<pml::dnssd::dnsInstance> pInstance, const std::string& sVersion)
 {
     if(pInstance->nUpdate != 0)
     {
@@ -135,7 +134,7 @@ bool VersionChanged(std::shared_ptr<dnsInstance> pInstance, const std::string& s
 }
 
 //NodeBrowse Thread  - started within main ClientThread
-static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<dnsInstance> pInstance)
+static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<pml::dnssd::dnsInstance> pInstance)
 {
     pmlLog() << "NODEBROWSER";
     if(pApi->GetMode() == ClientApiImpl::MODE_P2P)
@@ -452,7 +451,7 @@ ClientApiImpl::ClientApiImpl() :
     m_bDoneQueryBrowse(false),
     m_pWebSocket(std::make_unique<WebSocketClient>(std::bind(&ClientApiImpl::WebsocketConnected, this, _1), std::bind(&ClientApiImpl::WebsocketMessage, this, _1, _2)))
 {
-    m_mBrowser.insert(std::make_pair("local", std::make_unique<ServiceBrowser>()));
+    m_mBrowser.insert(std::make_pair("local", std::make_unique<pml::dnssd::Browser>()));
 
     m_mGrainUpdate = { {"/nodes/", std::bind(&ClientApiImpl::GrainUpdateNode, this, _1, _2)},
                         {"/devices/", std::bind(&ClientApiImpl::GrainUpdateDevice, this, _1, _2)},
@@ -532,7 +531,7 @@ void ClientApiImpl::SetCurlDone(const curlResponse& resp, unsigned long nType, c
     m_cvBrowse.notify_one();
 }
 
-void ClientApiImpl::SetInstanceResolved(std::shared_ptr<dnsInstance> pInstance)
+void ClientApiImpl::SetInstanceResolved(std::shared_ptr<pml::dnssd::dnsInstance> pInstance)
 {
     m_mutex.lock();
     m_pInstance = pInstance;
@@ -541,7 +540,7 @@ void ClientApiImpl::SetInstanceResolved(std::shared_ptr<dnsInstance> pInstance)
     m_cvBrowse.notify_one();
 }
 
-void ClientApiImpl::SetInstanceRemoved(std::shared_ptr<dnsInstance> pInstance)
+void ClientApiImpl::SetInstanceRemoved(std::shared_ptr<pml::dnssd::dnsInstance> pInstance)
 {
     m_mutex.lock();
     m_pInstance = pInstance;
@@ -686,7 +685,7 @@ void ClientApiImpl::HandleInstanceRemoved()
         else if(m_pInstance->sService == "_nmos-node._tcp" && m_eMode == MODE_P2P)
         {
             pmlLog(pml::LOG_INFO) << "NMOS: " << "node Removed: " << m_pInstance->sName ;
-            m_lstResolve.remove_if([this](std::shared_ptr<dnsInstance> pInstance) { return pInstance == m_pInstance;});
+            m_lstResolve.remove_if([this](std::shared_ptr<pml::dnssd::dnsInstance> pInstance) { return pInstance == m_pInstance;});
             RemoveResources(m_pInstance->sHostIP);
         }
         m_pInstance = nullptr;
@@ -2470,7 +2469,7 @@ bool ClientApiImpl::AddBrowseDomain(const std::string& sDomain)
 {
     if(!m_bRun)
     {
-        return m_mBrowser.insert(std::make_pair(sDomain, std::make_unique<ServiceBrowser>(sDomain))).second;
+        return m_mBrowser.insert(std::make_pair(sDomain, std::make_unique<pml::dnssd::Browser>(sDomain))).second;
     }
     return false;
 }

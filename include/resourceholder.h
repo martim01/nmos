@@ -51,6 +51,8 @@ namespace pml
                 typename std::map<std::string, std::shared_ptr<T> >::const_iterator GetStagedResourceEnd() const;
                 typename std::map<std::string, std::shared_ptr<T> >::const_iterator FindStagedResource(std::string sUuid) const;
 
+                typename std::shared_ptr<T> GetStagedResource(const std::string& sUuid) const;
+
                 size_t GetResourceCount() const;
             protected:
 

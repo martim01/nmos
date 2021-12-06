@@ -3,8 +3,6 @@
 #include <sstream>
 #include <algorithm>
 #ifdef __GNU__
-#include "avahipublisher.h"
-#include "avahibrowser.h"
 #include <unistd.h>
 #include <sys/types.h>
 #include <ifaddrs.h>
@@ -14,14 +12,12 @@
 #include <arpa/inet.h>
 #else
 #define WINVER 0x0600
-#include "bonjourbrowser.h"
-#include "bonjourpublisher.h"
 #include <winsock2.h>
 #include <windows.h>
 #include <iphlpapi.h>
 #include <iptypes.h>
 #endif
-
+#include "dnssd.h"
 #include "log.h"
 #include "curlregister.h"
 #include "eventposter.h"
@@ -121,7 +117,7 @@ m_nDiscoveryPort(0),
 m_nHeartbeatTime(5000),
 m_activator(*this)
 {
-    m_mBrowser.insert(std::make_pair("local", std::make_unique<ServiceBrowser>()));
+    m_mBrowser.insert(std::make_pair("local", std::make_unique<pml::dnssd::Browser>()));
 }
 
 NodeApiPrivate::~NodeApiPrivate()
@@ -307,7 +303,7 @@ bool NodeApiPrivate::StartmDNSPublisher()
     if(itEndpoint != m_self.GetEndpointsEnd())
     {
         pmlLog(pml::LOG_INFO) << "NMOS: " << "Start mDNS Publisher" ;
-        m_pNodeApiPublisher.reset(new ServicePublisher(CreateGuid(itEndpoint->sHost), "_nmos-node._tcp", itEndpoint->nPort, itEndpoint->sHost));
+        m_pNodeApiPublisher = std::make_unique<pml::dnssd::Publisher>(CreateGuid(itEndpoint->sHost), "_nmos-node._tcp", itEndpoint->nPort, itEndpoint->sHost);
         SetmDNSTxt(itEndpoint->bSecure);
         return m_pNodeApiPublisher->Start();
     }
@@ -664,7 +660,7 @@ void NodeApiPrivate::UpdateRegisterSimple(bool bSelf, std::list<std::shared_ptr<
 
 }
 
-void NodeApiPrivate::HandleInstanceResolved(std::shared_ptr<dnsInstance> pInstance)
+void NodeApiPrivate::HandleInstanceResolved(std::shared_ptr<pml::dnssd::dnsInstance> pInstance)
 {
     auto itPriority = pInstance->mTxt.find("pri");
     auto itVersion = pInstance->mTxt.find("api_ver");
@@ -721,7 +717,7 @@ void NodeApiPrivate::HandleInstanceResolved(std::shared_ptr<dnsInstance> pInstan
 
 }
 
-void NodeApiPrivate::HandleInstanceRemoved(std::shared_ptr<dnsInstance> pInstance)
+void NodeApiPrivate::HandleInstanceRemoved(std::shared_ptr<pml::dnssd::dnsInstance> pInstance)
 {
     stringstream ssUrl;
     ssUrl <<  pInstance->sHostIP << ":" << pInstance->nPort << "/x-nmos/registration/";
@@ -900,72 +896,6 @@ bool NodeApiPrivate::UnregisterResource(const string& sType, const std::string& 
 }
 
 
-//bool NodeApiPrivate::FindQueryNode()
-//{
-//    if(m_sQueryNode.empty())
-//    {
-//        map<string, std::shared_ptr<dnsService> >::const_iterator itService = m_pRegistrationBrowser->FindService("_nmos-query._tcp");
-//        if(itService != m_pRegistrationBrowser->GetServiceEnd())
-//        {
-//            pmlLog(pml::LOG_INFO) << "NMOS: " << "NodeApi: Query. Found nmos query service." ;
-//            shared_ptr<dnsInstance>  pInstance(0);
-//            string sApiVersion;
-//            for(map<string, shared_ptr<dnsInstance> >::const_iterator itInstance = itService->second->mInstances.begin(); itInstance != itService->second->mInstances.end(); ++itInstance)
-//            {   //get the registration node with smallest priority number
-//
-//                pmlLog(pml::LOG_INFO) << "NMOS: " << "NodeApi: Query. Found nmos query node: " << itInstance->second->sName ;
-//                //get top priority
-//                unsigned long nPriority(200);
-//                map<string, string>::const_iterator itPriority = itInstance->second->mTxt.find("pri");
-//                map<string, string>::const_iterator itVersion = itInstance->second->mTxt.find("api_ver");
-//                if(itPriority != itInstance->second->mTxt.end() && itVersion != itInstance->second->mTxt.end())
-//                {
-//                    if(stoul(itPriority->second) < nPriority && itVersion->second.find("v1.2") != string::npos)
-//                    {//for now only doing v1.2
-//                        // @todo maybe support other versions?
-//                        pInstance = itInstance->second;
-//                        nPriority = stoi(itPriority->second);
-//
-//                        pmlLog(pml::LOG_INFO) << "NMOS: " << "NodeApi: Query. Found nmos query node with v1.2 and low priority: " << itInstance->second->sName << " " << nPriority ;
-//
-//                    }
-//                }
-//            }
-//
-//            if(pInstance)
-//            {
-//                //build the registration url
-//                stringstream ssUrl;
-//                ssUrl <<  pInstance->sHostIP << ":" << pInstance->nPort << "/x-nmos/query/v1.2";
-//                m_sQueryNode = ssUrl.str();
-//                return true;
-//            }
-//            return false;
-//        }
-//    }
-//    return true;
-//}
-
-//const ResourceHolder& NodeApiPrivate::GetQueryResults()
-//{
-//    pmlLog(pml::LOG_INFO) << "NMOS: " << "GetQueryResults: " << m_query.GetResourceCount() << " " << (int)&m_query ;
-//    return m_query;
-//}
-
-//bool NodeApiPrivate::Query(NodeApiPrivate::enumResource eResource, const std::string& sQuery)
-//{
-//    m_query.RemoveAllResources();
-//    m_query.SetType(STR_RESOURCE[eResource]);
-//
-//    if(m_pRegisterCurl && FindQueryNode())
-//    {
-//        m_pRegisterCurl->Query(m_sQueryNode, eResource, sQuery, &m_query, CURL_QUERY);
-//        return true;
-//    }
-//    return false;
-//}
-
-
 bool NodeApiPrivate::IsRunning()
 {
     return m_bRun;
@@ -1081,7 +1011,7 @@ bool NodeApiPrivate::AddFlow(shared_ptr<Flow> pResource)
 
 bool NodeApiPrivate::AddReceiver(shared_ptr<Receiver> pResource)
 {
-    auto pDevice = GetDevice(pResource->GetParentResourceId());
+    auto pDevice = m_devices.GetStagedResource(pResource->GetParentResourceId());
     if(pDevice)
     {
         if(m_receivers.AddResource(pResource))
@@ -1120,8 +1050,7 @@ bool NodeApiPrivate::AddReceiver(shared_ptr<Receiver> pResource)
 
 bool NodeApiPrivate::AddSender(shared_ptr<Sender> pResource)
 {
-
-    auto pDevice = GetDevice(pResource->GetParentResourceId());
+    auto pDevice = m_devices.GetStagedResource(pResource->GetParentResourceId());
     if(pDevice)
     {
         if(m_senders.AddResource(pResource))
@@ -1164,6 +1093,7 @@ bool NodeApiPrivate::AddSender(shared_ptr<Sender> pResource)
             return true;
         }
     }
+    pmlLog(pml::LOG_ERROR) << "NMOS: AddSender - could not find parent device '" << pResource->GetParentResourceId() << "'";
     return false;
 }
 
@@ -1172,7 +1102,7 @@ void NodeApiPrivate::RemoveSender(const std::string& sId)
     auto pSender = GetSender(sId);
     if(pSender)
     {
-        auto pDevice = GetDevice(pSender->GetParentResourceId());
+        auto pDevice = m_devices.GetStagedResource(pSender->GetParentResourceId());
         if(pDevice)
         {
             pDevice->RemoveSender(sId);
@@ -1195,7 +1125,7 @@ void NodeApiPrivate::RemoveReceiver(const std::string& sId)
     auto pReceiver = GetReceiver(sId);
     if(pReceiver)
     {
-        auto pDevice = GetDevice(pReceiver->GetParentResourceId());
+        auto pDevice = m_devices.GetStagedResource(pReceiver->GetParentResourceId());
         if(pDevice)
         {
             pDevice->RemoveReceiver(sId);
@@ -1351,7 +1281,7 @@ bool NodeApiPrivate::AddBrowseDomain(const std::string& sDomain)
 {
     if(!m_bRun)
     {
-        return m_mBrowser.insert(std::make_pair(sDomain, std::make_unique<ServiceBrowser>(sDomain))).second;
+        return m_mBrowser.insert(std::make_pair(sDomain, std::make_unique<pml::dnssd::Browser>(sDomain))).second;
     }
     return false;
 }

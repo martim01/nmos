@@ -11,7 +11,7 @@ namespace pml
 {
     namespace nmos
     {
-        struct dnsInstance;
+
         class Sender;
 
         class NMOS_EXPOSE EventPoster

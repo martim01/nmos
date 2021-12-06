@@ -49,23 +49,23 @@ int main()
 
     if(pml::nmos::NodeApi::Get().AddDevice(pDevice) == false)
     {
-        cout << "FAILED TO ADD DEVICE" << endl;
+        pmlLog(pml::LOG_ERROR) << "FAILED TO ADD DEVICE";
     }
     if(pml::nmos::NodeApi::Get().AddSource(pSource) == false)
     {
-        cout << "FAILED TO ADD SOURCE" << endl;
+        pmlLog(pml::LOG_ERROR) << "FAILED TO ADD SOURCE";
     }
     if(pml::nmos::NodeApi::Get().AddFlow(pFlow) == false)
     {
-        cout << "FAILED TO ADD FLOW" << endl;
+        pmlLog(pml::LOG_ERROR) << "FAILED TO ADD FLOW";
     }
     if(pml::nmos::NodeApi::Get().AddReceiver(pReceiver) == false)
     {
-        cout << "FAILED TO ADD RECEIVER" << endl;
+        pmlLog(pml::LOG_ERROR) << "FAILED TO ADD RECEIVER";
     }
     if(pml::nmos::NodeApi::Get().AddSender(pSender) == false)
     {
-        cout << "FAILED TO ADD SENDER" << endl;
+        pmlLog(pml::LOG_ERROR) << "FAILED TO ADD SENDER";
     }
     pml::nmos::NodeApi::Get().Commit();
 
@@ -81,70 +81,70 @@ int main()
             switch(pPoster->GetReason())
             {
                 case ThreadPoster::CURL_DONE:
-                    cout << "----------------------------------------" << endl;
-                    cout << "Curl Done" << endl;
-                    cout << "----------------------------------------" << endl;
+                    pmlLog() << "----------------------------------------";
+                    pmlLog() << "Curl Done";
+                    pmlLog() << "----------------------------------------";
                     break;
                 case ThreadPoster::INSTANCE_RESOLVED:
-                    cout << "----------------------------------------" << endl;
-                    cout << "Browser: Instance Resolved" << endl;
-                    cout << "----------------------------------------" << endl;
+                    pmlLog() << "----------------------------------------";
+                    pmlLog() << "Browser: Instance Resolved";
+                    pmlLog() << "----------------------------------------";
                     break;
                 case ThreadPoster::ALLFORNOW:
-                    cout << "----------------------------------------" << endl;
-                    cout << "Browser: All For Now" << endl;
-                    cout << "----------------------------------------" << endl;
+                    pmlLog() << "----------------------------------------";
+                    pmlLog() << "Browser: All For Now";
+                    pmlLog() << "----------------------------------------";
                     break;
                 case ThreadPoster::FINISHED:
-                    cout << "----------------------------------------" << endl;
-                    cout << "Browser: Finished" << endl;
-                    cout << "----------------------------------------" << endl;
+                    pmlLog() << "----------------------------------------";
+                    pmlLog() << "Browser: Finished";
+                    pmlLog() << "----------------------------------------";
                     break;
                 case ThreadPoster::REGERROR:
-                    cout << "----------------------------------------" << endl;
-                    cout << "Publisher: Error" << endl;
-                    cout << "----------------------------------------" << endl;
+                    pmlLog() << "----------------------------------------";
+                    pmlLog() << "Publisher: Error";
+                    pmlLog() << "----------------------------------------";
                     break;
                 case ThreadPoster::INSTANCE_REMOVED:
-                    cout << "----------------------------------------" << endl;
-                    cout << "Browser: Instance Removed" << endl;
-                    cout << "----------------------------------------" << endl;
+                    pmlLog() << "----------------------------------------";
+                    pmlLog() << "Browser: Instance Removed";
+                    pmlLog() << "----------------------------------------";
                     break;
                 case ThreadPoster::TARGET:
-                    cout << "----------------------------------------" << endl;
-                    cout << "NMOS Target: " << pPoster->GetString() << " [" << pPoster->GetSDP() << "]" << endl;
-                    cout << "----------------------------------------" << endl;
+                    pmlLog() << "----------------------------------------";
+                    pmlLog() << "NMOS Target: " << pPoster->GetString() << " [" << pPoster->GetSDP() << "]";
+                    pmlLog() << "----------------------------------------";
                     //getchar();
                     pml::nmos::NodeApi::Get().TargetTaken("192.168.1.113", pPoster->GetPort(), true);
                     break;
                 case ThreadPoster::PATCH_SENDER:
-                    cout << "----------------------------------------" << endl;
-                    cout << "NMOS Patch Sender: " << pPoster->GetString() << endl;
-                    cout << "----------------------------------------" << endl;
+                    pmlLog() << "----------------------------------------";
+                    pmlLog() << "NMOS Patch Sender: " << pPoster->GetString();
+                    pmlLog() << "----------------------------------------";
                     pml::nmos::NodeApi::Get().SenderPatchAllowed(pPoster->GetPort(), true, pPoster->GetString(),"","239.192.55.101");
                     break;
                 case ThreadPoster::PATCH_RECEIVER:
-                    cout << "----------------------------------------" << endl;
-                    cout << "NMOS Patch Receiver: " << pPoster->GetString() << endl;
-                    cout << "----------------------------------------" << endl;
+                    pmlLog() << "----------------------------------------";
+                    pmlLog() << "NMOS Patch Receiver: " << pPoster->GetString();
+                    pmlLog() << "----------------------------------------";
                     pml::nmos::NodeApi::Get().ReceiverPatchAllowed(pPoster->GetPort(), true, pPoster->GetString(), "192.168.1.113");
                     break;
                 case ThreadPoster::ACTIVATE_SENDER:
-                    cout << "----------------------------------------" << endl;
-                    cout << "NMOS Sender Activated: " << pPoster->GetString() << endl;
-                    cout << "----------------------------------------" << endl;
+                    pmlLog() << "----------------------------------------";
+                    pmlLog() << "NMOS Sender Activated: " << pPoster->GetString();
+                    pmlLog() << "----------------------------------------";
                     break;
                 case ThreadPoster::ACTIVATE_RECEIVER:
-                    cout << "----------------------------------------" << endl;
-                    cout << "NMOS Receiver Activated: " << pPoster->GetString() << endl;
-                    cout << "----------------------------------------" << endl;
+                    pmlLog() << "----------------------------------------";
+                    pmlLog() << "NMOS Receiver Activated: " << pPoster->GetString();
+                    pmlLog() << "----------------------------------------";
                     break;
             }
 
         }
 //        if(nCount < 100)
 //        {
-//            cout << "CHANGE PACKET TIME IN " << (100-nCount) << endl;
+//            cout << "CHANGE PACKET TIME IN " << (100-nCount);
 //
 //        }
 //        nCount++;

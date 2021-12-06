@@ -44,8 +44,7 @@ SET(SOURCES "../external/uuid/guid.cpp"
  "../src/sourcegeneric.cpp"
  "../src/threadpool.cpp"
  "../src/transportparams.cpp"
- "../src/utils.cpp"
- "../src/zcposter.cpp")
+ "../src/utils.cpp")
 
 
 #linux specific
@@ -56,23 +55,10 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	if(TARGET PkgConfig::curl)
 		message(STATUS "Found libcurl")
 	endif()
-
-	pkg_search_module(avahi REQUIRED avahi-client IMPORTED_TARGET)
-	if(TARGET PkgConfig::curl)
-		message(STATUS "Found avahi-client")
-	endif()
-
-	#add the os specific code
-	SET(OS_SOURCES "../src/gnu/avahibrowser.cpp" "../src/gnu/avahipublisher.cpp")
-
-	
 endif()
 
 #Windows specific
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-	
-	#add the os specific code
-	SET(OS_SOURCES "../src/windows/bonjourbrowser.cpp" "../src/windows/bonjourpublisher.cpp")
 	
 	#add the os specific defines
 	add_definitions(-D__GNUWIN32__)
@@ -101,7 +87,7 @@ set_target_properties(nmos_base
 	POSITION_INDEPENDENT_CODE 1)
 
 target_link_libraries(nmos_base PkgConfig::curl)
-target_link_libraries(nmos_base PkgConfig::avahi)
+
 
 set_target_properties(nmos_base PROPERTIES DEBUG_POSTFIX "d")
 

@@ -45,9 +45,12 @@ set_target_properties(nmos_node
 	CXX_STANDARD_REQUIRED ON
 	POSITION_INDEPENDENT_CODE 1)
 
-target_link_libraries(nmos_node nmos_base)
+target_link_libraries(nmos_node optimized nmos_base debug nmos_based)
+target_link_libraries(nmos_node optimized pml_dnssd debug pml_dnssdd)
+
 
 set_target_properties(nmos_node PROPERTIES DEBUG_POSTFIX "d")
+
 
 list(APPEND flags "-fPIC" "-Wall" "-fpermissive" )
 

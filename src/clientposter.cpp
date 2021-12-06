@@ -7,7 +7,7 @@ using namespace pml::nmos;
 
 
 
-void ClientZCPoster::InstanceResolved(std::shared_ptr<dnsInstance> pInstance)
+void ClientZCPoster::InstanceResolved(std::shared_ptr<pml::dnssd::dnsInstance> pInstance)
 {
     m_pImpl->SetInstanceResolved(pInstance);
 }
@@ -27,7 +27,7 @@ void ClientZCPoster::RegistrationNodeError()
 
 }
 
-void ClientZCPoster::InstanceRemoved(std::shared_ptr<dnsInstance> pInstance)
+void ClientZCPoster::InstanceRemoved(std::shared_ptr<pml::dnssd::dnsInstance> pInstance)
 {
     m_pImpl->SetInstanceRemoved(pInstance);
 }

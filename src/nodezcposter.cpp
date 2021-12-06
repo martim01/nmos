@@ -1,6 +1,7 @@
 #include "nodezcposter.h"
 #include "nodeapiprivate.h"
 
+using namespace pml::dnssd;
 
 using namespace pml::nmos;
 

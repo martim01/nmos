@@ -23,12 +23,15 @@
 class WebSocketClient;
 namespace pml
 {
+    namespace dnssd
+    {
+        class Browser;
+        struct dnsInstance;
+    };
     namespace nmos
     {
 
-        class ServiceBrowser;
         class EventPoster;
-        class dnsInstance;
         class CurlRegister;
         class ClientApiPoster;
         class ClientZCPoster;
@@ -93,8 +96,8 @@ namespace pml
                 bool Wait(unsigned long nMilliseconds);
                 bool IsRunning();
                 void StopRun();
-                void SetInstanceResolved(std::shared_ptr<dnsInstance> pInstance);
-                void SetInstanceRemoved(std::shared_ptr<dnsInstance> pInstance);
+                void SetInstanceResolved(std::shared_ptr<pml::dnssd::dnsInstance> pInstance);
+                void SetInstanceRemoved(std::shared_ptr<pml::dnssd::dnsInstance> pInstance);
                 void SetAllForNow(const std::string& sService);
                 void SetCurlDone(const curlResponse& resp, unsigned long nType, const std::string& sResourceId);
                 enumSignal GetSignal();
@@ -173,7 +176,7 @@ namespace pml
 
                 void ConnectToQueryServer();
                 void RemoveResources(const std::string& sIpAddress);
-                void StoreNodeVersion(const std::string& sIpAddress, std::shared_ptr<dnsInstance> pInstance);
+                void StoreNodeVersion(const std::string& sIpAddress, std::shared_ptr<pml::dnssd::dnsInstance> pInstance);
 
                 std::string GetTargetUrl(std::shared_ptr<Receiver> pReceiver, ApiVersion& version);
                 std::string GetConnectionUrlSingle(std::shared_ptr<Resource> pResource, const std::string& sDirection, const std::string& sEndpoint);
@@ -253,9 +256,9 @@ namespace pml
 
                 std::atomic<bool> m_bRun;
 
-                std::shared_ptr<dnsInstance> m_pInstance;
+                std::shared_ptr<pml::dnssd::dnsInstance> m_pInstance;
                 std::string m_sService;
-                std::list<std::shared_ptr<dnsInstance> > m_lstResolve;
+                std::list<std::shared_ptr<pml::dnssd::dnsInstance> > m_lstResolve;
 
                 std::mutex m_mutex;
                 std::condition_variable m_cvBrowse; //sync between nmos thread and ServiceBrowser thread
@@ -270,9 +273,9 @@ namespace pml
 
                 std::shared_ptr<ClientZCPoster> m_pClientZCPoster;
                 std::unique_ptr<CurlRegister> m_pCurl;
-                std::multimap<unsigned short, std::shared_ptr<dnsInstance> > m_mmQueryNodes;
+                std::multimap<unsigned short, std::shared_ptr<pml::dnssd::dnsInstance> > m_mmQueryNodes;
 
-                std::map<std::string, std::unique_ptr<ServiceBrowser>> m_mBrowser;
+                std::map<std::string, std::unique_ptr<pml::dnssd::Browser>> m_mBrowser;
 
                 std::unique_ptr<std::thread> m_pThread;
                 bool m_bStarted;
