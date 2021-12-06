@@ -19,5 +19,6 @@
 			<Depends filename="base/libnmos_base.cbp" />
 			<Depends filename="client/libnmos_client.cbp" />
 		</Project>
+		<Project filename="../dnssd/dnssd.cbp" />
 	</Workspace>
 </CodeBlocks_workspace_file>

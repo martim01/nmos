@@ -87,7 +87,6 @@
 				<Option projectCompilerOptionsRelation="-1" />
 				<Option projectLinkerOptionsRelation="-1" />
 				<Option projectIncludeDirsRelation="-1" />
-				<Option projectResourceIncludeDirsRelation="-1" />
 				<Option projectLibDirsRelation="-1" />
 				<MakeCommands>
 					<Build command="" />
@@ -106,39 +105,22 @@
 			<Add option="-DNMOS_EXPORT" />
 			<Add option="-DMG_ENABLE_HTTP_STREAMING_MULTIPART" />
 			<Add option="-DNMOS_CLIENT_API" />
-			<Add directory="../external/jsoncpp" />
 			<Add directory="../include" />
 			<Add directory="../external/uuid" />
-			<Add directory="../external/mongoose" />
-			<Add directory="../../Restgoose/include" />
-			<Add directory="../../log/include" />
+			<Add directory="$(#restgoose.INCLUDE)" />
+			<Add directory="$(#log.INCLUDE)" />
+			<Add directory="$(#json.INCLUDE)" />
 		</Compiler>
 		<Linker>
 			<Add directory="../../Restgoose/lib" />
 			<Add directory="../../log/lib" />
 		</Linker>
-		<Unit filename="../external/jsoncpp/jsoncpp.cpp" />
+		<Unit filename="../../jsoncpp/dist/jsoncpp.cpp" />
 		<Unit filename="../external/uuid/guid.cpp" />
 		<Unit filename="../external/uuid/guid.h" />
 		<Unit filename="../external/uuid/md5.cpp" />
 		<Unit filename="../external/uuid/md5.h" />
 		<Unit filename="../include/activation.h" />
-		<Unit filename="../include/avahibrowser.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="../include/avahipublisher.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="../include/bonjourbrowser.h">
-			<Option target="Windows Debug" />
-			<Option target="Windows Release" />
-		</Unit>
-		<Unit filename="../include/bonjourpublisher.h">
-			<Option target="Windows Debug" />
-			<Option target="Windows Release" />
-		</Unit>
 		<Unit filename="../include/connection.h" />
 		<Unit filename="../include/constraint.h" />
 		<Unit filename="../include/curlregister.h" />
@@ -188,14 +170,6 @@
 		<Unit filename="../src/flowvideo.cpp" />
 		<Unit filename="../src/flowvideocoded.cpp" />
 		<Unit filename="../src/flowvideoraw.cpp" />
-		<Unit filename="../src/gnu/avahibrowser.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="../src/gnu/avahipublisher.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
 		<Unit filename="../src/ioresource.cpp" />
 		<Unit filename="../src/nmosapiversion.cpp" />
 		<Unit filename="../src/receiverbase.cpp" />
@@ -218,7 +192,6 @@
 			<Option target="Windows Debug" />
 			<Option target="Windows Release" />
 		</Unit>
-		<Unit filename="../src/zcposter.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />

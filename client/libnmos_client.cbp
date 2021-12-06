@@ -88,7 +88,6 @@
 				<Option projectCompilerOptionsRelation="-1" />
 				<Option projectLinkerOptionsRelation="-1" />
 				<Option projectIncludeDirsRelation="-1" />
-				<Option projectResourceIncludeDirsRelation="-1" />
 				<Option projectLibDirsRelation="-1" />
 				<MakeCommands>
 					<Build command="" />
@@ -107,12 +106,12 @@
 			<Add option="-DNMOS_EXPORT" />
 			<Add option="-DMG_ENABLE_HTTP_STREAMING_MULTIPART" />
 			<Add option="-DNMOS_CLIENT_API" />
-			<Add directory="../external/jsoncpp" />
 			<Add directory="../include" />
 			<Add directory="../external/uuid" />
-			<Add directory="../external/mongoose" />
-			<Add directory="../../Restgoose/include" />
-			<Add directory="../../log/include" />
+			<Add directory="$(#restgoose.INCLUDE)" />
+			<Add directory="$(#log.INCLUDE)" />
+			<Add directory="$(#dnssd.INCLUDE)" />
+			<Add directory="$(#json.INCLUDE)" />
 		</Compiler>
 		<Linker>
 			<Add directory="../../Restgoose/lib" />

@@ -40,6 +40,7 @@
 				<Option projectCompilerOptionsRelation="-1" />
 				<Option projectLinkerOptionsRelation="-1" />
 				<Option projectIncludeDirsRelation="-1" />
+				<Option projectResourceIncludeDirsRelation="-1" />
 				<Option projectLibDirsRelation="-1" />
 				<MakeCommands>
 					<Build command="" />
@@ -96,6 +97,7 @@
 					<Add library="restgoose" />
 					<Add library="pml_log" />
 					<Add library="nmos_base" />
+					<Add library="pml_dnssd" />
 					<Add directory="../../lib" />
 					<Add directory="../../../Restgoose/lib" />
 					<Add directory="../../../log/lib" />
@@ -107,7 +109,7 @@
 			<Add option="-fexceptions" />
 			<Add directory="$(#json.include)" />
 			<Add directory="../../include" />
-			<Add directory="../../../Restgoose" />
+			<Add directory="$(#restgoose.INCLUDE)" />
 		</Compiler>
 		<Unit filename="main.cpp" />
 		<Unit filename="threadposter.cpp" />

@@ -107,16 +107,14 @@
 			<Add option="-DNMOS_EXPORT" />
 			<Add option="-DMG_ENABLE_HTTP_STREAMING_MULTIPART" />
 			<Add option="-DNMOS_NODE_API" />
-			<Add directory="../external/jsoncpp" />
 			<Add directory="../include" />
 			<Add directory="../external/uuid" />
-			<Add directory="../external/mongoose" />
-			<Add directory="../../Restgoose/include" />
-			<Add directory="../../log/include" />
+			<Add directory="$(#restgoose.INCLUDE)" />
+			<Add directory="$(#log.INCLUDE)" />
+			<Add directory="$(#dnssd.INCLUDE)" />
+			<Add directory="$(#json.INCLUDE)" />
 		</Compiler>
 		<Linker>
-			<Add directory="../../Restgoose/lib" />
-			<Add directory="../../log/lib" />
 			<Add directory="../lib" />
 		</Linker>
 		<Unit filename="../include/activator.h" />
