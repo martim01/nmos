@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 project(nmosworkspace)
 
 SET(BUILD_LOG ON CACHE BOOL "set to OFF if pml::log built by parent project")
+SET(BUILD_DNSSD ON CACHE BOOL "set to OFF if pml::dnssd built by parent project")
 
 SET(DIR_BASE $ENV{HOME} CACHE STRING "base location for libraries")
 SET(DIR_JSON ${DIR_BASE}/jsoncpp CACHE STRING "location of jsoncpp")
@@ -10,33 +11,33 @@ SET(DIR_RESTGOOSE ${DIR_BASE}/Restgoose CACHE STRING "location of Restgoose")
 SET(DIR_DNSSD ${DIR_BASE}/dnssd CACHE STRING "location of pml dnssd")
 
 #Get Restgoose
-find_path(TEMP_DIR NAMES "CMakeLists.txt" PATHS ${DIR_RESTGOOSE})
-if((NOT TEMP_DIR) OR (NOT EXISTS ${TEMP_DIR}))
+find_path(NMOS_TEMP_DIR NAMES "CMakeLists.txt" PATHS ${DIR_RESTGOOSE})
+if((NOT NMOS_TEMP_DIR) OR (NOT EXISTS ${NMOS_TEMP_DIR}))
 	message(STATUS "Restgoose not found - clone from GitHub")
 	execute_process(COMMAND git clone https://github.com/martim01/Restgoose ${DIR_RESTGOOSE})
 endif()
-unset(TEMP_DIR)
+unset(NMOS_TEMP_DIR)
 
-find_path(TEMP_DIR2 NAMES "CMakeLists.txt" PATHS ${DIR_RESTGOOSE})
-if((NOT TEMP_DIR2) OR (NOT EXISTS ${TEMP_DIR2}))
+find_path(NMOS_TEMP_DIR2 NAMES "CMakeLists.txt" PATHS ${DIR_RESTGOOSE})
+if((NOT NMOS_TEMP_DIR2) OR (NOT EXISTS ${NMOS_TEMP_DIR2}))
 	message(FATAL_ERROR "Failed to clone Restgoose")
 endif()
-unset(TEMP_DIR2)
+unset(NMOS_TEMP_DIR2)
 
 
 #Get dnssd
-find_path(TEMP_DIR NAMES "CMakeLists.txt" PATHS ${DIR_DNSSD})
-if((NOT TEMP_DIR) OR (NOT EXISTS ${TEMP_DIR}))
+find_path(NMOS_TEMP_DIR NAMES "CMakeLists.txt" PATHS ${DIR_DNSSD})
+if((NOT NMOS_TEMP_DIR) OR (NOT EXISTS ${NMOS_TEMP_DIR}))
 	message(STATUS "pml::dnssd not found - clone from GitHub")
 	execute_process(COMMAND git clone https://github.com/martim01/dnssd ${DIR_DNSSD})
 endif()
-unset(TEMP_DIR)
+unset(NMOS_TEMP_DIR)
 
-find_path(TEMP_DIR2 NAMES "CMakeLists.txt" PATHS ${DIR_DNSSD})
-if((NOT TEMP_DIR2) OR (NOT EXISTS ${TEMP_DIR2}))
+find_path(NMOS_TEMP_DIR2 NAMES "CMakeLists.txt" PATHS ${DIR_DNSSD})
+if((NOT NMOS_TEMP_DIR2) OR (NOT EXISTS ${NMOS_TEMP_DIR2}))
 	message(FATAL_ERROR "Failed to clone dnssd")
 endif()
-unset(TEMP_DIR2)
+unset(NMOS_TEMP_DIR2)
 
 if(${BUILD_LOG})
 	add_subdirectory(${DIR_LOG} ${DIR_LOG}/build)
@@ -45,7 +46,12 @@ else()
 endif()
 
 SET(BUILD_LOG OFF CACHE BOOL "set to OFF if pml::log built by parent project" FORCE)
-add_subdirectory(${DIR_DNSSD} ${DIR_DNSSD}/build)
+if(${BUILD_DNSSD})
+	add_subdirectory(${DIR_DNSSD} ${DIR_DNSSD}/build)
+else()
+	message(STATUS "nmos - pml::dnssd being built elsewhere")
+endif()
+
 add_subdirectory(${DIR_RESTGOOSE} ${DIR_RESTGOOSE}/build)
 
 message(STATUS "Configure nmos_base")
