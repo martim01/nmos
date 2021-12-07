@@ -24,7 +24,7 @@ namespace pml
             protected:
 
 
-                std::vector<std::string> SplitUrl(const url& theUrl);
+                std::vector<std::string> SplitEndpoint(const endpoint& theEndpoint);
                 response JsonError(int nCode, const std::string& sError, const std::string& sDebug="");
 
 

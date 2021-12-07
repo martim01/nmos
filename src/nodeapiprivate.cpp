@@ -52,14 +52,14 @@
 using namespace pml::nmos;
 using namespace std::placeholders;
 
-response NodeApiPrivate::GetRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response NodeApiPrivate::GetRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     resp.jsonData.append("x-nmos/");
     return resp;
 }
 
-response NodeApiPrivate::GetNmosDiscoveryRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response NodeApiPrivate::GetNmosDiscoveryRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     resp.jsonData.append("node/");
@@ -71,7 +71,7 @@ response NodeApiPrivate::GetNmosDiscoveryRoot(const query& theQuery, const postD
     return resp;
 }
 
-response NodeApiPrivate::GetNmosConnectionRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response NodeApiPrivate::GetNmosConnectionRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     resp.jsonData.append("connection/");
@@ -80,11 +80,11 @@ response NodeApiPrivate::GetNmosConnectionRoot(const query& theQuery, const post
 }
 
 
-response NotFound(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response NotFound(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp(404);
     resp.jsonData["code"] = 404;
-    resp.jsonData["error"] = theUrl.Get() + " not found";
+    resp.jsonData["error"] = theEndpoint.Get() + " not found";
     resp.jsonData["debug"] = "null";
 
     return resp;
@@ -251,8 +251,8 @@ void NodeApiPrivate::Init(std::shared_ptr<EventPoster> pPoster, unsigned short n
     m_mDiscoveryServers.insert(std::make_pair(ApiVersion(1,2), make_unique<IS04Server>(m_lstServers.back(), ApiVersion(1,2), m_pPoster,*this)));
 
 
-    m_lstServers.back()->AddEndpoint(endpoint(RestGoose::GET, url("")), std::bind(&NodeApiPrivate::GetRoot, this,_1,_2,_3,_4));
-    m_lstServers.back()->AddEndpoint(endpoint(RestGoose::GET, url("/x-nmos")), std::bind(&NodeApiPrivate::GetNmosDiscoveryRoot,this, _1,_2,_3,_4));
+    m_lstServers.back()->AddEndpoint(methodpoint(RestGoose::GET, endpoint("")), std::bind(&NodeApiPrivate::GetRoot, this,_1,_2,_3,_4));
+    m_lstServers.back()->AddEndpoint(methodpoint(RestGoose::GET, endpoint("/x-nmos")), std::bind(&NodeApiPrivate::GetNmosDiscoveryRoot,this, _1,_2,_3,_4));
     m_lstServers.back()->AddNotFoundCallback(std::bind(&NotFound, _1,_2,_3,_4));
 
     //Create another RestGoose server if using different ports
@@ -260,8 +260,8 @@ void NodeApiPrivate::Init(std::shared_ptr<EventPoster> pPoster, unsigned short n
     {
          m_lstServers.push_back(std::make_shared<RestGoose>());
          m_lstServers.back()->Init("","",nDiscoveryPort, "", false);
-         m_lstServers.back()->AddEndpoint(endpoint(RestGoose::GET, url("")), std::bind(&NodeApiPrivate::GetRoot,this, _1,_2,_3,_4));
-         m_lstServers.back()->AddEndpoint(endpoint(RestGoose::GET, url("/x-nmos")), std::bind(&NodeApiPrivate::GetNmosConnectionRoot, this,_1,_2,_3,_4));
+         m_lstServers.back()->AddEndpoint(methodpoint(RestGoose::GET, endpoint("")), std::bind(&NodeApiPrivate::GetRoot,this, _1,_2,_3,_4));
+         m_lstServers.back()->AddEndpoint(methodpoint(RestGoose::GET, endpoint("/x-nmos")), std::bind(&NodeApiPrivate::GetNmosConnectionRoot, this,_1,_2,_3,_4));
          m_lstServers.back()->AddNotFoundCallback(std::bind(&NotFound, _1,_2,_3,_4));
     }
 
@@ -957,7 +957,7 @@ bool NodeApiPrivate::AddDevice(shared_ptr<Device> pResource)
             {
                 stringstream sstr;
                 sstr << "http://" << itEndpoint->sHost << ":" << m_nConnectionPort << "/x-nmos/connection/" << pairServer.first.GetVersionAsString();
-                pResource->AddControl(control("urn:x-nmos:control:sr-ctrl/"+pairServer.first.GetVersionAsString()), url(sstr.str()));
+                pResource->AddControl(control("urn:x-nmos:control:sr-ctrl/"+pairServer.first.GetVersionAsString()), endpoint(sstr.str()));
             }
         }
         //add the discovery endpoints

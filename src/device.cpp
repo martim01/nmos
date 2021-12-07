@@ -104,7 +104,7 @@ bool Device::UpdateFromJson(const Json::Value& jsData)
             }
             else
             {
-                m_mmControls.insert({control(jsData["controls"][ai]["type"].asString()), url(jsData["controls"][ai]["href"].asString())});
+                m_mmControls.insert({control(jsData["controls"][ai]["type"].asString()), endpoint(jsData["controls"][ai]["href"].asString())});
             }
         }
     }
@@ -142,17 +142,17 @@ bool Device::Commit(const ApiVersion& version)
     return false;
 }
 
-void Device::AddControl(const control& type, const url& Uri)
+void Device::AddControl(const control& type, const endpoint& theEndpoint)
 {
-    m_mmControls.insert({type, Uri});
+    m_mmControls.insert({type, theEndpoint});
 
     UpdateVersionTime();
 }
-void Device::RemoveControl(const control& type, const url& Uri)
+void Device::RemoveControl(const control& type, const endpoint& theEndpoint)
 {
     for(auto itControl = m_mmControls.lower_bound(type); itControl != m_mmControls.upper_bound(type); ++itControl)
     {
-        if(itControl->second == Uri)
+        if(itControl->second == theEndpoint)
         {
             m_mmControls.erase(itControl);
             break;
@@ -169,19 +169,19 @@ void Device::ChangeType(enumType eType)
 
 
 
-url Device::GetPreferredUrl(const control& type) const
+endpoint Device::GetPreferredUrl(const control& type) const
 {
     auto itPref = m_mPreferred.find(type);
     if(itPref != m_mPreferred.end())
     {
         return itPref->second;
     }
-    return url("");
+    return endpoint("");
 }
 
-void Device::SetPreferredUrl(const control& type, const url& Uri)
+void Device::SetPreferredUrl(const control& type, const endpoint& theEndpoint)
 {
-    m_mPreferred[type] = Uri;
+    m_mPreferred[type] = theEndpoint;
 }
 
 void Device::RemovePreferredUrl(const control& type)

@@ -277,9 +277,9 @@ namespace pml
                 enum {REG_FAILED = 0, REG_START, REG_DEVICES, REG_SOURCES, REG_FLOWS, REG_SENDERS, REG_RECEIVERS, REG_DONE};
 
 
-                response GetRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosDiscoveryRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosConnectionRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
+                response GetRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosDiscoveryRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosConnectionRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
 
                 std::string CreateFlowSdp(const std::string& sId, const TransportParamsRTPSender& tpSender, const std::set<std::string>& setInterfaces);
 

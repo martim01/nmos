@@ -67,7 +67,7 @@ std::vector<Constraints> CreateConstraints(const Json::Value& jsData)
 }
 
 
-bool CheckSubnet(const url& address1, const url& address2, unsigned long  nSubnet)
+bool CheckSubnet(const ipAddress& address1, const ipAddress& address2, unsigned long  nSubnet)
 {
     in_addr addr1, addr2;
     if(inet_aton(address1.Get().c_str(), &addr1) != 0 && inet_aton(address2.Get().c_str(), &addr2) != 0)
@@ -1539,7 +1539,7 @@ bool ClientApiImpl::Subscribe(const std::string& sSenderId, const std::string& s
         pmlLog(pml::LOG_DEBUG) << "TARGET: " << sUrl ;
         return true;
     }
-    pmlLog(pml::LOG_ERROR) << "NMOS: " << "Couldn't create target url" ;
+    pmlLog(pml::LOG_ERROR) << "NMOS: " << "Couldn't create target endpoint" ;
     return false;
 }
 
@@ -1618,7 +1618,7 @@ std::string ClientApiImpl::GetTargetUrl(std::shared_ptr<Receiver> pReceiver, Api
         return std::string();
     }
 
-    //now we can build our url...
+    //now we can build our endpoint...
     std::stringstream ssurl;
     ssurl << itEndpoint->sHost << ":" << itEndpoint->nPort << "/x-nmos/node/" << version.GetVersionAsString() << "/receivers/" << pReceiver->GetId() << "/target";
 
@@ -1648,7 +1648,7 @@ std::string ClientApiImpl::GetConnectionUrl(std::shared_ptr<Resource> pResource)
         return std::string();
     }
 
-    //have we a preferred url to control this device?
+    //have we a preferred endpoint to control this device?
     auto theControl = control("urn:x-nmos:control:sr-ctrl/"+m_version.GetVersionAsString());
     auto uri = itDevice->second->GetPreferredUrl(theControl);
     if(uri.Get().empty() == false)
@@ -1657,7 +1657,7 @@ std::string ClientApiImpl::GetConnectionUrl(std::shared_ptr<Resource> pResource)
     }
 
     //work our way through the possible endpoints and find one which will reply to us
-    std::set<url> setTried;
+    std::set<endpoint> setTried;
     for(auto itControl = itDevice->second->GetControls().lower_bound(theControl); itControl != itDevice->second->GetControls().upper_bound(theControl); ++itControl)
     {
         //is it in the same subnet as any of our interfaces
@@ -1666,7 +1666,7 @@ std::string ClientApiImpl::GetConnectionUrl(std::shared_ptr<Resource> pResource)
             //same subnet mask and not tried this ip address before
             auto vSplit = SplitString(itControl->second.Get(), '/');
 
-            if(CheckSubnet(url(vSplit[1].substr(0, vSplit[1].find(':'))), pairInterface.first, pairInterface.second) && setTried.insert(itControl->second).second)
+            if(CheckSubnet(ipAddress(vSplit[1].substr(0, vSplit[1].find(':'))), pairInterface.first, pairInterface.second) && setTried.insert(itControl->second).second)
             {
                 //we should be able to connect on this
                 auto curlResp = CurlRegister::Get(itControl->second.Get());
@@ -2150,7 +2150,7 @@ bool ClientApiImpl::RemoveQuerySubscriptionRegistry(const std::string& sSubscrip
                 else if(pairQuery.second.jsSubscription["ws_href"].isString())
                 {
                     //we simply need to close the websocket
-                    m_pWebSocket->CloseConnection(url(pairQuery.second.jsSubscription["ws_href"].asString()));
+                    m_pWebSocket->CloseConnection(endpoint(pairQuery.second.jsSubscription["ws_href"].asString()));
                     m_mmQuery.erase(pairQuery.first);
                 }
                 else
@@ -2344,16 +2344,16 @@ bool ClientApiImpl::MeetsQuery(const std::string& sQuery, std::shared_ptr<const 
     //return false;9999
 }
 
-url ClientApiImpl::GetQueryServer(const ApiVersion& version)
+endpoint ClientApiImpl::GetQueryServer(const ApiVersion& version)
 {
 //@todo ClientApiImpl::SubscribeToQueryServer Allow other versions than 1.2
     if(m_mmQueryNodes.empty() == false)
     {
         std::stringstream ssUrl;
         ssUrl <<  m_mmQueryNodes.begin()->second->sHostIP << ":" << m_mmQueryNodes.begin()->second->nPort << "/x-nmos/query/" << version.GetVersionAsString();
-        return url(ssUrl.str());
+        return endpoint(ssUrl.str());
     }
-    return url("");
+    return endpoint("");
 }
 
 void ClientApiImpl::SubscribeToQueryServer()
@@ -2361,7 +2361,7 @@ void ClientApiImpl::SubscribeToQueryServer()
     pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApi: SubscribeToQueryServer";
     if(m_mmQueryNodes.empty() == false)
     {
-        url urlQuery = GetQueryServer();
+        endpoint urlQuery = GetQueryServer();
         pmlLog(pml::LOG_DEBUG) << "NMOS: " << "QUERY URL: " << urlQuery;
 
         //we run through all our queries and post them to the query server asking for the websocket
@@ -2376,7 +2376,7 @@ void ClientApiImpl::SubscribeToQueryServer()
     }
 }
 
-bool ClientApiImpl::QueryQueryServer(const url& theUrl, ClientApiImpl::query& theQuery)
+bool ClientApiImpl::QueryQueryServer(const endpoint& theUrl, ClientApiImpl::query& theQuery)
 {
     //create our json query
     Json::Value jsQuery;
@@ -2437,7 +2437,7 @@ void ClientApiImpl::HandleSuccessfulQuerySubscription(const ClientApiImpl::query
 
     if(theQuery.jsSubscription["ws_href"].isString() && theQuery.jsSubscription["id"].isString())
     {
-        if(m_pWebSocket->Connect(url(theQuery.jsSubscription["ws_href"].asString())))
+        if(m_pWebSocket->Connect(endpoint(theQuery.jsSubscription["ws_href"].asString())))
         {
             pmlLog(pml::LOG_INFO) << "NMOS: Attempting websocket connection to " << theQuery.jsSubscription["ws_href"].asString();
         }
@@ -2484,13 +2484,13 @@ bool ClientApiImpl::RemoveBrowseDomain(const std::string& sDomain)
 }
 
 
-bool ClientApiImpl::WebsocketConnected(const url& theUrl)
+bool ClientApiImpl::WebsocketConnected(const endpoint& theUrl)
 {
     pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApi Websocket connected to " << theUrl;
     return true;
 }
 
-bool ClientApiImpl::WebsocketMessage(const url& theUrl, const std::string& sMessage)
+bool ClientApiImpl::WebsocketMessage(const endpoint& theUrl, const std::string& sMessage)
 {
     pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApi: Message: " << sMessage;
     auto jsGrain = ConvertToJson(sMessage);
@@ -2788,7 +2788,7 @@ void ClientApiImpl::GetSubnetMasks()
                 std::string sInterface(temp_addr->ifa_name);
                 std::string sAddress(inet_ntoa(((sockaddr_in*)temp_addr->ifa_addr)->sin_addr));
 
-                m_mSubnetMasks.insert({url(sAddress), ((sockaddr_in*)temp_addr->ifa_netmask)->sin_addr.s_addr});
+                m_mSubnetMasks.insert({ipAddress(sAddress), ((sockaddr_in*)temp_addr->ifa_netmask)->sin_addr.s_addr});
             }
             // @todo AF_INET6
             temp_addr = temp_addr->ifa_next;

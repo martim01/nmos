@@ -33,35 +33,35 @@ namespace pml
                 void RemoveSenderEndpoint(const std::string& sId);
                 void RemoveReceiverEndpoint(const std::string& sId);
 
-                response GetNmosRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosVersion(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosBulk(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosBulkSenders(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response PostNmosBulkSenders(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosBulkReceivers(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response PostNmosBulkReceivers(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosSingle(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosSingleSenders(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosSingleReceivers(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosSingleSender(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosSingleSenderConstraints(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosSingleSenderStaged(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosSingleSenderActive(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosSingleSenderTransportfile(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosSingleSenderTransportType(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response PatchNmosSingleSenderStaged(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosSingleReceiver(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosSingleReceiverConstraints(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosSingleReceiverStaged(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosSingleReceiverActive(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosSingleReceiverTransportType(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response PatchNmosSingleReceiverStaged(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
+                response GetNmosRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosVersion(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosBulk(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosBulkSenders(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response PostNmosBulkSenders(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosBulkReceivers(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response PostNmosBulkReceivers(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingle(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleSenders(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleReceivers(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleSender(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleSenderConstraints(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleSenderStaged(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleSenderActive(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleSenderTransportfile(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleSenderTransportType(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response PatchNmosSingleSenderStaged(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleReceiver(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleReceiverConstraints(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleReceiverStaged(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleReceiverActive(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleReceiverTransportType(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response PatchNmosSingleReceiverStaged(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
 
             private:
                 void AddBaseEndpoints();
 
-                std::shared_ptr<Sender> GetSender(const url& theUrl);
-                std::shared_ptr<Receiver> GetReceiver(const url& theUrl);
+                std::shared_ptr<Sender> GetSender(const endpoint& theEndpoint);
+                std::shared_ptr<Receiver> GetReceiver(const endpoint& theEndpoint);
 
 
 

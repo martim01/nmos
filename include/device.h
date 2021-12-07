@@ -5,7 +5,7 @@
 #include "nmosdlldefine.h"
 #include "namedtype.h"
 
-using url = NamedType<std::string, struct UrlParameter>;
+using endpoint = NamedType<std::string, struct endpointParameter>;
 using control = NamedType<std::string, struct ControlParameter>;
 
 namespace pml
@@ -24,15 +24,15 @@ namespace pml
                 virtual bool UpdateFromJson(const Json::Value& jsData);
 
                 virtual ~Device(){}
-                void AddControl(const control& type, const url& Uri);
-                void RemoveControl(const control& type, const url& sUri);
+                void AddControl(const control& type, const endpoint& theEndpoint);
+                void RemoveControl(const control& type, const endpoint& theEndpoint);
                 void ChangeType(enumType eType);
 
-                const std::multimap<control, url>& GetControls() const { return m_mmControls;}
+                const std::multimap<control, endpoint>& GetControls() const { return m_mmControls;}
 
-                url GetPreferredUrl(const control& type) const;
+                endpoint GetPreferredUrl(const control& type) const;
                 void RemovePreferredUrl(const control& type);
-                void SetPreferredUrl(const control& type, const url& Uri);
+                void SetPreferredUrl(const control& type, const endpoint& theEndpoint);
 
                 void AddSender(const std::string& sId);
                 void AddReceiver(const std::string& sId);
@@ -50,8 +50,8 @@ namespace pml
 
                 enumType m_eType;
                 std::string m_sNodeId;
-                std::multimap<control, url> m_mmControls;
-                std::map<control, url> m_mPreferred;
+                std::multimap<control, endpoint> m_mmControls;
+                std::map<control, endpoint> m_mPreferred;
                 std::set<std::string> m_setSenders;
                 std::set<std::string> m_setReceivers;
 

@@ -159,8 +159,8 @@ namespace pml
                 bool AddBrowseDomain(const std::string& sDomain);
                 bool RemoveBrowseDomain(const std::string& sDomain);
 
-                bool WebsocketConnected(const url& theUrl);
-                bool WebsocketMessage(const url& theUrl, const std::string& sMessage);
+                bool WebsocketConnected(const endpoint& theEndpoint);
+                bool WebsocketMessage(const endpoint& theEndpoint, const std::string& sMessage);
 
                 const ApiVersion& GetVersion() const { return m_version;}
 
@@ -291,8 +291,8 @@ namespace pml
                     Json::Value jsSubscription;
                 };
 
-                url GetQueryServer(const ApiVersion& version=ApiVersion(1,2));
-                bool QueryQueryServer(const url& theUrl, query& theQuery);
+                endpoint GetQueryServer(const ApiVersion& version=ApiVersion(1,2));
+                bool QueryQueryServer(const endpoint& theEndpoint, query& theQuery);
                 void HandleQuerySubscriptionResponse(unsigned short nCode, const ClientApiImpl::query& theQuery);
                 void HandleSuccessfulQuerySubscription(const ClientApiImpl::query& theQuery);
 
@@ -305,7 +305,7 @@ namespace pml
 
                 std::map<std::string, std::function<void(const std::string&, const Json::Value&)>> m_mGrainUpdate;
 
-                std::map<url, unsigned long> m_mSubnetMasks;
+                std::map<ipAddress, unsigned long> m_mSubnetMasks;
                 //std::map<std::string, ClientHolder<T>&> m_mGrainRemove;
 
 

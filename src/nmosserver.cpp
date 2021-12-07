@@ -29,7 +29,7 @@ response NmosServer::JsonError(int nCode, const std::string& sError, const std::
 }
 
 
-std::vector<std::string> NmosServer::SplitUrl(const url& theUrl)
+std::vector<std::string> NmosServer::SplitEndpoint(const endpoint& theEndpoint)
 {
-    return SplitString(theUrl.Get(), '/');
+    return SplitString(theEndpoint.Get(), '/');
 }

@@ -33,23 +33,23 @@ namespace pml
                 void RemoveReceiverEndpoint(const std::string& sId);
 
 
-                response GetNmosRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosVersion(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosNode(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
+                response GetNmosRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosVersion(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosNode(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
 
-                response GetNmosSources(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosFlows(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosDevices(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosSenders(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosReceivers(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
+                response GetNmosSources(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosFlows(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosDevices(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSenders(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosReceivers(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
 
 
-                response GetNmosSource(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosFlow(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosDevice(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosSender(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response GetNmosReceiver(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
-                response PutNmosReceiver(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser);
+                response GetNmosSource(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosFlow(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosDevice(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSender(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosReceiver(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response PutNmosReceiver(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
 
             private:
                 void AddBaseEndpoints();

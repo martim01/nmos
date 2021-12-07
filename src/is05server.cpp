@@ -43,81 +43,81 @@ IS05Server::~IS05Server()
 
 void IS05Server::AddBaseEndpoints()
 {
-    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url("/x-nmos/connection")), std::bind(&IS05Server::GetNmosRoot, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString())), std::bind(&IS05Server::GetNmosVersion, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+BULK)), std::bind(&IS05Server::GetNmosBulk, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+BULK+SENDERS)), std::bind(&IS05Server::GetNmosBulkSenders, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(endpoint(RestGoose::POST,url(ROOT+m_version.GetVersionAsString()+BULK+SENDERS)), std::bind(&IS05Server::PostNmosBulkSenders, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+BULK+RECEIVERS)), std::bind(&IS05Server::GetNmosBulkReceivers, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(endpoint(RestGoose::POST,url(ROOT+m_version.GetVersionAsString()+BULK+RECEIVERS)), std::bind(&IS05Server::PostNmosBulkReceivers, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE)), std::bind(&IS05Server::GetNmosSingle, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS)), std::bind(&IS05Server::GetNmosSingleSenders, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS)), std::bind(&IS05Server::GetNmosSingleReceivers, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(methodpoint(RestGoose::GET, endpoint("/x-nmos/connection")), std::bind(&IS05Server::GetNmosRoot, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString())), std::bind(&IS05Server::GetNmosVersion, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+BULK)), std::bind(&IS05Server::GetNmosBulk, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+BULK+SENDERS)), std::bind(&IS05Server::GetNmosBulkSenders, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(methodpoint(RestGoose::POST,endpoint(ROOT+m_version.GetVersionAsString()+BULK+SENDERS)), std::bind(&IS05Server::PostNmosBulkSenders, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+BULK+RECEIVERS)), std::bind(&IS05Server::GetNmosBulkReceivers, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(methodpoint(RestGoose::POST,endpoint(ROOT+m_version.GetVersionAsString()+BULK+RECEIVERS)), std::bind(&IS05Server::PostNmosBulkReceivers, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE)), std::bind(&IS05Server::GetNmosSingle, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS)), std::bind(&IS05Server::GetNmosSingleSenders, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS)), std::bind(&IS05Server::GetNmosSingleReceivers, this, _1,_2,_3,_4));
 }
 
 void IS05Server::AddSenderEndpoint(const std::string& sId)
 {
-    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId)), std::bind(&IS05Server::GetNmosSingleSender, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+CONSTRAINTS)), std::bind(&IS05Server::GetNmosSingleSenderConstraints, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+STAGED)), std::bind(&IS05Server::GetNmosSingleSenderStaged, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+ACTIVE)), std::bind(&IS05Server::GetNmosSingleSenderActive, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTFILE)), std::bind(&IS05Server::GetNmosSingleSenderTransportfile, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId)), std::bind(&IS05Server::GetNmosSingleSender, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+CONSTRAINTS)), std::bind(&IS05Server::GetNmosSingleSenderConstraints, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+STAGED)), std::bind(&IS05Server::GetNmosSingleSenderStaged, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+ACTIVE)), std::bind(&IS05Server::GetNmosSingleSenderActive, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTFILE)), std::bind(&IS05Server::GetNmosSingleSenderTransportfile, this, _1,_2,_3,_4));
     if(m_version > ApiVersion(1,0))
     {
-        m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTTYPE)), std::bind(&IS05Server::GetNmosSingleSenderTransportType, this, _1,_2,_3,_4));
+        m_pServer->AddEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTTYPE)), std::bind(&IS05Server::GetNmosSingleSenderTransportType, this, _1,_2,_3,_4));
     }
-    m_pServer->AddEndpoint(endpoint(RestGoose::PATCH, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+STAGED)), std::bind(&IS05Server::PatchNmosSingleSenderStaged, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(methodpoint(RestGoose::PATCH, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+STAGED)), std::bind(&IS05Server::PatchNmosSingleSenderStaged, this, _1,_2,_3,_4));
 }
 
 void IS05Server::AddReceiverEndpoint(const std::string& sId)
 {
-    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId)), std::bind(&IS05Server::GetNmosSingleReceiver, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+CONSTRAINTS)), std::bind(&IS05Server::GetNmosSingleReceiverConstraints, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+STAGED)), std::bind(&IS05Server::GetNmosSingleReceiverStaged, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+ACTIVE)), std::bind(&IS05Server::GetNmosSingleReceiverActive, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId)), std::bind(&IS05Server::GetNmosSingleReceiver, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+CONSTRAINTS)), std::bind(&IS05Server::GetNmosSingleReceiverConstraints, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+STAGED)), std::bind(&IS05Server::GetNmosSingleReceiverStaged, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+ACTIVE)), std::bind(&IS05Server::GetNmosSingleReceiverActive, this, _1,_2,_3,_4));
     if(m_version > ApiVersion(1,0))
     {
-        m_pServer->AddEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+TRANSPORTTYPE)), std::bind(&IS05Server::GetNmosSingleReceiverTransportType, this, _1,_2,_3,_4));
+        m_pServer->AddEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+TRANSPORTTYPE)), std::bind(&IS05Server::GetNmosSingleReceiverTransportType, this, _1,_2,_3,_4));
     }
-    m_pServer->AddEndpoint(endpoint(RestGoose::PATCH, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+STAGED)), std::bind(&IS05Server::PatchNmosSingleReceiverStaged, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(methodpoint(RestGoose::PATCH, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+STAGED)), std::bind(&IS05Server::PatchNmosSingleReceiverStaged, this, _1,_2,_3,_4));
 }
 
 void IS05Server::RemoveSenderEndpoint(const std::string& sId)
 {
-    m_pServer->DeleteEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId)));
-    m_pServer->DeleteEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+CONSTRAINTS)));
-    m_pServer->DeleteEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+STAGED)));
-    m_pServer->DeleteEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+ACTIVE)));
-    m_pServer->DeleteEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTFILE)));
+    m_pServer->DeleteEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId)));
+    m_pServer->DeleteEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+CONSTRAINTS)));
+    m_pServer->DeleteEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+STAGED)));
+    m_pServer->DeleteEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+ACTIVE)));
+    m_pServer->DeleteEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTFILE)));
     if(m_version > ApiVersion(1,0))
     {
-        m_pServer->DeleteEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTTYPE)));
+        m_pServer->DeleteEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTTYPE)));
     }
-    m_pServer->DeleteEndpoint(endpoint(RestGoose::PATCH, url(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+STAGED)));
+    m_pServer->DeleteEndpoint(methodpoint(RestGoose::PATCH, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+STAGED)));
 }
 
 void IS05Server::RemoveReceiverEndpoint(const std::string& sId)
 {
-    m_pServer->DeleteEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId)));
-    m_pServer->DeleteEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+CONSTRAINTS)));
-    m_pServer->DeleteEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+STAGED)));
-    m_pServer->DeleteEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+ACTIVE)));
+    m_pServer->DeleteEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId)));
+    m_pServer->DeleteEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+CONSTRAINTS)));
+    m_pServer->DeleteEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+STAGED)));
+    m_pServer->DeleteEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+ACTIVE)));
     if(m_version > ApiVersion(1,0))
     {
-        m_pServer->DeleteEndpoint(endpoint(RestGoose::GET, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+TRANSPORTTYPE)));
+        m_pServer->DeleteEndpoint(methodpoint(RestGoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+TRANSPORTTYPE)));
     }
-    m_pServer->DeleteEndpoint(endpoint(RestGoose::PATCH, url(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+STAGED)));
+    m_pServer->DeleteEndpoint(methodpoint(RestGoose::PATCH, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+STAGED)));
 }
 
 
-response IS05Server::GetNmosRoot(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response IS05Server::GetNmosRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     resp.jsonData = m_api.JsonConnectionVersions();
     return resp;
 }
 
-response IS05Server::GetNmosVersion(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response IS05Server::GetNmosVersion(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     resp.jsonData.append("bulk/");
@@ -125,7 +125,7 @@ response IS05Server::GetNmosVersion(const query& theQuery, const postData& theDa
     return resp;
 }
 
-response IS05Server::GetNmosBulk(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response IS05Server::GetNmosBulk(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     resp.jsonData.append("senders/");
@@ -134,27 +134,27 @@ response IS05Server::GetNmosBulk(const query& theQuery, const postData& theData,
 
 }
 
-response IS05Server::GetNmosBulkSenders(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response IS05Server::GetNmosBulkSenders(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
-    return JsonError(405, "Method not allowed here", theUrl.Get());
+    return JsonError(405, "Method not allowed here", theEndpoint.Get());
 }
 
-response IS05Server::PostNmosBulkSenders(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response IS05Server::PostNmosBulkSenders(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
     return PostJsonSenders(ConvertToJson(theData.Get()));
 }
 
-response IS05Server::GetNmosBulkReceivers(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response IS05Server::GetNmosBulkReceivers(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
-    return JsonError(405, "Method not allowed here", theUrl.Get());
+    return JsonError(405, "Method not allowed here", theEndpoint.Get());
 }
 
-response IS05Server::PostNmosBulkReceivers(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response IS05Server::PostNmosBulkReceivers(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
     return PostJsonReceivers(ConvertToJson(theData.Get()));
 }
 
-response IS05Server::GetNmosSingle(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response IS05Server::GetNmosSingle(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     resp.jsonData.append("senders/");
@@ -162,24 +162,24 @@ response IS05Server::GetNmosSingle(const query& theQuery, const postData& theDat
     return resp;
 }
 
-response IS05Server::GetNmosSingleSenders(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response IS05Server::GetNmosSingleSenders(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     resp.jsonData = m_api.GetSenders().GetConnectionJson(m_version);
     return resp;
 }
 
-response IS05Server::GetNmosSingleReceivers(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response IS05Server::GetNmosSingleReceivers(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     resp.jsonData = m_api.GetReceivers().GetConnectionJson(m_version);
     return resp;
 }
 
-response IS05Server::GetNmosSingleSender(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response IS05Server::GetNmosSingleSender(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
-    if(GetSender(theUrl) != nullptr)
+    if(GetSender(theEndpoint) != nullptr)
     {
         resp.jsonData.append("constraints/");
         resp.jsonData.append("staged/");
@@ -192,61 +192,61 @@ response IS05Server::GetNmosSingleSender(const query& theQuery, const postData& 
     }
     else
     {
-        resp = JsonError(404, "Sender does not exist", theUrl.Get());
+        resp = JsonError(404, "Sender does not exist", theEndpoint.Get());
     }
 
     return resp;
 }
 
-response IS05Server::GetNmosSingleSenderConstraints(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response IS05Server::GetNmosSingleSenderConstraints(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
-    auto pSender = GetSender(theUrl);
+    auto pSender = GetSender(theEndpoint);
     if(pSender)
     {
         resp.jsonData = pSender->GetConnectionConstraintsJson(m_version);
     }
     else
     {
-        resp = JsonError(404, "Sender does not exist", theUrl.Get());
+        resp = JsonError(404, "Sender does not exist", theEndpoint.Get());
     }
     return resp;
 }
 
-response IS05Server::GetNmosSingleSenderStaged(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response IS05Server::GetNmosSingleSenderStaged(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
-    auto pSender = GetSender(theUrl);
+    auto pSender = GetSender(theEndpoint);
     if(pSender)
     {
         resp.jsonData = pSender->GetConnectionStagedJson(m_version);
     }
     else
     {
-        resp = JsonError(404, "Sender does not exist", theUrl.Get());
+        resp = JsonError(404, "Sender does not exist", theEndpoint.Get());
     }
     return resp;
 }
 
-response IS05Server::GetNmosSingleSenderActive(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response IS05Server::GetNmosSingleSenderActive(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
-    auto pSender = GetSender(theUrl);
+    auto pSender = GetSender(theEndpoint);
     if(pSender)
     {
         resp.jsonData = pSender->GetConnectionActiveJson(m_version);
     }
     else
     {
-        resp = JsonError(404, "Sender does not exist", theUrl.Get());
+        resp = JsonError(404, "Sender does not exist", theEndpoint.Get());
     }
     return resp;
 }
 
-response IS05Server::GetNmosSingleSenderTransportfile(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response IS05Server::GetNmosSingleSenderTransportfile(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
-    auto pSender = GetSender(theUrl);
+    auto pSender = GetSender(theEndpoint);
     if(pSender)
     {
         if(pSender->GetActive().GetMasterEnable())
@@ -257,21 +257,21 @@ response IS05Server::GetNmosSingleSenderTransportfile(const query& theQuery, con
         }
         else
         {
-            resp = JsonError(404, "MasterEnable=false", theUrl.Get());
+            resp = JsonError(404, "MasterEnable=false", theEndpoint.Get());
         }
 
     }
     else
     {
-        resp = JsonError(404, "Sender does not exist", theUrl.Get());
+        resp = JsonError(404, "Sender does not exist", theEndpoint.Get());
     }
     return resp;
 }
 
-response IS05Server::GetNmosSingleSenderTransportType(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response IS05Server::GetNmosSingleSenderTransportType(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
-    auto pSender = GetSender(theUrl);
+    auto pSender = GetSender(theEndpoint);
     if(pSender)
     {
         auto vType = SplitString(pSender->GetTransportType(),'.');
@@ -279,28 +279,28 @@ response IS05Server::GetNmosSingleSenderTransportType(const query& theQuery, con
     }
     else
     {
-        resp = JsonError(404, "Sender does not exist", theUrl.Get());
+        resp = JsonError(404, "Sender does not exist", theEndpoint.Get());
     }
     return resp;
 }
 
-response IS05Server::PatchNmosSingleSenderStaged(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response IS05Server::PatchNmosSingleSenderStaged(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
-    auto pSender = GetSender(theUrl);
+    auto pSender = GetSender(theEndpoint);
     if(pSender)
     {
         return PatchSender(pSender, ConvertToJson(theData.Get()));
     }
     else
     {
-        return JsonError(404, "Sender does not exist", theUrl.Get());
+        return JsonError(404, "Sender does not exist", theEndpoint.Get());
     }
 }
 
-response IS05Server::GetNmosSingleReceiver(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response IS05Server::GetNmosSingleReceiver(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
-    auto pReceiver = GetReceiver(theUrl);
+    auto pReceiver = GetReceiver(theEndpoint);
     if(pReceiver)
     {
         resp.jsonData.append("constraints/");
@@ -313,60 +313,60 @@ response IS05Server::GetNmosSingleReceiver(const query& theQuery, const postData
     }
     else
     {
-        resp = JsonError(404, "Receiver does not exist", theUrl.Get());
+        resp = JsonError(404, "Receiver does not exist", theEndpoint.Get());
     }
     return resp;
 }
 
-response IS05Server::GetNmosSingleReceiverConstraints(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response IS05Server::GetNmosSingleReceiverConstraints(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
-    auto pReceiver = GetReceiver(theUrl);
+    auto pReceiver = GetReceiver(theEndpoint);
     if(pReceiver)
     {
         resp.jsonData = pReceiver->GetConnectionConstraintsJson(m_version);
     }
     else
     {
-        resp = JsonError(404, "Receiver does not exist", theUrl.Get());
+        resp = JsonError(404, "Receiver does not exist", theEndpoint.Get());
     }
     return resp;
 }
 
-response IS05Server::GetNmosSingleReceiverStaged(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response IS05Server::GetNmosSingleReceiverStaged(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
-    auto pReceiver = GetReceiver(theUrl);
+    auto pReceiver = GetReceiver(theEndpoint);
     if(pReceiver)
     {
         resp.jsonData = pReceiver->GetConnectionStagedJson(m_version);
     }
     else
     {
-        resp = JsonError(404, "Receiver does not exist", theUrl.Get());
+        resp = JsonError(404, "Receiver does not exist", theEndpoint.Get());
     }
     return resp;
 }
 
-response IS05Server::GetNmosSingleReceiverActive(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response IS05Server::GetNmosSingleReceiverActive(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
-    auto pReceiver = GetReceiver(theUrl);
+    auto pReceiver = GetReceiver(theEndpoint);
     if(pReceiver)
     {
         resp.jsonData = pReceiver->GetConnectionActiveJson(m_version);
     }
     else
     {
-        resp = JsonError(404, "Receiver does not exist", theUrl.Get());
+        resp = JsonError(404, "Receiver does not exist", theEndpoint.Get());
     }
     return resp;
 }
 
-response IS05Server::GetNmosSingleReceiverTransportType(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response IS05Server::GetNmosSingleReceiverTransportType(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
-    auto pReceiver = GetReceiver(theUrl);
+    auto pReceiver = GetReceiver(theEndpoint);
     if(pReceiver)
     {
         auto vType = SplitString(pReceiver->GetTransportType(),'.');
@@ -374,21 +374,21 @@ response IS05Server::GetNmosSingleReceiverTransportType(const query& theQuery, c
     }
     else
     {
-        resp = JsonError(404, "Receiver does not exist", theUrl.Get());
+        resp = JsonError(404, "Receiver does not exist", theEndpoint.Get());
     }
     return resp;
 }
 
-response IS05Server::PatchNmosSingleReceiverStaged(const query& theQuery, const postData& theData, const url& theUrl, const userName& theUser)
+response IS05Server::PatchNmosSingleReceiverStaged(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
-    auto pReceiver = GetReceiver(theUrl);
+    auto pReceiver = GetReceiver(theEndpoint);
     if(pReceiver)
     {
         return PatchReceiver(pReceiver, ConvertToJson(theData.Get()));
     }
     else
     {
-        return JsonError(404, "Receiver does not exist", theUrl.Get());
+        return JsonError(404, "Receiver does not exist", theEndpoint.Get());
     }
 }
 
@@ -637,9 +637,9 @@ response IS05Server::PostJsonReceivers(const Json::Value& jsRequest)
 }
 
 
-std::shared_ptr<Sender> IS05Server::GetSender(const url& theUrl)
+std::shared_ptr<Sender> IS05Server::GetSender(const endpoint& theEndpoint)
 {
-    auto vPath = SplitUrl(theUrl);
+    auto vPath = SplitEndpoint(theEndpoint);
     if(vPath.size() > RESOURCE_ID)
     {
         return m_api.GetSender(vPath[RESOURCE_ID]);
@@ -650,9 +650,9 @@ std::shared_ptr<Sender> IS05Server::GetSender(const url& theUrl)
     }
 }
 
-std::shared_ptr<Receiver> IS05Server::GetReceiver(const url& theUrl)
+std::shared_ptr<Receiver> IS05Server::GetReceiver(const endpoint& theEndpoint)
 {
-    auto vPath = SplitUrl(theUrl);
+    auto vPath = SplitEndpoint(theEndpoint);
     if(vPath.size() > RESOURCE_ID)
     {
         return m_api.GetReceiver(vPath[RESOURCE_ID]);
