@@ -4,8 +4,7 @@
 #include <string>
 #include "RestGoose.h"
 #include "nmosapiversion.h"
-
-class RestGoose;
+#include <vector>
 
 namespace pml
 {
@@ -27,6 +26,7 @@ namespace pml
                 std::vector<std::string> SplitEndpoint(const endpoint& theEndpoint);
                 response JsonError(int nCode, const std::string& sError, const std::string& sDebug="");
 
+                response ConvertPostDataToJson(const std::vector<partData>& vData);
 
 
                 std::shared_ptr<RestGoose> m_pServer;

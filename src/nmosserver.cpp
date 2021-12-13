@@ -33,3 +33,26 @@ std::vector<std::string> NmosServer::SplitEndpoint(const endpoint& theEndpoint)
 {
     return SplitString(theEndpoint.Get(), '/');
 }
+
+response NmosServer::ConvertPostDataToJson(const postData& vData)
+{
+    response resp(404, "No data sent or incorrect data sent");
+    if(vData.size() == 1)
+    {
+        resp.nHttpCode = 200;
+        resp.jsonData = ConvertToJson(vData[0].sData);
+    }
+    else if(vData.size() > 1)
+    {
+        resp.nHttpCode = 200;
+        resp.jsonData.clear();
+        for(size_t i = 0; i < vData.size(); i++)
+        {
+            if(vData[i].sName.empty() == false)
+            {
+                resp.jsonData[vData[i].sName] = vData[i].sData;
+            }
+        }
+    }
+    return resp;
+}

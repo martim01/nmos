@@ -110,14 +110,14 @@ void IS05Server::RemoveReceiverEndpoint(const std::string& sId)
 }
 
 
-response IS05Server::GetNmosRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+response IS05Server::GetNmosRoot(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     resp.jsonData = m_api.JsonConnectionVersions();
     return resp;
 }
 
-response IS05Server::GetNmosVersion(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+response IS05Server::GetNmosVersion(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     resp.jsonData.append("bulk/");
@@ -125,7 +125,7 @@ response IS05Server::GetNmosVersion(const query& theQuery, const postData& theDa
     return resp;
 }
 
-response IS05Server::GetNmosBulk(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+response IS05Server::GetNmosBulk(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     resp.jsonData.append("senders/");
@@ -134,27 +134,27 @@ response IS05Server::GetNmosBulk(const query& theQuery, const postData& theData,
 
 }
 
-response IS05Server::GetNmosBulkSenders(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+response IS05Server::GetNmosBulkSenders(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
     return JsonError(405, "Method not allowed here", theEndpoint.Get());
 }
 
-response IS05Server::PostNmosBulkSenders(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+response IS05Server::PostNmosBulkSenders(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
-    return PostJsonSenders(ConvertToJson(theData.Get()));
+    return PostJsonSenders(ConvertPostDataToJson(vData));
 }
 
-response IS05Server::GetNmosBulkReceivers(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+response IS05Server::GetNmosBulkReceivers(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
     return JsonError(405, "Method not allowed here", theEndpoint.Get());
 }
 
-response IS05Server::PostNmosBulkReceivers(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+response IS05Server::PostNmosBulkReceivers(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
-    return PostJsonReceivers(ConvertToJson(theData.Get()));
+    return PostJsonReceivers(ConvertPostDataToJson(vData));
 }
 
-response IS05Server::GetNmosSingle(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+response IS05Server::GetNmosSingle(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     resp.jsonData.append("senders/");
@@ -162,21 +162,21 @@ response IS05Server::GetNmosSingle(const query& theQuery, const postData& theDat
     return resp;
 }
 
-response IS05Server::GetNmosSingleSenders(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+response IS05Server::GetNmosSingleSenders(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     resp.jsonData = m_api.GetSenders().GetConnectionJson(m_version);
     return resp;
 }
 
-response IS05Server::GetNmosSingleReceivers(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+response IS05Server::GetNmosSingleReceivers(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     resp.jsonData = m_api.GetReceivers().GetConnectionJson(m_version);
     return resp;
 }
 
-response IS05Server::GetNmosSingleSender(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+response IS05Server::GetNmosSingleSender(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     if(GetSender(theEndpoint) != nullptr)
@@ -198,7 +198,7 @@ response IS05Server::GetNmosSingleSender(const query& theQuery, const postData& 
     return resp;
 }
 
-response IS05Server::GetNmosSingleSenderConstraints(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+response IS05Server::GetNmosSingleSenderConstraints(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     auto pSender = GetSender(theEndpoint);
@@ -213,7 +213,7 @@ response IS05Server::GetNmosSingleSenderConstraints(const query& theQuery, const
     return resp;
 }
 
-response IS05Server::GetNmosSingleSenderStaged(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+response IS05Server::GetNmosSingleSenderStaged(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     auto pSender = GetSender(theEndpoint);
@@ -228,7 +228,7 @@ response IS05Server::GetNmosSingleSenderStaged(const query& theQuery, const post
     return resp;
 }
 
-response IS05Server::GetNmosSingleSenderActive(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+response IS05Server::GetNmosSingleSenderActive(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     auto pSender = GetSender(theEndpoint);
@@ -243,7 +243,7 @@ response IS05Server::GetNmosSingleSenderActive(const query& theQuery, const post
     return resp;
 }
 
-response IS05Server::GetNmosSingleSenderTransportfile(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+response IS05Server::GetNmosSingleSenderTransportfile(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     auto pSender = GetSender(theEndpoint);
@@ -268,7 +268,7 @@ response IS05Server::GetNmosSingleSenderTransportfile(const query& theQuery, con
     return resp;
 }
 
-response IS05Server::GetNmosSingleSenderTransportType(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+response IS05Server::GetNmosSingleSenderTransportType(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     auto pSender = GetSender(theEndpoint);
@@ -284,12 +284,17 @@ response IS05Server::GetNmosSingleSenderTransportType(const query& theQuery, con
     return resp;
 }
 
-response IS05Server::PatchNmosSingleSenderStaged(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+response IS05Server::PatchNmosSingleSenderStaged(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
     auto pSender = GetSender(theEndpoint);
     if(pSender)
     {
-        return PatchSender(pSender, ConvertToJson(theData.Get()));
+        auto request = ConvertPostDataToJson(vData);
+        if(request.nHttpCode != 200)
+        {
+            return request;
+        }
+        return PatchSender(pSender, request.jsonData);
     }
     else
     {
@@ -297,7 +302,7 @@ response IS05Server::PatchNmosSingleSenderStaged(const query& theQuery, const po
     }
 }
 
-response IS05Server::GetNmosSingleReceiver(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+response IS05Server::GetNmosSingleReceiver(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     auto pReceiver = GetReceiver(theEndpoint);
@@ -318,7 +323,7 @@ response IS05Server::GetNmosSingleReceiver(const query& theQuery, const postData
     return resp;
 }
 
-response IS05Server::GetNmosSingleReceiverConstraints(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+response IS05Server::GetNmosSingleReceiverConstraints(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     auto pReceiver = GetReceiver(theEndpoint);
@@ -333,7 +338,7 @@ response IS05Server::GetNmosSingleReceiverConstraints(const query& theQuery, con
     return resp;
 }
 
-response IS05Server::GetNmosSingleReceiverStaged(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+response IS05Server::GetNmosSingleReceiverStaged(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     auto pReceiver = GetReceiver(theEndpoint);
@@ -348,7 +353,7 @@ response IS05Server::GetNmosSingleReceiverStaged(const query& theQuery, const po
     return resp;
 }
 
-response IS05Server::GetNmosSingleReceiverActive(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+response IS05Server::GetNmosSingleReceiverActive(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     auto pReceiver = GetReceiver(theEndpoint);
@@ -363,7 +368,7 @@ response IS05Server::GetNmosSingleReceiverActive(const query& theQuery, const po
     return resp;
 }
 
-response IS05Server::GetNmosSingleReceiverTransportType(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+response IS05Server::GetNmosSingleReceiverTransportType(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
     response resp;
     auto pReceiver = GetReceiver(theEndpoint);
@@ -379,12 +384,17 @@ response IS05Server::GetNmosSingleReceiverTransportType(const query& theQuery, c
     return resp;
 }
 
-response IS05Server::PatchNmosSingleReceiverStaged(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+response IS05Server::PatchNmosSingleReceiverStaged(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
     auto pReceiver = GetReceiver(theEndpoint);
     if(pReceiver)
     {
-        return PatchReceiver(pReceiver, ConvertToJson(theData.Get()));
+        auto request = ConvertPostDataToJson(vData);
+        if(request.nHttpCode != 200)
+        {
+            return request;
+        }
+        return PatchReceiver(pReceiver, request.jsonData);
     }
     else
     {
@@ -398,8 +408,7 @@ response IS05Server::PatchSender(std::shared_ptr<Sender> pSender, const Json::Va
 {
     pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchSender: " << pSender->GetId() ;
     response resp;
-
-
+    
     auto conRequest = pSender->GetStaged();
     //can we patch a connection from the json?
     if(conRequest.Patch(jsRequest) == false)
@@ -475,7 +484,7 @@ response IS05Server::PatchSender(std::shared_ptr<Sender> pSender, const Json::Va
 response IS05Server::PatchReceiver(std::shared_ptr<Receiver> pReceiver, const Json::Value& jsRequest)
 {
     response resp;
-
+    
     auto conRequest = pReceiver->GetStaged();
     pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchJsonReceiver: Staged SenderId = '" << (pReceiver->GetStaged().GetSenderId() ? *pReceiver->GetStaged().GetSenderId() : "")
                             << "' request SenderId = '" << (conRequest.GetSenderId() ? *conRequest.GetSenderId() : "") << "'";
@@ -541,96 +550,101 @@ response IS05Server::PatchReceiver(std::shared_ptr<Receiver> pReceiver, const Js
 }
 
 
-response IS05Server::PostJsonSenders(const Json::Value& jsRequest)
+response IS05Server::PostJsonSenders(const response& request)
 {
-    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "IS05Server::PostJsonSenders:  " << jsRequest ;
-
-    response resp;
-    //check that each part of the array is correct.
-    for(Json::ArrayIndex ai = 0; ai < jsRequest.size(); ai++)
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "IS05Server::PostJsonSenders:  " << request.jsonData ;
+    response resp(request);
+    if(request.nHttpCode == 200)
     {
-        if(CheckJson(jsRequest[ai], {{"id",{jsondatatype::_STRING}}, {"params",{jsondatatype::_OBJECT}}}) == false)
+        //check that each part of the array is correct.
+        for(Json::ArrayIndex ai = 0; ai < request.jsonData.size(); ai++)
         {
-            resp = JsonError(400, "Request is ill defined.");
-            break;
-        }
-    }
-
-
-    if(resp.nHttpCode == 200)
-    {   //passed the JSON checking
-
-        for(Json::ArrayIndex ai = 0; ai < jsRequest.size(); ai++)
-        {
-            Json::Value jsResponse(Json::objectValue);
-            jsResponse["id"] = jsRequest[ai]["id"];
-
-            auto pSender = m_api.GetSender(jsRequest[ai]["id"].asString());
-            if(!pSender)
+            if(CheckJson(request.jsonData[ai], {{"id",{jsondatatype::_STRING}}, {"params",{jsondatatype::_OBJECT}}}) == false)
             {
-                jsResponse["code"] = 404;
-                jsResponse["error"] = "Resource does not exist.";
-                jsResponse["debug"] = "null";
-                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PostJsonSenders: Resource does not exist." ;
+                resp = JsonError(400, "Request is ill defined.");
+                break;
             }
-            else
+        }
+
+
+        if(request.nHttpCode == 200)
+        {   //passed the JSON checking
+
+            for(Json::ArrayIndex ai = 0; ai < request.jsonData.size(); ai++)
             {
-                auto patchResponse = PatchSender(pSender, jsRequest[ai]["params"]);
-                jsResponse["code"] = patchResponse.nHttpCode;
-                if(patchResponse.nHttpCode != 200)
+                Json::Value jsResponse(Json::objectValue);
+                jsResponse["id"] = request.jsonData[ai]["id"];
+
+                auto pSender = m_api.GetSender(request.jsonData[ai]["id"].asString());
+                if(!pSender)
                 {
-                    jsResponse["error"] = patchResponse.jsonData["error"];
+                    jsResponse["code"] = 404;
+                    jsResponse["error"] = "Resource does not exist.";
+                    jsResponse["debug"] = "null";
+                    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PostJsonSenders: Resource does not exist." ;
                 }
+                else
+                {
+                    auto patchResponse = PatchSender(pSender, request.jsonData[ai]["params"]);
+                    jsResponse["code"] = patchResponse.nHttpCode;
+                    if(patchResponse.nHttpCode != 200)
+                    {
+                        jsResponse["error"] = patchResponse.jsonData["error"];
+                    }
+                }
+                resp.jsonData.append(jsResponse);
             }
-            resp.jsonData.append(jsResponse);
-        }
 
+        }
     }
     return resp;
 }
 
 
-response IS05Server::PostJsonReceivers(const Json::Value& jsRequest)
+response IS05Server::PostJsonReceivers(const response& request)
 {
-    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "IS05Server::PostJsonReceivers:  " << jsRequest ;
+    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "IS05Server::PostJsonReceivers:  " << request.jsonData ;
 
-    response resp;
-    //check that each part of the array is correct.
-    for(Json::ArrayIndex ai = 0; ai < jsRequest.size(); ai++)
+    response resp(request);
+    if(request.nHttpCode == 200)
     {
-        if(CheckJson(jsRequest[ai], {{"id",{jsondatatype::_STRING}}, {"params",{jsondatatype::_OBJECT}}}) == false)
+        //check that each part of the array is correct.
+        for(Json::ArrayIndex ai = 0; ai < request.jsonData.size(); ai++)
         {
-            resp = JsonError(400, "Request is ill defined.");
-            break;
+            if(CheckJson(request.jsonData[ai], {{"id",{jsondatatype::_STRING}}, {"params",{jsondatatype::_OBJECT}}}) == false)
+            {
+                resp = JsonError(400, "Request is ill defined.");
+                break;
+            }
         }
-    }
 
 
-    if(resp.nHttpCode == 200)
-    {   //passed the JSON checking
-        for(Json::ArrayIndex ai = 0; ai < jsRequest.size(); ai++)
-        {
-            Json::Value jsResponse(Json::objectValue);
-            jsResponse["id"] = jsRequest[ai]["id"];
-
-            auto pReceiver = m_api.GetReceiver(jsRequest[ai]["id"].asString());
-            if(!pReceiver)
+        if(resp.nHttpCode == 200)
+        {   //passed the JSON checking
+            for(Json::ArrayIndex ai = 0; ai < request.jsonData.size(); ai++)
             {
-                jsResponse["code"] = 404;
-                jsResponse["error"] = "Resource does not exist.";
-                jsResponse["debug"] = "null";
-                pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PostJsonReceivers: Resource does not exist." ;
-            }
-            else
-            {
-                auto patchResponse = PatchReceiver(pReceiver, jsRequest[ai]["params"]);
-                jsResponse["code"] = patchResponse.nHttpCode;
-                if(patchResponse.nHttpCode != 200)
+                Json::Value jsResponse(Json::objectValue);
+                jsResponse["id"] = request.jsonData[ai]["id"];
+
+                auto pReceiver = m_api.GetReceiver(request.jsonData[ai]["id"].asString());
+                if(!pReceiver)
                 {
-                    jsResponse["error"] = patchResponse.jsonData["error"];
+                    jsResponse["code"] = 404;
+                    jsResponse["error"] = "Resource does not exist.";
+                    jsResponse["debug"] = "null";
+                    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PostJsonReceivers: Resource does not exist." ;
                 }
+                else
+                {
+                    auto patchResponse = PatchReceiver(pReceiver, request.jsonData[ai]["params"]);
+                    jsResponse["code"] = patchResponse.nHttpCode;
+                    if(patchResponse.nHttpCode != 200)
+                    {
+                        jsResponse["error"] = patchResponse.jsonData["error"];
+                    }
+                }
+                resp.jsonData.append(jsResponse);
             }
-            resp.jsonData.append(jsResponse);
         }
     }
     return resp;

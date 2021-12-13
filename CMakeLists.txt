@@ -62,3 +62,6 @@ add_subdirectory(node)
 
 message(STATUS "Configure nmos_client")
 add_subdirectory(client)
+
+message(STATUS "Configure tests")
+add_subdirectory("tests/nmos_node_test")

@@ -67,8 +67,8 @@ namespace pml
 
                 response PatchSender(std::shared_ptr<Sender> pSender, const Json::Value& jsRequest);
                 response PatchReceiver(std::shared_ptr<Receiver> pReceiver, const Json::Value& jsRequest);
-                response PostJsonSenders(const Json::Value& jsRequest);
-                response PostJsonReceivers(const Json::Value& jsRequest);
+                response PostJsonSenders(const response& request);
+                response PostJsonReceivers(const response& request);
 
                 static const std::string ROOT;
                 static const std::string BULK;

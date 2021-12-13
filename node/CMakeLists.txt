@@ -24,7 +24,7 @@ SET(SOURCES "../src/activator.cpp"
  "../src/resourceholder.cpp")
 
 
-
+link_directories(${CMAKE_SOURCE_DIR}/lib)
 add_library(nmos_node SHARED ${SOURCES})
 
 #add the os specific defines
