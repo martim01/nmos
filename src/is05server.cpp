@@ -408,7 +408,7 @@ response IS05Server::PatchSender(std::shared_ptr<Sender> pSender, const Json::Va
 {
     pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchSender: " << pSender->GetId() ;
     response resp;
-    
+
     auto conRequest = pSender->GetStaged();
     //can we patch a connection from the json?
     if(conRequest.Patch(jsRequest) == false)
@@ -484,7 +484,7 @@ response IS05Server::PatchSender(std::shared_ptr<Sender> pSender, const Json::Va
 response IS05Server::PatchReceiver(std::shared_ptr<Receiver> pReceiver, const Json::Value& jsRequest)
 {
     response resp;
-    
+
     auto conRequest = pReceiver->GetStaged();
     pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchJsonReceiver: Staged SenderId = '" << (pReceiver->GetStaged().GetSenderId() ? *pReceiver->GetStaged().GetSenderId() : "")
                             << "' request SenderId = '" << (conRequest.GetSenderId() ? *conRequest.GetSenderId() : "") << "'";
@@ -553,7 +553,9 @@ response IS05Server::PatchReceiver(std::shared_ptr<Receiver> pReceiver, const Js
 response IS05Server::PostJsonSenders(const response& request)
 {
     pmlLog(pml::LOG_DEBUG) << "NMOS: " << "IS05Server::PostJsonSenders:  " << request.jsonData ;
-    response resp(request);
+
+    response resp;
+
     if(request.nHttpCode == 200)
     {
         //check that each part of the array is correct.
@@ -567,9 +569,8 @@ response IS05Server::PostJsonSenders(const response& request)
         }
 
 
-        if(request.nHttpCode == 200)
+        if(resp.nHttpCode == 200)
         {   //passed the JSON checking
-
             for(Json::ArrayIndex ai = 0; ai < request.jsonData.size(); ai++)
             {
                 Json::Value jsResponse(Json::objectValue);
@@ -594,8 +595,11 @@ response IS05Server::PostJsonSenders(const response& request)
                 }
                 resp.jsonData.append(jsResponse);
             }
-
         }
+    }
+    else
+    {
+        resp = request;
     }
     return resp;
 }
@@ -605,7 +609,8 @@ response IS05Server::PostJsonReceivers(const response& request)
 {
     pmlLog(pml::LOG_DEBUG) << "NMOS: " << "IS05Server::PostJsonReceivers:  " << request.jsonData ;
 
-    response resp(request);
+    response resp;
+
     if(request.nHttpCode == 200)
     {
         //check that each part of the array is correct.
@@ -620,7 +625,8 @@ response IS05Server::PostJsonReceivers(const response& request)
 
 
         if(resp.nHttpCode == 200)
-        {   //passed the JSON checking
+        {
+             //passed the JSON checking
             for(Json::ArrayIndex ai = 0; ai < request.jsonData.size(); ai++)
             {
                 Json::Value jsResponse(Json::objectValue);
@@ -646,6 +652,10 @@ response IS05Server::PostJsonReceivers(const response& request)
                 resp.jsonData.append(jsResponse);
             }
         }
+    }
+    else
+    {
+        resp = request;
     }
     return resp;
 }

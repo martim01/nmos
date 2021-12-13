@@ -36,7 +36,7 @@ std::vector<std::string> NmosServer::SplitEndpoint(const endpoint& theEndpoint)
 
 response NmosServer::ConvertPostDataToJson(const postData& vData)
 {
-    response resp(404, "No data sent or incorrect data sent");
+    response resp = JsonError(400, "No data sent");
     if(vData.size() == 1)
     {
         resp.nHttpCode = 200;

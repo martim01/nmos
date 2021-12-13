@@ -147,7 +147,7 @@ void pml::nmos::Activator::Activate()
 
         for(auto itEvent = m_mmActivations.begin(); itEvent != m_mmActivations.upper_bound(m_mmActivations.begin()->first); ++itEvent)
         {
-            m_api.Activate(false, itEvent->second);
+            m_api.Activate(true, itEvent->second);
         }
         m_mmActivations.erase(m_mmActivations.begin()->first);
     }

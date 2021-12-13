@@ -1089,7 +1089,7 @@ bool NodeApiPrivate::AddSender(shared_ptr<Sender> pResource)
             {
                 pairServer.second->AddSenderEndpoint(pResource->GetId());
             }
-            Activate(false, pResource);
+            Activate(true, pResource);
             return true;
         }
     }
@@ -1459,7 +1459,7 @@ bool NodeApiPrivate::Stage(const connectionReceiver<activationResponse>& conRequ
         case activation::ACT_NOW:
             pReceiver->SetStagedActivationTimePoint(GetTaiTimeNow());
             pReceiver->SetActivationAllowed(true);
-            Activate(true, pReceiver);
+            Activate(false, pReceiver);
             break;
         case activation::ACT_ABSOLUTE:
             {
@@ -1504,7 +1504,7 @@ bool NodeApiPrivate::Stage(const connectionReceiver<activationResponse>& conRequ
 void NodeApiPrivate::SubscribeToSender(std::shared_ptr<Receiver> pReceiver, const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp)
 {
     pReceiver->SubscribeToSender(sSenderId, sSdp, sInterfaceIp);
-    Activate(false, pReceiver);
+    Activate(true, pReceiver);
     pReceiver->UpdateVersionTime();
     Commit();
 }

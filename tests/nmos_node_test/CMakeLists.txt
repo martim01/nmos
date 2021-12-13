@@ -4,7 +4,7 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 include_directories(${DIR_LOG}/include)
 include_directories(${DIR_PTPMONKEY}/include)
-include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories("../../include")
 include_directories(${DIR_JSON}/include)
 
 link_directories(${CMAKE_SOURCE_DIR}/lib)

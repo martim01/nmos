@@ -444,14 +444,14 @@ std::string SdpManager::CreateConnectionLine(const TransportParamsRTPSender& tpS
             break;
         case SdpManager::IP4_MULTI:
             sLine = "c=IN IP4 " + tpSender.GetDestinationIp() + "/32\r\n";
-            sLine = "a=source-filter: incl IN IP4 " + tpSender.GetDestinationIp() + " " + tpSender.GetSourceIp() + "\r\n";
+            sLine += "a=source-filter: incl IN IP4 " + tpSender.GetDestinationIp() + " " + tpSender.GetSourceIp() + "\r\n";
             break;
         case SdpManager::IP6_UNI:
             sLine = "c=IN IP6 " + tpSender.GetDestinationIp() + "\r\n";
             break;
         case SdpManager::IP6_MULTI:
             sLine = "c=IN IP6 " + tpSender.GetDestinationIp() + "\r\n";
-            sLine = "a=source-filter: incl IN IP6 " + tpSender.GetDestinationIp() + " " + tpSender.GetSourceIp() + "\r\n";
+            sLine += "a=source-filter: incl IN IP6 " + tpSender.GetDestinationIp() + " " + tpSender.GetSourceIp() + "\r\n";
             break;
         case SdpManager::SdpManager::IP_INVALID:
             pmlLog(pml::LOG_WARN) << "NMOS: Sender can't create SDP - destination IP invalid '" << tpSender.GetDestinationIp() << "'";

@@ -167,6 +167,10 @@ std::string TransportParamsRTP::GetSourceIp() const
 
 unsigned short TransportParamsRTP::GetDestinationPort() const
 {
+    if(m_json.isMember(DESTINATION_PORT) == false || m_json[DESTINATION_PORT].asString() == AUTO)
+    {
+        return 5004;
+    }
     return m_json[DESTINATION_PORT].asUInt();
 }
 
