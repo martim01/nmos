@@ -1,5 +1,7 @@
 #include "sourcegeneric.h"
 
+using namespace pml::nmos;
+
 SourceGeneric::SourceGeneric(const std::string& sLabel, const std::string& sDescription, const std::string& sDeviceId, enumFormat eFormat) :
     Source(sLabel, sDescription, sDeviceId, eFormat)
 {
@@ -17,7 +19,7 @@ bool SourceGeneric::UpdateFromJson(const Json::Value& jsData)
     if(jsData["format"].isString() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'format' is not a string" << std::endl;
+        m_ssJsonError << "'format' is not a string" ;
     }
 
     if(m_bIsOk)
@@ -37,8 +39,17 @@ bool SourceGeneric::UpdateFromJson(const Json::Value& jsData)
         else
         {
             m_bIsOk = false;
-            m_ssJsonError << "'format' " <<jsData["format"].asString() <<" incorrect" << std::endl;
+            m_ssJsonError << "'format' " <<jsData["format"].asString() <<" incorrect" ;
         }
     }
     return m_bIsOk;
+}
+std::shared_ptr<SourceGeneric> SourceGeneric::Create(const Json::Value& jsResponse)
+{
+    auto pResource  = std::make_shared<SourceGeneric>();
+    if(pResource->UpdateFromJson(jsResponse))
+    {
+        return pResource;
+    }
+    return nullptr;
 }

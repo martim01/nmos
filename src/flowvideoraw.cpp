@@ -1,6 +1,7 @@
 #include "flowvideoraw.h"
 
 using namespace std;
+using namespace pml::nmos;
 
 
 const string FlowVideoRaw::STR_COMPONENT[11] = { "Y", "Cb", "Cr", "I", "Ct", "Cp", "A", "R", "G", "B", "DepthMap"};
@@ -23,7 +24,7 @@ bool FlowVideoRaw::UpdateFromJson(const Json::Value& jsData)
     FlowVideo::UpdateFromJson(jsData);
     if(jsData["components"].isArray() == false || jsData["components"].size() == 0)
     {
-        m_ssJsonError << "'components' is not an array or is an empty array" << std::endl;
+        m_ssJsonError << "'components' is not an array or is an empty array" ;
         m_bIsOk = false;
     }
     if(m_bIsOk)
@@ -32,31 +33,31 @@ bool FlowVideoRaw::UpdateFromJson(const Json::Value& jsData)
         {
             if(jsData["components"][ai].isObject() == false)
             {
-                m_ssJsonError << "'components' #" << ai << " is not an object" << std::endl;
+                m_ssJsonError << "'components' #" << ai << " is not an object" ;
                 m_bIsOk = false;
                 break;
             }
             if(jsData["components"][ai]["name"].isString() == false)
             {
-                m_ssJsonError << "'components' #" << ai << " 'name' is not a string" << std::endl;
+                m_ssJsonError << "'components' #" << ai << " 'name' is not a string" ;
                 m_bIsOk = false;
                 break;
             }
             if(jsData["components"][ai]["width"].isInt() == false)
             {
-                m_ssJsonError << "'components' #" << ai << " 'width' is not an int" << std::endl;
+                m_ssJsonError << "'components' #" << ai << " 'width' is not an int" ;
                 m_bIsOk = false;
                 break;
             }
             if(jsData["components"][ai]["height"].isInt() == false)
             {
-                m_ssJsonError << "'components' #" << ai << " 'height' is not an int" << std::endl;
+                m_ssJsonError << "'components' #" << ai << " 'height' is not an int" ;
                 m_bIsOk = false;
                 break;
             }
             if(jsData["components"][ai]["bit_depth"].isInt() == false)
             {
-                m_ssJsonError << "'components' #" << ai << " 'bit_depth' is not an int" << std::endl;
+                m_ssJsonError << "'components' #" << ai << " 'bit_depth' is not an int" ;
                 m_bIsOk = false;
                 break;
             }
@@ -75,7 +76,7 @@ bool FlowVideoRaw::UpdateFromJson(const Json::Value& jsData)
                 }
                 if(!bFound)
                 {
-                    m_ssJsonError << "'components' #" << ai << " 'name' is not valid" << std::endl;
+                    m_ssJsonError << "'components' #" << ai << " 'name' is not valid" ;
                     m_bIsOk = false;
                 }
 
@@ -117,9 +118,23 @@ bool FlowVideoRaw::Commit(const ApiVersion& version)
     return false;
 }
 
-
-std::string FlowVideoRaw::CreateSDPLines(unsigned short nRtpPort) const
+std::shared_ptr<FlowVideoRaw> FlowVideoRaw::Create(const Json::Value& jsResponse)
 {
-    // @todo create VideoRaw SDP information
-    return "";
+    auto pResource  = std::make_shared<FlowVideoRaw>();
+    if(pResource->UpdateFromJson(jsResponse))
+    {
+        return pResource;
+    }
+    return nullptr;
+}
+
+
+std::string FlowVideoRaw::CreateSDPMediaLine(unsigned short nPort) const
+{
+    return std::string();
+}
+
+std::string FlowVideoRaw::CreateSDPAttributeLines(std::shared_ptr<const Source> pSource) const
+{
+    return std::string();
 }

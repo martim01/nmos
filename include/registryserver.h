@@ -1,3 +1,4 @@
+#ifdef __NMOS_REGISTRY__
 #pragma once
 #include <string>
 #include <condition_variable>
@@ -122,3 +123,4 @@ class RegistryServer
 };
 
 
+#endif

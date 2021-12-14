@@ -2,31 +2,38 @@
 #include "json/json.h"
 #include <memory>
 #include <string>
+#include "RestGoose.h"
+#include "nmosapiversion.h"
+#include <vector>
 
-class Server;
-class EventPoster;
-
-class NmosServer
+namespace pml
 {
-    public:
-        NmosServer(): m_pPoster(0){}
-        virtual ~NmosServer(){}
+    namespace nmos
+    {
+        class EventPoster;
+        class NodeApiPrivate;
 
-        void SetPoster(std::shared_ptr<EventPoster> pPoster,unsigned short nPort);
+        class NmosServer
+        {
+            public:
+                NmosServer(std::shared_ptr<RestGoose> pServer, const ApiVersion& version, std::shared_ptr<EventPoster> pPoster, NodeApiPrivate& api);
+                virtual ~NmosServer();
 
-        virtual int GetJsonNmos(Server* pServer, std::string& sReturn, std::string& sContentType);
-        virtual int PutJsonNmos(Server* pServer, const std::string& sJson, std::string& sResponse);
-        virtual int PatchJsonNmos(Server* pServer, const std::string& sJson, std::string& sResponse);
-        virtual int PostJsonNmos(Server* pServer, const std::string& sJson, std::string& sResponse);
-        virtual int DeleteJsonNmos(Server* pServer, const std::string& sJson, std::string& sResponse);
 
-        void SetPath(const std::vector<std::string>& vPath);
+            protected:
 
-    protected:
-        Json::Value GetJsonError(unsigned long nCode = 404, const std::string& sError="Resource not found");
 
-        std::shared_ptr<EventPoster> m_pPoster;
-        unsigned short m_nPort;
-        std::vector<std::string> m_vPath;
+                std::vector<std::string> SplitEndpoint(const endpoint& theEndpoint);
+                response JsonError(int nCode, const std::string& sError, const std::string& sDebug="");
 
+                response ConvertPostDataToJson(const std::vector<partData>& vData);
+
+
+                std::shared_ptr<RestGoose> m_pServer;
+                ApiVersion m_version;
+                std::shared_ptr<EventPoster> m_pPoster;
+                NodeApiPrivate& m_api;
+
+        };
+    };
 };

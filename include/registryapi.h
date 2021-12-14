@@ -1,4 +1,5 @@
-#pragma once
+#ifdef __NMOS_REGISTRY__
+
 #include <string>
 #include "json/json.h"
 #include "nmosdlldefine.h"
@@ -87,3 +88,4 @@ class NMOS_EXPOSE RegistryApi
         bool m_bRunning;
 
 };
+#endif

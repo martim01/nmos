@@ -1,87 +1,36 @@
 #pragma once
-#include "ioresource.h"
-#include <set>
-#include <memory>
-#include "nmosdlldefine.h"
-#include "constraint.h"
-#include "connection.h"
-#include "version.h"
+#include "receiverbase.h"
 
-class Sender;
-class EventPoster;
-
-class NMOS_EXPOSE Receiver : public IOResource
+namespace pml
 {
-    public:
-        enum enumTransport {RTP, RPT_UCAST, RTP_MCAST, DASH};
-        enum enumType {AUDIO, VIDEO, DATA, MUX};
-        Receiver(const std::string& sLabel, const std::string& sDescription, enumTransport eTransport, const std::string& sDeviceId, enumType eType, int flagsTransport=TransportParamsRTP::CORE);
-        ~Receiver();
-        Receiver();
-        virtual bool UpdateFromJson(const Json::Value& jsData);
-
-        void SetTransport(enumTransport eTransport);
-        void SetType(enumType eType);
-
-        void AddInterfaceBinding(const std::string& sInterface);
-        void RemoveInterfaceBinding(const std::string& sInterface);
-
-        bool AddCap(const std::string& sCap);
-        void RemoveCap(const std::string& sCap);
-
-
-        virtual bool Commit(const ApiVersion& version);
-
-        std::string GetParentResourceId() const
+    namespace nmos
+    {
+        class NodeApiPrivate;
+        class Receiver : public ReceiverBase
         {
-            return m_sDeviceId;
-        }
+            public:
+                Receiver(const std::string& sLabel, const std::string& sDescription, enumTransport eTransport, const std::string& sDeviceId, enumType eType, int flagsTransport=TransportParamsRTP::CORE);
 
-        Json::Value GetConnectionStagedJson(const ApiVersion& version) const;
-        Json::Value GetConnectionActiveJson(const ApiVersion& version) const;
-        Json::Value GetConnectionConstraintsJson(const ApiVersion& version) const;
+                Receiver();
 
-        const std::string& GetSender() const;
-        void SetSender(const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp);  //this is the IS-04 way of connecting
-
-        bool CheckConstraints(const connectionReceiver& conRequest);
-        bool IsLocked() const;
-        bool Stage(const connectionReceiver& conRequest);
-        connectionReceiver GetStaged() const;
-
-        void SetupActivation(const std::string& sInterfaceIp);
-        void Activate(bool bImmediate=false);
-
-        bool IsMasterEnabled() const;
-
-        bool IsActivateAllowed() const;
-        void CommitActivation();
-
-    private:
+                void SetupActivation(const std::string& sInterfaceIp);
+                void MasterEnable(bool bEnable);
 
 
-        enumTransport m_eTransport;
-        std::string m_sDeviceId;
-        std::string m_sManifest;
-        std::string m_sSenderId;
-        bool m_bSenderActive;
-        enumType m_eType;
-        std::set<std::string> m_setInterfaces;
-        std::set<std::string> m_setCaps;
+            private:
+                friend class IS05Server;
+                friend class IS04Server;
+                friend class NodeApiPrivate;
 
+                void SetSender(const std::string& sSenderId, const std::string& sSdp, const std::string& sInterfaceIp);  //this is the IS-04 way of connecting
+                connection::enumActivate Stage(const connectionReceiver& conRequest);
+                void CommitActivation();
+                void Activate();
 
-        connectionReceiver m_Staged;
-        connectionReceiver m_Active;
-        constraintsReceiver m_constraints;  // @todo constraints should be same parameters as connection
-
-        bool m_bActivateAllowed;
-        //std::string m_sSenderId;
-        std::string m_sInterfaceIp;
-
-        static const std::string STR_TRANSPORT[4];
-        static const std::string STR_TYPE[4];
+                void SetStagedActivationTime(const std::string& sTime);
+                void SetStagedActivationTimePoint(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp);
+                void RemoveStagedActivationTime();
+                void SetActivationAllowed(bool bAllowed) { m_bActivateAllowed = bAllowed;}
+        };
+    };
 };
-
-
-
-

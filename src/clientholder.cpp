@@ -4,11 +4,11 @@
 #include "self.h"
 #include "device.h"
 #include "source.h"
-#include "sender.h"
+#include "senderbase.h"
 #include "flow.h"
-#include "receiver.h"
+#include "receiverbase.h"
 
-using namespace std;
+using namespace pml::nmos;
 
 template<class T> ClientHolder<T>::ClientHolder()
 {
@@ -21,7 +21,7 @@ template<class T> ClientHolder<T>::~ClientHolder()
 }
 
 
-template<class T> bool ClientHolder<T>::AddResource(const string& sIpAddres, shared_ptr<T> pResource)
+template<class T> bool ClientHolder<T>::AddResource(const std::string& sIpAddres, std::shared_ptr<T> pResource)
 {
     if(pResource && m_mResource.insert(make_pair(pResource->GetId(), pResource)).second)
     {
@@ -32,7 +32,7 @@ template<class T> bool ClientHolder<T>::AddResource(const string& sIpAddres, sha
     return false;
 }
 
-template<class T> bool ClientHolder<T>::RemoveResource(shared_ptr<T> pResource)
+template<class T> bool ClientHolder<T>::RemoveResource(std::shared_ptr<T> pResource)
 {
     if(pResource)
     {
@@ -41,17 +41,24 @@ template<class T> bool ClientHolder<T>::RemoveResource(shared_ptr<T> pResource)
     return false;
 }
 
-template<class T> std::shared_ptr<T> ClientHolder<T>::RemoveResource(const string& sUuid)
+template<class T> std::shared_ptr<T> ClientHolder<T>::RemoveResource(const std::string& sUuid)
 {
-    shared_ptr<T> pResource(0);
-    map<string, string>::iterator itAddress = m_mResourceIdAddress.find(sUuid);
+    std::shared_ptr<T> pResource(nullptr);
+    auto itAddress = m_mResourceIdAddress.find(sUuid);
     if(itAddress != m_mResourceIdAddress.end())
     {
-        m_mmAddressResourceId.erase(itAddress->second);
+        for(auto itRes = m_mmAddressResourceId.lower_bound(itAddress->second); itRes != m_mmAddressResourceId.upper_bound(itAddress->second); ++itRes)
+        {
+            if(itRes->second == sUuid)
+            {
+                m_mmAddressResourceId.erase(itRes);
+                break;
+            }
+        }
     }
     m_mResourceIdAddress.erase(sUuid);
 
-    typename map<string,shared_ptr<T> >::iterator itResource = m_mResource.find(sUuid);
+    auto itResource = m_mResource.find(sUuid);
     if(itResource != m_mResource.end())
     {
         pResource = itResource->second;
@@ -61,23 +68,26 @@ template<class T> std::shared_ptr<T> ClientHolder<T>::RemoveResource(const strin
     return pResource;
 }
 
-template<class T> void ClientHolder<T>::RemoveResources(const string& sIpAddres, typename std::list<std::shared_ptr<T> >& lstRemoved)
+template<class T> resourcechanges<T> ClientHolder<T>::RemoveResources(const std::string& sIpAddres)
 {
-    set<string> setRemoved;
+    std::set<std::string> setRemoved;
+    resourcechanges<T> changed;
 
-    for(multimap<string, string>::iterator itResource = m_mmAddressResourceId.lower_bound(sIpAddres); itResource != m_mmAddressResourceId.upper_bound(sIpAddres); ++itResource)
+    for(auto itResource = m_mmAddressResourceId.lower_bound(sIpAddres); itResource != m_mmAddressResourceId.upper_bound(sIpAddres); ++itResource)
     {
         setRemoved.insert(itResource->second);
-        typename map<string, shared_ptr<T> >::iterator itRemove = m_mResource.find(itResource->second);
+        auto itRemove = m_mResource.find(itResource->second);
         if(itRemove != m_mResource.end())
         {
-            lstRemoved.push_back(itRemove->second);
+            changed.lstRemoved.push_back(itRemove->second);
         }
         m_mResource.erase(itResource->second);
         m_mResourceIdAddress.erase(itResource->second);
     }
     m_mmAddressResourceId.erase(sIpAddres);
+    return changed;
 }
+
 
 template<class T> void ClientHolder<T>::RemoveAllResources()
 {
@@ -86,29 +96,29 @@ template<class T> void ClientHolder<T>::RemoveAllResources()
     m_mResource.clear();
 }
 
-template<class T> bool ClientHolder<T>::ResourceExists(const string& sUuid) const
+template<class T> bool ClientHolder<T>::ResourceExists(const std::string& sUuid) const
 {
     return (m_mResource.find(sUuid) != m_mResource.end());
 }
 
-template<class T> typename map<string, shared_ptr<T> >::const_iterator ClientHolder<T>::GetResourceBegin() const
+template<class T> const typename std::map<std::string, std::shared_ptr<T> >& ClientHolder<T>::GetResources() const
 {
-    return m_mResource.begin();
+    return m_mResource;
 }
 
-template<class T> typename map<string, shared_ptr<T> >::const_iterator ClientHolder<T>::GetResourceEnd() const
-{
-    return m_mResource.end();
-}
-
-template<class T> typename map<string, shared_ptr<T> >::const_iterator ClientHolder<T>::FindNmosResource(const string& sUuid) const
+template<class T> typename std::map<std::string, std::shared_ptr<T> >::const_iterator ClientHolder<T>::FindNmosResource(const std::string& sUuid) const
 {
     return m_mResource.find(sUuid);
 }
 
-template<class T> typename map<string, shared_ptr<T> >::iterator ClientHolder<T>::GetNmosResource(const string& sUuid)
+template<class T> typename std::shared_ptr<T> ClientHolder<T>::GetNmosResource(const std::string& sUuid)
 {
-    return m_mResource.find(sUuid);
+    auto itResource = m_mResource.find(sUuid);
+    if(itResource != m_mResource.end())
+    {
+        return itResource->second;
+    }
+    return nullptr;
 }
 
 template<class T> size_t ClientHolder<T>::GetResourceCount() const
@@ -116,32 +126,31 @@ template<class T> size_t ClientHolder<T>::GetResourceCount() const
     return m_mResource.size();
 }
 
-template<class T> shared_ptr<T> ClientHolder<T>::UpdateResource(const Json::Value& jsData)
+template<class T> std::shared_ptr<T> ClientHolder<T>::UpdateResource(const Json::Value& jsData)
 {
-    typename map<string, shared_ptr<T> >::iterator itResource = GetNmosResource(jsData["id"].asString());
-    if(itResource != GetResourceEnd())
+    auto pResource = GetNmosResource(jsData["id"].asString());
+    if(pResource)
     {
-        m_setStored.erase(itResource->first);   //resource still exists so make sure we don't remove it later
+        m_setStored.erase(jsData["id"].asString());   //resource still exists so make sure we don't remove it later
 
-        Log::Get() <<  itResource->first << " found already " << endl;
-        if(itResource->second->UpdateFromJson(jsData))
+        pmlLog(pml::LOG_INFO) << "NMOS: " << jsData["id"].asString() << " found already " ;
+        if(pResource->UpdateFromJson(jsData))
         {
-            Log::Get() <<  itResource->first << " updated " << endl;
+            pmlLog(pml::LOG_INFO) <<  "NMOS: " << jsData["id"].asString() << " updated " ;
         }
         else
         {
-            Log::Get() << "Found node but json data incorrect: " << itResource->second->GetJsonParseError() << endl;
+            pmlLog(pml::LOG_INFO) << "NMOS: " << "Found node but json data incorrect: " << pResource->GetJsonParseError() ;
         }
-        return itResource->second;
     }
-    return 0;
+    return pResource;
 }
 
 
 
-template<class T> string ClientHolder<T>::GetResourceIpAddress(const string& sUid)
+template<class T> std::string ClientHolder<T>::GetResourceIpAddress(const std::string& sUid)
 {
-    map<string, string>::const_iterator itResource = m_mResourceIdAddress.find(sUid);
+    auto itResource = m_mResourceIdAddress.find(sUid);
     if(itResource != m_mResourceIdAddress.end())
     {
         return itResource->second;
@@ -149,29 +158,32 @@ template<class T> string ClientHolder<T>::GetResourceIpAddress(const string& sUi
     return "";
 }
 
-template<class T> void ClientHolder<T>::StoreResources(const string& sIpAddress)
+template<class T> void ClientHolder<T>::StoreResources(const std::string& sIpAddress)
 {
-    for(multimap<string, string>::iterator itResource = m_mmAddressResourceId.lower_bound(sIpAddress); itResource != m_mmAddressResourceId.upper_bound(sIpAddress); ++itResource)
+    for(auto itResource = m_mmAddressResourceId.lower_bound(sIpAddress); itResource != m_mmAddressResourceId.upper_bound(sIpAddress); ++itResource)
     {
         m_setStored.insert(itResource->second);
     }
 }
 
-template<class T> void ClientHolder<T>::RemoveStaleResources(typename std::list<std::shared_ptr<T> >& lstRemoved)
+template<class T> typename std::list<std::shared_ptr<const T> > ClientHolder<T>::RemoveStaleResources()
 {
-    for(set<string>::iterator itResource = m_setStored.begin(); itResource != m_setStored.end(); ++itResource)
+    m_lstRemoved.clear();
+    for(auto pResource : m_setStored)
     {
-        lstRemoved.push_back(RemoveResource((*itResource)));
+        m_lstRemoved.push_back(RemoveResource(pResource));
     }
-
+    return m_lstRemoved;
 }
 
-template<class T> void ClientHolder<T>::GetResourcesAsList(typename std::list<std::shared_ptr<T> >& lstResources)
+template<class T> resourcechanges<T> ClientHolder<T>::GetResourcesAsList()
 {
-    for(typename std::map<std::string, std::shared_ptr<T> >::iterator itResource = m_mResource.begin(); itResource != m_mResource.end(); ++itResource)
+    resourcechanges<T> changes;
+    for(auto pairResource : m_mResource)
     {
-        lstResources.push_back(itResource->second);
+        changes.lstAdded.push_back(pairResource.second);
     }
+    return changes;
 }
 
 

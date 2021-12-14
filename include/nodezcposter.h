@@ -1,17 +1,25 @@
 #include "zcposter.h"
 
-class NodeZCPoster : public ZCPoster
+namespace pml
 {
-    public:
-        NodeZCPoster(){}
+    namespace nmos
+    {
+        class NodeApiPrivate;
+        class NodeZCPoster : public pml::dnssd::ZCPoster
+        {
+            public:
+                NodeZCPoster(NodeApiPrivate& api) : m_api(api){}
 
-    protected:
+            protected:
 
-        virtual void InstanceResolved(std::shared_ptr<dnsInstance> pInstance);
-        virtual void AllForNow(const std::string& sService);
-        virtual void Finished();
-        virtual void RegistrationNodeError();
-        virtual void InstanceRemoved(std::shared_ptr<dnsInstance> pInstance);
+                void InstanceResolved(std::shared_ptr<pml::dnssd::dnsInstance> pInstance) override;
+                void AllForNow(const std::string& sService) override;
+                void Finished() override;
+                void RegistrationNodeError() override;
+                void InstanceRemoved(std::shared_ptr<pml::dnssd::dnsInstance> pInstance) override;
 
+            private:
+                NodeApiPrivate& m_api;
+        };
+    };
 };
-

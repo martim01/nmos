@@ -4,182 +4,201 @@
 #include "source.h"
 #include "device.h"
 #include "flow.h"
-#include "sender.h"
-#include "receiver.h"
+#include "senderbase.h"
+#include "receiverbase.h"
 #include <iostream>
+#include "log.h"
+
 using namespace std;
+using namespace pml::nmos;
 
 void TestPoster::ModeChanged(bool bQueryApi)
 {
     if(bQueryApi)
     {
-        cout << "++++++QUERY MODE++++++" << endl;
+        pmlLog() << "++++++QUERY MODE++++++" ;
     }
     else
     {
-        cout << "++++++P2P MODE++++++" << endl;
+        pmlLog() << "++++++P2P MODE++++++" ;
     }
 }
-void TestPoster::NodeChanged(const std::list<std::shared_ptr<Self> >& lstNodesAdded, const std::list<std::shared_ptr<Self> >& lstNodesUpdated, const std::list<std::shared_ptr<Self> >& lstNodesRemoved)
+void TestPoster::NodeChanged(const pml::nmos::resourcechanges<pml::nmos::Self>& changed)
 {
-    Json::FastWriter sw;
-
-    cout << "++++++NODES ADDED++++++" << endl;
-    for(std::list<std::shared_ptr<Self> >::const_iterator itResource = lstNodesAdded.begin(); itResource != lstNodesAdded.end(); ++itResource)
+    pmlLog() << "++++++NODES ADDED++++++" ;
+    for(auto pResource : changed.lstAdded)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        pmlLog() << pResource->GetJson(pml::nmos::ApiVersion(1,2)) ;
     }
-    cout << "++++++++++++++++++++++++" << endl;
+    pmlLog() << "++++++++++" << changed.lstAdded.size() << "++++++++++++++" ;
 
-    cout << "++++++NODES UPDATED++++++" << endl;
-    for(std::list<std::shared_ptr<Self> >::const_iterator itResource = lstNodesUpdated.begin(); itResource != lstNodesUpdated.end(); ++itResource)
+    pmlLog() << "++++++NODES UPDATED++++++" ;
+    for(auto pResource :changed.lstUpdated)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        pmlLog() << pResource->GetJson(pml::nmos::ApiVersion(1,2)) ;
     }
-
-    cout << "++++++NODES REMOVE++++++" << endl;
-    for(std::list<std::shared_ptr<Self> >::const_iterator itResource = lstNodesRemoved.begin(); itResource != lstNodesRemoved.end(); ++itResource)
+    pmlLog() << "++++++++++" << changed.lstUpdated.size() << "++++++++++++++" ;
+    pmlLog() << "++++++NODES REMOVE++++++" ;
+    for(auto pResource : changed.lstRemoved)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        pmlLog() << pResource->GetJson(pml::nmos::ApiVersion(1,2)) ;
     }
 
-    cout << "++++++++++++++++++++++++" << endl;
+    pmlLog() << "++++++++++" << changed.lstRemoved.size() << "++++++++++++++" ;
 }
 
-void TestPoster::DeviceChanged(const std::list<std::shared_ptr<Device> >& lstDevicesAdded, const std::list<std::shared_ptr<Device> >& lstDevicesUpdated, const std::list<std::shared_ptr<Device> >& lstDevicesRemoved)
+void TestPoster::DeviceChanged(const pml::nmos::resourcechanges<pml::nmos::Device>& changed)
 {
-    Json::FastWriter sw;
 
-    cout << "++++++DEVICES ADDED++++++" << endl;
-    for(std::list<std::shared_ptr<Device> >::const_iterator itResource = lstDevicesAdded.begin(); itResource != lstDevicesAdded.end(); ++itResource)
+    pmlLog() << "++++++DEVICES ADDED++++++" ;
+    for(auto pResource : changed.lstAdded)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        pmlLog() << pResource->GetJson(pml::nmos::ApiVersion(1,2)) ;
     }
-    cout << "++++++++++++++++++++++++" << endl;
+    pmlLog() << "++++++++++" << changed.lstAdded.size() << "++++++++++++++" ;
 
-    cout << "++++++DEVICES UPDATED++++++" << endl;
-    for(std::list<std::shared_ptr<Device> >::const_iterator itResource = lstDevicesUpdated.begin(); itResource != lstDevicesUpdated.end(); ++itResource)
+    pmlLog() << "++++++DEVICES UPDATED++++++" ;
+    for(auto pResource : changed.lstUpdated)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        pmlLog() << pResource->GetJson(pml::nmos::ApiVersion(1,2)) ;
     }
+    pmlLog() << "++++++++++" << changed.lstUpdated.size() << "++++++++++++++" ;
 
-    cout << "++++++DEVICES REMOVE++++++" << endl;
-    for(std::list<std::shared_ptr<Device> >::const_iterator itResource = lstDevicesRemoved.begin(); itResource != lstDevicesRemoved.end(); ++itResource)
+    pmlLog() << "++++++DEVICES REMOVE++++++" ;
+    for(auto pResource : changed.lstRemoved)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        pmlLog() << pResource->GetJson(pml::nmos::ApiVersion(1,2)) ;
     }
 
-    cout << "++++++++++++++++++++++++" << endl;
+    pmlLog() << "++++++++++" << changed.lstRemoved.size() << "++++++++++++++" ;
 }
 
-void TestPoster::SourceChanged(const std::list<std::shared_ptr<Source> >& lstSourcesAdded, const std::list<std::shared_ptr<Source> >& lstSourcesUpdated, const std::list<std::shared_ptr<Source> >& lstSourcesRemoved)
+void TestPoster::SourceChanged(const pml::nmos::resourcechanges<pml::nmos::Source>& changed)
 {
-    Json::FastWriter sw;
-
-    cout << "++++++SOURCES ADDED++++++" << endl;
-    for(std::list<std::shared_ptr<Source> >::const_iterator itResource = lstSourcesAdded.begin(); itResource != lstSourcesAdded.end(); ++itResource)
+    pmlLog() << "++++++SOURCES ADDED++++++" ;
+    for(auto pResource : changed.lstAdded)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        pmlLog() << pResource->GetJson(pml::nmos::ApiVersion(1,2)) ;
     }
-    cout << "++++++++++++++++++++++++" << endl;
+    pmlLog() << "++++++++++" << changed.lstAdded.size() << "++++++++++++++" ;
 
-    cout << "++++++SOURCES UPDATED++++++" << endl;
-    for(std::list<std::shared_ptr<Source> >::const_iterator itResource = lstSourcesUpdated.begin(); itResource != lstSourcesUpdated.end(); ++itResource)
+    pmlLog() << "++++++SOURCES UPDATED++++++" ;
+    for(auto pResource : changed.lstUpdated)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        pmlLog() << pResource->GetJson(pml::nmos::ApiVersion(1,2)) ;
     }
-
-    cout << "++++++SOURCES REMOVE++++++" << endl;
-    for(std::list<std::shared_ptr<Source> >::const_iterator itResource = lstSourcesRemoved.begin(); itResource != lstSourcesRemoved.end(); ++itResource)
+    pmlLog() << "++++++++++" << changed.lstUpdated.size() << "++++++++++++++" ;
+    pmlLog() << "++++++SOURCES REMOVE++++++" ;
+    for(auto pResource : changed.lstRemoved)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        pmlLog() << pResource->GetJson(pml::nmos::ApiVersion(1,2)) ;
     }
 
-    cout << "++++++++++++++++++++++++" << endl;
+    pmlLog() << "++++++++++" << changed.lstRemoved.size() << "++++++++++++++" ;
 }
 
-void TestPoster::FlowChanged(const std::list<std::shared_ptr<Flow> >& lstFlowsAdded, const std::list<std::shared_ptr<Flow> >& lstFlowsUpdated, const std::list<std::shared_ptr<Flow> >& lstFlowsRemoved)
+void TestPoster::FlowChanged(const pml::nmos::resourcechanges<pml::nmos::Flow>& changed)
 {
-    Json::FastWriter sw;
-
-    cout << "++++++FLOWS ADDED++++++" << endl;
-    for(std::list<std::shared_ptr<Flow> >::const_iterator itResource = lstFlowsAdded.begin(); itResource != lstFlowsAdded.end(); ++itResource)
+    pmlLog() << "++++++FLOWS ADDED++++++" ;
+    for(auto pResource : changed.lstAdded)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        pmlLog() << pResource->GetJson(pml::nmos::ApiVersion(1,2)) ;
     }
-    cout << "++++++++++++++++++++++++" << endl;
+    pmlLog() << "++++++++++" << changed.lstAdded.size() << "++++++++++++++" ;
 
-    cout << "++++++FLOWS UPDATED++++++" << endl;
-    for(std::list<std::shared_ptr<Flow> >::const_iterator itResource = lstFlowsUpdated.begin(); itResource != lstFlowsUpdated.end(); ++itResource)
+    pmlLog() << "++++++FLOWS UPDATED++++++" ;
+    for(auto pResource : changed.lstUpdated)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        pmlLog() << pResource->GetJson(pml::nmos::ApiVersion(1,2)) ;
     }
+    pmlLog() << "++++++++++" << changed.lstUpdated.size() << "++++++++++++++" ;
 
-    cout << "++++++FLOWS REMOVE++++++" << endl;
-    for(std::list<std::shared_ptr<Flow> >::const_iterator itResource = lstFlowsRemoved.begin(); itResource != lstFlowsRemoved.end(); ++itResource)
+    pmlLog() << "++++++FLOWS REMOVE++++++" ;
+    for(auto pResource : changed.lstRemoved)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        pmlLog() << pResource->GetJson(pml::nmos::ApiVersion(1,2)) ;
     }
 
-    cout << "++++++++++++++++++++++++" << endl;
+    pmlLog() << "++++++++++" << changed.lstRemoved.size() << "++++++++++++++" ;
 }
 
-void TestPoster::SenderChanged(const std::list<std::shared_ptr<Sender> >& lstSendersAdded, const std::list<std::shared_ptr<Sender> >& lstSendersUpdated, const std::list<std::shared_ptr<Sender> >& lstSendersRemoved)
+void TestPoster::SenderChanged(const pml::nmos::resourcechanges<pml::nmos::Sender>& changed)
 {
-    Json::FastWriter sw;
-
-    cout << "++++++SENDERS ADDED++++++" << endl;
-    for(std::list<std::shared_ptr<Sender> >::const_iterator itResource = lstSendersAdded.begin(); itResource != lstSendersAdded.end(); ++itResource)
+    pmlLog() << "++++++SENDERS ADDED++++++" ;
+    for(auto pResource : changed.lstAdded)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        pmlLog() << pResource->GetJson(pml::nmos::ApiVersion(1,2)) ;
     }
-    cout << "++++++++++++++++++++++++" << endl;
+    pmlLog() << "++++++++++" << changed.lstAdded.size() << "++++++++++++++" ;
 
-    cout << "++++++SENDERS UPDATED++++++" << endl;
-    for(std::list<std::shared_ptr<Sender> >::const_iterator itResource = lstSendersUpdated.begin(); itResource != lstSendersUpdated.end(); ++itResource)
+    pmlLog() << "++++++SENDERS UPDATED++++++" ;
+    for(auto pResource : changed.lstUpdated)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        pmlLog() << pResource->GetJson(pml::nmos::ApiVersion(1,2)) ;
     }
-
-    cout << "++++++SENDERS REMOVE++++++" << endl;
-    for(std::list<std::shared_ptr<Sender> >::const_iterator itResource = lstSendersRemoved.begin(); itResource != lstSendersRemoved.end(); ++itResource)
+    pmlLog() << "++++++++++" << changed.lstUpdated.size() << "++++++++++++++" ;
+    pmlLog() << "++++++SENDERS REMOVE++++++" ;
+    for(auto pResource : changed.lstRemoved)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        pmlLog() << pResource->GetJson(pml::nmos::ApiVersion(1,2)) ;
     }
 
-    cout << "++++++++++++++++++++++++" << endl;
+    pmlLog() << "++++++++++" << changed.lstRemoved.size() << "++++++++++++++" ;
 }
 
-void TestPoster::ReceiverChanged(const std::list<std::shared_ptr<Receiver> >& lstReceiversAdded, const std::list<std::shared_ptr<Receiver> >& lstReceiversUpdated, const std::list<std::shared_ptr<Receiver> >& lstReceiversRemoved)
+void TestPoster::ReceiverChanged(const pml::nmos::resourcechanges<pml::nmos::Receiver>& changed)
 {
-    Json::FastWriter sw;
-
-    cout << "++++++RECEIVERS ADDED++++++" << endl;
-    for(std::list<std::shared_ptr<Receiver> >::const_iterator itResource = lstReceiversAdded.begin(); itResource != lstReceiversAdded.end(); ++itResource)
+    pmlLog() << "++++++RECEIVERS ADDED++++++" ;
+    for(auto pResource : changed.lstAdded)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        pmlLog() << pResource->GetJson(pml::nmos::ApiVersion(1,2)) ;
     }
-    cout << "++++++++++++++++++++++++" << endl;
+    pmlLog() << "++++++++++" << changed.lstAdded.size() << "++++++++++++++" ;
 
-    cout << "++++++RECEIVERS UPDATED++++++" << endl;
-    for(std::list<std::shared_ptr<Receiver> >::const_iterator itResource = lstReceiversUpdated.begin(); itResource != lstReceiversUpdated.end(); ++itResource)
+    pmlLog() << "++++++RECEIVERS UPDATED++++++" ;
+    for(auto pResource : changed.lstUpdated)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        pmlLog() << pResource->GetJson(pml::nmos::ApiVersion(1,2)) ;
     }
-
-    cout << "++++++RECEIVERS REMOVE++++++" << endl;
-    for(std::list<std::shared_ptr<Receiver> >::const_iterator itResource = lstReceiversRemoved.begin(); itResource != lstReceiversRemoved.end(); ++itResource)
+    pmlLog() << "++++++++++" << changed.lstUpdated.size() << "++++++++++++++" ;
+    pmlLog() << "++++++RECEIVERS REMOVE++++++" ;
+    for(auto pResource : changed.lstRemoved)
     {
-        cout << sw.write((*itResource)->GetJson(ApiVersion(1,2))) << endl;
+        pmlLog() << pResource->GetJson(pml::nmos::ApiVersion(1,2)) ;
     }
 
-    cout << "++++++++++++++++++++++++" << endl;
+    pmlLog() << "++++++++++" << changed.lstRemoved.size() << "++++++++++++++" ;
+}
+
+void TestPoster::QueryServerChanged(const std::string& sUrl)
+{
+    pmlLog() << "++++++QUERY SERVER CHANGED ++++++" ;
+    pmlLog() << sUrl;
+    pmlLog() << "++++++++++++++++++++++++" ;
+}
+
+void TestPoster::QueryServerFound(const std::string& sUrl, unsigned short nPriority)
+{
+    pmlLog() << "++++++QUERY SERVER FOUND ++++++" ;
+    pmlLog() << sUrl << ": " << nPriority;
+    pmlLog() << "++++++++++++++++++++++++" ;
+}
+
+void TestPoster::QueryServerRemoved(const std::string& sUrl)
+{
+    pmlLog() << "++++++QUERY SERVER REMOVED ++++++" ;
+    pmlLog() << sUrl;
+    pmlLog() << "++++++++++++++++++++++++" ;
 }
 
 
 void TestPoster::QuerySubscription(const std::string& sSubscriptionId, int nResource, const std::string& sQuery)
 {
-
+    pmlLog() << "++++++QUERY SUBSCRIPTION++++++" ;
+    pmlLog() << sSubscriptionId;
+    pmlLog() << nResource;
+    pmlLog() << sQuery;
+    pmlLog() << "++++++++++++++++++++++++" ;
 }
 
 void TestPoster::QuerySubscriptionRemoved(const std::string& sSubscriptionId)
@@ -189,46 +208,104 @@ void TestPoster::QuerySubscriptionRemoved(const std::string& sSubscriptionId)
 
 void TestPoster::RequestTargetResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
 {
-
+    pmlLog() << "++++++RequestTargetResult++++++" ;
+    pmlLog() << "Result = " << nResult;
+    pmlLog() << "Response = " << sResponse;
+    pmlLog() << "Resource = " << sResourceId;
+    pmlLog() << "++++++++++++++++++++++++" ;
 }
 
-void TestPoster::RequestPatchSenderResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+void TestPoster::RequestPatchSenderResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId)
 {
-
+    pmlLog() << "++++++RequestPatchSenderResult++++++" ;
+    pmlLog() << "Result = " << resp.nCode;
+    if(con)
+    {
+        pmlLog() << "Response = " << (*con).GetJson();
+    }
+    pmlLog() << "Resource = " << sResourceId;
+    pmlLog() << "++++++++++++++++++++++++" ;
 }
 
-void TestPoster::RequestPatchReceiverResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+void TestPoster::RequestPatchReceiverResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId)
 {
-
+    pmlLog() << "++++++RequestPatchReceiverResult++++++" ;
+    pmlLog() << "Result = " << resp.nCode;
+    if(con)
+    {
+        pmlLog() << "Response = " << (*con).GetJson();
+    }
+    pmlLog() << "Resource = " << sResourceId;
+    pmlLog() << "++++++++++++++++++++++++" ;
 }
 
 void TestPoster::RequestConnectResult(const std::string& sSenderId, const std::string& sReceiverId, bool bSuccess, const std::string& sResponse)
 {
-
+    pmlLog() << "++++++RequestConnectResult++++++" ;
+    pmlLog() << "Sender = " << sSenderId;
+    pmlLog() << "Receiver = " << sReceiverId;
+    pmlLog() << "Result = " << bSuccess;
+    pmlLog() << "Response = " << sResponse;
+    pmlLog() << "++++++++++++++++++++++++" ;
 }
 
-void TestPoster::RequestGetSenderStagedResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+void TestPoster::RequestGetSenderStagedResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId)
 {
-
+    pmlLog() << "++++++RequestGetSenderStagedResult++++++" ;
+    pmlLog() << "Result = " << resp.nCode;
+    if(con)
+    {
+        pmlLog() << "Response = " << (*con).GetJson();
+    }
+    pmlLog() << "Resource = " << sResourceId;
+    pmlLog() << "++++++++++++++++++++++++" ;
 }
 
-void TestPoster::RequestGetSenderActiveResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+void TestPoster::RequestGetSenderActiveResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId)
 {
-
+    pmlLog() << "++++++RequestGetSenderActiveResult++++++" ;
+    pmlLog() << "Result = " << resp.nCode;
+    if(con)
+    {
+        pmlLog() << "Response = " << (*con).GetJson();
+    }
+    pmlLog() << "Resource = " << sResourceId;
+    pmlLog() << "++++++++++++++++++++++++" ;
 }
 
-void TestPoster::RequestGetSenderTransportFileResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+void TestPoster::RequestGetSenderTransportFileResult(const curlResponse& resp, const std::experimental::optional<std::string>& sTransportFile, const std::string& sResourceId)
 {
-
+    pmlLog() << "++++++RequestGetSenderTransportFileResult++++++" ;
+    pmlLog() << "Result = " << resp.nCode;
+    if(sTransportFile)
+    {
+        pmlLog() << "Response = " << (*sTransportFile);
+    }
+    pmlLog() << "Resource = " << sResourceId;
+    pmlLog() << "++++++++++++++++++++++++" ;
 }
 
-void TestPoster::RequestGetReceiverStagedResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+void TestPoster::RequestGetReceiverStagedResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId)
 {
-
+    pmlLog() << "++++++RequestGetReceiverStagedResult++++++" ;
+    pmlLog() << "Result = " << resp.nCode;
+    if(con)
+    {
+        pmlLog() << "Response = " << (*con).GetJson();
+    }
+    pmlLog() << "Resource = " << sResourceId;
+    pmlLog() << "++++++++++++++++++++++++" ;
 }
 
-void TestPoster::RequestGetReceiverActiveResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+void TestPoster::RequestGetReceiverActiveResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId)
 {
-
+    pmlLog() << "++++++RequestGetReceiverActiveResult++++++" ;
+    pmlLog() << "Result = " << resp.nCode;
+    if(con)
+    {
+        pmlLog() << "Response = " << (*con).GetJson();
+    }
+    pmlLog() << "Resource = " << sResourceId;
+    pmlLog() << "++++++++++++++++++++++++" ;
 }
 

@@ -1,5 +1,7 @@
 #include "flowdatasdianc.h"
 
+using namespace pml::nmos;
+
 FlowDataSdiAnc::FlowDataSdiAnc(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId) :
     FlowData(sLabel, sDescription, sSourceId, sDeviceId, "video/smpte291")
 {
@@ -17,12 +19,12 @@ bool FlowDataSdiAnc::UpdateFromJson(const Json::Value& jsData)
     if(jsData["DID_SDID"].isArray() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'DID_SDID' is not an array" << std::endl;
+        m_ssJsonError << "'DID_SDID' is not an array" ;
     }
     else if(jsData["DID_SDID"].empty())
     {
         m_bIsOk = false;
-        m_ssJsonError << "'DID_SDID' cannot be an empty array" << std::endl;
+        m_ssJsonError << "'DID_SDID' cannot be an empty array" ;
     }
 
     if(jsData["DID_SDID"].isArray())
@@ -36,7 +38,7 @@ bool FlowDataSdiAnc::UpdateFromJson(const Json::Value& jsData)
             else
             {
                 m_bIsOk = false;
-                m_ssJsonError << "'DID_SDID' #" << ai << "'DID' or 'SDID' is not a string" << std::endl;
+                m_ssJsonError << "'DID_SDID' #" << ai << "'DID' or 'SDID' is not a string" ;
                 break;
             }
         }
@@ -67,8 +69,23 @@ bool FlowDataSdiAnc::Commit(const ApiVersion& version)
 }
 
 
-std::string FlowDataSdiAnc::CreateSDPLines(unsigned short nRtpPort) const
+std::shared_ptr<FlowDataSdiAnc> FlowDataSdiAnc::Create(const Json::Value& jsResponse)
 {
-    // @todo create FlowDataSdiAnc SDP information
-    return "";
+    auto pResource  = std::make_shared<FlowDataSdiAnc>();
+    if(pResource->UpdateFromJson(jsResponse))
+    {
+        return pResource;
+    }
+    return nullptr;
+}
+
+
+std::string FlowDataSdiAnc::CreateSDPMediaLine(unsigned short nPort) const
+{
+    return std::string();
+}
+
+std::string FlowDataSdiAnc::CreateSDPAttributeLines(std::shared_ptr<const Source> pSource) const
+{
+    return std::string();
 }

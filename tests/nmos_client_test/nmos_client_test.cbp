@@ -40,7 +40,6 @@
 				<Option projectCompilerOptionsRelation="-1" />
 				<Option projectLinkerOptionsRelation="-1" />
 				<Option projectIncludeDirsRelation="-1" />
-				<Option projectResourceIncludeDirsRelation="-1" />
 				<Option projectLibDirsRelation="-1" />
 				<MakeCommands>
 					<Build command="" />
@@ -65,12 +64,14 @@
 					<Add directory="$(#microhttp.include)" />
 				</Compiler>
 				<Linker>
-					<Add option="`pkg-config --libs libmicrohttpd`" />
 					<Add option="`pkg-config --libs avahi-client`" />
 					<Add option="`pkg-config --libs uuid`" />
 					<Add option="`pkg-config --libs libcurl`" />
-					<Add library="../../lib/libnmosd.so" />
+					<Add library="libnmos_clientd" />
 					<Add library="pthread" />
+					<Add library="pml_logd" />
+					<Add library="libnmos_based" />
+					<Add library="restgoosed" />
 					<Add directory="$(#microhttp.lib)" />
 				</Linker>
 			</Target>
@@ -82,30 +83,34 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-std=c++11" />
 					<Add option="-D__GNU__" />
 					<Add directory="$(#microhttp.include)" />
 					<Add directory="../../lib" />
 				</Compiler>
 				<Linker>
-					<Add option="`pkg-config --libs libmicrohttpd`" />
 					<Add option="`pkg-config --libs avahi-client`" />
 					<Add option="`pkg-config --libs uuid`" />
 					<Add option="`pkg-config --libs libcurl`" />
-					<Add library="libnmos" />
+					<Add library="libnmos_base" />
+					<Add library="libnmos_client" />
 					<Add library="pthread" />
+					<Add library="pml_log" />
 					<Add directory="$(#microhttp.lib)" />
 				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
+			<Add option="-std=c++14" />
 			<Add option="-fexceptions" />
 			<Add directory="$(#json.include)" />
 			<Add directory="../../include" />
+			<Add directory="../../../log/include" />
+			<Add directory="../../../Restgoose" />
 		</Compiler>
 		<Linker>
 			<Add directory="../../lib" />
+			<Add directory="../../../log/lib" />
 		</Linker>
 		<Unit filename="main.cpp" />
 		<Unit filename="testposter.cpp" />

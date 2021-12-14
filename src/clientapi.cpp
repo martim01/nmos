@@ -1,6 +1,9 @@
 #include "clientapi.h"
 #include "clientprivate.h"
+#include "curlregister.h"
 
+
+using namespace pml::nmos;
 ClientApi& ClientApi::Get()
 {
     static ClientApi api;
@@ -31,92 +34,65 @@ ClientApi::~ClientApi()
 
 }
 
-std::map<std::string, std::shared_ptr<Self> >::const_iterator ClientApi::GetNodeBegin()
+const std::map<std::string, std::shared_ptr<Self> >& ClientApi::GetNodes()
 {
-    return m_pApi->GetNodeBegin();
+    return m_pApi->GetNodes();
 }
 
-std::map<std::string, std::shared_ptr<Self> >::const_iterator ClientApi::GetNodeEnd()
-{
-    return m_pApi->GetNodeEnd();
-}
-
-std::map<std::string, std::shared_ptr<Self> >::const_iterator ClientApi::FindNode(const std::string& sUid)
+std::shared_ptr<const Self> ClientApi::FindNode(const std::string& sUid)
 {
     return m_pApi->FindNode(sUid);
 }
 
-std::map<std::string, std::shared_ptr<Device> >::const_iterator ClientApi::GetDeviceBegin()
+const std::map<std::string, std::shared_ptr<Device> >& ClientApi::GetDevices()
 {
-    return m_pApi->GetDeviceBegin();
+    return m_pApi->GetDevices();
 }
 
-std::map<std::string, std::shared_ptr<Device> >::const_iterator ClientApi::GetDeviceEnd()
-{
-    return m_pApi->GetDeviceEnd();
-}
-
-std::map<std::string, std::shared_ptr<Device> >::const_iterator ClientApi::FindDevice(const std::string& sUid)
+std::shared_ptr<const Device> ClientApi::FindDevice(const std::string& sUid)
 {
     return m_pApi->FindDevice(sUid);
 }
 
-std::map<std::string, std::shared_ptr<Source> >::const_iterator ClientApi::GetSourceBegin()
+const std::map<std::string, std::shared_ptr<Source> >& ClientApi::GetSources()
 {
-    return m_pApi->GetSourceBegin();
+    return m_pApi->GetSources();
 }
 
-std::map<std::string, std::shared_ptr<Source> >::const_iterator ClientApi::GetSourceEnd()
-{
-    return m_pApi->GetSourceEnd();
-}
 
-std::map<std::string, std::shared_ptr<Source> >::const_iterator ClientApi::FindSource(const std::string& sUid)
+std::shared_ptr<const Source> ClientApi::FindSource(const std::string& sUid)
 {
     return m_pApi->FindSource(sUid);
 }
 
-std::map<std::string, std::shared_ptr<Flow> >::const_iterator ClientApi::GetFlowBegin()
+const std::map<std::string, std::shared_ptr<Flow> >& ClientApi::GetFlows()
 {
-    return m_pApi->GetFlowBegin();
+    return m_pApi->GetFlows();
 }
 
-std::map<std::string, std::shared_ptr<Flow> >::const_iterator ClientApi::GetFlowEnd()
-{
-    return m_pApi->GetFlowEnd();
-}
 
-std::map<std::string, std::shared_ptr<Flow> >::const_iterator ClientApi::FindFlow(const std::string& sUid)
+std::shared_ptr<const Flow> ClientApi::FindFlow(const std::string& sUid)
 {
     return m_pApi->FindFlow(sUid);
 }
 
-std::map<std::string, std::shared_ptr<Sender> >::const_iterator ClientApi::GetSenderBegin()
+const std::map<std::string, std::shared_ptr<Sender> >& ClientApi::GetSenders()
 {
-    return m_pApi->GetSenderBegin();
+    return m_pApi->GetSenders();
 }
 
-std::map<std::string, std::shared_ptr<Sender> >::const_iterator ClientApi::GetSenderEnd()
-{
-    return m_pApi->GetSenderEnd();
-}
 
-std::map<std::string, std::shared_ptr<Sender> >::const_iterator ClientApi::FindSender(const std::string& sUid)
+std::shared_ptr<const Sender> ClientApi::FindSender(const std::string& sUid)
 {
     return m_pApi->FindSender(sUid);
 }
 
-std::map<std::string, std::shared_ptr<Receiver> >::const_iterator ClientApi::GetReceiverBegin()
+const std::map<std::string, std::shared_ptr<Receiver> >& ClientApi::GetReceivers()
 {
-    return m_pApi->GetReceiverBegin();
+    return m_pApi->GetReceivers();
 }
 
-std::map<std::string, std::shared_ptr<Receiver> >::const_iterator ClientApi::GetReceiverEnd()
-{
-    return m_pApi->GetReceiverEnd();
-}
-
-std::map<std::string, std::shared_ptr<Receiver> >::const_iterator ClientApi::FindReceiver(const std::string& sUid)
+std::shared_ptr<const Receiver> ClientApi::FindReceiver(const std::string& sUid)
 {
     return m_pApi->FindReceiver(sUid);
 }
@@ -134,39 +110,50 @@ bool ClientApi::Unsubscribe(const std::string& sReceiverId)
 }
 
 
-bool ClientApi::RequestSenderStaged(const std::string& sSenderId)
+std::pair<curlResponse, std::experimental::optional<connectionSender<activationResponse>>>  ClientApi::RequestSenderStaged(const std::string& sSenderId, bool bAsync)
 {
-    return m_pApi->RequestSenderStaged(sSenderId);
+    return m_pApi->RequestSenderStaged(sSenderId, bAsync);
 }
 
-bool ClientApi::RequestSenderActive(const std::string& sSenderId)
+std::pair<curlResponse, std::experimental::optional<connectionSender<activationResponse>>>  ClientApi::RequestSenderActive(const std::string& sSenderId, bool bAsync)
 {
-    return m_pApi->RequestSenderActive(sSenderId);
+    return m_pApi->RequestSenderActive(sSenderId, bAsync);
 }
 
-bool ClientApi::RequestSenderTransportFile(const std::string& sSenderId)
+std::pair<curlResponse, std::experimental::optional<std::string>> ClientApi::RequestSenderTransportFile(const std::string& sSenderId, bool bAsync)
 {
-    return m_pApi->RequestSenderTransportFile(sSenderId);
+    return m_pApi->RequestSenderTransportFile(sSenderId, bAsync);
 }
 
-bool ClientApi::RequestReceiverStaged(const std::string& sReceiverId)
+std::pair<curlResponse, std::vector<Constraints>> ClientApi::RequestSenderConstraints(const std::string& sSenderId, bool bAsync)
 {
-    return m_pApi->RequestReceiverStaged(sReceiverId);
+    return m_pApi->RequestSenderConstraints(sSenderId, bAsync);
 }
 
-bool ClientApi::RequestReceiverActive(const std::string& sReceiverId)
+std::pair<curlResponse, std::experimental::optional<connectionReceiver<activationResponse>>> ClientApi::RequestReceiverStaged(const std::string& sReceiverId, bool bAsync)
 {
-    return m_pApi->RequestReceiverActive(sReceiverId);
+    return m_pApi->RequestReceiverStaged(sReceiverId, bAsync);
 }
 
-bool ClientApi::PatchSenderStaged(const std::string& sSenderId, const connectionSender& aConnection)
+std::pair<curlResponse, std::experimental::optional<connectionReceiver<activationResponse>>> ClientApi::RequestReceiverActive(const std::string& sReceiverId, bool bAsync)
 {
-    return m_pApi->PatchSenderStaged(sSenderId, aConnection);
+    return m_pApi->RequestReceiverActive(sReceiverId, bAsync);
 }
 
-bool ClientApi::PatchReceiverStaged(const std::string& sReceiverId, const connectionReceiver& aConnection)
+
+std::pair<curlResponse, std::vector<Constraints>> ClientApi::RequestReceiverConstraints(const std::string& sReceiverId, bool bAsync)
 {
-    return m_pApi->PatchReceiverStaged(sReceiverId, aConnection);
+    return m_pApi->RequestReceiverConstraints(sReceiverId, bAsync);
+}
+
+std::pair<curlResponse, std::experimental::optional<connectionSender<activationResponse>>> ClientApi::PatchSenderStaged(const std::string& sSenderId, const connectionSender<activationRequest>& aConnection, bool bAsync)
+{
+    return m_pApi->PatchSenderStaged(sSenderId, aConnection, bAsync);
+}
+
+std::pair<curlResponse, std::experimental::optional<connectionReceiver<activationResponse>>> ClientApi::PatchReceiverStaged(const std::string& sReceiverId, const connectionReceiver<activationRequest>& aConnection, bool bAsync)
+{
+    return m_pApi->PatchReceiverStaged(sReceiverId, aConnection, bAsync);
 }
 
 void ClientApi::SetPoster(std::shared_ptr<ClientApiPoster> pPoster)
@@ -186,7 +173,7 @@ bool ClientApi::Disconnect(const std::string& sReceiverId)
 }
 
 
-bool ClientApi::AddQuerySubscription(flagResource eResource, const std::string& sQuery, unsigned long nUpdateRate)
+bool ClientApi::AddQuerySubscription(enumResource eResource, const std::string& sQuery, unsigned long nUpdateRate)
 {
     return m_pApi->AddQuerySubscription(eResource, sQuery, nUpdateRate);
 }
@@ -194,4 +181,14 @@ bool ClientApi::AddQuerySubscription(flagResource eResource, const std::string& 
 bool ClientApi::RemoveQuerySubscription(const std::string& sSubscriptionId)
 {
     return m_pApi->RemoveQuerySubscription(sSubscriptionId);
+}
+
+bool ClientApi::AddBrowseDomain(const std::string& sDomain)
+{
+    return m_pApi->AddBrowseDomain(sDomain);
+}
+
+bool ClientApi::RemoveBrowseDomain(const std::string& sDomain)
+{
+    return m_pApi->RemoveBrowseDomain(sDomain);
 }

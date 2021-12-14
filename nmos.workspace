@@ -1,17 +1,24 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_workspace_file>
 	<Workspace title="Workspace">
-		<Project filename="libnmos.cbp" />
-		<Project filename="tests/nmos_registry_test/nmos_registry_test.cbp">
-			<Depends filename="libnmos.cbp" />
+		<Project filename="../log/log.cbp" />
+		<Project filename="../Restgoose/Restgoose.cbp" />
+		<Project filename="base/libnmos_base.cbp" />
+		<Project filename="node/libnmos_node.cbp">
+			<Depends filename="base/libnmos_base.cbp" />
+		</Project>
+		<Project filename="client/libnmos_client.cbp">
+			<Depends filename="base/libnmos_base.cbp" />
 		</Project>
 		<Project filename="tests/nmos_node_test/nmos_node_test.cbp">
-			<Depends filename="libnmos.cbp" />
+			<Depends filename="../Restgoose/Restgoose.cbp" />
+			<Depends filename="base/libnmos_base.cbp" />
+			<Depends filename="node/libnmos_node.cbp" />
 		</Project>
 		<Project filename="tests/nmos_client_test/nmos_client_test.cbp">
-			<Depends filename="libnmos.cbp" />
+			<Depends filename="base/libnmos_base.cbp" />
+			<Depends filename="client/libnmos_client.cbp" />
 		</Project>
-		<Project filename="tests/nmos_clientnode_test/nmos_clientnode_test.cbp" />
-		<Project filename="../rdswebserver/rdswebserver.cbp" />
+		<Project filename="../dnssd/dnssd.cbp" />
 	</Workspace>
 </CodeBlocks_workspace_file>

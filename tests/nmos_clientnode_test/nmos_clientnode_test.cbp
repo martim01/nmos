@@ -81,18 +81,19 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-std=c++11" />
+					<Add option="-std=c++14" />
 					<Add option="-D__GNU__" />
 					<Add directory="$(#microhttp.include)" />
 					<Add directory="../../lib" />
 				</Compiler>
 				<Linker>
-					<Add option="`pkg-config --libs libmicrohttpd`" />
 					<Add option="`pkg-config --libs avahi-client`" />
 					<Add option="`pkg-config --libs uuid`" />
 					<Add option="`pkg-config --libs libcurl`" />
-					<Add library="libnmos" />
+					<Add library="libnmos_node" />
 					<Add library="pthread" />
+					<Add library="libnmos_client" />
+					<Add library="pml_log" />
 					<Add directory="$(#microhttp.lib)" />
 				</Linker>
 			</Target>

@@ -1,4 +1,11 @@
 #include "clientapiposter.h"
+#include "log.h"
+
+using namespace pml::nmos;
+
+ClientApiPoster::~ClientApiPoster()
+{
+}
 
 
 void ClientApiPoster::_ModeChanged(bool bQueryApi)
@@ -6,34 +13,40 @@ void ClientApiPoster::_ModeChanged(bool bQueryApi)
     ModeChanged(bQueryApi);
 }
 
-void ClientApiPoster::_NodeChanged(const std::list<std::shared_ptr<Self> >& lstNodesAdded, const std::list<std::shared_ptr<Self> >& lstNodesUpdated, const std::list<std::shared_ptr<Self> >& lstNodesRemoved)
+void ClientApiPoster::_NodeChanged(const resourcechanges<Self>& changed)
 {
-    NodeChanged(lstNodesAdded, lstNodesUpdated, lstNodesRemoved);
+    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApiPoster::_NodeChanged" ;
+    NodeChanged(changed);
 }
 
-void ClientApiPoster::_DeviceChanged(const std::list<std::shared_ptr<Device> >& lstDevicesAdded, const std::list<std::shared_ptr<Device> >& lstDevicesUpdated, const std::list<std::shared_ptr<Device> >& lstDevicesRemoved)
+void ClientApiPoster::_DeviceChanged(const resourcechanges<Device>& changed)
 {
-    DeviceChanged(lstDevicesAdded, lstDevicesUpdated, lstDevicesRemoved);
+    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApiPoster::_DeviceChanged" ;
+    DeviceChanged(changed);
 }
 
-void ClientApiPoster::_SourceChanged(const std::list<std::shared_ptr<Source> >& lstSourcesAdded, const std::list<std::shared_ptr<Source> >& lstSourcesUpdated, const std::list<std::shared_ptr<Source> >& lstSourcesRemoved)
+void ClientApiPoster::_SourceChanged(const resourcechanges<Source>& changed)
 {
-    SourceChanged(lstSourcesAdded, lstSourcesUpdated, lstSourcesRemoved);
+    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApiPoster::_SourceChanged" ;
+    SourceChanged(changed);
 }
 
-void ClientApiPoster::_FlowChanged(const std::list<std::shared_ptr<Flow> >& lstFlowsAdded, const std::list<std::shared_ptr<Flow> >& lstFlowsUpdated, const std::list<std::shared_ptr<Flow> >& lstFlowsRemoved)
+void ClientApiPoster::_FlowChanged(const resourcechanges<Flow>& changed)
 {
-    FlowChanged(lstFlowsAdded, lstFlowsUpdated, lstFlowsRemoved);
+    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApiPoster::_FlowChanged" ;
+    FlowChanged(changed);
 }
 
-void ClientApiPoster::_SenderChanged(const std::list<std::shared_ptr<Sender> >& lstSendersAdded, const std::list<std::shared_ptr<Sender> >& lstSendersUpdated, const std::list<std::shared_ptr<Sender> >& lstSendersRemoved)
+void ClientApiPoster::_SenderChanged(const resourcechanges<Sender>& changed)
 {
-    SenderChanged(lstSendersAdded, lstSendersUpdated, lstSendersRemoved);
+    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApiPoster::_SenderChanged" ;
+    SenderChanged(changed);
 }
 
-void ClientApiPoster::_ReceiverChanged(const std::list<std::shared_ptr<Receiver> >& lstReceiversAdded, const std::list<std::shared_ptr<Receiver> >& lstReceiversUpdated, const std::list<std::shared_ptr<Receiver> >& lstReceiversRemoved)
+void ClientApiPoster::_ReceiverChanged(const resourcechanges<Receiver>& changed)
 {
-    ReceiverChanged(lstReceiversAdded, lstReceiversUpdated, lstReceiversRemoved);
+    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApiPoster::_ReceiverChanged" ;
+    ReceiverChanged(changed);
 }
 
 
@@ -42,14 +55,14 @@ void ClientApiPoster::_RequestTargetResult(unsigned long nResult, const std::str
     RequestTargetResult(nResult, sResponse, sResourceId);
 }
 
-void ClientApiPoster::_RequestPatchSenderResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+void ClientApiPoster::_RequestPatchSenderResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId)
 {
-    RequestPatchSenderResult(nResult, sResponse, sResourceId);
+    RequestPatchSenderResult(resp, con, sResourceId);
 }
 
-void ClientApiPoster::_RequestPatchReceiverResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+void ClientApiPoster::_RequestPatchReceiverResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId)
 {
-    RequestPatchReceiverResult(nResult, sResponse, sResourceId);
+    RequestPatchReceiverResult(resp, con, sResourceId);
 }
 
 void ClientApiPoster::_RequestConnectResult(const std::string& sSenderId, const std::string& sReceiverId, bool bSuccess, const std::string& sResponse)
@@ -58,31 +71,40 @@ void ClientApiPoster::_RequestConnectResult(const std::string& sSenderId, const 
 }
 
 
-void ClientApiPoster::_RequestGetSenderStagedResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+void ClientApiPoster::_RequestGetSenderStagedResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId)
 {
-    RequestGetSenderStagedResult(nResult, sResponse, sResourceId);
+    RequestGetSenderStagedResult(resp, con, sResourceId);
 }
 
-void ClientApiPoster::_RequestGetSenderActiveResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+void ClientApiPoster::_RequestGetSenderActiveResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId)
 {
-    RequestGetSenderActiveResult(nResult, sResponse, sResourceId);
+    RequestGetSenderActiveResult(resp, con, sResourceId);
 }
 
-void ClientApiPoster::_RequestGetSenderTransportFileResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+void ClientApiPoster::_RequestGetSenderTransportFileResult(const curlResponse& resp, const std::experimental::optional<std::string>& sTransportFile, const std::string& sResourceId)
 {
-    RequestGetSenderTransportFileResult(nResult, sResponse, sResourceId);
+    RequestGetSenderTransportFileResult(resp, sTransportFile, sResourceId);
 }
 
-void ClientApiPoster::_RequestGetReceiverStagedResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+void ClientApiPoster::_RequestGetReceiverStagedResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId)
 {
-    RequestGetReceiverStagedResult(nResult, sResponse, sResourceId);
+    RequestGetReceiverStagedResult(resp, con, sResourceId);
 }
 
-void ClientApiPoster::_RequestGetReceiverActiveResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)
+void ClientApiPoster::_RequestGetReceiverActiveResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId)
 {
-    RequestGetReceiverActiveResult(nResult, sResponse, sResourceId);
+    RequestGetReceiverActiveResult(resp, con, sResourceId);
 }
 
+void ClientApiPoster::_RequestGetSenderConstraintsResult(const curlResponse& resp, const std::vector<Constraints>& vConstraints, const std::string& sResourceId)
+{
+    RequestGetSenderConstraintsResult(resp, vConstraints, sResourceId);
+}
+
+void ClientApiPoster::_RequestGetReceiverConstraintsResult(const curlResponse& resp, const std::vector<Constraints>& vConstraints, const std::string& sResourceId)
+{
+    RequestGetReceiverConstraintsResult(resp, vConstraints, sResourceId);
+}
 
 void ClientApiPoster::_QuerySubscription(const std::string& sSubscriptionId, int nResource, const std::string& sQuery)
 {
@@ -92,4 +114,19 @@ void ClientApiPoster::_QuerySubscription(const std::string& sSubscriptionId, int
 void ClientApiPoster::_QuerySubscriptionRemoved(const std::string& sSubscriptionId)
 {
     QuerySubscriptionRemoved(sSubscriptionId);
+}
+
+void ClientApiPoster::_QueryServerFound(const std::string& sUrl, unsigned short nPriority)
+{
+    QueryServerFound(sUrl, nPriority);
+}
+
+void ClientApiPoster::_QueryServerRemoved(const std::string& sUrl)
+{
+    QueryServerRemoved(sUrl);
+}
+
+void ClientApiPoster::_QueryServerChanged(const std::string& sUrl)
+{
+    QueryServerChanged(sUrl);
 }

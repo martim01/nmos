@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="libnmos_node" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Linux Debug">
+				<Option platforms="Unix;" />
+				<Option output="../lib/nmos_noded" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-std=c++14" />
+					<Add option="-g" />
+					<Add option="-D__GNU__" />
+				</Compiler>
+				<Linker>
+					<Add option="`pkg-config --libs avahi-client`" />
+					<Add option="`pkg-config --libs uuid`" />
+					<Add option="`pkg-config --libs libcurl`" />
+					<Add library="pml_logd" />
+					<Add library="atomic" />
+					<Add library="restgoosed" />
+					<Add library="pthread" />
+				</Linker>
+			</Target>
+			<Target title="Linux Release">
+				<Option platforms="Unix;" />
+				<Option output="../lib/nmos_node" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-O3" />
+					<Add option="-std=c++14" />
+					<Add option="-pthread" />
+					<Add option="-D__GNU__" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="`pkg-config --libs avahi-client`" />
+					<Add option="`pkg-config --libs libcurl`" />
+					<Add library="atomic" />
+					<Add library="restgoose" />
+					<Add library="pthread" />
+					<Add library="pml_log" />
+					<Add library="nmos_base" />
+				</Linker>
+			</Target>
+			<Target title="Windows Debug">
+				<Option platforms="Windows;" />
+				<Option output="../lib/libnmosd" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="3" />
+				<Option compiler="new_gnu_gcc_compiler" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-O3" />
+					<Add option="-std=c++14" />
+					<Add option="-pthread" />
+					<Add option="-D__GNU__" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="`pkg-config --libs avahi-client`" />
+					<Add option="`pkg-config --libs libcurl`" />
+					<Add library="atomic" />
+					<Add library="restgoose" />
+					<Add library="pthread" />
+				</Linker>
+			</Target>
+			<Target title="Windows Release">
+				<Option platforms="Windows;" />
+				<Option output="../lib/libnmos" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="3" />
+				<Option compiler="new_gnu_gcc_compiler" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Option projectCompilerOptionsRelation="-1" />
+				<Option projectLinkerOptionsRelation="-1" />
+				<Option projectIncludeDirsRelation="-1" />
+				<Option projectResourceIncludeDirsRelation="-1" />
+				<Option projectLibDirsRelation="-1" />
+				<MakeCommands>
+					<Build command="" />
+					<CompileFile command="" />
+					<Clean command="" />
+					<DistClean command="" />
+					<AskRebuildNeeded command="" />
+					<SilentBuild command=" &gt; $(CMD_NULL)" />
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-std=c++1z" />
+			<Add option="-fexceptions" />
+			<Add option="-DNMOS_EXPORT" />
+			<Add option="-DMG_ENABLE_HTTP_STREAMING_MULTIPART" />
+			<Add option="-DNMOS_NODE_API" />
+			<Add directory="../include" />
+			<Add directory="../external/uuid" />
+			<Add directory="$(#restgoose.INCLUDE)" />
+			<Add directory="$(#log.INCLUDE)" />
+			<Add directory="$(#dnssd.INCLUDE)" />
+			<Add directory="$(#json.INCLUDE)" />
+		</Compiler>
+		<Linker>
+			<Add directory="../lib" />
+		</Linker>
+		<Unit filename="../include/activator.h" />
+		<Unit filename="../include/eventposter.h" />
+		<Unit filename="../include/is04server.h" />
+		<Unit filename="../include/is05server.h" />
+		<Unit filename="../include/nmosdlldefine.h" />
+		<Unit filename="../include/nmosserver.h" />
+		<Unit filename="../include/nmosthread.h" />
+		<Unit filename="../include/nodeapi.h" />
+		<Unit filename="../include/nodeapiprivate.h" />
+		<Unit filename="../include/nodezcposter.h" />
+		<Unit filename="../include/resourceholder.h" />
+		<Unit filename="../src/activator.cpp" />
+		<Unit filename="../src/eventposter.cpp" />
+		<Unit filename="../src/is04server.cpp" />
+		<Unit filename="../src/is05server.cpp" />
+		<Unit filename="../src/nmosserver.cpp" />
+		<Unit filename="../src/nmosthread.cpp" />
+		<Unit filename="../src/nodeapi.cpp" />
+		<Unit filename="../src/nodeapiprivate.cpp" />
+		<Unit filename="../src/nodezcposter.cpp" />
+		<Unit filename="../src/resourceholder.cpp" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

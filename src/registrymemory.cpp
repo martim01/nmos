@@ -1,3 +1,4 @@
+#ifdef __NMOS_REGISTRY__
 #include "registrymemory.h"
 #include "registryholder.h"
 #include "registryapi.h"
@@ -63,11 +64,11 @@ bool RegistryMemory::AddResource(const std::string& sType, shared_ptr<Resource> 
     {
         if(itHolder->second.AddResource(pResource))
         {
-            Log::Get() << "Resource of type '" << sType << "' " << pResource->GetId() << " added to registry." << endl;
+            pmlLog(pml::LOG_INFO) << "Resource of type '" << sType << "' " << pResource->GetId() << " added to registry." ;
             return true;
         }
     }
-    Log::Get(Log::LOG_ERROR) << "Failed to add resource of type '" << sType << "' " << pResource->GetId() << " added to registry." << endl;
+    pmlLog(pml::LOG_ERROR) << "Failed to add resource of type '" << sType << "' " << pResource->GetId() << " added to registry." ;
     return false;
 }
 
@@ -90,7 +91,7 @@ bool RegistryMemory::GarbageCollection()
         list<string> lstDeleteNode;
         for(map<string, shared_ptr<Resource> >::const_iterator itResource = itNode->second.GetResourceBegin(); itResource != itNode->second.GetResourceEnd(); ++itResource)
         {
-            Log::Get() << "GarbageCollection: " << itResource->first << " Now: " << nNow << " Heartbeat: " << itResource->second->GetLastHeartbeat() << endl;
+            pmlLog(pml::LOG_INFO) << "GarbageCollection: " << itResource->first << " Now: " << nNow << " Heartbeat: " << itResource->second->GetLastHeartbeat() ;
             if(nNow-itResource->second->GetLastHeartbeat() > 30)    //@todo should be able to set the garbage collection time
             {
                 lstDeleteNode.push_back(itResource->first);
@@ -140,8 +141,9 @@ void RegistryMemory::GarbageDelete(RegistryApi::enumResource eResource, const st
     {
         for(list<string>::const_iterator itDelete = lstDelete.begin(); itDelete != lstDelete.end(); ++itDelete)
         {
-            Log::Get() << "Garbage Collect '" << RegistryApi::STR_RESOURCE[eResource] << "' " << (*itDelete) << endl;
+            pmlLog(pml::LOG_INFO) << "Garbage Collect '" << RegistryApi::STR_RESOURCE[eResource] << "' " << (*itDelete) ;
             itHolder->second.RemoveResource(*itDelete);
         }
     }
 }
+#endif

@@ -1,5 +1,8 @@
 #include "flowaudiocoded.h"
 
+
+using namespace pml::nmos;
+
 std::map<std::string, unsigned short>  FlowAudioCoded::m_mRtpTypes = std::map<std::string, unsigned short>();
 
 FlowAudioCoded::FlowAudioCoded(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId, unsigned int nSampleRate, const std::string& sMediaType) :
@@ -17,11 +20,25 @@ FlowAudioCoded::FlowAudioCoded(const std::string& sLabel, const std::string& sDe
     m_mRtpTypes.insert(std::make_pair("audio/MPA", 14));
     m_mRtpTypes.insert(std::make_pair("audio/G728", 15));
     m_mRtpTypes.insert(std::make_pair("audio/G729", 18));
+
+    #ifdef NMOS_NODE_API
+    m_pSdpCreator  = std::make_unique<FlowAudioCodedSdpCreator>(this);
+    #endif // NMOS_NODE_API
 }
 
 FlowAudioCoded::FlowAudioCoded() : FlowAudio()
 {
 
+}
+
+std::shared_ptr<FlowAudioCoded> FlowAudioCoded::Create(const Json::Value& jsResponse)
+{
+    auto pResource = std::make_shared<FlowAudioCoded>();
+    if(pResource->UpdateFromJson(jsResponse))
+    {
+        return pResource;
+    }
+    return nullptr;
 }
 
 bool FlowAudioCoded::UpdateFromJson(const Json::Value& jsData)
@@ -30,7 +47,7 @@ bool FlowAudioCoded::UpdateFromJson(const Json::Value& jsData)
     if(jsData["media_type"].isString() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'media_type' is not a string" << std::endl;
+        m_ssJsonError << "'media_type' is not a string" ;
     }
     else
     {
@@ -56,25 +73,13 @@ void FlowAudioCoded::SetMediaType(const std::string& sMediaType)
 }
 
 
-std::string FlowAudioCoded::CreateSDPLines(unsigned short nRtpPort) const
+
+std::string FlowAudioCoded::CreateSDPMediaLine(unsigned short nPort) const
 {
-    // @todo FlowAudioCoded::CreateSDPLines
-    std::stringstream sstr;
+    return std::string();
+}
 
-    if(m_json["media_type"].isString())
-    {
-        std::string sMedia = m_json["media_type"].asString();
-        std::map<std::string, unsigned short>::const_iterator itType = m_mRtpTypes.find(sMedia);
-        if(itType != m_mRtpTypes.end())
-        {
-            sstr << "m=audio " << nRtpPort << " RTP/AVP " << itType->second << "\r\n"; //this is not 96 its the actual number
-        }
-        else
-        {
-            sstr << "m=audio " << nRtpPort << " RTP/AVP 103\r\n";
-            sstr << "a=rtpmap:103 " << sMedia << "\r\n";    // @todo check what more is needed here ofr different audio codings
-        }
-
-    }
-    return sstr.str();
+std::string FlowAudioCoded::CreateSDPAttributeLines(std::shared_ptr<const Source> pSource) const
+{
+    return std::string();
 }

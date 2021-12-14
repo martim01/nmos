@@ -1,12 +1,13 @@
 #include "flow.h"
 
+using namespace pml::nmos;
+
 Flow::Flow(const std::string& sLabel, const std::string& sDescription, const std::string& sFormat, const std::string& sSourceId, const std::string& sDeviceId) :
     Resource("flow", sLabel, sDescription),
     m_nMediaClkOffset(0),
     m_sFormat(sFormat),
     m_sSourceId(sSourceId),
     m_sDeviceId(sDeviceId)
-
 {
 
 }
@@ -23,17 +24,17 @@ bool Flow::UpdateFromJson(const Json::Value& jsData)
     if(jsData["device_id"].isString() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'device_id' is not a string" << std::endl;
+        m_ssJsonError << "'device_id' is not a string" ;
     }
     if(jsData["source_id"].isString() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'device_id' is not a string" << std::endl;
+        m_ssJsonError << "'device_id' is not a string" ;
     }
     if(jsData["parents"].isArray() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'parents' is not an array" << std::endl;
+        m_ssJsonError << "'parents' is not an array" ;
     }
     if(m_bIsOk)
     {
@@ -45,7 +46,7 @@ bool Flow::UpdateFromJson(const Json::Value& jsData)
             if(jsData["parents"][ai].isString() == false)
             {
                 m_bIsOk = false;
-                m_ssJsonError << "'parents' #" << ai << " is not a string" << std::endl;
+                m_ssJsonError << "'parents' #" << ai << " is not a string" ;
             }
             else
             {

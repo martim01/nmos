@@ -15,6 +15,8 @@
 
 
 using namespace std;
+using namespace pml::nmos;
+
 
 
 Self::Self(const string& sHostname, const string& sUrl,const string& sLabel, const string& sDescription) : Resource("self", sLabel, sDescription),
@@ -27,6 +29,16 @@ Self::Self(const string& sHostname, const string& sUrl,const string& sLabel, con
 
 Self::~Self()
 {
+}
+
+std::shared_ptr<Self> Self::Create(const Json::Value& jsResponse)
+{
+    auto pResource  = std::make_shared<Self>();
+    if(pResource->UpdateFromJson(jsResponse))
+    {
+        return pResource;
+    }
+    return nullptr;
 }
 
 void Self::Init(const string& sHostname, const string& sUrl,const string& sLabel, const string& sDescription)
@@ -57,13 +69,13 @@ void Self::RemoveApiVersion(unsigned short nMajor, unsigned short nMinor)
 
 void Self::AddEndpoint(const string& sHost, unsigned int nPort, bool bSecure)
 {
-    m_setEndpoint.insert(endpoint(sHost, nPort, bSecure));
+    m_setEndpoint.insert(ifendpoint(sHost, nPort, bSecure));
 
 }
 
 void Self::RemoveEndpoint(const string& sHost, unsigned int nPort)
 {
-    m_setEndpoint.erase(endpoint(sHost, nPort, false));
+    m_setEndpoint.erase(ifendpoint(sHost, nPort, false));
 
 }
 
@@ -144,7 +156,7 @@ bool Self::UpdateFromJson(const Json::Value& jsData)
         {
             if(jsData["api"]["endpoints"][ai].isObject() && jsData["api"]["endpoints"][ai]["host"].isString() && jsData["api"]["endpoints"][ai]["port"].isInt() && jsData["api"]["endpoints"][ai]["protocol"].isString())
             {
-                m_setEndpoint.insert(endpoint(jsData["api"]["endpoints"][ai]["host"].asString(), jsData["api"]["endpoints"][ai]["port"].asInt(), (jsData["api"]["endpoints"][ai]["protocol"].asString() == "https")));
+                m_setEndpoint.insert(ifendpoint(jsData["api"]["endpoints"][ai]["host"].asString(), jsData["api"]["endpoints"][ai]["port"].asInt(), (jsData["api"]["endpoints"][ai]["protocol"].asString() == "https")));
             }
             else
             {
@@ -177,50 +189,50 @@ bool Self::Commit(const ApiVersion& version)
         m_json["caps"] = Json::Value(Json::objectValue);
 
         m_json["api"]["versions"] = Json::Value(Json::arrayValue);
-        for(set<ApiVersion>::iterator itVersion = m_setVersion.begin(); itVersion != m_setVersion.end(); ++itVersion)
+        for(auto version : m_setVersion)
         {
-            m_json["api"]["versions"].append((*itVersion).GetVersionAsString());
+            m_json["api"]["versions"].append(version.GetVersionAsString());
         }
 
         m_json["api"]["endpoints"] = Json::Value(Json::arrayValue);
-        for(set<endpoint>::iterator itEnd = m_setEndpoint.begin(); itEnd != m_setEndpoint.end(); ++itEnd)
+        for(auto point : m_setEndpoint)
         {
 
-            m_json["api"]["endpoints"].append((*itEnd).Commit());
+            m_json["api"]["endpoints"].append(point.Commit());
         }
 
         m_json["services"] = Json::Value(Json::arrayValue);
-        for(map<string, string>::iterator itService = m_mService.begin(); itService != m_mService.end(); ++itService)
+        for(auto pairService : m_mService)
         {
             Json::Value jsService;
-            jsService["href"] = itService->first;
-            jsService["type"] = itService->first;
+            jsService["href"] = pairService.first;
+            jsService["type"] = pairService.first;
             m_json["services"].append(jsService);
         }
 
         m_json["clocks"] = Json::Value(Json::arrayValue);
-        for(map<string, clock>::iterator itClock = m_mClock.begin(); itClock != m_mClock.end(); ++itClock)
+        for(auto pairClock : m_mClock)
         {
-            Json::Value jsClock(itClock->second.Commit());
-            jsClock["name"] = itClock->first;
+            Json::Value jsClock(pairClock.second.Commit());
+            jsClock["name"] = pairClock.first;
             m_json["clocks"].append(jsClock);
         }
         m_mClockCommited = m_mClock;
 
         m_json["interfaces"] = Json::Value(Json::arrayValue);
-        for(map<string, nodeinterface>::iterator itInterface = m_mInterface.begin(); itInterface != m_mInterface.end(); ++itInterface)
+        for(auto pairInterface : m_mInterface)
         {
             Json::Value jsInterface;
-            jsInterface["name"] = itInterface->first;
-            if(itInterface->second.sChassisMac.empty() == false)
+            jsInterface["name"] = pairInterface.first;
+            if(pairInterface.second.sChassisMac.empty() == false)
             {
-                jsInterface["chassis_id"] = itInterface->second.sChassisMac;
+                jsInterface["chassis_id"] = pairInterface.second.sChassisMac;
             }
             else
             {
                 jsInterface["chassis_id"] = Json::nullValue;
             }
-            jsInterface["port_id"] = itInterface->second.sPortMac;
+            jsInterface["port_id"] = pairInterface.second.sPortMac;
 
             m_json["interfaces"].append(jsInterface);
         }
@@ -241,9 +253,9 @@ bool Self::Commit(const ApiVersion& version)
 Json::Value Self::JsonVersions() const
 {
     Json::Value jsVersion;
-    for(set<ApiVersion>::iterator itVersion = m_setVersion.begin(); itVersion != m_setVersion.end(); ++itVersion)
+    for(auto version : m_setVersion)
     {
-        jsVersion.append((*itVersion).GetVersionAsString()+"/");
+        jsVersion.append(version.GetVersionAsString()+"/");
     }
     return jsVersion;
 }
@@ -259,39 +271,13 @@ const std::set<ApiVersion>& Self::GetApiVersions() const
     return m_setVersion;
 }
 
-//bool Self::StartServers()
-//{
-//    for(set<endpoint>::iterator itEndpoint = m_setEndpoint.begin(); itEndpoint != m_setEndpoint.end(); ++itEndpoint)
-//    {
-//        map<unsigned short, MicroServer*>::iterator itServer = m_mServers.find(itEndpoint->nPort);
-//        if(itServer == m_mServers.end())
-//        {
-//            MicroServer* pServer(new MicroServer());
-//            m_mServers.insert(make_pair(itEndpoint->nPort, pServer));
-//            pServer->Init(itEndpoint->nPort);
-//        }
-//    }
-//    return true;
-//}
 
-
-//bool Self::StopServers()
-//{
-//    for(map<unsigned short, MicroServer*>::iterator itServer = m_mServers.begin(); itServer != m_mServers.end(); ++itServer)
-//    {
-//        itServer->second->Stop();
-//        delete itServer->second;
-//    }
-//    m_mServers.clear();
-//    return true;
-//}
-
-set<endpoint>::const_iterator Self::GetEndpointsBegin() const
+set<ifendpoint>::const_iterator Self::GetEndpointsBegin() const
 {
     return m_setEndpoint.begin();
 }
 
-set<endpoint>::const_iterator Self::GetEndpointsEnd() const
+set<ifendpoint>::const_iterator Self::GetEndpointsEnd() const
 {
     return m_setEndpoint.end();
 }
@@ -338,45 +324,53 @@ void Self::GetAddresses(const std::string& sInterface, nodeinterface& anInterfac
     close(fd);
 
     anInterface.sMainIpAddress = inet_ntoa((((sockaddr_in*)&ifr.ifr_addr)->sin_addr));
-    cout << sInterface << ": " << anInterface.sMainIpAddress << "  " << anInterface.sPortMac << endl;
+    cout << sInterface << ": " << anInterface.sMainIpAddress << "  " << anInterface.sPortMac ;
     #else
     // @todo windows get mac address
     #endif
 }
 
 
-std::string Self::CreateClockSdp(const std::string& sClockName, const std::string& sInterface) const
+std::string Self::CreateSDPClockLine(const std::string& sClockName, const std::string& sIpAddress) const
 {
-    std::stringstream ss;
+
+    std::string sLine = "a=ts-refclk:local\r\n";
+
     auto itClock = m_mClockCommited.find(sClockName);
     if(itClock != m_mClockCommited.end())
     {
         if(itClock->second.nType == clock::PTP)
         {
-            ss << "a=ts-refclk:ptp=";
+            sLine =  "a=ts-refclk:ptp=";
             if(itClock->second.bTraceable)
             {
-                ss << "traceable\r\n";
+                sLine += "traceable\r\n";
             }
             else
             {
-                ss << itClock->second.sVersion << ":" << itClock->second.sGmid << "\r\n";
+                sLine += itClock->second.sVersion + ":" + itClock->second.sGmid + "\r\n";
             }
         }
         else if(itClock->second.nType == clock::INTERNAL)
         {
-            map<std::string, nodeinterface>::const_iterator itInterface = m_mInterface.find(sInterface);
-            if(itInterface != m_mInterface.end())
+            if(sIpAddress.empty())
             {
-                ss << "a=ts-refclk:localmac=" << itInterface->second.sPortMac << "\r\n";
+                return "a=ts-refclk:localmac=" + m_mInterface.begin()->second.sPortMac + "\r\n";
             }
-            else if(m_mInterface.empty())
+            else if(m_mInterface.empty() == false)
             {
-                ss << "a=ts-refclk:localmac=" << m_mInterface.begin()->second.sPortMac << "\r\n";
+                for(const auto& pairInterface : m_mInterface)
+                {
+                    if(pairInterface.second.sMainIpAddress == sIpAddress)
+                    {
+                        return "a=ts-refclk:localmac=" + pairInterface.second.sPortMac + "\r\n";
+                    }
+                }
+                return "a=ts-refclk:localmac=" + m_mInterface.begin()->second.sPortMac + "\r\n";
             }
         }
     }
-    return ss.str();
+    return sLine;
 }
 
 

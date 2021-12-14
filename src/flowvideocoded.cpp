@@ -1,5 +1,7 @@
 #include "flowvideocoded.h"
 
+using namespace pml::nmos;
+
 FlowVideoCoded::FlowVideoCoded(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId, const std::string& sMediaType, unsigned int nFrameWidth, unsigned int nFrameHeight, enumColour eColour, enumInterlace eInterlace, enumTransfer eTransfer) :
     FlowVideo(sLabel, sDescription, sSourceId, sDeviceId, sMediaType, nFrameWidth, nFrameHeight, eColour, eInterlace, eTransfer)
 {
@@ -27,9 +29,23 @@ bool FlowVideoCoded::Commit(const ApiVersion& version)
 }
 
 
-
-std::string FlowVideoCoded::CreateSDPLines(unsigned short nRtpPort) const
+std::shared_ptr<FlowVideoCoded> FlowVideoCoded::Create(const Json::Value& jsResponse)
 {
-    // @todo create VideoCoded SDP information
-    return "";
+    auto pResource  = std::make_shared<FlowVideoCoded>();
+    if(pResource->UpdateFromJson(jsResponse))
+    {
+        return pResource;
+    }
+    return nullptr;
+}
+
+
+std::string FlowVideoCoded::CreateSDPMediaLine(unsigned short nPort) const
+{
+    return std::string();
+}
+
+std::string FlowVideoCoded::CreateSDPAttributeLines(std::shared_ptr<const Source> pSource) const
+{
+    return std::string();
 }

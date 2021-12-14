@@ -1,8 +1,5 @@
 #pragma once
 #include "nodeapi.h"
-#include "clientapi.h"
-#include "registryapi.h"
-#include "log.h"
 #include "eventposter.h"
 #include "resource.h"
 #include "device.h"
@@ -14,7 +11,7 @@
 #include "flowvideoraw.h"
 #include "flowdatasdianc.h"
 #include "flowmux.h"
-#include "sender.h"
-#include "receiver.h"
+#include "senderbase.h"
+#include "receiverbase.h"
 
 

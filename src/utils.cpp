@@ -14,7 +14,7 @@
 #endif // __GNU__
 #include <chrono>
 #include <sstream>
-
+#include "log.h"
 #include "guid.h"
 #include <array>
 
@@ -42,6 +42,14 @@ void SplitString(vector<string>& vSplit, const std::string& str, char cSplit)
         }
     }
 }
+
+vector<string> SplitString(const std::string& str, char cSplit)
+{
+    std::vector<std::string> vSplit;
+    SplitString(vSplit, str, cSplit);
+    return vSplit;
+}
+
 
 
 string GetIpAddress(const string& sInterface)
@@ -71,10 +79,15 @@ size_t GetCurrentHeartbeatTime()
 }
 
 std::string GetCurrentTaiTime(bool bIncludeNano)
+            {
+    return ConvertTimeToString(GetTaiTimeNow(), bIncludeNano);
+}
+
+std::chrono::time_point<std::chrono::high_resolution_clock> GetTaiTimeNow()
 {
-    std::chrono::time_point<std::chrono::high_resolution_clock> tp(std::chrono::high_resolution_clock::now());
+    auto tp = std::chrono::high_resolution_clock::now();
     tp += LEAP_SECONDS;
-    return ConvertTimeToString(tp, bIncludeNano);
+    return tp;
 }
 
 std::string ConvertTimeToString(std::chrono::time_point<std::chrono::high_resolution_clock> tp, bool bIncludeNano)
@@ -108,18 +121,130 @@ std::string CreateGuid()
     return CreateGuid(GetCurrentTaiTime(true));
 }
 
-
-bool CheckJson(const Json::Value& jsObject, std::initializer_list<std::string> lstAllowed)
+bool CheckJsonType(const Json::Value& jsValue, const std::set<jsondatatype>& setType)
 {
-    for(Json::Value::const_iterator itParam = jsObject.begin(); itParam != jsObject.end(); ++itParam)
+    switch(jsValue.type())
     {
-        std::initializer_list<std::string>::iterator itList = lstAllowed.begin();
-        for(; itList != lstAllowed.end(); ++itList)
+        case Json::ValueType::arrayValue:
+            if(setType.find(jsondatatype::_ARRAY) == setType.end())
+            {
+                return false;
+            }
+            break;
+        case Json::ValueType::booleanValue:
+            if(setType.find(jsondatatype::_BOOLEAN) == setType.end())
+            {
+                return false;
+            }
+            break;
+        case Json::ValueType::intValue:
+        case Json::ValueType::uintValue:
+            if(setType.find(jsondatatype::_INTEGER) == setType.end())
+            {
+                return false;
+            }
+            break;
+        case Json::ValueType::realValue:
+            if(setType.find(jsondatatype::_NUMBER) == setType.end())
+            {
+                return false;
+            }
+            break;
+        case Json::ValueType::nullValue:
+            if(setType.find(jsondatatype::_NULL) == setType.end())
+            {
+                return false;
+            }
+            break;
+        case Json::ValueType::objectValue:
+            if(setType.find(jsondatatype::_OBJECT) == setType.end())
+            {
+                return false;
+            }
+            break;
+        case Json::ValueType::stringValue:
+            if(setType.find(jsondatatype::_STRING) == setType.end())
+            {
+                return false;
+            }
+            break;
+    }
+    return true;
+}
+
+void PatchJson(Json::Value& jsObject, const Json::Value& jsPatch)
+{
+    for(auto itObject = jsPatch.begin(); itObject != jsPatch.end(); ++itObject)
+    {
+        if(jsObject.isMember(itObject.key().asString()))
         {
-            if((*itList) == itParam.key().asString())
-                break;
+            jsObject[itObject.key().asString()] = (*itObject);
         }
-        if(itList == lstAllowed.end())   //found a non allowed thing
+    }
+}
+
+bool CheckJson(const Json::Value& jsObject, const std::map<std::string, std::set<jsondatatype>>& mKeys)
+{
+    return CheckJsonAllowed(jsObject, mKeys) && CheckJsonRequired(jsObject, mKeys);
+}
+
+bool CheckJsonAllowed(const Json::Value& jsObject, const std::map<std::string, std::set<jsondatatype>>& mAllowed)
+{
+    for(auto itObject = jsObject.begin(); itObject != jsObject.end(); ++itObject)
+    {
+        auto itAllowed = mAllowed.find(itObject.key().asString()) ;
+        if(itAllowed == mAllowed.end())
+        {
+            pmlLog(pml::LOG_DEBUG) << "NMOS: CheckJsonAllowed: " << itObject.key().asString() << " not allowed";
+            return false;
+        }
+        else if(CheckJsonType(*itObject, itAllowed->second) == false)
+        {   //key allowed but not if this type
+            pmlLog(pml::LOG_DEBUG) << "NMOS: CheckJsonAllowed: " << itObject.key().asString() << " allowed but wrong type";
+            return false;
+        }
+    }
+    return true;
+}
+
+
+bool CheckJsonRequired(const Json::Value& jsObject, const std::map<std::string, std::set<jsondatatype>>& mRequired)
+{
+    for(auto required : mRequired)
+    {
+        if(jsObject.isMember(required.first) == false)
+        {
+            return false;
+        }
+        if(!CheckJsonType(jsObject[required.first], required.second))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool CheckJsonOptional(const Json::Value& jsObject, const std::map<std::string, std::set<jsondatatype>>& mOptional)
+{
+    //if the key exists then it must be of the given type
+    for(auto opt : mOptional)
+    {
+        if(jsObject.isMember(opt.first))
+        {
+            if(!CheckJsonType(jsObject[opt.first], opt.second))
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+bool CheckJsonNotAllowed(const Json::Value& jsObject, const std::set<std::string>& setNotAllowed)
+{
+    for(auto sKey : setNotAllowed)
+    {
+        if(jsObject.isMember(sKey))
         {
             return false;
         }
@@ -136,6 +261,142 @@ bool JsonMemberExistsAndIsNull(const Json::Value& jsObject, const std::string& s
 bool JsonMemberExistsAndIsNotNull(const Json::Value& jsObject, const std::string& sMember)
 {
     return (jsObject.isMember(sMember) && (jsObject[sMember].isNull()==false));
+}
+
+
+Json::Value ConvertToJson(const std::string& str)
+{
+    Json::Value jsData;
+    try
+    {
+        std::stringstream ss;
+        ss.str(str);
+
+        ss >> jsData;
+
+    }
+    catch(const Json::RuntimeError& e)
+    {
+        pmlLog(pml::LOG_ERROR) << "NMOS: " << "Unable to convert '" << str << "' to JSON: " << e.what();
+    }
+
+    return jsData;
+}
+
+std::string ConvertFromJson(const Json::Value& jsValue)
+{
+    Json::StreamWriterBuilder builder;
+    builder["commentStyle"] = "None";
+    builder["indentation"] = "";
+    return Json::writeString(builder, jsValue);
+}
+
+std::experimental::optional<bool> GetBool(const Json::Value& jsObject, const std::string& sKey)
+{
+    if(jsObject.isMember(sKey) && jsObject[sKey].isConvertibleTo(Json::booleanValue))
+    {
+        return jsObject[sKey].asBool();
+    }
+    return {};
+}
+
+std::experimental::optional<std::string> GetString(const Json::Value& jsObject, const std::string& sKey)
+{
+    if(jsObject.isMember(sKey) && jsObject[sKey].isConvertibleTo(Json::stringValue))
+    {
+        return jsObject[sKey].asString();
+    }
+    return {};
+}
+
+std::experimental::optional<uint32_t> GetUInt(const Json::Value& jsObject, const std::string& sKey)
+{
+    if(jsObject.isMember(sKey) && jsObject[sKey].isConvertibleTo(Json::uintValue))
+    {
+        return jsObject[sKey].asUInt();
+    }
+    return {};
+}
+
+std::experimental::optional<int32_t> GetInt(const Json::Value& jsObject, const std::string& sKey)
+{
+    if(jsObject.isMember(sKey) && jsObject[sKey].isConvertibleTo(Json::intValue))
+    {
+        return jsObject[sKey].asInt();
+    }
+    return {};
+}
+std::experimental::optional<uint64_t> GetUInt64(const Json::Value& jsObject, const std::string& sKey)
+{
+    if(jsObject.isMember(sKey) && jsObject[sKey].isConvertibleTo(Json::uintValue))
+    {
+        return jsObject[sKey].asUInt64();
+    }
+    return {};
+}
+
+std::experimental::optional<int64_t> GetInt64(const Json::Value& jsObject, const std::string& sKey)
+{
+    if(jsObject.isMember(sKey) && jsObject[sKey].isConvertibleTo(Json::intValue))
+    {
+        return jsObject[sKey].asInt64();
+    }
+    return {};
+}
+
+std::experimental::optional<double> GetDouble(const Json::Value& jsObject, const std::string& sKey)
+{
+    if(jsObject.isMember(sKey) && jsObject[sKey].isConvertibleTo(Json::realValue))
+    {
+        return jsObject[sKey].asDouble();
+    }
+    return {};
+}
+
+
+
+std::experimental::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> ConvertTaiStringToTimePoint(const std::string& sTai)
+{
+    std::istringstream f(sTai);
+    std::string sSeconds;
+    std::string sNano;
+
+    if(getline(f, sSeconds, ':') && getline(f, sNano, ':'))
+    {
+        try
+        {
+            std::chrono::seconds sec(std::stoul(sSeconds));
+            std::chrono::nanoseconds nano(std::stoul(sNano));
+            nano += std::chrono::duration_cast<std::chrono::nanoseconds>(sec);
+            return std::chrono::time_point<std::chrono::high_resolution_clock>(nano);
+        }
+        catch(std::invalid_argument& e)
+        {
+            return {};
+        }
+    }
+    return {};
+}
+
+bool AddTaiStringToTimePoint(const std::string& sTai,std::chrono::time_point<std::chrono::high_resolution_clock>& tp)
+{
+    try
+    {
+        std::vector<std::string> vTime;
+        SplitString(vTime, sTai, ':');
+        if(vTime.size() != 2)
+        {
+            throw std::invalid_argument("invalid time");
+        }
+        std::chrono::nanoseconds nano((static_cast<long long int>(std::stoul(vTime[0]))*1000000000)+stoul(vTime[1]));
+        tp+=nano;
+        tp-=LEAP_SECONDS;   //remove the leap seconds to get back to the system time?>?>
+        return true;
+    }
+    catch(std::invalid_argument& e)
+    {
+        return false;
+    }
 }
 
 

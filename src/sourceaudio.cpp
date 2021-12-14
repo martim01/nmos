@@ -1,4 +1,8 @@
 #include "sourceaudio.h"
+#include <algorithm>
+
+
+using namespace pml::nmos;
 
 
 SourceAudio::SourceAudio(const std::string& sLabel, const std::string& sDescription, const std::string& sDeviceId) :
@@ -13,15 +17,20 @@ SourceAudio::SourceAudio() : Source(Source::AUDIO)
 
 }
 
-void SourceAudio::AddChannel(const std::string& sLabel, const std::string& sSymbol)
+void SourceAudio::AddChannels(const std::map<channelSymbol, channelLabel>& mChannels)
 {
-    m_mChannel.insert(make_pair(sSymbol, sLabel));
+    m_mChannel.insert(mChannels.begin(), mChannels.end());
+}
+
+void SourceAudio::AddChannel(const channelSymbol& symbol, const channelLabel& label)
+{
+    m_mChannel.insert(make_pair(symbol, label));
     UpdateVersionTime();
 }
 
-void SourceAudio::RemoveChannel(const std::string& sSymbol)
+void SourceAudio::RemoveChannel(const channelSymbol& symbol)
 {
-    m_mChannel.erase(sSymbol);
+    m_mChannel.erase(symbol);
     UpdateVersionTime();
 }
 
@@ -32,12 +41,12 @@ bool SourceAudio::UpdateFromJson(const Json::Value& jsData)
     if(jsData["channels"].isArray() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'channels' is not an array" << std::endl;
+        m_ssJsonError << "'channels' is not an array" ;
     }
     else if(jsData["channels"].size() ==0 )
     {
         m_bIsOk = false;
-        m_ssJsonError << "'channels' is an empty array" << std::endl;
+        m_ssJsonError << "'channels' is an empty array" ;
     }
     if(m_bIsOk)
     {
@@ -46,25 +55,25 @@ bool SourceAudio::UpdateFromJson(const Json::Value& jsData)
             if(jsData["channels"][ai].isObject() == false)
             {
                 m_bIsOk = false;
-                m_ssJsonError << "'channels' #" << ai << " is not an object" << std::endl;
+                m_ssJsonError << "'channels' #" << ai << " is not an object" ;
                 break;
             }
             else if(jsData["channels"][ai]["label"].isString() == false)
             {
                 m_bIsOk = false;
-                m_ssJsonError << "'channels' #" << ai << " 'label' is not a string" << std::endl;
+                m_ssJsonError << "'channels' #" << ai << " 'label' is not a string" ;
                 break;
             }
             else if(jsData["channels"][ai]["symbol"].isString() == false)
             {
                 m_bIsOk = false;
-                m_ssJsonError << "'channels' #" << ai << " 'symbol' is not a string" << std::endl;
+                m_ssJsonError << "'channels' #" << ai << " 'symbol' is not a string" ;
                 break;
             }
             else
             {
                 // @todo should we check the channel symbol is valid??
-                m_mChannel.insert(make_pair(jsData["channels"][ai]["symbol"].asString(), jsData["channels"][ai]["label"].asString()));
+                m_mChannel.insert(make_pair(channelSymbol(jsData["channels"][ai]["symbol"].asString()), channelLabel(jsData["channels"][ai]["label"].asString())));
             }
         }
     }
@@ -77,11 +86,11 @@ bool SourceAudio::Commit(const ApiVersion& version)
     {
         m_json["channels"] = Json::Value(Json::arrayValue);
 
-        for(std::map<std::string, std::string>::const_iterator itChannel = m_mChannel.begin(); itChannel != m_mChannel.end(); ++itChannel)
+        for(const auto& pairChannel : m_mChannel)
         {
             Json::Value jsChannel;
-            jsChannel["label"] = itChannel->second;
-            jsChannel["symbol"] =  itChannel->first;
+            jsChannel["label"] = pairChannel.second.Get();
+            jsChannel["symbol"] =  pairChannel.first.Get();
 
             m_json["channels"].append(jsChannel);
         }
@@ -89,6 +98,16 @@ bool SourceAudio::Commit(const ApiVersion& version)
         return true;
     }
     return false;
+}
+
+std::shared_ptr<SourceAudio> SourceAudio::Create(const Json::Value& jsResponse)
+{
+    auto pResource  = std::make_shared<SourceAudio>();
+    if(pResource->UpdateFromJson(jsResponse))
+    {
+        return pResource;
+    }
+    return nullptr;
 }
 
 size_t SourceAudio::GetNumberOfChannels() const

@@ -3,20 +3,28 @@
 #include "nmosdlldefine.h"
 #include <list>
 
-class NMOS_EXPOSE FlowDataSdiAnc : public FlowData
+namespace pml
 {
-    public:
-        FlowDataSdiAnc(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId);
-        FlowDataSdiAnc();
-        virtual bool UpdateFromJson(const Json::Value& jsData);
-        virtual bool Commit(const ApiVersion& version);
+    namespace nmos
+    {
+        class NMOS_EXPOSE FlowDataSdiAnc : public FlowData
+        {
+            public:
+                FlowDataSdiAnc(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId);
+                static std::shared_ptr<FlowDataSdiAnc> Create(const Json::Value& jsResponse);
+                FlowDataSdiAnc();
+                virtual bool UpdateFromJson(const Json::Value& jsData);
+                virtual bool Commit(const ApiVersion& version);
 
-        virtual std::string CreateSDPLines(unsigned short nRtpPort) const;
+                std::string CreateSDPMediaLine(unsigned short nPort) const override;
+                std::string CreateSDPAttributeLines(std::shared_ptr<const Source> pSource) const override;
 
-    private:
-        //@TODO identification words
-        std::list<std::pair<std::string, std::string> > m_lstWords;
+            private:
+
+                //@TODO identification words
+                std::list<std::pair<std::string, std::string> > m_lstWords;
+        };
+    };
 };
-
 
 

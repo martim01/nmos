@@ -1,59 +1,90 @@
 #pragma once
 #include <string>
 #include <condition_variable>
-#include "microhttpd.h"
 #include <thread>
 #include <vector>
 #include "json/json.h"
-#include "version.h"
+#include "nmosapiversion.h"
 #include "nmosserver.h"
 
-class Sender;
-class Receiver;
+class RestGoose;
 
-class IS05Server : public NmosServer
+namespace pml
 {
-    public:
+    namespace nmos
+    {
+        class Sender;
+        class Receiver;
 
-        /** @brief Constructor - this is called in NodeApi::StartService
-        *   @param pPoster a sheared_ptr to an object of a class derived from EventPoster.
-        **/
-        IS05Server();
+        class IS05Server : public NmosServer
+        {
+            public:
+
+                /** @brief Constructor - this is called in NodeApi::StartService
+                *   @param pPoster a sheared_ptr to an object of a class derived from EventPoster.
+                **/
+                IS05Server(std::shared_ptr<RestGoose> pServer, const ApiVersion& version, std::shared_ptr<EventPoster> pPoster, NodeApiPrivate& api);
+                virtual ~IS05Server();
+
+
+                void AddSenderEndpoint(const std::string& sId);
+                void AddReceiverEndpoint(const std::string& sId);
+
+                void RemoveSenderEndpoint(const std::string& sId);
+                void RemoveReceiverEndpoint(const std::string& sId);
+
+                response GetNmosRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosVersion(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosBulk(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosBulkSenders(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response PostNmosBulkSenders(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosBulkReceivers(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response PostNmosBulkReceivers(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingle(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleSenders(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleReceivers(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleSender(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleSenderConstraints(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleSenderStaged(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleSenderActive(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleSenderTransportfile(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleSenderTransportType(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response PatchNmosSingleSenderStaged(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleReceiver(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleReceiverConstraints(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleReceiverStaged(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleReceiverActive(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response GetNmosSingleReceiverTransportType(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                response PatchNmosSingleReceiverStaged(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+
+            private:
+                void AddBaseEndpoints();
+
+                std::shared_ptr<Sender> GetSender(const endpoint& theEndpoint);
+                std::shared_ptr<Receiver> GetReceiver(const endpoint& theEndpoint);
 
 
 
-    protected:
-        friend class NodeApi;
+                response PatchSender(std::shared_ptr<Sender> pSender, const Json::Value& jsRequest);
+                response PatchReceiver(std::shared_ptr<Receiver> pReceiver, const Json::Value& jsRequest);
+                response PostJsonSenders(const response& request);
+                response PostJsonReceivers(const response& request);
+
+                static const std::string ROOT;
+                static const std::string BULK;
+                static const std::string SENDERS;
+                static const std::string RECEIVERS;
+                static const std::string SINGLE;
+                static const std::string CONSTRAINTS;
+                static const std::string STAGED;
+                static const std::string ACTIVE;
+                static const std::string TRANSPORTFILE;
+                static const std::string TRANSPORTTYPE;
 
 
-    private:
+                static const size_t RESOURCE_ID = 5;
 
-
-
-        int GetJsonNmos(Server* pServer, std::string& sReturn, std::string& sContentType);
-        int PatchJsonNmos(Server* pServer, const std::string& sJson, std::string& sResponse);
-        int PostJsonNmos(Server* pServer, const std::string& sJson, std::string& sResponse);
-
-        int GetJsonNmosConnectionApi(std::string& sReturn, std::string& sContentType);
-        int GetJsonNmosConnectionSingleApi(std::string& sReturn, std::string& sContentType, const ApiVersion& version);
-        int GetJsonNmosConnectionBulkApi(std::string& sReturn);
-
-        int GetJsonNmosConnectionSingleSenders(std::string& sReturn, std::string& sContentType, const ApiVersion& version);
-        int GetJsonNmosConnectionSingleReceivers(std::string& sReturn, const ApiVersion& version);
-
-        int PatchJsonSender(Server* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version);
-        int PatchJsonReceiver(Server* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version);
-
-        int PostJsonSenders(Server* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version);
-        int PostJsonReceivers(Server* pServer, const std::string& sJson, std::string& sResponse, const ApiVersion& version);
-
-        int PatchSender(Server* pServer, std::shared_ptr<Sender> pSender, const Json::Value& jsRequest, std::string& sResponse, const ApiVersion& version);
-        int PatchReceiver(Server* pServer, std::shared_ptr<Receiver> pReceiver, const Json::Value& jsRequest, std::string& sResponse, const ApiVersion& version);
-
-        enum {NMOS=0, API_TYPE=1,VERSION=2,ENDPOINT=3, RESOURCE=4, TARGET=5};
-        enum {SZ_BASE=0, SZ_NMOS=1, SZ_API_TYPE=2,SZ_VERSION=3,SZ_ENDPOINT=4, SZ_RESOURCE=5, SZ_TARGET=6};
-        enum {SZC_TYPE=4, SZC_DIRECTION=5, SZC_ID=6, SZC_LAST=7};
-        enum {C_TYPE = 3, C_DIRECTION=4, C_ID=5, C_LAST=6};
+        };
+    };
 };
-
 

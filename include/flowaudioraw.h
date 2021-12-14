@@ -2,24 +2,35 @@
 #include "flowaudio.h"
 #include "nmosdlldefine.h"
 
-class NMOS_EXPOSE FlowAudioRaw : public FlowAudio
+namespace pml
 {
-    public:
-        enum enumFormat { L24, L20, L16, L8};
-        enum enumPacket { US_125, US_250, US_333, US_1000, US_4000};;
+    namespace nmos
+    {
+        class NMOS_EXPOSE FlowAudioRaw : public FlowAudio
+        {
+            public:
+                enum enumFormat { L24, L20, L16, L8};
+                enum enumPacket { US_125, US_250, US_333, US_1000, US_4000};;
 
-        FlowAudioRaw(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId, unsigned int nSampleRate, enumFormat eFormat);
-        virtual bool Commit(const ApiVersion& version);
+                FlowAudioRaw(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId, unsigned int nSampleRate, enumFormat eFormat);
+                virtual bool Commit(const ApiVersion& version);
+                static std::shared_ptr<FlowAudioRaw> Create(const Json::Value& jsResponse);
+                FlowAudioRaw();
 
-        FlowAudioRaw();
-        virtual bool UpdateFromJson(const Json::Value& jsData);
-        void SetFormat(enumFormat eFormat);
-        void SetPacketTime(enumPacket ePacketTime);
+                virtual bool UpdateFromJson(const Json::Value& jsData);
+                void SetFormat(enumFormat eFormat);
+                void SetPacketTime(enumPacket ePacketTime);
 
-        virtual std::string CreateSDPLines(unsigned short nRtpPort) const;
+                enumFormat GetFormat() const { return m_eFormat;}
+                enumPacket GetPacketTime() const { return m_ePacketTime;}
 
-    private:
-        enumFormat m_eFormat;
-        enumPacket m_ePacketTime;
+                std::string CreateSDPMediaLine(unsigned short nPort) const override;
+                std::string CreateSDPAttributeLines(std::shared_ptr<const Source> pSource) const override;
+
+            private:
+
+                enumFormat m_eFormat;
+                enumPacket m_ePacketTime;
+        };
+    };
 };
-

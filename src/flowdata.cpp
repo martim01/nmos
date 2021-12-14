@@ -1,5 +1,7 @@
 #include "flowdata.h"
 
+using namespace pml::nmos;
+
 FlowData::FlowData(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId, const std::string& sMediaType) :
     Flow(sLabel, sDescription, "urn:x-nmos:format:data", sSourceId, sDeviceId),
     m_sMediaType(sMediaType)
@@ -23,7 +25,7 @@ bool FlowData::UpdateFromJson(const Json::Value& jsData)
     }
     else
     {
-        m_ssJsonError << "'media_type' is not a string" << std::endl;
+        m_ssJsonError << "'media_type' is not a string" ;
     }
     return m_bIsOk;
 }

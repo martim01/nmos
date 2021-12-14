@@ -1,96 +1,67 @@
 #pragma once
 #include <curl/curl.h>
 #include <string>
-#include "nodeapi.h"
+#include <memory>
+#include <list>
+#include <functional>
 
-class CurlEvent;
-/** @brief Struct that keeps the return Curl data in memory until we've finished getting stuff
-**/
-struct MemoryStruct
+namespace pml
 {
-    ///< @brief Constructor
-    MemoryStruct()
+    namespace nmos
     {
-        pMemory = reinterpret_cast<char*>(malloc(1));
-        nSize = 0;
-    }
+        class CurlEvent;
+        class EventPoster;
 
-    ///< @brief Destructor
-    ~MemoryStruct()
-    {
-        free(pMemory);
-    }
+        struct curlResponse
+        {
+            curlResponse() : nCode(500){}
+            long nCode;
+            std::string sResponse;
+            std::string sDebug;
+        };
 
-  char *pMemory;    ///< @brief Pointer to some memory
-  size_t nSize;     ///< @brief Size of the allocated memory
+
+        /** @brief class that does all the curl requests to PIPs and decodes the returned data. This class is contained in curlthread
+        **/
+        class CurlRegister
+        {
+
+            public:
+                ///< @brief constructor
+                CurlRegister(std::function<void(const curlResponse&, unsigned long, const std::string&)> pCallback);
+
+                ///< @brief Destructor
+                ~CurlRegister();
+
+
+                //simple versions
+                static curlResponse Post(const std::string& sBaseUrl, const std::string& sJson);
+                static curlResponse Delete(const std::string& sBaseUrl, const std::string& sType, const std::string& sId);
+                static curlResponse PutPatch(const std::string& sBaseUrl, const std::string& sJson, bool bPut, const std::string& sResourceId);
+                static curlResponse Get(const std::string& sUrl, bool bJson=false);
+
+
+                //threaded version
+                void PostAsync(const std::string& sBaseUrl, const std::string& sJson, long nUserType);
+                void DeleteAsync(const std::string& sBaseUrl, const std::string& sType, const std::string& sId, long nUserType);
+                void PutPatchAsync(const std::string& sBaseUrl, const std::string& sJson, long nUserType, bool bPut, const std::string& sResourceId);
+                void GetAsync(const std::string& sUrl, long nUserType, bool bJson=false);
+
+                void Callback(const curlResponse& resp, long nUser, const std::string sResponse="");
+
+                static const int TIMEOUT_CONNECT = 3;
+                static const int TIMEOUT_MSG = 2;
+
+            private:
+
+
+                std::function<void(const curlResponse&, unsigned long, const std::string&)> m_pCallback;
+
+                static const std::string STR_RESOURCE[7];
+
+                //std::list<std::shared_ptr<std::thread>> m_lstThread;
+
+
+        };
+    };
 };
-
-
-/** @brief Curl callback function that gets the returned Schedule data from PIPs
-*   @param pData
-*   @param nSize
-*   @param nMemb
-*   @param pNetwork
-*   @return <i>int<i>
-**/
-static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp);
-
-/** @brief Curl callback function that gets any error/debug messages from libcurl
-*   @param handle
-*   @param type
-*   @param data
-*   @param size
-*   @param userptr
-*   @return <i>int<i>
-**/
-static int debug_callback(CURL *handle, curl_infotype type, char *data, size_t size, void *userptr);
-
-class EventPoster;
-/** @brief class that does all the curl requests to PIPs and decodes the returned data. This class is contained in curlthread
-**/
-class CurlRegister
-{
-
-    public:
-        ///< @brief constructor
-        CurlRegister(std::shared_ptr<EventPoster> pPoster);
-
-        ///< @brief Destructor
-        ~CurlRegister();
-
-        std::shared_ptr<EventPoster> GetPoster();
-
-        //threaded version
-        void Post(const std::string& sBaseUrl, const std::string& sJson, long nUserType);
-        //simple versions
-        static long Post(const std::string& sBaseUrl, const std::string& sJson, std::string& sResponse);
-
-        void Delete(const std::string& sBaseUrl, const std::string& sType, const std::string& sId, long nUserType);
-        static long Delete(const std::string& sBaseUrl, const std::string& sType, const std::string& sId, std::string& sResponse);
-
-        //void Query(const std::string& sBaseUrl, NodeApi::enumResource eResource, const std::string& sQuery, ResourceHolder* pResults, long nUserType);
-        //long Query(const std::string& sBaseUrl, NodeApi::enumResource eResource, const std::string& sQuery, ResourceHolder* pResults);
-
-        //threaded version
-        void PutPatch(const std::string& sBaseUrl, const std::string& sJson, long nUserType, bool bPut, const std::string& sResourceId);
-        //simple versions
-        static long PutPatch(const std::string& sBaseUrl, const std::string& sJson, std::string& sResponse, bool bPut, const std::string& sResourceId);
-
-
-        void Get(const std::string& sUrl, long nUserType);
-        //static simple version
-        static long Get(const std::string& sUrl, std::string& sResonse, bool bJson=false);
-
-    private:
-
-        //void PostStatic(const std::string& sUrl, const std::string& sJson, EventPoster* pPoster);
-//        void ParseResults(NodeApi::enumResource eResource, const std::string& sResponse, ResourceHolder* pResults);
-        std::shared_ptr<EventPoster> m_pPoster;
-
-        static const std::string STR_RESOURCE[7];
-
-        static const int TIMEOUT_CONNECT = 3;
-        static const int TIMEOUT_MSG = 2;
-
-};
-

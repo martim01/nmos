@@ -16,15 +16,18 @@
 				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>
-					<Add option="-std=c++11" />
+					<Add option="-std=c++14" />
 					<Add option="-g" />
 					<Add option="-D__GNU__" />
 				</Compiler>
 				<Linker>
-					<Add option="`pkg-config --libs libmicrohttpd`" />
 					<Add option="`pkg-config --libs avahi-client`" />
 					<Add option="`pkg-config --libs uuid`" />
 					<Add option="`pkg-config --libs libcurl`" />
+					<Add library="pml_logd" />
+					<Add library="atomic" />
+					<Add library="restgoosed" />
+					<Add library="pthread" />
 				</Linker>
 			</Target>
 			<Target title="Linux Release">
@@ -36,15 +39,19 @@
 				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>
-					<Add option="-std=c++11" />
 					<Add option="-O3" />
+					<Add option="-std=c++14" />
+					<Add option="-pthread" />
 					<Add option="-D__GNU__" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
-					<Add option="`pkg-config --libs libmicrohttpd`" />
 					<Add option="`pkg-config --libs avahi-client`" />
 					<Add option="`pkg-config --libs libcurl`" />
+					<Add library="atomic" />
+					<Add library="restgoose" />
+					<Add library="pthread" />
+					<Add library="pml_log" />
 				</Linker>
 			</Target>
 			<Target title="Windows Debug">
@@ -56,28 +63,18 @@
 				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>
-					<Add option="-std=c11" />
-					<Add option="-g" />
-					<Add option="-pipe" />
-					<Add option="-mthreads" />
-					<Add option='[[if (PLATFORM == PLATFORM_MSW &amp;&amp; (GetCompilerFactory().GetCompilerVersionString(_T(&quot;gcc&quot;)) &gt;= _T(&quot;4.0.0&quot;))) print(_T(&quot;-Wno-attributes&quot;));]]' />
-					<Add option="-std=c++11" />
-					<Add option="-D__GNUWIN32__" />
-					<Add option="-D_MSL_STDINT_H" />
-					<Add directory="external/mdnssd" />
-					<Add directory="$(#curl.INCLUDE)" />
-					<Add directory="$(#microhttp.INCLUDE)" />
+					<Add option="-O3" />
+					<Add option="-std=c++14" />
+					<Add option="-pthread" />
+					<Add option="-D__GNU__" />
 				</Compiler>
 				<Linker>
-					<Add library="dnssd" />
-					<Add library="libcurl" />
-					<Add library="Ws2_32" />
-					<Add library="Iphlpapi" />
-					<Add library="libmicrohttpd-12" />
-					<Add library="Ole32" />
-					<Add directory="$(#curl.LIB)" />
-					<Add directory="$(#microhttp.LIB)" />
-					<Add directory="external/mdnssd/windows" />
+					<Add option="-s" />
+					<Add option="`pkg-config --libs avahi-client`" />
+					<Add option="`pkg-config --libs libcurl`" />
+					<Add library="atomic" />
+					<Add library="restgoose" />
+					<Add library="pthread" />
 				</Linker>
 			</Target>
 			<Target title="Windows Release">
@@ -104,183 +101,22 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
+			<Add option="-std=c++1z" />
 			<Add option="-fexceptions" />
 			<Add option="-DNMOS_EXPORT" />
 			<Add option="-DMG_ENABLE_HTTP_STREAMING_MULTIPART" />
-			<Add directory="$(#json.include)" />
+			<Add directory="external/jsoncpp" />
 			<Add directory="include" />
 			<Add directory="external/uuid" />
 			<Add directory="external/mongoose" />
+			<Add directory="../Restgoose" />
+			<Add directory="../log/include" />
 		</Compiler>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXCancellationRequest.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXCancellationRequest.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXDNSLookup.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXDNSLookup.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXEventFd.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXEventFd.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXHttpClient.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXHttpClient.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXNetSystem.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXProgressCallback.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXSetThreadName.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXSocket.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXSocket.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXSocketConnect.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXSocketConnect.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXSocketFactory.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXSocketFactory.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXSocketServer.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXSocketServer.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXUrlParser.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXUrlParser.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXWebSocket.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXWebSocket.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXWebSocketErrorInfo.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXWebSocketHandshake.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXWebSocketHandshake.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXWebSocketHttpHeaders.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXWebSocketHttpHeaders.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXWebSocketPerMessageDeflate.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXWebSocketPerMessageDeflate.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXWebSocketPerMessageDeflateCodec.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXWebSocketPerMessageDeflateCodec.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXWebSocketPerMessageDeflateOptions.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXWebSocketPerMessageDeflateOptions.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXWebSocketSendInfo.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXWebSocketServer.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXWebSocketServer.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXWebSocketTransport.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/IXWebSocketTransport.h">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/libwshandshake.hpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
-		<Unit filename="external/IXWebSocket-master/ixwebsocket/linux/IXSetThreadName_linux.cpp">
-			<Option target="Linux Debug" />
-			<Option target="Linux Release" />
-		</Unit>
+		<Linker>
+			<Add directory="../Restgoose/lib" />
+			<Add directory="../log/lib" />
+		</Linker>
 		<Unit filename="external/jsoncpp/jsoncpp.cpp" />
-		<Unit filename="external/mongoose/mongoose.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="external/mongoose/mongoose.h" />
 		<Unit filename="external/uuid/guid.cpp" />
 		<Unit filename="external/uuid/guid.h" />
 		<Unit filename="external/uuid/md5.cpp" />
@@ -328,10 +164,7 @@
 		<Unit filename="include/is04server.h" />
 		<Unit filename="include/is05server.h" />
 		<Unit filename="include/libnmos.h" />
-		<Unit filename="include/log.h" />
 		<Unit filename="include/mdns.h" />
-		<Unit filename="include/microserver.h" />
-		<Unit filename="include/mongooseserver.h" />
 		<Unit filename="include/nmosdlldefine.h" />
 		<Unit filename="include/nmosserver.h" />
 		<Unit filename="include/nmosthread.h" />
@@ -348,7 +181,6 @@
 		<Unit filename="include/sdp.h" />
 		<Unit filename="include/self.h" />
 		<Unit filename="include/sender.h" />
-		<Unit filename="include/server.h" />
 		<Unit filename="include/source.h" />
 		<Unit filename="include/sourceaudio.h" />
 		<Unit filename="include/sourcegeneric.h" />
@@ -388,9 +220,6 @@
 		<Unit filename="src/ioresource.cpp" />
 		<Unit filename="src/is04server.cpp" />
 		<Unit filename="src/is05server.cpp" />
-		<Unit filename="src/log.cpp" />
-		<Unit filename="src/microserver.cpp" />
-		<Unit filename="src/mongooseserver.cpp" />
 		<Unit filename="src/nmosserver.cpp" />
 		<Unit filename="src/nmosthread.cpp" />
 		<Unit filename="src/nodeapi.cpp" />
@@ -405,7 +234,6 @@
 		<Unit filename="src/sdp.cpp" />
 		<Unit filename="src/self.cpp" />
 		<Unit filename="src/sender.cpp" />
-		<Unit filename="src/server.cpp" />
 		<Unit filename="src/source.cpp" />
 		<Unit filename="src/sourceaudio.cpp" />
 		<Unit filename="src/sourcegeneric.cpp" />

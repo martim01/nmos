@@ -1,79 +1,67 @@
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
-project(libnmos LANGUAGES CXX)
+project(nmosworkspace)
 
-option(BUILD_SHARED_LIB "Make a shared library" ON)
+SET(BUILD_LOG ON CACHE BOOL "set to OFF if pml::log built by parent project")
+SET(BUILD_DNSSD ON CACHE BOOL "set to OFF if pml::dnssd built by parent project")
 
-set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+SET(DIR_BASE $ENV{HOME} CACHE STRING "base location for libraries")
+SET(DIR_JSON ${DIR_BASE}/jsoncpp CACHE STRING "location of jsoncpp")
+SET(DIR_LOG ${DIR_BASE}/log CACHE STRING "location of pml log")
+SET(DIR_RESTGOOSE ${DIR_BASE}/Restgoose CACHE STRING "location of Restgoose")
+SET(DIR_DNSSD ${DIR_BASE}/dnssd CACHE STRING "location of pml dnssd")
+
+#Get Restgoose
+find_path(NMOS_TEMP_DIR NAMES "CMakeLists.txt" PATHS ${DIR_RESTGOOSE})
+if((NOT NMOS_TEMP_DIR) OR (NOT EXISTS ${NMOS_TEMP_DIR}))
+	message(STATUS "Restgoose not found - clone from GitHub")
+	execute_process(COMMAND git clone https://github.com/martim01/Restgoose ${DIR_RESTGOOSE})
+endif()
+unset(NMOS_TEMP_DIR)
+
+find_path(NMOS_TEMP_DIR2 NAMES "CMakeLists.txt" PATHS ${DIR_RESTGOOSE})
+if((NOT NMOS_TEMP_DIR2) OR (NOT EXISTS ${NMOS_TEMP_DIR2}))
+	message(FATAL_ERROR "Failed to clone Restgoose")
+endif()
+unset(NMOS_TEMP_DIR2)
 
 
-include_directories(include)
-include_directories("external/jsoncpp")
-include_directories("external/uuid")
+#Get dnssd
+find_path(NMOS_TEMP_DIR NAMES "CMakeLists.txt" PATHS ${DIR_DNSSD})
+if((NOT NMOS_TEMP_DIR) OR (NOT EXISTS ${NMOS_TEMP_DIR}))
+	message(STATUS "pml::dnssd not found - clone from GitHub")
+	execute_process(COMMAND git clone https://github.com/martim01/dnssd ${DIR_DNSSD})
+endif()
+unset(NMOS_TEMP_DIR)
 
+find_path(NMOS_TEMP_DIR2 NAMES "CMakeLists.txt" PATHS ${DIR_DNSSD})
+if((NOT NMOS_TEMP_DIR2) OR (NOT EXISTS ${NMOS_TEMP_DIR2}))
+	message(FATAL_ERROR "Failed to clone dnssd")
+endif()
+unset(NMOS_TEMP_DIR2)
 
-#linux specific
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-	#use pkgconfig to find the required libs
-	find_package(PkgConfig REQUIRED QUIET)
-	pkg_search_module(microhttpd REQUIRED libmicrohttpd IMPORTED_TARGET)
-	if(TARGET PkgConfig::microhttpd)
-		message(STATUS "Found microhttpd")
-	endif()
-
-	pkg_search_module(curl REQUIRED libcurl IMPORTED_TARGET)
-	if(TARGET PkgConfig::curl)
-		message(STATUS "Found libcurl")
-	endif()
-
-	pkg_search_module(avahi REQUIRED avahi-client IMPORTED_TARGET)
-	if(TARGET PkgConfig::curl)
-		message(STATUS "Found avahi-client")
-	endif()
-
-	#add the os specific code
-	file(GLOB OS_SOURCES "src/gnu/*.cpp")
-	
-	
+if(${BUILD_LOG})
+	add_subdirectory(${DIR_LOG} ${DIR_LOG}/build)
+else()
+	message(STATUS "nmos - pml::log being build elsewhere")
 endif()
 
-#Windows specific
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-	
-	#add the os specific code
-	file(GLOB OS_SOURCES "src/window/*.cpp")
-	
-	#add the os specific defines
-	add_definitions(-D__GNUWIN32__)
-	add_definitions(-D_MSL_STDINT_H)
+SET(BUILD_LOG OFF CACHE BOOL "set to OFF if pml::log built by parent project" FORCE)
+if(${BUILD_DNSSD})
+	add_subdirectory(${DIR_DNSSD} ${DIR_DNSSD}/build)
+else()
+	message(STATUS "nmos - pml::dnssd being built elsewhere")
 endif()
 
+add_subdirectory(${DIR_RESTGOOSE} ${DIR_RESTGOOSE}/build)
 
-file(GLOB SOURCES "src/*.cpp")
+message(STATUS "Configure nmos_base")
+add_subdirectory(base)
 
+message(STATUS "Configure nmos_node")
+add_subdirectory(node)
 
-add_library(nmos SHARED ${OS_SOURCES} "external/uuid/guid.cpp" "external/uuid/md5.cpp" ${SOURCES} "external/jsoncpp/jsoncpp.cpp")
+message(STATUS "Configure nmos_client")
+add_subdirectory(client)
 
-#add the os specific defines
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-	target_compile_definitions(nmos PUBLIC __GNU__)
-endif()
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-	#add the os specific defines
-	target_compile_definitions(nmos PUBLIC __GNUWIN32__)
-	target_compile_definitions(nmos PUBLIC _MSL_STDINT_H)
-endif()
-
-
-set_target_properties(nmos 
-	PROPERTIES 
-	CXX_STANDARD 11
-	CXX_EXTENSIONS OFF
-	CXX_STANDARD_REQUIRED ON
-	POSITION_INDEPENDENT_CODE 1)
-
-target_link_libraries(nmos PkgConfig::microhttpd)
-target_link_libraries(nmos PkgConfig::curl)
-target_link_libraries(nmos PkgConfig::avahi)
-
-
-target_compile_options(nmos PRIVATE -O3)
+message(STATUS "Configure tests")
+add_subdirectory("tests/nmos_node_test")

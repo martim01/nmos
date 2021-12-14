@@ -5,6 +5,8 @@
 #include "utils.h"
 #include <iostream>
 
+using namespace pml::nmos;
+
 std::string Resource::s_sBase("");
 
 
@@ -37,27 +39,27 @@ bool Resource::UpdateFromJson(const Json::Value& jsValue)
     if(m_json["id"].isString() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'id' not a string" << std::endl;
+        m_ssJsonError << "'id' not a string" ;
     }
     if(m_json["label"].isString()==false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'label' not a string" << std::endl;
+        m_ssJsonError << "'label' not a string" ;
     }
     if(m_json["description"].isString()==false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'description' not a string" << std::endl;
+        m_ssJsonError << "'description' not a string" ;
     }
     if(m_json["version"].isString() ==false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'version' not a string" << std::endl;
+        m_ssJsonError << "'version' not a string" ;
     }
     if(m_json["tags"].isObject() == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'tags' not an object" << std::endl;
+        m_ssJsonError << "'tags' not an object" ;
     }
     if(m_bIsOk)
     {
@@ -94,6 +96,14 @@ void Resource::AddTag(const std::string& sKey, const std::string& sValue)
 {
     m_mmTag.insert(std::make_pair(sKey, sValue));
     UpdateVersionTime();
+}
+
+void Resource::AddTags(const std::list<std::pair<std::string, std::string>>& lstTags)
+{
+    for(const auto& tag : lstTags)
+    {
+        m_mmTag.insert(tag);
+    }
 }
 
 
@@ -175,29 +185,6 @@ const std::string& Resource::GetVersion() const
 }
 
 
-bool Resource::ConvertTaiStringToTimePoint(const std::string& sTai, std::chrono::time_point<std::chrono::high_resolution_clock>& tp)
-{
-    std::istringstream f(sTai);
-    std::string sSeconds;
-    std::string sNano;
-
-    if(getline(f, sSeconds, ':') && getline(f, sNano, ':'))
-    {
-        try
-        {
-            std::chrono::seconds sec(std::stoul(sSeconds));
-            std::chrono::nanoseconds nano(std::stoul(sNano));
-            nano += std::chrono::duration_cast<std::chrono::nanoseconds>(sec);
-            tp = std::chrono::time_point<std::chrono::high_resolution_clock>(nano);
-            return true;
-        }
-        catch(std::invalid_argument& e)
-        {
-            return false;
-        }
-    }
-    return false;
-}
 
 const std::string& Resource::GetType() const
 {

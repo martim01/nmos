@@ -2,7 +2,7 @@
 #include "clientapiposter.h"
 
 
-class TestPoster : public ClientApiPoster
+class TestPoster : public pml::nmos::ClientApiPoster
 {
     public:
         TestPoster(){};
@@ -11,28 +11,32 @@ class TestPoster : public ClientApiPoster
 
     protected:
 
-        virtual void ModeChanged(bool bQueryApi);
-        virtual void NodeChanged(const std::list<std::shared_ptr<Self> >& lstNodesAdded, const std::list<std::shared_ptr<Self> >& lstNodesUpdated, const std::list<std::shared_ptr<Self> >& lstNodesRemoved);
-        virtual void DeviceChanged(const std::list<std::shared_ptr<Device> >& lstDevicesAdded, const std::list<std::shared_ptr<Device> >& lstDevicesUpdated, const std::list<std::shared_ptr<Device> >& lstDevicesRemoved);
-        virtual void SourceChanged(const std::list<std::shared_ptr<Source> >& lstSourcesAdded, const std::list<std::shared_ptr<Source> >& lstSourcesUpdated, const std::list<std::shared_ptr<Source> >& lstSourcesRemoved);
-        virtual void FlowChanged(const std::list<std::shared_ptr<Flow> >& lstFlowsAdded, const std::list<std::shared_ptr<Flow> >& lstFlowsUpdated, const std::list<std::shared_ptr<Flow> >& lstFlowsRemoved);
-        virtual void SenderChanged(const std::list<std::shared_ptr<Sender> >& lstSendersAdded, const std::list<std::shared_ptr<Sender> >& lstSendersUpdated, const std::list<std::shared_ptr<Sender> >& lstSendersRemoved);
-        virtual void ReceiverChanged(const std::list<std::shared_ptr<Receiver> >& lstReceiversAdded, const std::list<std::shared_ptr<Receiver> >& lstReceiversUpdated, const std::list<std::shared_ptr<Receiver> >& lstReceiversRemoved);
+        void ModeChanged(bool bQueryApi) override;
+        void NodeChanged(const pml::nmos::resourcechanges<pml::nmos::Self>& changed) override;
+        void DeviceChanged(const pml::nmos::resourcechanges<pml::nmos::Device>& changed) override;
+        void SourceChanged(const pml::nmos::resourcechanges<pml::nmos::Source>& changed) override;
+        void FlowChanged(const pml::nmos::resourcechanges<pml::nmos::Flow>& changed) override;
+        void SenderChanged(const pml::nmos::resourcechanges<pml::nmos::Sender>& changed) override;
+        void ReceiverChanged(const pml::nmos::resourcechanges<pml::nmos::Receiver>& changed) override;
 
-        virtual void QuerySubscription(const std::string& sSubscriptionId, int nResource, const std::string& sQuery);
-        virtual void QuerySubscriptionRemoved(const std::string& sSubscriptionId);
+        void QuerySubscription(const std::string& sSubscriptionId, int nResource, const std::string& sQuery) override;
+        void QuerySubscriptionRemoved(const std::string& sSubscriptionId) override;
 
-        virtual void RequestTargetResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
-        virtual void RequestPatchSenderResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
-        virtual void RequestPatchReceiverResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
-        virtual void RequestConnectResult(const std::string& sSenderId, const std::string& sReceiverId, bool bSuccess, const std::string& sResponse);
+        void RequestTargetResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId) override;
+        void RequestPatchSenderResult(const pml::nmos::curlResponse& resp, const std::experimental::optional<pml::nmos::connectionSender<pml::nmos::activationResponse>>& con, const std::string& sResourceId) override;
+        void RequestPatchReceiverResult(const pml::nmos::curlResponse& resp, const std::experimental::optional<pml::nmos::connectionReceiver<pml::nmos::activationResponse>>& con, const std::string& sResourceId) override;
+        void RequestConnectResult(const std::string& sSenderId, const std::string& sReceiverId, bool bSuccess, const std::string& sResponse) override;
 
-        virtual void RequestGetSenderStagedResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
-        virtual void RequestGetSenderActiveResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
+        void RequestGetSenderStagedResult(const pml::nmos::curlResponse& resp, const std::experimental::optional<pml::nmos::connectionSender<pml::nmos::activationResponse>>& con, const std::string& sResourceId) override;
+        void RequestGetSenderActiveResult(const pml::nmos::curlResponse& resp, const std::experimental::optional<pml::nmos::connectionSender<pml::nmos::activationResponse>>& con, const std::string& sResourceId) override;
+        void RequestGetSenderTransportFileResult(const pml::nmos::curlResponse& resp, const std::experimental::optional<std::string>& sTransportFile, const std::string& sResourceId) override;
 
-        virtual void RequestGetSenderTransportFileResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
-        virtual void RequestGetReceiverStagedResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
-        virtual void RequestGetReceiverActiveResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
+        void RequestGetReceiverStagedResult(const pml::nmos::curlResponse& resp, const std::experimental::optional<pml::nmos::connectionReceiver<pml::nmos::activationResponse>>& con, const std::string& sResourceId) override;
+        void RequestGetReceiverActiveResult(const pml::nmos::curlResponse& resp, const std::experimental::optional<pml::nmos::connectionReceiver<pml::nmos::activationResponse>>& con, const std::string& sResourceId) override;
+
+        void QueryServerChanged(const std::string& sUrl) override;
+        void QueryServerFound(const std::string& sUrl, unsigned short nPriority) override;
+        void QueryServerRemoved(const std::string& sUrl) override;
 
 
     private:

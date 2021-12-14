@@ -2,8 +2,15 @@
 #include "eventposter.h"
 #include <condition_variable>
 
+namespace pml
+{
+    namespace nmos
+    {
+        class ApiVersion;
+    };
+};
 
-class ThreadPoster : public EventPoster
+class ThreadPoster : public pml::nmos::EventPoster
 {
     public:
         ThreadPoster(){}
@@ -21,21 +28,22 @@ class ThreadPoster : public EventPoster
         }
 
         void Signal();
-        enum {CURL_DONE, INSTANCE_RESOLVED, ALLFORNOW, FINISHED, REGERROR, INSTANCE_REMOVED, TARGET, PATCH_SENDER, PATCH_RECEIVER, ACTIVATE_SENDER, ACTIVATE_RECEIVER};
+        enum {CURL_DONE, INSTANCE_RESOLVED, ALLFORNOW, FINISHED, REGERROR, INSTANCE_REMOVED, TARGET, PATCH_SENDER, PATCH_RECEIVER, ACTIVATE_SENDER, ACTIVATE_RECEIVER,
+              REGISTRATION_NODE_FOUND, REGISTRATION_NODE_REMOVED, REGISTRATION_NODE_CHANGED, REGISTRATION_NODE_CHOSEN, REGISTRATION_CHANGED};
 
     protected:
 
-        void CurlDone(unsigned long nResult, const std::string& sResponse, long nType, const std::string& sResourceId);
-        void InstanceResolved(std::shared_ptr<dnsInstance> pInstance);
-        void AllForNow(const std::string& sService);
-        void Finished();
-        void RegistrationNodeError();
-        void InstanceRemoved(std::shared_ptr<dnsInstance> pInstance);
-        void Target(const std::string& sReceiverId, const std::string& sTransportFile, unsigned short nPort);
-        void PatchSender(const std::string& sSenderId, const connectionSender& conPatch, unsigned short nPort);
-        void PatchReceiver(const std::string& sReceiverId, const connectionReceiver& conPatch, unsigned short nPort);
-        void SenderActivated(const std::string& sSenderId);
-        void ReceiverActivated(const std::string& sReceiverId);
+        void Target(const std::string& sReceiverId, const std::string& sTransportFile, unsigned short nPort) override;
+        void PatchSender(const std::string& sSenderId, const pml::nmos::connectionSender<pml::nmos::activationResponse>& conPatch, unsigned short nPort) override;
+        void PatchReceiver(const std::string& sReceiverId, const pml::nmos::connectionReceiver<pml::nmos::activationResponse>& conPatch, unsigned short nPort) override;
+        void SenderActivated(const std::string& sSenderId) override;
+        void ReceiverActivated(const std::string& sReceiverId) override;
+
+        void RegistrationNodeFound(const std::string& sUrl, unsigned short nPriority, const pml::nmos::ApiVersion& version) override;
+        void RegistrationNodeRemoved(const std::string& sUrl) override;
+        void RegistrationNodeChanged(const std::string& sUrl, unsigned short nPriority, bool bGood, const pml::nmos::ApiVersion& version) override;
+        void RegistrationChanged(const std::string& sUrl, enumRegState eState) override;
+
 
         void SetReason(unsigned int nReason);
         void LaunchThread();
@@ -50,7 +58,7 @@ class ThreadPoster : public EventPoster
         std::string m_sSDP;
 
         unsigned int m_nReason;
-        std::shared_ptr<Sender> m_pSender;
+        std::shared_ptr<pml::nmos::Sender> m_pSender;
 
 };
 

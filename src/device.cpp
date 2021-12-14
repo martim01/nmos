@@ -1,4 +1,8 @@
 #include "device.h"
+#include "utils.h"
+#include "log.h"
+
+using namespace pml::nmos;
 
 const std::string Device::STR_TYPE[2] = {"urn:x-nmos:device:generic", "urn:x-nmos:device:pipeline"};
 
@@ -16,34 +20,30 @@ Device::Device() : Resource("device")
 
 }
 
+std::shared_ptr<Device> Device::Create(const Json::Value& jsResponse)
+{
+    auto pResource  = std::make_shared<Device>();
+    if(pResource->UpdateFromJson(jsResponse))
+    {
+        return pResource;
+    }
+    return nullptr;
+}
+
 bool Device::UpdateFromJson(const Json::Value& jsData)
 {
     Resource::UpdateFromJson(jsData);
-    if(jsData["type"].isString() == false)
+    if(CheckJsonRequired(jsData, {{"type",{jsondatatype::_STRING}},
+                       {"node_id",{jsondatatype::_STRING}},
+                       {"senders",{jsondatatype::_ARRAY}},
+                       {"receivers",{jsondatatype::_ARRAY}},
+                       {"controls",{jsondatatype::_ARRAY}}}) == false)
     {
         m_bIsOk = false;
-        m_ssJsonError << "'type' is not a string" << std::endl;
+        m_ssJsonError << "Device json incorrect";
+        pmlLog(pml::LOG_WARN) << "NMOS: Device - json incorrect: " << jsData;
     }
-    if(jsData["node_id"].isString() == false)
-    {
-        m_bIsOk = false;
-        m_ssJsonError << "'node_id' is not a string" << std::endl;
-    }
-    if(jsData["senders"].isArray() == false)
-    {
-        m_bIsOk = false;
-        m_ssJsonError << "'sender' is not an array" << std::endl;
-    }
-    if(jsData["receivers"].isArray() == false)
-    {
-        m_bIsOk = false;
-        m_ssJsonError << "'receivers' is not an array" << std::endl;
-    }
-    if(jsData["controls"].isArray() == false)
-    {
-        m_bIsOk = false;
-        m_ssJsonError << "'controls' is not an array" << std::endl;
-    }
+
     if(m_bIsOk)
     {
         if(jsData["type"].asString() == STR_TYPE[GENERIC])
@@ -61,7 +61,7 @@ bool Device::UpdateFromJson(const Json::Value& jsData)
             if(jsData["senders"][ai].isString() == false)
             {
                 m_bIsOk = false;
-                m_ssJsonError << "'senders' entry #" << ai << " not a string" << std::endl;
+                m_ssJsonError << "'senders' entry #" << ai << " not a string" ;
                 break;
             }
             else
@@ -74,7 +74,7 @@ bool Device::UpdateFromJson(const Json::Value& jsData)
             if(jsData["receivers"][ai].isString() == false)
             {
                 m_bIsOk = false;
-                m_ssJsonError << "'receivers' entry #" << ai << " not a string" << std::endl;
+                m_ssJsonError << "'receivers' entry #" << ai << " not a string" ;
                 break;
             }
             else
@@ -86,25 +86,25 @@ bool Device::UpdateFromJson(const Json::Value& jsData)
         {
             if(jsData["controls"][ai].isObject() == false)
             {
-                m_ssJsonError << "'controls' entry #" << ai << " not an object" << std::endl;
+                m_ssJsonError << "'controls' entry #" << ai << " not an object" ;
                 m_bIsOk = false;
                 break;
             }
             if(jsData["controls"][ai]["href"].isString() == false)
             {
-                m_ssJsonError << "'controls' entry #" << ai << " 'href' not a string" << std::endl;
+                m_ssJsonError << "'controls' entry #" << ai << " 'href' not a string" ;
                 m_bIsOk = false;
                 break;
             }
             if(jsData["controls"][ai]["type"].isString() == false)
             {
                 m_bIsOk = false;
-                m_ssJsonError << "'controls' entry #" << ai << " type not a string" << std::endl;
+                m_ssJsonError << "'controls' entry #" << ai << " type not a string" ;
                 break;
             }
             else
             {
-                m_setControls.insert(std::make_pair(jsData["controls"][ai]["type"].asString(), jsData["controls"][ai]["href"].asString()));
+                m_mmControls.insert({control(jsData["controls"][ai]["type"].asString()), endpoint(jsData["controls"][ai]["href"].asString())});
             }
         }
     }
@@ -130,11 +130,11 @@ bool Device::Commit(const ApiVersion& version)
         }
 
         m_json["controls"] = Json::Value(Json::arrayValue);
-        for(std::set<std::pair<std::string, std::string> >::iterator itControl = m_setControls.begin(); itControl != m_setControls.end(); ++itControl)
+        for(const auto& pairControl : m_mmControls)
         {
             Json::Value jsControl = Json::Value(Json::objectValue);
-            jsControl["type"] = (*itControl).first;
-            jsControl["href"] = (*itControl).second;
+            jsControl["type"] = pairControl.first.Get();
+            jsControl["href"] = pairControl.second.Get();
             m_json["controls"].append(jsControl);
         }
         return true;
@@ -142,14 +142,22 @@ bool Device::Commit(const ApiVersion& version)
     return false;
 }
 
-void Device::AddControl(const std::string& sType, const std::string& sUri)
+void Device::AddControl(const control& type, const endpoint& theEndpoint)
 {
-    m_setControls.insert(make_pair(sType, sUri));
+    m_mmControls.insert({type, theEndpoint});
+
     UpdateVersionTime();
 }
-void Device::RemoveControl(const std::string& sType, const std::string& sUri)
+void Device::RemoveControl(const control& type, const endpoint& theEndpoint)
 {
-    m_setControls.erase(make_pair(sType, sUri));
+    for(auto itControl = m_mmControls.lower_bound(type); itControl != m_mmControls.upper_bound(type); ++itControl)
+    {
+        if(itControl->second == theEndpoint)
+        {
+            m_mmControls.erase(itControl);
+            break;
+        }
+    }
     UpdateVersionTime();
 }
 
@@ -159,12 +167,48 @@ void Device::ChangeType(enumType eType)
     UpdateVersionTime();
 }
 
-std::set<std::pair<std::string, std::string> >::const_iterator Device::GetControlsBegin() const
+
+
+endpoint Device::GetPreferredUrl(const control& type) const
 {
-    return m_setControls.begin();
+    auto itPref = m_mPreferred.find(type);
+    if(itPref != m_mPreferred.end())
+    {
+        return itPref->second;
+    }
+    return endpoint("");
 }
 
-std::set<std::pair<std::string, std::string> >::const_iterator Device::GetControlsEnd() const
+void Device::SetPreferredUrl(const control& type, const endpoint& theEndpoint)
 {
-    return m_setControls.end();
+    m_mPreferred[type] = theEndpoint;
+}
+
+void Device::RemovePreferredUrl(const control& type)
+{
+    m_mPreferred.erase(type);
+}
+
+void Device::AddSender(const std::string& sId)
+{
+    m_setSenders.insert(sId);
+    UpdateVersionTime();
+}
+
+void Device::AddReceiver(const std::string& sId)
+{
+    m_setReceivers.insert(sId);
+    UpdateVersionTime();
+}
+
+void Device::RemoveSender(const std::string& sId)
+{
+    m_setSenders.erase(sId);
+    UpdateVersionTime();
+}
+
+void Device::RemoveReceiver(const std::string& sId)
+{
+    m_setReceivers.erase(sId);
+    UpdateVersionTime();
 }

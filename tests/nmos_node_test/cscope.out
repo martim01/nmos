@@ -1,0 +1,2024 @@
+cscope 15 $HOME/nmos/tests/nmos_node_test               0000011985
+	@/home/pi/nmos/tests/nmos_node_test/main.cpp
+
+1 
+	~<io¡»am
+>
+
+3 
+	~<io¡»am
+>
+
+4 
+	~<f¡»am
+>
+
+5 
+	~"th»adpo¡”.h
+"
+
+6 
+	~"nod—pi.h
+"
+
+7 
+	~"sourûaudio.h
+"
+
+8 
+	~"æowaudiÜaw.h
+"
+
+9 
+	~"deviû.h
+"
+
+10 
+	~"£nd”.h
+"
+
+11 
+	~"»ûiv”.h
+"
+
+12 
+	~"log.h
+"
+
+13 
+	~"../../log/šşude/log.h
+"
+
+15 
+usšg
+ 
+Çme¥aû
+ 
+	g¡d
+;
+
+19 
+	$maš
+()
+
+22 
+LogSŒ—m
+::
+	`AddOuut
+(
+make_unique
+<
+LogOuut
+>());
+
+23 
+pml
+::
+LogSŒ—m
+::
+	`AddOuut
+(
+make_unique
+<pml::
+LogOuut
+>());
+
+25 
+¡d
+::
+sh¬ed_±r
+<
+Th»adPo¡”
+> 
+pPo¡”
+ = std::
+make_sh¬ed
+<ThreadPoster>();
+
+27 
+NodeApi
+::
+	`G‘
+().
+	`In™
+(
+pPo¡”
+, 8080, 8080, "host Label", "host Description");
+
+28 
+NodeApi
+::
+	`G‘
+().
+	`S‘H—¹b—tTime
+(5000);
+
+29 
+NodeApi
+::
+	`G‘
+().
+	`G‘S–f
+().
+	`AddIÁ”ÇlClock
+("clk0");
+
+30 
+NodeApi
+::
+	`G‘
+().
+	`G‘S–f
+().
+	`AddPTPClock
+("şk1", 
+Œue
+, "IEEE1588-2008", "08-00-11-ff-fe-21-e1-b0",rue);
+
+31 
+NodeApi
+::
+	`G‘
+().
+	`G‘S–f
+().
+	`AddIÁ”çû
+("eth0");
+
+32 
+NodeApi
+::
+	`G‘
+().
+	`G‘S–f
+().
+	`AddTag
+("location", "W1");
+
+33 
+NodeApi
+::
+	`G‘
+().
+	`G‘S–f
+().
+	`AddTag
+("location", "MCR1");
+
+34 
+NodeApi
+::
+	`G‘
+().
+	`G‘S–f
+().
+	`AddTag
+("Author", "Matt");
+
+36 
+sh¬ed_±r
+<
+Deviû
+> 
+pDeviû
+ = 
+make_sh¬ed
+<Deviû>("Te¡Deviû", "Te¡DesütiÚ", Deviû::
+GENERIC
+,
+NodeApi
+::
+	`G‘
+().
+	`G‘S–f
+().
+	`G‘Id
+());
+
+38 
+sh¬ed_±r
+<
+SourûAudio
+> 
+pSourû
+ = 
+make_sh¬ed
+<SourûAudio>("Te¡Audio", "Te¡DesütiÚ", 
+pDeviû
+->
+	`G‘Id
+());
+
+39 
+pSourû
+->
+	`AddChªÃl
+("Left", "L");
+
+40 
+pSourû
+->
+	`AddChªÃl
+("Right", "R");
+
+42 
+sh¬ed_±r
+<
+FlowAudioRaw
+> 
+pFlow
+ = 
+make_sh¬ed
+<FlowAudioRaw>("Te¡Flow", "Te¡DesütiÚ", 
+pSourû
+->
+	`G‘Id
+(), 
+pDeviû
+->G‘Id(),48000, FlowAudioRaw::
+L24
+);
+
+43 
+pFlow
+->
+	`S‘Pack‘Time
+(
+FlowAudioRaw
+::
+US_125
+);
+
+44 
+pFlow
+->
+	`S‘MedŸClkOff£t
+(0);
+
+46 
+sh¬ed_±r
+<
+S’d”
+> 
+pS’d”
+ = 
+make_sh¬ed
+<S’d”>("Te¡S’d”", "DesütiÚ", 
+pFlow
+->
+	`G‘Id
+(), S’d”::
+RTP_MCAST
+, 
+pDeviû
+->GetId(), "eth0");
+
+47 
+sh¬ed_±r
+<
+Reûiv”
+> 
+pReûiv”
+ = 
+make_sh¬ed
+<Reûiv”>("Te¡ Reûiv”", "Te¡DesütiÚ", Reûiv”::
+RTP_MCAST
+, 
+pDeviû
+->
+	`G‘Id
+(), Reûiv”::
+AUDIO
+, 
+T¿n¥ÜtP¬amsRTP
+::
+CORE
+ | T¿n¥ÜtP¬amsRTP::
+MULTICAST
+);
+
+49 
+pS’d”
+->
+	`C»©eSDP
+();
+
+50 
+pS’d”
+->
+	`Ma¡”EÇbË
+(
+Œue
+);
+
+53 
+pReûiv”
+->
+	`AddC­
+("audio/L24");
+
+54 
+pReûiv”
+->
+	`AddC­
+("audio/L20");
+
+55 
+pReûiv”
+->
+	`AddC­
+("audio/L16");
+
+56 
+pReûiv”
+->
+	`AddIÁ”çûBšdšg
+("eth0");
+
+58 if(
+NodeApi
+::
+	`G‘
+().
+	`AddDeviû
+(
+pDeviû
+è=ğ
+çl£
+)
+
+60 
+cout
+ << "FAILED TO ADD DEVICE" << 
+’dl
+;
+
+62 if(
+NodeApi
+::
+	`G‘
+().
+	`AddSourû
+(
+pSourû
+è=ğ
+çl£
+)
+
+64 
+cout
+ << "FAILED TO ADD SOURCE" << 
+’dl
+;
+
+66 if(
+NodeApi
+::
+	`G‘
+().
+	`AddFlow
+(
+pFlow
+è=ğ
+çl£
+)
+
+68 
+cout
+ << "FAILED TO ADD FLOW" << 
+’dl
+;
+
+70 if(
+NodeApi
+::
+	`G‘
+().
+	`AddReûiv”
+(
+pReûiv”
+è=ğ
+çl£
+)
+
+72 
+cout
+ << "FAILED TO ADD RECEIVER" << 
+’dl
+;
+
+74 if(
+NodeApi
+::
+	`G‘
+().
+	`AddS’d”
+(
+pS’d”
+è=ğ
+çl£
+)
+
+76 
+cout
+ << "FAILED TO ADD SENDER" << 
+’dl
+;
+
+78 
+NodeApi
+::
+	`G‘
+().
+	`Comm™
+();
+
+82 
+NodeApi
+::
+	`G‘
+().
+	`S¹S”viûs
+();
+
+84 
+	`nCouÁ
+(0);
+
+85 
+Œue
+)
+
+87 if(
+pPo¡”
+->
+	`Wa™
+(
+chrÚo
+::
+	`mli£cÚds
+(100)))
+
+89 
+pPo¡”
+->
+	`G‘R—sÚ
+())
+
+91 
+Th»adPo¡”
+::
+CURL_DONE
+:
+
+92 
+cout
+ << "----------------------------------------" << 
+’dl
+;
+
+93 
+cout
+ << "Cu¾ DÚe" << 
+’dl
+;
+
+94 
+cout
+ << "----------------------------------------" << 
+’dl
+;
+
+96 
+Th»adPo¡”
+::
+INSTANCE_RESOLVED
+:
+
+97 
+cout
+ << "----------------------------------------" << 
+’dl
+;
+
+98 
+cout
+ << "Brow£r: In¡ªû ResŞved" << 
+’dl
+;
+
+99 
+cout
+ << "----------------------------------------" << 
+’dl
+;
+
+101 
+Th»adPo¡”
+::
+ALLFORNOW
+:
+
+102 
+cout
+ << "----------------------------------------" << 
+’dl
+;
+
+103 
+cout
+ << "Brow£r: AÎ FÜ Now" << 
+’dl
+;
+
+104 
+cout
+ << "----------------------------------------" << 
+’dl
+;
+
+106 
+Th»adPo¡”
+::
+FINISHED
+:
+
+107 
+cout
+ << "----------------------------------------" << 
+’dl
+;
+
+108 
+cout
+ << "Brow£r: Fšished" << 
+’dl
+;
+
+109 
+cout
+ << "----------------------------------------" << 
+’dl
+;
+
+111 
+Th»adPo¡”
+::
+REGERROR
+:
+
+112 
+cout
+ << "----------------------------------------" << 
+’dl
+;
+
+113 
+cout
+ << "Publish”: E¼Ü" << 
+’dl
+;
+
+114 
+cout
+ << "----------------------------------------" << 
+’dl
+;
+
+116 
+Th»adPo¡”
+::
+INSTANCE_REMOVED
+:
+
+117 
+cout
+ << "----------------------------------------" << 
+’dl
+;
+
+118 
+cout
+ << "Brow£r: In¡ªû Removed" << 
+’dl
+;
+
+119 
+cout
+ << "----------------------------------------" << 
+’dl
+;
+
+121 
+Th»adPo¡”
+::
+TARGET
+:
+
+122 
+cout
+ << "----------------------------------------" << 
+’dl
+;
+
+123 
+cout
+ << "NMOS T¬g‘: " << 
+pPo¡”
+->
+	`G‘SŒšg
+(è<< " [" <<…Po¡”->
+	`G‘SDP
+(è<< "]" << 
+’dl
+;
+
+124 
+cout
+ << "----------------------------------------" << 
+’dl
+;
+
+126 
+NodeApi
+::
+	`G‘
+().
+	`T¬g‘Tak’
+("192.168.1.113", 
+pPo¡”
+->
+	`G‘PÜt
+(), 
+Œue
+);
+
+128 
+Th»adPo¡”
+::
+PATCH_SENDER
+:
+
+129 
+cout
+ << "----------------------------------------" << 
+’dl
+;
+
+130 
+cout
+ << "NMOS P©ch S’d”: " << 
+pPo¡”
+->
+	`G‘SŒšg
+(è<< 
+’dl
+;
+
+131 
+cout
+ << "----------------------------------------" << 
+’dl
+;
+
+132 
+NodeApi
+::
+	`G‘
+().
+	`S’d”P©chAÎowed
+(
+pPo¡”
+->
+	`G‘PÜt
+(), 
+Œue
+,…Po¡”->
+	`G‘SŒšg
+(),"","239.192.55.101");
+
+134 
+Th»adPo¡”
+::
+PATCH_RECEIVER
+:
+
+135 
+cout
+ << "----------------------------------------" << 
+’dl
+;
+
+136 
+cout
+ << "NMOS P©ch Reûiv”: " << 
+pPo¡”
+->
+	`G‘SŒšg
+(è<< 
+’dl
+;
+
+137 
+cout
+ << "----------------------------------------" << 
+’dl
+;
+
+138 
+NodeApi
+::
+	`G‘
+().
+	`Reûiv”P©chAÎowed
+(
+pPo¡”
+->
+	`G‘PÜt
+(), 
+Œue
+,…Po¡”->
+	`G‘SŒšg
+(), "192.168.1.113");
+
+140 
+Th»adPo¡”
+::
+ACTIVATE_SENDER
+:
+
+141 
+cout
+ << "----------------------------------------" << 
+’dl
+;
+
+142 
+cout
+ << "NMOS S’d” Aùiv©ed: " << 
+pPo¡”
+->
+	`G‘SŒšg
+(è<< 
+’dl
+;
+
+143 
+cout
+ << "----------------------------------------" << 
+’dl
+;
+
+145 
+Th»adPo¡”
+::
+ACTIVATE_RECEIVER
+:
+
+146 
+cout
+ << "----------------------------------------" << 
+’dl
+;
+
+147 
+cout
+ << "NMOS Reûiv” Aùiv©ed: " << 
+pPo¡”
+->
+	`G‘SŒšg
+(è<< 
+’dl
+;
+
+148 
+cout
+ << "----------------------------------------" << 
+’dl
+;
+
+166 
+NodeApi
+::
+	`G‘
+().
+	`StİS”viûs
+();
+
+169 
+	}
+}
+
+	@/home/pi/nmos/tests/nmos_node_test/threadposter.cpp
+
+1 
+	~"th»adpo¡”.h
+"
+
+2 
+	~<th»ad
+>
+
+3 
+	~<chrÚo
+>
+
+5 
+	$NÙify
+(
+Th»adPo¡”
+* 
+pPo¡”
+)
+
+7 
+¡d
+::
+this_th»ad
+::
+	`¦“p_fÜ
+(¡d::
+chrÚo
+::
+	`mli£cÚds
+(1));
+
+8 
+pPo¡”
+->
+	`SigÇl
+();
+
+9 
+	}
+}
+
+11 
+boŞ
+ 
+	gTh»adPo¡”
+::
+	$Wa™
+(
+¡d
+::
+chrÚo
+::
+mli£cÚds
+ 
+ms
+)
+
+13 
+¡d
+::
+unique_lock
+<¡d::
+mu‹x
+> 
+	`ul
+(
+m_mu‹xMaš
+);
+
+15  (
+m_cv
+.
+	`wa™_fÜ
+(
+ul
+, 
+ms
+è=ğ
+¡d
+::
+cv_¡©us
+::
+no_timeout
+);
+
+16 
+	}
+}
+
+18 
+	gTh»adPo¡”
+::
+	$G‘R—sÚ
+()
+
+20 
+¡d
+::
+lock_gu¬d
+<¡d::
+mu‹x
+> 
+	`lg
+(
+m_mu‹xMaš
+);
+
+21  
+m_nR—sÚ
+;
+
+22 
+	}
+}
+
+24 
+	gTh»adPo¡”
+::
+	$S‘R—sÚ
+(
+nR—sÚ
+)
+
+26 
+¡d
+::
+lock_gu¬d
+<¡d::
+mu‹x
+> 
+	`lg
+(
+m_mu‹xMaš
+);
+
+27 
+m_nR—sÚ
+ = 
+nR—sÚ
+;
+
+28 
+	}
+}
+
+30 
+	gTh»adPo¡”
+::
+	$Cu¾DÚe
+(
+nResuÉ
+, cÚ¡ 
+¡d
+::
+¡ršg
+& 
+sRe¥Ú£
+, 
+nTy³
+, cÚ¡ std::¡ršg& 
+sResourûId
+)
+
+32 
+	`S‘R—sÚ
+(
+CURL_DONE
+);
+
+34 
+	`LaunchTh»ad
+();
+
+35 
+	}
+}
+
+37 
+	gTh»adPo¡”
+::
+In¡ªûResŞved
+(
+¡d
+::
+sh¬ed_±r
+<
+dnsIn¡ªû
+> 
+pIn¡ªû
+)
+
+39 
+S‘R—sÚ
+(
+INSTANCE_RESOLVED
+);
+
+40 
+LaunchTh»ad
+();
+
+43 
+	gTh»adPo¡”
+::
+	$AÎFÜNow
+(cÚ¡ 
+¡d
+::
+¡ršg
+& 
+sS”viû
+)
+
+45 
+	`S‘R—sÚ
+(
+ALLFORNOW
+);
+
+46 
+	`LaunchTh»ad
+();
+
+48 
+	}
+}
+
+50 
+	gTh»adPo¡”
+::
+	$Fšished
+()
+
+52 
+	`S‘R—sÚ
+(
+FINISHED
+);
+
+53 
+	`LaunchTh»ad
+();
+
+54 
+	}
+}
+
+56 
+	gTh»adPo¡”
+::
+	$Regi¡¿tiÚNodeE¼Ü
+()
+
+58 
+	`S‘R—sÚ
+(
+REGERROR
+);
+
+59 
+	`LaunchTh»ad
+();
+
+60 
+	}
+}
+
+62 
+	gTh»adPo¡”
+::
+In¡ªûRemoved
+(
+¡d
+::
+sh¬ed_±r
+<
+dnsIn¡ªû
+> 
+pIn¡ªû
+)
+
+64 
+S‘R—sÚ
+(
+INSTANCE_REMOVED
+);
+
+65 
+LaunchTh»ad
+();
+
+68 
+	gTh»adPo¡”
+::
+	$T¬g‘
+(cÚ¡ 
+¡d
+::
+¡ršg
+& 
+sReûiv”Id
+, cÚ¡ std::¡ršg& 
+sT¿n¥ÜtFe
+, 
+nPÜt
+)
+
+70 
+	`S‘R—sÚ
+(
+TARGET
+);
+
+71 
+m_sSŒšg
+ = 
+sReûiv”Id
+;
+
+72 
+m_nShÜt
+ = 
+nPÜt
+;
+
+73 
+m_sSDP
+ = 
+sT¿n¥ÜtFe
+;
+
+74 
+	`LaunchTh»ad
+();
+
+75 
+	}
+}
+
+77 
+	gTh»adPo¡”
+::
+	$P©chS’d”
+(cÚ¡ 
+¡d
+::
+¡ršg
+& 
+sS’d”Id
+, cÚ¡ 
+cÚÃùiÚS’d”
+& 
+cÚP©ch
+, 
+nPÜt
+)
+
+79 
+	`S‘R—sÚ
+(
+PATCH_SENDER
+);
+
+80 
+m_sSŒšg
+ = 
+sS’d”Id
+;
+
+81 
+m_nShÜt
+ = 
+nPÜt
+;
+
+83 
+	`LaunchTh»ad
+();
+
+84 
+	}
+}
+
+86 
+	gTh»adPo¡”
+::
+	$P©chReûiv”
+(cÚ¡ 
+¡d
+::
+¡ršg
+& 
+sReûiv”Id
+, cÚ¡ 
+cÚÃùiÚReûiv”
+& 
+cÚP©ch
+, 
+nPÜt
+)
+
+88 
+	`S‘R—sÚ
+(
+PATCH_RECEIVER
+);
+
+89 
+m_sSŒšg
+ = 
+sReûiv”Id
+;
+
+90 
+m_nShÜt
+ = 
+nPÜt
+;
+
+91 
+	`LaunchTh»ad
+();
+
+92 
+	}
+}
+
+94 
+	gTh»adPo¡”
+::
+	$S’d”Aùiv©ed
+(cÚ¡ 
+¡d
+::
+¡ršg
+& 
+sS’d”Id
+)
+
+96 
+	`S‘R—sÚ
+(
+ACTIVATE_SENDER
+);
+
+97 
+m_sSŒšg
+ = 
+sS’d”Id
+;
+
+98 
+	`LaunchTh»ad
+();
+
+99 
+	}
+}
+
+101 
+	gTh»adPo¡”
+::
+	$Reûiv”Aùiv©ed
+(cÚ¡ 
+¡d
+::
+¡ršg
+& 
+sReûiv”Id
+)
+
+103 
+	`S‘R—sÚ
+(
+ACTIVATE_RECEIVER
+);
+
+104 
+m_sSŒšg
+ = 
+sReûiv”Id
+;
+
+105 
+	`LaunchTh»ad
+();
+
+106 
+	}
+}
+
+109 cÚ¡ 
+	g¡d
+::
+¡ršg
+& 
+Th»adPo¡”
+::
+	$G‘SŒšg
+()
+
+111 
+¡d
+::
+lock_gu¬d
+<¡d::
+mu‹x
+> 
+	`lg
+(
+m_mu‹xMaš
+);
+
+112  
+m_sSŒšg
+;
+
+113 
+	}
+}
+
+115 
+	gTh»adPo¡”
+::
+	$G‘PÜt
+()
+
+117 
+¡d
+::
+lock_gu¬d
+<¡d::
+mu‹x
+> 
+	`lg
+(
+m_mu‹xMaš
+);
+
+118  
+m_nShÜt
+;
+
+119 
+	}
+}
+
+121 
+	gTh»adPo¡”
+::
+	$SigÇl
+()
+
+123 
+m_cv
+.
+	`nÙify_Úe
+();
+
+124 
+	}
+}
+
+127 
+	gTh»adPo¡”
+::
+	$LaunchTh»ad
+()
+
+129 
+¡d
+::
+th»ad
+ 
+	`thNÙify
+(
+NÙify
+, 
+this
+);
+
+130 
+thNÙify
+.
+	`d‘ach
+();
+
+131 
+	}
+}
+
+	@/home/pi/nmos/tests/nmos_node_test/threadposter.h
+
+1 #´agm¨
+Úû
+
+
+2 
+	~"ev’o¡”.h
+"
+
+3 
+	~<cÚd™iÚ_v¬ŸbË
+>
+
+6 şas 
+	cTh»adPo¡”
+ : 
+public
+ 
+Ev’tPo¡”
+
+
+8 
+public
+:
+
+9 
+	$Th»adPo¡”
+(){}
+
+10 
+vœtu®
+ ~
+	$Th»adPo¡”
+(){
+	}
+}
+
+12 
+boŞ
+ 
+Wa™
+(
+¡d
+::
+chrÚo
+::
+mli£cÚds
+ 
+ms
+);
+
+13 
+G‘R—sÚ
+();
+
+15 cÚ¡ 
+	g¡d
+::
+¡ršg
+& 
+G‘SŒšg
+();
+
+16 
+G‘PÜt
+();
+
+18 cÚ¡ 
+	g¡d
+::
+¡ršg
+ 
+	$G‘SDP
+() const
+
+20  
+m_sSDP
+;
+
+21 
+	}
+}
+
+23 
+SigÇl
+();
+
+24 ’um {
+	gCURL_DONE
+, 
+	gINSTANCE_RESOLVED
+, 
+	gALLFORNOW
+, 
+	gFINISHED
+, 
+	gREGERROR
+, 
+	gINSTANCE_REMOVED
+, 
+	gTARGET
+, 
+	gPATCH_SENDER
+, 
+	gPATCH_RECEIVER
+, 
+	gACTIVATE_SENDER
+, 
+	gACTIVATE_RECEIVER
+};
+
+26 
+	g´Ùeùed
+:
+
+28 
+Cu¾DÚe
+(
+nResuÉ
+, cÚ¡ 
+¡d
+::
+¡ršg
+& 
+sRe¥Ú£
+, 
+nTy³
+, cÚ¡ std::¡ršg& 
+sResourûId
+);
+
+29 
+In¡ªûResŞved
+(
+¡d
+::
+sh¬ed_±r
+<
+dnsIn¡ªû
+> 
+pIn¡ªû
+);
+
+30 
+AÎFÜNow
+(cÚ¡ 
+¡d
+::
+¡ršg
+& 
+sS”viû
+);
+
+31 
+Fšished
+();
+
+32 
+Regi¡¿tiÚNodeE¼Ü
+();
+
+33 
+In¡ªûRemoved
+(
+¡d
+::
+sh¬ed_±r
+<
+dnsIn¡ªû
+> 
+pIn¡ªû
+);
+
+34 
+T¬g‘
+(cÚ¡ 
+¡d
+::
+¡ršg
+& 
+sReûiv”Id
+, cÚ¡ std::¡ršg& 
+sT¿n¥ÜtFe
+, 
+nPÜt
+);
+
+35 
+P©chS’d”
+(cÚ¡ 
+¡d
+::
+¡ršg
+& 
+sS’d”Id
+, cÚ¡ 
+cÚÃùiÚS’d”
+& 
+cÚP©ch
+, 
+nPÜt
+);
+
+36 
+P©chReûiv”
+(cÚ¡ 
+¡d
+::
+¡ršg
+& 
+sReûiv”Id
+, cÚ¡ 
+cÚÃùiÚReûiv”
+& 
+cÚP©ch
+, 
+nPÜt
+);
+
+37 
+S’d”Aùiv©ed
+(cÚ¡ 
+¡d
+::
+¡ršg
+& 
+sS’d”Id
+);
+
+38 
+Reûiv”Aùiv©ed
+(cÚ¡ 
+¡d
+::
+¡ršg
+& 
+sReûiv”Id
+);
+
+40 
+S‘R—sÚ
+(
+nR—sÚ
+);
+
+41 
+LaunchTh»ad
+();
+
+43 
+	g¡d
+::
+mu‹x
+ 
+m_mu‹xMaš
+;
+
+44 
+	g¡d
+::
+cÚd™iÚ_v¬ŸbË
+ 
+m_cv
+;
+
+46 
+	g¡d
+::
+¡ršg
+ 
+m_sSŒšg
+;
+
+47 
+	gm_nLÚg
+;
+
+48 
+	gm_nShÜt
+;
+
+50 
+	g¡d
+::
+¡ršg
+ 
+m_sSDP
+;
+
+52 
+	gm_nR—sÚ
+;
+
+53 
+	g¡d
+::
+sh¬ed_±r
+<
+S’d”
+> 
+m_pS’d”
+;
+
+	@threadposter.h
+
+1 #´agm¨
+Úû
+
+
+2 
+	~"ev’o¡”.h
+"
+
+3 
+	~<cÚd™iÚ_v¬ŸbË
+>
+
+6 şas 
+	cTh»adPo¡”
+ : 
+public
+ 
+Ev’tPo¡”
+
+
+8 
+public
+:
+
+9 
+	$Th»adPo¡”
+(){}
+
+10 
+vœtu®
+ ~
+	$Th»adPo¡”
+(){
+	}
+}
+
+12 
+boŞ
+ 
+Wa™
+(
+¡d
+::
+chrÚo
+::
+mli£cÚds
+ 
+ms
+);
+
+13 
+G‘R—sÚ
+();
+
+15 cÚ¡ 
+	g¡d
+::
+¡ršg
+& 
+G‘SŒšg
+();
+
+16 
+G‘PÜt
+();
+
+18 cÚ¡ 
+	g¡d
+::
+¡ršg
+ 
+	$G‘SDP
+() const
+
+20  
+m_sSDP
+;
+
+21 
+	}
+}
+
+23 
+SigÇl
+();
+
+24 ’um {
+	gCURL_DONE
+, 
+	gINSTANCE_RESOLVED
+, 
+	gALLFORNOW
+, 
+	gFINISHED
+, 
+	gREGERROR
+, 
+	gINSTANCE_REMOVED
+, 
+	gTARGET
+, 
+	gPATCH_SENDER
+, 
+	gPATCH_RECEIVER
+, 
+	gACTIVATE_SENDER
+, 
+	gACTIVATE_RECEIVER
+};
+
+26 
+	g´Ùeùed
+:
+
+28 
+Cu¾DÚe
+(
+nResuÉ
+, cÚ¡ 
+¡d
+::
+¡ršg
+& 
+sRe¥Ú£
+, 
+nTy³
+, cÚ¡ std::¡ršg& 
+sResourûId
+);
+
+29 
+In¡ªûResŞved
+(
+¡d
+::
+sh¬ed_±r
+<
+dnsIn¡ªû
+> 
+pIn¡ªû
+);
+
+30 
+AÎFÜNow
+(cÚ¡ 
+¡d
+::
+¡ršg
+& 
+sS”viû
+);
+
+31 
+Fšished
+();
+
+32 
+Regi¡¿tiÚNodeE¼Ü
+();
+
+33 
+In¡ªûRemoved
+(
+¡d
+::
+sh¬ed_±r
+<
+dnsIn¡ªû
+> 
+pIn¡ªû
+);
+
+34 
+T¬g‘
+(cÚ¡ 
+¡d
+::
+¡ršg
+& 
+sReûiv”Id
+, cÚ¡ std::¡ršg& 
+sT¿n¥ÜtFe
+, 
+nPÜt
+);
+
+35 
+P©chS’d”
+(cÚ¡ 
+¡d
+::
+¡ršg
+& 
+sS’d”Id
+, cÚ¡ 
+cÚÃùiÚS’d”
+& 
+cÚP©ch
+, 
+nPÜt
+);
+
+36 
+P©chReûiv”
+(cÚ¡ 
+¡d
+::
+¡ršg
+& 
+sReûiv”Id
+, cÚ¡ 
+cÚÃùiÚReûiv”
+& 
+cÚP©ch
+, 
+nPÜt
+);
+
+37 
+S’d”Aùiv©ed
+(cÚ¡ 
+¡d
+::
+¡ršg
+& 
+sS’d”Id
+);
+
+38 
+Reûiv”Aùiv©ed
+(cÚ¡ 
+¡d
+::
+¡ršg
+& 
+sReûiv”Id
+);
+
+40 
+S‘R—sÚ
+(
+nR—sÚ
+);
+
+41 
+LaunchTh»ad
+();
+
+43 
+	g¡d
+::
+mu‹x
+ 
+m_mu‹xMaš
+;
+
+44 
+	g¡d
+::
+cÚd™iÚ_v¬ŸbË
+ 
+m_cv
+;
+
+46 
+	g¡d
+::
+¡ršg
+ 
+m_sSŒšg
+;
+
+47 
+	gm_nLÚg
+;
+
+48 
+	gm_nShÜt
+;
+
+50 
+	g¡d
+::
+¡ršg
+ 
+m_sSDP
+;
+
+52 
+	gm_nR—sÚ
+;
+
+53 
+	g¡d
+::
+sh¬ed_±r
+<
+S’d”
+> 
+m_pS’d”
+;
+
+	@
+1
+.
+1
+/usr/include
+4
+161
+/home/pi/nmos/tests/nmos_node_test/main.cpp
+/home/pi/nmos/tests/nmos_node_test/threadposter.cpp
+/home/pi/nmos/tests/nmos_node_test/threadposter.h
+threadposter.h

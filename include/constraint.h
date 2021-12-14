@@ -2,101 +2,85 @@
 #include <string>
 #include "json/json.h"
 #include <vector>
-#include "version.h"
+#include "nmosapiversion.h"
+#include "utils.h"
+#include "optional.hpp"
 
-class constraint
+namespace pml
 {
-    public:
+    namespace nmos
+    {
+        typedef std::pair<jsondatatype, std::string> pairEnum_t;
 
-        enum enumConstraint {CON_BOOL, CON_INTEGER, CON_NULL, CON_NUMBER, CON_STRING};
-        typedef std::pair<enumConstraint, std::string> pairEnum_t;
-
-        constraint(const std::string& sParam, const std::string& sDescription="");
-
-        bool MeetsConstraint(const std::string& sValue);
-        bool MeetsConstraint(int nValue);
-        bool MeetsConstraint(double dValue);
-        bool MeetsConstraint(bool bValue);
-
-        void SetMinimum(int nMinimum);
-        void SetMaximum(int nMaximum);
-        void SetEnum(const std::vector<pairEnum_t>& vConstraints);
-        void SetPattern(const std::string& sPattern);
-
-        void RemoveMinimum();
-        void RemoveMaximum();
-        void RemoveEnum();
-        void RemovePattern();
-
-        std::string GetParam() const
+        class constraint
         {
-            return m_sParam;
-        }
-
-        Json::Value GetJson(const ApiVersion& version) const;
-
-    private:
-        std::string m_sParam;
-
-        std::pair<bool, int> m_pairMinimum;     // @todo min constraint can be a double as well
-        std::pair<bool, int> m_pairMaximum;     // @todo max constraint can be a double as well
-        std::vector<pairEnum_t> m_vEnum;
-        std::pair<bool, std::string> m_pairPattern;
-
-        std::string m_sDescription;
-};
+            public:
 
 
-struct constraints
-{
-    constraints();
+                constraint(const std::string& sDescription="");
 
-    virtual Json::Value GetJson(const ApiVersion& version) const;
+                bool MeetsConstraint(const std::string& value) const;
+                bool MeetsConstraint(const unsigned int value) const;
+                bool MeetsConstraint(const int value) const;
+                bool MeetsConstraint(const double value) const;
+                bool MeetsConstraint(const bool value) const;
 
-    int nParamsSupported;
+                void SetMinimum(int nMinimum);
+                void SetMaximum(int nMaximum);
+                void SetEnum(const std::vector<pairEnum_t>& vConstraints);
+                void SetPattern(const std::string& sPattern);
 
-    constraint source_ip;
-    constraint destination_port;
-
-    constraint fec_destination_ip;
-    constraint fec_enabled;
-    constraint fec_mode;
-    constraint fec1D_destination_port;
-    constraint fec2D_destination_port;
-
-    constraint rtcp_enabled;
-    constraint rtcp_destination_ip;
-    constraint rtcp_destination_port;
-
-    constraint rtp_enabled;
-};
-
-struct constraintsSender : public constraints
-{
-    constraintsSender();
-    virtual Json::Value GetJson(const ApiVersion& version) const;
+                void RemoveMinimum();
+                void RemoveMaximum();
+                void RemoveEnum();
+                void RemovePattern();
 
 
+                Json::Value GetJson() const;
 
-    constraint destination_ip;
+                bool UpdateFromJson(const Json::Value& jsConstraint);
 
-    constraint source_port;
-    constraint fec_type;
-    constraint fec_block_width;
-    constraint fec_block_height;
-    constraint fec1D_source_port;
-    constraint fec2D_source_port;
-        constraint rtcp_source_port;
+                static const std::string MAXIMUM;
+                static const std::string MINIMUM;
+                static const std::string PATTERN;
+                static const std::string ENUM;
 
-};
+            private:
+
+                std::string m_sDescription;
+                std::experimental::optional<int> m_minimum; // @todo min constraint can be a double as well
+                std::experimental::optional<int> m_maximum; // @todo min constraint can be a double as well
+                std::experimental::optional<std::string> m_pattern;
+                std::vector<pairEnum_t> m_vEnum;
 
 
-struct constraintsReceiver : public constraints
-{
-    constraintsReceiver();
+        };
 
-    virtual Json::Value GetJson(const ApiVersion& version) const;
 
-    constraint interface_ip;
-    constraint multicast_ip;
+        class Constraints
+        {
+            public:
+                Constraints();
+                Constraints(const Json::Value& jsTransport);
+
+                virtual Json::Value GetJson() const;
+
+                bool UpdateFromJson(const Json::Value& jsData);
+
+                bool MeetsConstraint(const std::string& sKey, const Json::Value& jsCheck) const;
+
+                bool AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
+                                   const std::vector<pairEnum_t>& vEnum);
+                bool ClearConstraint(const std::string& sKey);
+
+                void CreateEmptyConstraint(const std::string& sKey);
+
+            protected:
+                std::map<std::string, constraint> m_mConstraints;
+
+
+        };
+
+
+    };
 };

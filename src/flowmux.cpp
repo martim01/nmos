@@ -1,4 +1,5 @@
 #include "flowmux.h"
+using namespace pml::nmos;
 
 FlowMux::FlowMux(const std::string& sLabel, const std::string& sDescription, const std::string& sSourceId, const std::string& sDeviceId, const std::string& sMediaType) :
     Flow(sLabel, sDescription, "urn:x-nmos:format:mux", sSourceId, sDeviceId),
@@ -22,7 +23,7 @@ bool FlowMux::UpdateFromJson(const Json::Value& jsData)
     }
     else
     {
-        m_ssJsonError << "'media-type' is not a string" << std::endl;
+        m_ssJsonError << "'media-type' is not a string" ;
     }
     return m_bIsOk;
 }
@@ -45,9 +46,22 @@ void FlowMux::SetMediaType(const std::string& sMediaType)
     UpdateVersionTime();
 }
 
-
-std::string FlowMux::CreateSDPLines(unsigned short nRtpPort) const
+std::shared_ptr<FlowMux> FlowMux::Create(const Json::Value& jsResponse)
 {
-    // @todo create FlowMux SDP information
-    return "";
+    auto pResource  = std::make_shared<FlowMux>();
+    if(pResource->UpdateFromJson(jsResponse))
+    {
+        return pResource;
+    }
+    return nullptr;
+}
+
+std::string FlowMux::CreateSDPMediaLine(unsigned short nPort) const
+{
+    return std::string();
+}
+
+std::string FlowMux::CreateSDPAttributeLines(std::shared_ptr<const Source> pSource) const
+{
+    return std::string();
 }

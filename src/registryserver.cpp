@@ -1,3 +1,4 @@
+#ifdef __NMOS_REGISTRY__
 #include "registryserver.h"
 #include "registryapi.h"
 #include <sstream>
@@ -21,7 +22,7 @@ using namespace std;
 
 void RegistryServer::RequestCompleted (void *cls, MHD_Connection* pConnection, void **ptr, enum MHD_RequestTerminationCode toe)
 {
-    Log::Get() << "Request completed" << endl;
+    pmlLog(pml::LOG_INFO) << "Request completed" ;
     RegistryInfo *pInfo = reinterpret_cast<RegistryInfo*>(*ptr);
     if (pInfo)
     {
@@ -30,7 +31,7 @@ void RegistryServer::RequestCompleted (void *cls, MHD_Connection* pConnection, v
     }
     else
     {
-        Log::Get(Log::LOG_ERROR) << "Request completed: Failed" << endl;
+        pmlLog(pml::LOG_ERROR) << "Request completed: Failed" ;
     }
 }
 
@@ -39,7 +40,7 @@ int RegistryServer::DoHttpGet(MHD_Connection* pConnection, string sUrl, Registry
     string sResponse, sContentType;
     int nCode = pInfo->pServer->GetJson(sUrl, sResponse, sContentType);
 
-    Log::Get() << "Response: " << sResponse << endl;
+    pmlLog(pml::LOG_INFO) << "Response: " << sResponse ;
 
     MHD_Response* pResponse = MHD_create_response_from_buffer (sResponse.length(), (void *) sResponse.c_str(), MHD_RESPMEM_MUST_COPY);
     MHD_add_response_header(pResponse, "Content-Type", sContentType.c_str());
@@ -79,7 +80,7 @@ int RegistryServer::DoHttpDelete(MHD_Connection* pConnection, string sUrl, Regis
     string sResponse;
     int nCode = pInfo->pServer->DeleteJson(sUrl, sResponse);
 
-    Log::Get() << "Response: " << sResponse << endl;
+    pmlLog(pml::LOG_INFO) << "Response: " << sResponse ;
 
     MHD_Response* pResponse = MHD_create_response_from_buffer (sResponse.length(), (void *) sResponse.c_str(), MHD_RESPMEM_MUST_COPY);
     MHD_add_response_header(pResponse, "Content-Type", "application/json");
@@ -98,12 +99,12 @@ int RegistryServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, c
     char sAddr[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &(pAddr->sin_addr), sAddr, INET_ADDRSTRLEN);
 
-    Log::Get(Log::LOG_DEBUG) << "AnswerToConnection: " << sAddr << endl;
+    pmlLog(pml::LOG_DEBUG) << "AnswerToConnection: " << sAddr ;
 
     string sMethod(method);
     if (NULL == *ptr)
     {
-        Log::Get(Log::LOG_DEBUG) << "Initial connection" << endl;
+        pmlLog(pml::LOG_DEBUG) << "Initial connection" ;
         RegistryInfo* pInfo = new RegistryInfo();
         if(pInfo == 0)
         {
@@ -112,7 +113,7 @@ int RegistryServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, c
         pInfo->pServer = reinterpret_cast<RegistryServer*>(cls);
         if("POST" == sMethod)
         {
-            Log::Get(Log::LOG_DEBUG) << "Initial connection: " << sMethod << endl;
+            pmlLog(pml::LOG_DEBUG) << "Initial connection: " << sMethod ;
             if("POST" == sMethod)
             {
                 pInfo->nType = RegistryInfo::POST;
@@ -121,34 +122,34 @@ int RegistryServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, c
         else if("DELETE" == sMethod)
         {
             pInfo->nType = RegistryInfo::DEL;
-            Log::Get(Log::LOG_DEBUG) << "Initial connection: " << sMethod << endl;
+            pmlLog(pml::LOG_DEBUG) << "Initial connection: " << sMethod ;
         }
         else
         {
-            Log::Get(Log::LOG_DEBUG) << "Initial connection: GET" << endl;
+            pmlLog(pml::LOG_DEBUG) << "Initial connection: GET" ;
         }
         *ptr = (void *) pInfo;
 
-        Log::Get(Log::LOG_DEBUG) << "Initial connection: return MHD_YES" << endl;
+        pmlLog(pml::LOG_DEBUG) << "Initial connection: return MHD_YES" ;
         return MHD_YES;
     }
 
-    Log::Get(Log::LOG_DEBUG) << "RegistryServer: " << url << endl;
+    pmlLog(pml::LOG_DEBUG) << "RegistryServer: " << url ;
     if("GET" == string(sMethod))
     {
         RegistryInfo* pInfo = reinterpret_cast<RegistryInfo*>(*ptr);
-        Log::Get(Log::LOG_DEBUG) << "Actual connection: GET" << endl;
+        pmlLog(pml::LOG_DEBUG) << "Actual connection: GET" ;
         return DoHttpGet(pConnection, url, pInfo);
     }
     else if("DELETE" == string(sMethod))
     {
         RegistryInfo* pInfo = reinterpret_cast<RegistryInfo*>(*ptr);
-        Log::Get(Log::LOG_DEBUG) << "Actual connection: DELETE" << endl;
+        pmlLog(pml::LOG_DEBUG) << "Actual connection: DELETE" ;
         return DoHttpDelete(pConnection, url, pInfo);
     }
     else if("POST" == string(sMethod))
     {
-        Log::Get(Log::LOG_DEBUG) << "Actual connection: POST" << endl;
+        pmlLog(pml::LOG_DEBUG) << "Actual connection: POST" ;
         RegistryInfo* pInfo = reinterpret_cast<RegistryInfo*>(*ptr);
         if (*upload_data_size != 0)
         {
@@ -181,11 +182,11 @@ bool RegistryServer::Init(unsigned int nPort)
 , nPort, NULL, NULL, &RegistryServer::AnswerToConnection, this, MHD_OPTION_NOTIFY_COMPLETED, RequestCompleted, NULL, MHD_OPTION_THREAD_POOL_SIZE,4, MHD_OPTION_END);
     if(m_pmhd)
     {
-        Log::Get() << "RegistryServer: " << nPort << " Init: OK" << std::endl;
+        pmlLog(pml::LOG_INFO) << "RegistryServer: " << nPort << " Init: OK" ;
     }
     else
     {
-        Log::Get() << "RegistryServer: " << nPort << " Init: Failed" << std::endl;
+        pmlLog(pml::LOG_INFO) << "RegistryServer: " << nPort << " Init: Failed" ;
     }
 
     return (m_pmhd!=0);
@@ -239,10 +240,9 @@ int RegistryServer::GetJson(string sPath, string& sReturn, std::string& sContent
 
     if(m_vPath.size() <= SZ_BASE)
     {
-        Json::FastWriter stw;
         Json::Value jsNode;
         jsNode.append("x-nmos/");
-        sReturn = stw.write(jsNode);
+        sReturn = ConvertFromJson(jsNode);
     }
     else
     {
@@ -253,8 +253,7 @@ int RegistryServer::GetJson(string sPath, string& sReturn, std::string& sContent
         }
         else
         {
-            Json::FastWriter stw;
-            sReturn = stw.write(GetJsonError(404, "Page not found"));
+            sReturn = ConvertFromJson(GetJsonError(404, "Page not found"));
             nCode = 404;
         }
     }
@@ -263,12 +262,11 @@ int RegistryServer::GetJson(string sPath, string& sReturn, std::string& sContent
 
 int RegistryServer::GetJsonNmos(string& sReturn, std::string& sContentType)
 {
-    Json::FastWriter stw;
     if(m_vPath.size() == SZ_NMOS)
     {
         Json::Value jsNode;
         jsNode.append("registration/");
-        sReturn = stw.write(jsNode);
+        sReturn = ConvertFromJson(jsNode);
         return 200;
     }
     else if(m_vPath[API] == "registration")
@@ -277,7 +275,7 @@ int RegistryServer::GetJsonNmos(string& sReturn, std::string& sContentType)
         {
             Json::Value jsNode;
             jsNode.append("v1.2/");
-            sReturn = stw.write(jsNode);
+            sReturn = ConvertFromJson(jsNode);
             return 200;
         }
         else if(m_vPath[VERSION] == "v1.2")
@@ -287,7 +285,7 @@ int RegistryServer::GetJsonNmos(string& sReturn, std::string& sContentType)
                 Json::Value jsNode;
                 jsNode.append("resource/");
                 jsNode.append("health/");
-                sReturn = stw.write(jsNode);
+                sReturn = ConvertFromJson(jsNode);
                 return 200;
             }
             else if(m_vPath[RES_HEALTH] == "resource")
@@ -301,23 +299,22 @@ int RegistryServer::GetJsonNmos(string& sReturn, std::string& sContentType)
         }
         else
         {
-            sReturn = stw.write(GetJsonError(404, "Version not supported"));
+            sReturn = ConvertFromJson(GetJsonError(404, "Version not supported"));
             return 404;
         }
     }
-    sReturn = stw.write(GetJsonError(404, "API not found"));
+    sReturn = ConvertFromJson(GetJsonError(404, "API not found"));
     return 404;
 }
 
 int RegistryServer::GetJsonNmosResource(string& sReturn, const ApiVersion& version)
 {
-    Json::FastWriter stw;
     int nCode = 200;
     if(m_vPath.size() < SZ_ID)
     {
         //no GET allowed here
         nCode = 405;
-        sReturn = stw.write(GetJsonError(nCode, "Method not allowed here."));
+        sReturn = ConvertFromJson(GetJsonError(nCode, "Method not allowed here."));
     }
     else
     {
@@ -325,12 +322,12 @@ int RegistryServer::GetJsonNmosResource(string& sReturn, const ApiVersion& versi
         if(pResource)
         {
             nCode = 200;
-            sReturn = stw.write(pResource->GetJson(version));
+            sReturn = ConvertFromJson(pResource->GetJson(version));
         }
         else
         {
             nCode = 404;
-            sReturn = stw.write(GetJsonError(404, "Resource not found"));
+            sReturn = ConvertFromJson(GetJsonError(404, "Resource not found"));
         }
     }
     return nCode;
@@ -338,13 +335,12 @@ int RegistryServer::GetJsonNmosResource(string& sReturn, const ApiVersion& versi
 
 int RegistryServer::GetJsonNmosHealth(string& sReturn)
 {
-    Json::FastWriter stw;
     int nCode = 200;
     if(m_vPath.size() < SZ_ID)
     {
         //no GET allowed here
         nCode = 405;
-        sReturn = stw.write(GetJsonError(nCode, "Method not allowed here."));
+        sReturn = ConvertFromJson(GetJsonError(nCode, "Method not allowed here."));
     }
     else
     {
@@ -356,18 +352,18 @@ int RegistryServer::GetJsonNmosHealth(string& sReturn)
                 nCode = 200;
                 Json::Value jsNode;
                 jsNode["health"] = to_string(pResource->GetLastHeartbeat());
-                sReturn = stw.write(jsNode);
+                sReturn = ConvertFromJson(jsNode);
             }
             else
             {
                 nCode = 404;
-                sReturn = stw.write(GetJsonError(404, "Resource not found"));
+                sReturn = ConvertFromJson(GetJsonError(404, "Resource not found"));
             }
         }
         else
         {
             nCode = 400;
-            sReturn = stw.write(GetJsonError(400, "Page not found"));
+            sReturn = ConvertFromJson(GetJsonError(400, "Page not found"));
         }
     }
     return nCode;
@@ -387,18 +383,17 @@ Json::Value RegistryServer::GetJsonError(unsigned long nCode, string sError)
 
 int RegistryServer::PostJson(string sPath, const string& sJson, string& sResponse, std::string& sLocation)
 {
-    Log::Get() << "RegistyServer: " << sPath << " " << sJson << endl;
+    pmlLog(pml::LOG_INFO) << "RegistyServer: " << sPath << " " << sJson ;
     //make sure path is correct
     transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
 
-    Json::FastWriter stw;
 
     int nCode = 202;
     SplitString(m_vPath, sPath, '/');
     if(m_vPath.size() < SZ_RES_HEALTH || m_vPath[NMOS] != "x-nmos" || m_vPath[API]!="registration" || m_vPath[VERSION] != "v1.2")
     {
         nCode = 405;
-        sResponse = stw.write(GetJsonError(nCode, "Method not allowed here."));
+        sResponse = ConvertFromJson(GetJsonError(nCode, "Method not allowed here."));
     }
     else if(m_vPath[RES_HEALTH] == "resource" && m_vPath.size()==SZ_RES_HEALTH)
     {
@@ -412,9 +407,9 @@ int RegistryServer::PostJson(string sPath, const string& sJson, string& sRespons
     else
     {
         nCode = 405;
-        sResponse = stw.write(GetJsonError(nCode, "Method not allowed here."));
+        sResponse = ConvertFromJson(GetJsonError(nCode, "Method not allowed here."));
     }
-    Log::Get() << "Response: " << sResponse << " Code:" << nCode << endl;
+    pmlLog(pml::LOG_INFO) << "Response: " << sResponse << " Code:" << nCode ;
     return nCode;
 }
 
@@ -425,11 +420,10 @@ int RegistryServer::PostJsonNmosResource(const std::string& sJson, std::string& 
     //Is sJson Json
     Json::Value jsRequest;
     Json::Reader jsReader;
-    Json::FastWriter stw;
     if(jsReader.parse(sJson, jsRequest) == false || jsRequest["type"].isString()==false || jsRequest["data"].isObject()==false || jsRequest["data"]["id"].isString() == false)
     {
         nCode = 400;
-        sReturn = stw.write(GetJsonError(nCode, "Request is ill defined."));
+        sReturn = ConvertFromJson(GetJsonError(nCode, "Request is ill defined."));
         return nCode;
     }
 
@@ -437,18 +431,18 @@ int RegistryServer::PostJsonNmosResource(const std::string& sJson, std::string& 
     string sError;
     nCode = RegistryApi::Get().AddUpdateResource(jsRequest["type"].asString(), jsRequest["data"], sError);
 
-    Log::Get() << "RESOURCE TYPE: " << jsRequest["type"].asString() << endl;
+    pmlLog(pml::LOG_INFO) << "RESOURCE TYPE: " << jsRequest["type"].asString() ;
 
     if(nCode == 200 || nCode == 201)
     {
-        sReturn = stw.write(jsRequest["data"]);
+        sReturn = ConvertFromJson(jsRequest["data"]);
         stringstream sLoc;
         sLoc << "/x-nmos/registration/v1.2/resource/" << jsRequest["type"].asString() << "/" << jsRequest["data"]["id"].asString() << "/";
         sLocation = sLoc.str();
     }
     else
     {
-        sReturn = stw.write(GetJsonError(nCode, sError));
+        sReturn = ConvertFromJson(GetJsonError(nCode, sError));
     }
 
     return nCode;
@@ -458,20 +452,19 @@ int RegistryServer::PostJsonNmosResource(const std::string& sJson, std::string& 
 int RegistryServer::PostJsonNmosHealth(std::string& sReturn)
 {
     unsigned short nCode;
-    Json::FastWriter stw;
 
     size_t nHeatbeat = RegistryApi::Get().Heartbeat(m_vPath[HEALTH_ID]);
     if(nHeatbeat != 0)
     {
         Json::Value jsNode;
         jsNode["health"] = to_string(nHeatbeat);
-        sReturn = stw.write(jsNode);
+        sReturn = ConvertFromJson(jsNode);
         nCode = 200;
     }
     else
     {
         nCode = 404;
-        sReturn = stw.write(GetJsonError(404, "Resource not found"));
+        sReturn = ConvertFromJson(GetJsonError(404, "Resource not found"));
     }
     return nCode;
 }
@@ -482,14 +475,13 @@ int RegistryServer::DeleteJson(string sPath, string& sResponse)
     //make sure path is correct
     transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
 
-    Json::FastWriter stw;
 
     int nCode = 204;
     SplitString(m_vPath, sPath, '/');
     if(m_vPath.size() < SZ_ID || m_vPath[NMOS] != "x-nmos" || m_vPath[API]!="registration" || m_vPath[VERSION] != "v1.2" || m_vPath[RES_HEALTH] != "resource")
     {
         nCode = 405;
-        sResponse = stw.write(GetJsonError(nCode, "Method not allowed here."));
+        sResponse = ConvertFromJson(GetJsonError(nCode, "Method not allowed here."));
     }
     else
     {
@@ -502,9 +494,10 @@ int RegistryServer::DeleteJson(string sPath, string& sResponse)
         else
         {
             nCode = 404;
-            sResponse = stw.write(GetJsonError(nCode, "No resource found with this id."));
+            sResponse = ConvertFromJson-(GetJsonError(nCode, "No resource found with this id."));
         }
     }
 
     return nCode;
 }
+#endif //__NMOS_REGISTRY__

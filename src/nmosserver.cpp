@@ -1,57 +1,58 @@
 #include "nmosserver.h"
+#include <algorithm>
+#include "utils.h"
 
-int NmosServer::GetJsonNmos(Server* pServer, std::string& sReturn, std::string& sContentType)
+using namespace pml::nmos;
+
+NmosServer::NmosServer(std::shared_ptr<RestGoose> pServer, const ApiVersion& version, std::shared_ptr<EventPoster> pPoster, NodeApiPrivate& api) :
+    m_pServer(pServer),
+    m_version(version),
+    m_pPoster(pPoster),
+    m_api(api)
 {
-    Json::FastWriter stw;
-    sReturn = stw.write(GetJsonError(405, "Method not allowed here."));
-    return 405;
+
 }
 
-int NmosServer::PutJsonNmos(Server* pServer, const std::string& sJson, std::string& sResponse)
+NmosServer::~NmosServer()
 {
-    Json::FastWriter stw;
-    sResponse = stw.write(GetJsonError(405, "Method not allowed here."));
-    return 405;
+
 }
 
-int NmosServer::PatchJsonNmos(Server* pServer, const std::string& sJson, std::string& sResponse)
+response NmosServer::JsonError(int nCode, const std::string& sError, const std::string& sDebug)
 {
-    Json::FastWriter stw;
-    sResponse = stw.write(GetJsonError(405, "Method not allowed here."));
-    return 405;
-}
-
-int NmosServer::PostJsonNmos(Server* pServer, const std::string& sJson, std::string& sResponse)
-{
-    Json::FastWriter stw;
-    sResponse = stw.write(GetJsonError(405, "Method not allowed here."));
-    return 405;
-}
-
-int NmosServer::DeleteJsonNmos(Server* pServer, const std::string& sJson, std::string& sResponse)
-{
-    Json::FastWriter stw;
-    sResponse = stw.write(GetJsonError(405, "Method not allowed here."));
-    return 405;
-}
-
-Json::Value NmosServer::GetJsonError(unsigned long nCode, const std::string& sError)
-{
-    Json::Value jsError(Json::objectValue);
-    jsError["code"] = (int)nCode;
-    jsError["error"] = sError;
-    jsError["debug"] = "null";
-    return jsError;
-}
-
-void NmosServer::SetPath(const std::vector<std::string>& vPath)
-{
-    m_vPath = vPath;
+    response resp;
+    resp.nHttpCode =nCode;
+    resp.jsonData["code"] = nCode;
+    resp.jsonData["error"] = sError;
+    resp.jsonData["debug"] = sDebug;
+    return resp;
 }
 
 
-void NmosServer::SetPoster(std::shared_ptr<EventPoster> pPoster,unsigned short nPort)
+std::vector<std::string> NmosServer::SplitEndpoint(const endpoint& theEndpoint)
 {
-    m_pPoster = pPoster;
-    m_nPort = nPort;
+    return SplitString(theEndpoint.Get(), '/');
+}
+
+response NmosServer::ConvertPostDataToJson(const postData& vData)
+{
+    response resp = JsonError(400, "No data sent");
+    if(vData.size() == 1)
+    {
+        resp.nHttpCode = 200;
+        resp.jsonData = ConvertToJson(vData[0].sData);
+    }
+    else if(vData.size() > 1)
+    {
+        resp.nHttpCode = 200;
+        resp.jsonData.clear();
+        for(size_t i = 0; i < vData.size(); i++)
+        {
+            if(vData[i].sName.empty() == false)
+            {
+                resp.jsonData[vData[i].sName] = vData[i].sData;
+            }
+        }
+    }
+    return resp;
 }

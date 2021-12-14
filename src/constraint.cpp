@@ -1,14 +1,19 @@
 #include "constraint.h"
 #include <sstream>
 #include "transportparams.h"
+#include <algorithm>
+#include "log.h"
+
 
 using namespace std;
+using namespace pml::nmos;
 
-constraint::constraint(const std::string& sParam, const std::string& sDescription) :
-    m_sParam(sParam),
-    m_pairMinimum(make_pair(false, 0)),
-    m_pairMaximum(make_pair(false, 0)),
-    m_pairPattern(make_pair(false, "")),
+const std::string constraint::MAXIMUM = "maximum";
+const std::string constraint::MINIMUM = "minimum";
+const std::string constraint::PATTERN = "pattern";
+const std::string constraint::ENUM = "enum";
+
+constraint::constraint(const std::string& sDescription) :
     m_sDescription(sDescription)
 {
 
@@ -17,33 +22,33 @@ constraint::constraint(const std::string& sParam, const std::string& sDescriptio
 
 void constraint::SetMinimum(int nMinimum)
 {
-    m_pairMinimum = make_pair(true, nMinimum);
+    m_minimum = nMinimum;
 }
 
 void constraint::SetMaximum(int nMaximum)
 {
-    m_pairMaximum = make_pair(true, nMaximum);
+    m_maximum = nMaximum;
 }
 
-void constraint::SetEnum(const std::vector<constraint::pairEnum_t>& vConstraints)
+void constraint::SetEnum(const std::vector<pairEnum_t>& vConstraints)
 {
     m_vEnum = vConstraints;
 }
 
 void constraint::SetPattern(const std::string& sPattern)
 {
-    m_pairPattern = make_pair(true, sPattern);
+    m_pattern = sPattern;
 }
 
 
 void constraint::RemoveMinimum()
 {
-    m_pairMinimum = make_pair(false,0);
+    m_minimum.reset();
 }
 
 void constraint::RemoveMaximum()
 {
-    m_pairMaximum = make_pair(false,0);
+    m_maximum.reset();
 }
 
 void constraint::RemoveEnum()
@@ -53,52 +58,54 @@ void constraint::RemoveEnum()
 
 void constraint::RemovePattern()
 {
-    m_pairPattern = make_pair(false, "");
+    m_pattern.reset();
 }
 
-Json::Value constraint::GetJson(const ApiVersion& version) const
+Json::Value constraint::GetJson() const
 {
     Json::Value jsConstraint(Json::objectValue);
-    if(m_pairMinimum.first)
+    if(m_minimum)
     {
-        jsConstraint["minimum"] = m_pairMinimum.second;
+        jsConstraint[MINIMUM] = *m_minimum;
     }
-    if(m_pairMaximum.first)
+    if(m_maximum)
     {
-        jsConstraint["maximum"] = m_pairMaximum.second;
+        jsConstraint[MAXIMUM] = *m_maximum;
     }
-    if(m_pairPattern.first)
+    if(m_pattern)
     {
-        jsConstraint["pattern"] = m_pairPattern.second;
+        jsConstraint[PATTERN] = *m_pattern;
     }
     if(m_vEnum.empty() == false)
     {
-        jsConstraint["enum"] = Json::arrayValue;
+        jsConstraint[ENUM] = Json::arrayValue;
         for(size_t i = 0; i < m_vEnum.size(); i++)
         {
             switch(m_vEnum[i].first)
             {
-                case CON_BOOL:
+                case jsondatatype::_BOOLEAN:
                     if(m_vEnum[i].second == "true")
                     {
-                        jsConstraint["enum"].append(true);
+                        jsConstraint[ENUM].append(true);
                     }
                     else
                     {
-                        jsConstraint["enum"].append(false);
+                        jsConstraint[ENUM].append(false);
                     }
                     break;
-                case CON_INTEGER:
-                    jsConstraint["enum"] = stoi(m_vEnum[i].second);
+                case jsondatatype::_INTEGER:
+                    jsConstraint[ENUM].append(stoi(m_vEnum[i].second));
                     break;
-                case CON_NULL:
-                    jsConstraint["enum"] = Json::nullValue;
+                case jsondatatype::_NULL:
+                    jsConstraint[ENUM].append(Json::nullValue);
                     break;
-                case CON_STRING:
-                    jsConstraint["enum"] = m_vEnum[i].second;
+                case jsondatatype::_STRING:
+                    jsConstraint[ENUM].append(m_vEnum[i].second);
                     break;
-                case CON_NUMBER:
-                    jsConstraint["enum"] = stod(m_vEnum[i].second);
+                case jsondatatype::_NUMBER:
+                    jsConstraint[ENUM].append(stod(m_vEnum[i].second));
+                    break;
+                default:
                     break;
             }
         }
@@ -107,30 +114,34 @@ Json::Value constraint::GetJson(const ApiVersion& version) const
 }
 
 
-bool constraint::MeetsConstraint(const std::string& sValue)
+bool constraint::MeetsConstraint(const std::string& sValue) const
 {
+    if(sValue == TransportParamsRTP::AUTO)
+    {
+        return true;
+    }
     bool bMeets = true;
     //is the min set
-    if(m_pairMinimum.first)
+    if(m_minimum)
     {
         int nMin;
         try
         {
             nMin = stoi(sValue);
-            bMeets &= (nMin >= m_pairMinimum.second);
+            bMeets &= (nMin >= *m_minimum);
         }
         catch(const invalid_argument& ia)
         {
             bMeets = false;
         }
     }
-    if(m_pairMaximum.first)
+    if(m_maximum)
     {
         int nMax;
         try
         {
             nMax = stoi(sValue);
-            bMeets &= (nMax <= m_pairMaximum.second);
+            bMeets &= (nMax <= *m_maximum);
         }
         catch(const invalid_argument& ia)
         {
@@ -140,30 +151,36 @@ bool constraint::MeetsConstraint(const std::string& sValue)
 
     if(m_vEnum.empty() == false)
     {
+        bool bFound = false;
         for(size_t i = 0; i < m_vEnum.size(); i++)
         {
-            bMeets &= (m_vEnum[i].second == sValue);
+            if(m_vEnum[i].second == sValue)
+            {
+                bFound = true;
+                break;
+            }
         }
+        bMeets &= bFound;
     }
 
-    if(m_pairPattern.first)
+    if(m_pattern)
     {
         // @todo constraint pattern checking
     }
     return bMeets;
 }
 
-bool constraint::MeetsConstraint(int nValue)
+bool constraint::MeetsConstraint(int nValue) const
 {
     bool bMeets = true;
     //is the min set
-    if(m_pairMinimum.first)
+    if(m_minimum)
     {
-        bMeets &= (nValue >= m_pairMinimum.second);
+        bMeets &= (nValue >= *m_minimum);
     }
-    if(m_pairMaximum.first)
+    if(m_maximum)
     {
-        bMeets &= (nValue <= m_pairMaximum.second);
+        bMeets &= (nValue <= *m_maximum);
     }
 
     if(m_vEnum.empty() == false)
@@ -171,30 +188,73 @@ bool constraint::MeetsConstraint(int nValue)
         stringstream ss;
         ss << nValue;
 
+         bool bFound = false;
         for(size_t i = 0; i < m_vEnum.size(); i++)
         {
-            bMeets &= (m_vEnum[i].second == ss.str());
+            if(m_vEnum[i].second == ss.str())
+            {
+                bFound = true;
+                break;
+            }
         }
+        bMeets &= bFound;
     }
 
-    if(m_pairPattern.first)
+    if(m_pattern)
     {
         // @todo constraint pattern checking
     }
     return bMeets;
 }
 
-bool constraint::MeetsConstraint(double dValue)
+bool constraint::MeetsConstraint(unsigned int nValue) const
 {
     bool bMeets = true;
     //is the min set
-    if(m_pairMinimum.first)
+    if(m_minimum)
     {
-        bMeets &= (dValue >= m_pairMinimum.second);
+        bMeets &= (nValue >= *m_minimum);
     }
-    if(m_pairMaximum.first)
+    if(m_maximum)
     {
-        bMeets &= (dValue <= m_pairMaximum.second);
+        bMeets &= (nValue <= *m_maximum);
+    }
+
+    if(m_vEnum.empty() == false)
+    {
+        stringstream ss;
+        ss << nValue;
+
+         bool bFound = false;
+        for(size_t i = 0; i < m_vEnum.size(); i++)
+        {
+            if(m_vEnum[i].second == ss.str())
+            {
+                bFound = true;
+                break;
+            }
+        }
+        bMeets &= bFound;
+    }
+
+    if(m_pattern)
+    {
+        // @todo constraint pattern checking
+    }
+    return bMeets;
+}
+
+bool constraint::MeetsConstraint(double dValue) const
+{
+    bool bMeets = true;
+    //is the min set
+    if(m_minimum)
+    {
+        bMeets &= (dValue >= *m_minimum);
+    }
+    if(m_maximum)
+    {
+        bMeets &= (dValue <= *m_maximum);
     }
 
     if(m_vEnum.empty() == false)
@@ -202,30 +262,36 @@ bool constraint::MeetsConstraint(double dValue)
         stringstream ss;
         ss << dValue;
 
+         bool bFound = false;
         for(size_t i = 0; i < m_vEnum.size(); i++)
         {
-            bMeets &= (m_vEnum[i].second == ss.str());
+            if(m_vEnum[i].second == ss.str())
+            {
+                bFound = true;
+                break;
+            }
         }
+        bMeets &= bFound;
     }
 
-    if(m_pairPattern.first)
+    if(m_pattern)
     {
         // @todo constraint pattern checking
     }
     return bMeets;
 }
 
-bool constraint::MeetsConstraint(bool bValue)
+bool constraint::MeetsConstraint(bool bValue) const
 {
     bool bMeets = true;
     //is the min set
-    if(m_pairMinimum.first)
+    if(m_minimum)
     {
-        bMeets &= (bValue >= m_pairMinimum.second);
+        bMeets &= (bValue >= *m_minimum);
     }
-    if(m_pairMaximum.first)
+    if(m_maximum)
     {
-        bMeets &= (bValue <= m_pairMaximum.second);
+        bMeets &= (bValue <= *m_maximum);
     }
 
     if(m_vEnum.empty() == false)
@@ -236,116 +302,188 @@ bool constraint::MeetsConstraint(bool bValue)
             sValue = "true";
         }
 
+         bool bFound = false;
         for(size_t i = 0; i < m_vEnum.size(); i++)
         {
-            bMeets &= (m_vEnum[i].second == sValue);
+            if(m_vEnum[i].second == sValue)
+            {
+                bFound = true;
+                break;
+            }
         }
+        bMeets &= bFound;
     }
 
-    if(m_pairPattern.first)
+    if(m_pattern)
     {
         // @todo constraint pattern checking
     }
     return bMeets;
 }
 
+bool constraint::UpdateFromJson(const Json::Value& jsConstraint)
+{
+    if(CheckJsonAllowed(jsConstraint, { {MAXIMUM, {jsondatatype::_NUMBER, jsondatatype::_INTEGER}},
+                          {MINIMUM, {jsondatatype::_NUMBER, jsondatatype::_INTEGER}},
+                          {ENUM, {jsondatatype::_ARRAY}},
+                          {PATTERN, {jsondatatype::_STRING}}}) == false)
+    {
+        return false;
+    }
+
+    if(jsConstraint.isMember(MAXIMUM))
+    {
+        m_minimum = jsConstraint.asInt();   //@todo this could be a double
+    }
+    if(jsConstraint.isMember(MINIMUM))
+    {
+        m_minimum = jsConstraint.asInt();   //@todo this could be a double
+    }
+    if(jsConstraint.isMember(ENUM))
+    {
+        m_vEnum.clear();
+        m_vEnum.resize(jsConstraint[ENUM].size());
+        for(Json::ArrayIndex ai = 0; ai < jsConstraint[ENUM].size(); ai++)
+        {
+            switch(jsConstraint[ENUM][ai].type())
+            {
+                case Json::ValueType::booleanValue:
+                    m_vEnum[ai] = {jsondatatype::_BOOLEAN, jsConstraint[ENUM][ai].asBool() ? "true" : "false"};
+                    break;
+                case Json::ValueType::intValue:
+                case Json::ValueType::uintValue:
+                    m_vEnum[ai] = {jsondatatype::_INTEGER, jsConstraint[ENUM][ai].asString()};
+                    break;
+                case Json::ValueType::realValue:
+                    m_vEnum[ai] = {jsondatatype::_NUMBER, jsConstraint[ENUM][ai].asString()};
+                    break;
+                case Json::ValueType::nullValue:
+                    m_vEnum[ai] = {jsondatatype::_NULL, "null"};
+                    break;
+                case Json::ValueType::stringValue:
+                    m_vEnum[ai] = {jsondatatype::_STRING, jsConstraint[ENUM][ai].asString()};
+                    break;
+                default:
+                    return false;
+            }
+
+        }
+    }
+    if(jsConstraint.isMember(PATTERN))
+    {
+        m_pattern = jsConstraint.asString();
+    }
+    return true;
+}
 
 
 
-constraints::constraints() :
-    nParamsSupported(TransportParamsRTP::CORE),
-    source_ip("source_ip"),
-    destination_port("destination_port"),
-    fec_destination_ip("fec_destination_ip"),
-    fec_enabled("fec_enabled"),
-    fec_mode("fec_mode"),
-    fec1D_destination_port("fec1D_destination_port"),
-    fec2D_destination_port("fec2D_destination_port"),
-    rtcp_enabled("rtcp_enabled"),
-    rtcp_destination_ip("rtcp_destination_ip"),
-    rtcp_destination_port("rtcp_destination_port"),
-    rtp_enabled("rtp_enabled")
+Constraints::Constraints()
 {
 
 }
 
-Json::Value constraints::GetJson(const ApiVersion& version) const
+Json::Value Constraints::GetJson() const
 {
     Json::Value jsConstraints(Json::objectValue);
-    jsConstraints[destination_port.GetParam()] = destination_port.GetJson(version);
-    jsConstraints[source_ip.GetParam()] = source_ip.GetJson(version);
-    jsConstraints[rtp_enabled.GetParam()] = rtp_enabled.GetJson(version);
 
-    if(nParamsSupported & TransportParamsRTP::FEC)
+    for(const auto& pairConstraint : m_mConstraints)
     {
-        jsConstraints[fec_destination_ip.GetParam()] = fec_destination_ip.GetJson(version);
-        jsConstraints[fec_enabled.GetParam()] = fec_enabled.GetJson(version);
-        jsConstraints[fec_mode.GetParam()] = fec_mode.GetJson(version);
-        jsConstraints[fec1D_destination_port.GetParam()] = fec1D_destination_port.GetJson(version);
-        jsConstraints[fec2D_destination_port.GetParam()] = fec2D_destination_port.GetJson(version);
-    }
-    if(nParamsSupported & TransportParamsRTP::RTCP)
-    {
-        jsConstraints[rtcp_enabled.GetParam()] = rtcp_enabled.GetJson(version);
-        jsConstraints[rtcp_destination_ip.GetParam()] = rtcp_destination_ip.GetJson(version);
-        jsConstraints[rtcp_destination_port.GetParam()] = rtcp_destination_port.GetJson(version);
+        jsConstraints[pairConstraint.first] = pairConstraint.second.GetJson();
     }
     return jsConstraints;
 }
 
-constraintsSender::constraintsSender() : constraints(),
-    destination_ip("destination_ip"),
-    source_port("source_port"),
-    fec_type("fec_type"),
-    fec_block_width("fec_block_width"),
-    fec_block_height("fec_block_height"),
-    fec1D_source_port("fec1D_source_port"),
-    fec2D_source_port("fec2D_source_port"),
-    rtcp_source_port("rtcp_source_port")
 
+bool Constraints::UpdateFromJson(const Json::Value& jsData)
 {
-
+    for(auto itObject = jsData.begin(); itObject != jsData.end(); ++itObject)
+    {
+        m_mConstraints[itObject.key().asString()].UpdateFromJson(*itObject);
+    }
+    return true;
 }
 
-Json::Value constraintsSender::GetJson(const ApiVersion& version) const
+bool Constraints::MeetsConstraint(const std::string& sKey, const Json::Value& jsCheck) const
 {
-    Json::Value jsConstraints(constraints::GetJson(version));
-
-    jsConstraints[destination_ip.GetParam()] = destination_ip.GetJson(version);
-    jsConstraints[source_port.GetParam()] = source_port.GetJson(version);
-
-    if(nParamsSupported & TransportParamsRTP::FEC)
+    auto itConstraint = m_mConstraints.find(sKey);
+    if(itConstraint != m_mConstraints.end())
     {
-        jsConstraints[fec_type.GetParam()] = fec_type.GetJson(version);
-        jsConstraints[fec_block_width.GetParam()] = fec_block_width.GetJson(version);
-        jsConstraints[fec_block_height.GetParam()] = fec_block_height.GetJson(version);
-        jsConstraints[fec1D_source_port.GetParam()] = fec1D_source_port.GetJson(version);
-        jsConstraints[fec2D_source_port.GetParam()] = fec2D_source_port.GetJson(version);
+        pmlLog() << sKey << " " << jsCheck.type() << " " << jsCheck.asString();
+        switch(jsCheck.type())
+        {
+            case Json::ValueType::arrayValue:
+            case Json::ValueType::objectValue:
+                return false;
+            case Json::ValueType::booleanValue:
+                return itConstraint->second.MeetsConstraint(jsCheck.asBool());
+            case Json::ValueType::intValue:
+            case Json::ValueType::uintValue:
+                return itConstraint->second.MeetsConstraint(jsCheck.asInt());
+            case Json::ValueType::realValue:
+               return itConstraint->second.MeetsConstraint(jsCheck.asDouble());
+            case Json::ValueType::stringValue:
+                return itConstraint->second.MeetsConstraint(jsCheck.asString());
+            case Json::ValueType::nullValue:
+                return true;
+        }
     }
-    if(nParamsSupported & TransportParamsRTP::RTCP)
-    {
-        jsConstraints[rtcp_enabled.GetParam()] = rtcp_enabled.GetJson(version);
-        jsConstraints[rtcp_source_port.GetParam()] = rtcp_source_port.GetJson(version);
-    }
-
-
-    return jsConstraints;
+    return true;
 }
 
-constraintsReceiver::constraintsReceiver() : constraints(),
-    interface_ip("interface_ip"),
-    multicast_ip("multicast_ip")
+bool Constraints::AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
+                                const std::vector<pairEnum_t>& vEnum)
 {
-
+    auto itConstraint = m_mConstraints.find(sKey);
+    if(itConstraint != m_mConstraints.end())
+    {
+        if(minValue)
+        {
+            itConstraint->second.SetMinimum(*minValue);
+        }
+        if(maxValue)
+        {
+            itConstraint->second.SetMaximum(*maxValue);
+        }
+        if(pattern)
+        {
+            itConstraint->second.SetPattern(*pattern);
+        }
+        if(vEnum.size() != 0)
+        {
+            itConstraint->second.SetEnum(vEnum);
+        }
+        return true;
+    }
+    return false;
 }
 
-Json::Value constraintsReceiver::GetJson(const ApiVersion& version) const
+bool Constraints::ClearConstraint(const std::string& sKey)
 {
-    Json::Value jsConstraints(constraints::GetJson(version));
-    jsConstraints[interface_ip.GetParam()] = interface_ip.GetJson(version);
-    if(nParamsSupported & TransportParamsRTP::MULTICAST)
+    auto itConstraint = m_mConstraints.find(sKey);
+    if(itConstraint != m_mConstraints.end())
     {
-        jsConstraints[multicast_ip.GetParam()] = multicast_ip.GetJson(version);
+        itConstraint->second.RemoveMinimum();
+        itConstraint->second.RemoveMaximum();
+        itConstraint->second.RemoveEnum();
+        itConstraint->second.RemovePattern();
+        return true;
     }
-    return jsConstraints;
+    else
+    {
+        return false;
+    }
+}
+
+void Constraints::CreateEmptyConstraint(const std::string& sKey)
+{
+    m_mConstraints.insert({sKey, constraint()});
+}
+
+Constraints::Constraints(const Json::Value& jsTransport)
+{
+    for(auto itObject = jsTransport.begin(); itObject != jsTransport.end(); ++itObject)
+    {
+        CreateEmptyConstraint(itObject.key().asString());
+    }
 }
