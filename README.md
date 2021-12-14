@@ -14,17 +14,23 @@ The aim is to implement all of the specifications but currently IS-04 and IS-05 
 - Client - P2P IS-04 discovery complete. IS-04 Target complete. IS-05 single connections complete. Need to implemenet Query
 
 ### IS-05
-- Complete.
+- Complete. Supports v1.0, v1.1
 
 
 
 # Dependencies
 The library is intended to be platform agnostic and where possible use widely used and public licenced external libraries.
-- [microhttpd](https://www.gnu.org/software/libmicrohttpd/) for the webserver
 - [libcurl](https://curl.haxx.se/libcurl/) for registering resources and performing queries
 - Linux: [avahi](http://avahi.org/) for service discovery and publishing
 - Windows: mDNSRepsonder for service discovery and publishing
-All other external code is included in the external directory
+
+# Additional Libraries
+The following libraries are required from GitHub. Using the CMake project will automatically clone them to the home directory
+- [log](https://github.com/martim01/log)
+- [dnssd](https://github.com/martim01/dnssd)
+- [restgoose](https://github.com/martim01/restgoose)
+- [asio](https://github.com/chriskohlhoff/asio)
+- [mongoose](https://github.com/cesanta/mongoose)
 
 # Building
 There are CodeBlocks project files to build the library and a number of test applications. 
