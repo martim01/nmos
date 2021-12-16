@@ -2,8 +2,13 @@ cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 project(nmosworkspace)
 
 SET(BUILD_TESTS OFF CACHE BOOL "set to ON to build tests")
-SET(BUILD_LOG ON CACHE BOOL "set to OFF if pml::log built by parent project")
-SET(BUILD_DNSSD ON CACHE BOOL "set to OFF if pml::dnssd built by parent project")
+if(NOT DEFINED BUILD_LOG)
+        SET(BUILD_LOG ON)
+endif()
+
+if(NOT DEFINED BUILD_DNSSD)
+        SET(BUILD_DNSSD ON)
+endif()
 
 SET(DIR_BASE $ENV{HOME} CACHE STRING "base location for libraries")
 SET(DIR_JSON ${DIR_BASE}/jsoncpp CACHE STRING "location of jsoncpp")
