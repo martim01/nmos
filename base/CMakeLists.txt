@@ -104,3 +104,7 @@ endif()
 target_compile_options(nmos_base PRIVATE ${flags})
 
 set_target_properties(nmos_base PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib/)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        install(TARGETS nmos_base LIBRARY DESTINATION /usr/local/lib)
+endif()

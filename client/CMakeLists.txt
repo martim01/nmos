@@ -59,3 +59,7 @@ target_compile_options(nmos_client PRIVATE ${flags})
 
 
 set_target_properties(nmos_client PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib/)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        install(TARGETS nmos_client LIBRARY DESTINATION /usr/local/lib)
+endif()
