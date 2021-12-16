@@ -41,19 +41,19 @@ endif()
 unset(NMOS_TEMP_DIR2)
 
 if(${BUILD_LOG})
-	add_subdirectory(${DIR_LOG} ${CMAKE_SOURCE_DIR}/log/build)
+	add_subdirectory(${DIR_LOG} ${CMAKE_SOURCE_DIR}/build/log)
 else()
 	message(STATUS "nmos - pml::log being build elsewhere")
 endif()
 
 SET(BUILD_LOG OFF CACHE BOOL "set to OFF if pml::log built by parent project" FORCE)
 if(${BUILD_DNSSD})
-	add_subdirectory(${DIR_DNSSD} ${CMAKE_SOURCE_DIR}/dnssd/build)
+	add_subdirectory(${DIR_DNSSD} ${CMAKE_SOURCE_DIR}/build/dnssd)
 else()
 	message(STATUS "nmos - pml::dnssd being built elsewhere")
 endif()
 
-add_subdirectory(${DIR_RESTGOOSE} ${CMAKE_SOURCE_DIR}/restgoose/build)
+add_subdirectory(${DIR_RESTGOOSE} ${CMAKE_SOURCE_DIR}/build/restgoose)
 
 message(STATUS "Configure nmos_base")
 add_subdirectory(base)
