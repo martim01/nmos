@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 project(nmosworkspace)
 
+SET(BUILD_TESTS OFF CACHE BOOL "set to ON to build tests")
 SET(BUILD_LOG ON CACHE BOOL "set to OFF if pml::log built by parent project")
 SET(BUILD_DNSSD ON CACHE BOOL "set to OFF if pml::dnssd built by parent project")
 
@@ -11,14 +12,14 @@ SET(DIR_RESTGOOSE ${DIR_BASE}/Restgoose CACHE STRING "location of Restgoose")
 SET(DIR_DNSSD ${DIR_BASE}/dnssd CACHE STRING "location of pml dnssd")
 
 #Get Restgoose
-find_path(NMOS_TEMP_DIR NAMES "CMakeLists.txt" PATHS ${DIR_RESTGOOSE})
+find_path(NMOS_TEMP_DIR NAMES "CMakeLists.txt" PATHS ${DIR_RESTGOOSE} NO_CACHE)
 if((NOT NMOS_TEMP_DIR) OR (NOT EXISTS ${NMOS_TEMP_DIR}))
 	message(STATUS "Restgoose not found - clone from GitHub")
 	execute_process(COMMAND git clone https://github.com/martim01/Restgoose ${DIR_RESTGOOSE})
 endif()
 unset(NMOS_TEMP_DIR)
 
-find_path(NMOS_TEMP_DIR2 NAMES "CMakeLists.txt" PATHS ${DIR_RESTGOOSE})
+find_path(NMOS_TEMP_DIR2 NAMES "CMakeLists.txt" PATHS ${DIR_RESTGOOSE} NO_CACHE)
 if((NOT NMOS_TEMP_DIR2) OR (NOT EXISTS ${NMOS_TEMP_DIR2}))
 	message(FATAL_ERROR "Failed to clone Restgoose")
 endif()
@@ -26,14 +27,14 @@ unset(NMOS_TEMP_DIR2)
 
 
 #Get dnssd
-find_path(NMOS_TEMP_DIR NAMES "CMakeLists.txt" PATHS ${DIR_DNSSD})
+find_path(NMOS_TEMP_DIR NAMES "CMakeLists.txt" PATHS ${DIR_DNSSD} NO_CACHE)
 if((NOT NMOS_TEMP_DIR) OR (NOT EXISTS ${NMOS_TEMP_DIR}))
 	message(STATUS "pml::dnssd not found - clone from GitHub")
 	execute_process(COMMAND git clone https://github.com/martim01/dnssd ${DIR_DNSSD})
 endif()
 unset(NMOS_TEMP_DIR)
 
-find_path(NMOS_TEMP_DIR2 NAMES "CMakeLists.txt" PATHS ${DIR_DNSSD})
+find_path(NMOS_TEMP_DIR2 NAMES "CMakeLists.txt" PATHS ${DIR_DNSSD} NO_CACHE)
 if((NOT NMOS_TEMP_DIR2) OR (NOT EXISTS ${NMOS_TEMP_DIR2}))
 	message(FATAL_ERROR "Failed to clone dnssd")
 endif()
@@ -63,5 +64,7 @@ add_subdirectory(node)
 message(STATUS "Configure nmos_client")
 add_subdirectory(client)
 
-message(STATUS "Configure tests")
-add_subdirectory("tests/nmos_node_test")
+if(${BUILD_TESTS})
+	message(STATUS "Configure tests")
+	add_subdirectory("tests/nmos_node_test")
+endif()
