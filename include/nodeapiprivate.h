@@ -14,6 +14,7 @@
 #include "RestGoose.h"
 #include "connection.h"
 #include "activation.h"
+#include "nmosserver.h"
 
 namespace pml
 {
@@ -26,7 +27,6 @@ namespace pml
 
     namespace nmos
     {
-        class NmosServer;
 
 //        class ServiceBrowserEvent;
         class CurlRegister;
@@ -277,9 +277,9 @@ namespace pml
                 enum {REG_FAILED = 0, REG_START, REG_DEVICES, REG_SOURCES, REG_FLOWS, REG_SENDERS, REG_RECEIVERS, REG_DONE};
 
 
-                response GetRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
-                response GetNmosDiscoveryRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
-                response GetNmosConnectionRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                pml::restgoose::response GetRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                pml::restgoose::response GetNmosDiscoveryRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                pml::restgoose::response GetNmosConnectionRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
 
                 std::string CreateFlowSdp(const std::string& sId, const TransportParamsRTPSender& tpSender, const std::set<std::string>& setInterfaces);
 
@@ -413,7 +413,7 @@ namespace pml
                 std::chrono::system_clock::time_point m_tpHeartbeat;
 
 
-                std::list<std::shared_ptr<RestGoose>> m_lstServers;
+                std::list<std::shared_ptr<pml::restgoose::Server>> m_lstServers;
                 std::map<ApiVersion, std::unique_ptr<IS04Server>> m_mDiscoveryServers;
                 std::map<ApiVersion, std::unique_ptr<IS05Server>> m_mConnectionServers;
 

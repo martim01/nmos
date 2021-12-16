@@ -52,16 +52,16 @@
 using namespace pml::nmos;
 using namespace std::placeholders;
 
-response NodeApiPrivate::GetRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+pml::restgoose::response NodeApiPrivate::GetRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
-    response resp;
+    pml::restgoose::response resp;
     resp.jsonData.append("x-nmos/");
     return resp;
 }
 
-response NodeApiPrivate::GetNmosDiscoveryRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+pml::restgoose::response NodeApiPrivate::GetNmosDiscoveryRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
-    response resp;
+    pml::restgoose::response resp;
     resp.jsonData.append("node/");
 
     if(m_nConnectionPort == m_nDiscoveryPort)
@@ -71,18 +71,18 @@ response NodeApiPrivate::GetNmosDiscoveryRoot(const query& theQuery, const postD
     return resp;
 }
 
-response NodeApiPrivate::GetNmosConnectionRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+pml::restgoose::response NodeApiPrivate::GetNmosConnectionRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
-    response resp;
+    pml::restgoose::response resp;
     resp.jsonData.append("connection/");
 
     return resp;
 }
 
 
-response NotFound(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
+pml::restgoose::response NotFound(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser)
 {
-    response resp(404);
+    pml::restgoose::response resp(404);
     resp.jsonData["code"] = 404;
     resp.jsonData["error"] = theEndpoint.Get() + " not found";
     resp.jsonData["debug"] = "null";
@@ -244,24 +244,24 @@ void NodeApiPrivate::Init(std::shared_ptr<EventPoster> pPoster, unsigned short n
 
 
 
-    m_lstServers.push_back(std::make_shared<RestGoose>());
+    m_lstServers.push_back(std::make_shared<pml::restgoose::Server>());
     m_lstServers.back()->Init("","",nConnectionPort, "", false);
 
     m_mDiscoveryServers.insert(std::make_pair(ApiVersion(1,1), make_unique<IS04Server>(m_lstServers.back(), ApiVersion(1,1), m_pPoster,*this)));
     m_mDiscoveryServers.insert(std::make_pair(ApiVersion(1,2), make_unique<IS04Server>(m_lstServers.back(), ApiVersion(1,2), m_pPoster,*this)));
 
 
-    m_lstServers.back()->AddEndpoint(methodpoint(RestGoose::GET, endpoint("")), std::bind(&NodeApiPrivate::GetRoot, this,_1,_2,_3,_4));
-    m_lstServers.back()->AddEndpoint(methodpoint(RestGoose::GET, endpoint("/x-nmos")), std::bind(&NodeApiPrivate::GetNmosDiscoveryRoot,this, _1,_2,_3,_4));
+    m_lstServers.back()->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint("")), std::bind(&NodeApiPrivate::GetRoot, this,_1,_2,_3,_4));
+    m_lstServers.back()->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint("/x-nmos")), std::bind(&NodeApiPrivate::GetNmosDiscoveryRoot,this, _1,_2,_3,_4));
     m_lstServers.back()->AddNotFoundCallback(std::bind(&NotFound, _1,_2,_3,_4));
 
-    //Create another RestGoose server if using different ports
+    //Create another pml::restgoose server if using different ports
     if(m_nConnectionPort != m_nDiscoveryPort)
     {
-         m_lstServers.push_back(std::make_shared<RestGoose>());
+         m_lstServers.push_back(std::make_shared<pml::restgoose::Server>());
          m_lstServers.back()->Init("","",nDiscoveryPort, "", false);
-         m_lstServers.back()->AddEndpoint(methodpoint(RestGoose::GET, endpoint("")), std::bind(&NodeApiPrivate::GetRoot,this, _1,_2,_3,_4));
-         m_lstServers.back()->AddEndpoint(methodpoint(RestGoose::GET, endpoint("/x-nmos")), std::bind(&NodeApiPrivate::GetNmosConnectionRoot, this,_1,_2,_3,_4));
+         m_lstServers.back()->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint("")), std::bind(&NodeApiPrivate::GetRoot,this, _1,_2,_3,_4));
+         m_lstServers.back()->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint("/x-nmos")), std::bind(&NodeApiPrivate::GetNmosConnectionRoot, this,_1,_2,_3,_4));
          m_lstServers.back()->AddNotFoundCallback(std::bind(&NotFound, _1,_2,_3,_4));
     }
 
@@ -561,7 +561,7 @@ void NodeApiPrivate::ReceiverPatchAllowed(unsigned short nPort, bool bOk,const s
 
 void NodeApiPrivate::SignalServer(unsigned short nPort, bool bOk, const std::string& sExtra)
 {
-    auto itServer = std::find_if(m_lstServers.begin(), m_lstServers.end(), [nPort](std::shared_ptr<RestGoose> pGoose){ return pGoose->GetPort() == nPort;});
+    auto itServer = std::find_if(m_lstServers.begin(), m_lstServers.end(), [nPort](std::shared_ptr<pml::restgoose::Server> pGoose){ return pGoose->GetPort() == nPort;});
     if(itServer != m_lstServers.end())
     {
         (*itServer)->Signal(bOk, sExtra);

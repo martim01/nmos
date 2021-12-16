@@ -449,7 +449,7 @@ ClientApiImpl::ClientApiImpl() :
     m_pThread(nullptr),
     m_bStarted(false),
     m_bDoneQueryBrowse(false),
-    m_pWebSocket(std::make_unique<WebSocketClient>(std::bind(&ClientApiImpl::WebsocketConnected, this, _1), std::bind(&ClientApiImpl::WebsocketMessage, this, _1, _2)))
+    m_pWebSocket(std::make_unique<pml::restgoose::WebSocketClient>(std::bind(&ClientApiImpl::WebsocketConnected, this, _1), std::bind(&ClientApiImpl::WebsocketMessage, this, _1, _2)))
 {
     m_mBrowser.insert(std::make_pair("local", std::make_unique<pml::dnssd::Browser>()));
 

@@ -28,6 +28,10 @@ namespace pml
         class Browser;
         struct dnsInstance;
     };
+    namespace restgoose
+    {
+        class WebSocketClient;
+    }
     namespace nmos
     {
 
@@ -301,7 +305,7 @@ namespace pml
                 std::multimap<int, query> m_mmQuery;
 
 
-                std::unique_ptr<WebSocketClient> m_pWebSocket;
+                std::unique_ptr<pml::restgoose::WebSocketClient> m_pWebSocket;
 
                 std::map<std::string, std::function<void(const std::string&, const Json::Value&)>> m_mGrainUpdate;
 

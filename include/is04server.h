@@ -12,6 +12,8 @@ namespace pml
 {
     namespace nmos
     {
+
+
         class IS04Server : public NmosServer
         {
             public:
@@ -19,7 +21,7 @@ namespace pml
                 /** @brief Constructor - this is called in NodeApi::StartService
                 *   @param pPoster a sheared_ptr to an object of a class derived from EventPoster.
                 **/
-                IS04Server(std::shared_ptr<RestGoose> pServer, const ApiVersion& version, std::shared_ptr<EventPoster> pPoster, NodeApiPrivate& api);
+                IS04Server(std::shared_ptr<pml::restgoose::Server> pServer, const ApiVersion& version, std::shared_ptr<EventPoster> pPoster, NodeApiPrivate& api);
                 virtual ~IS04Server();
 
 
@@ -33,23 +35,23 @@ namespace pml
                 void RemoveReceiverEndpoint(const std::string& sId);
 
 
-                response GetNmosRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
-                response GetNmosVersion(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
-                response GetNmosNode(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                pml::restgoose::response GetNmosRoot(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                pml::restgoose::response GetNmosVersion(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                pml::restgoose::response GetNmosNode(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
 
-                response GetNmosSources(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
-                response GetNmosFlows(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
-                response GetNmosDevices(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
-                response GetNmosSenders(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
-                response GetNmosReceivers(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                pml::restgoose::response GetNmosSources(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                pml::restgoose::response GetNmosFlows(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                pml::restgoose::response GetNmosDevices(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                pml::restgoose::response GetNmosSenders(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                pml::restgoose::response GetNmosReceivers(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
 
 
-                response GetNmosSource(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
-                response GetNmosFlow(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
-                response GetNmosDevice(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
-                response GetNmosSender(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
-                response GetNmosReceiver(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
-                response PutNmosReceiver(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                pml::restgoose::response GetNmosSource(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                pml::restgoose::response GetNmosFlow(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                pml::restgoose::response GetNmosDevice(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                pml::restgoose::response GetNmosSender(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                pml::restgoose::response GetNmosReceiver(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
+                pml::restgoose::response PutNmosReceiver(const query& theQuery, const postData& theData, const endpoint& theEndpoint, const userName& theUser);
 
             private:
                 void AddBaseEndpoints();

@@ -4,7 +4,7 @@
 
 using namespace pml::nmos;
 
-NmosServer::NmosServer(std::shared_ptr<RestGoose> pServer, const ApiVersion& version, std::shared_ptr<EventPoster> pPoster, NodeApiPrivate& api) :
+NmosServer::NmosServer(std::shared_ptr<pml::restgoose::Server> pServer, const ApiVersion& version, std::shared_ptr<EventPoster> pPoster, NodeApiPrivate& api) :
     m_pServer(pServer),
     m_version(version),
     m_pPoster(pPoster),
@@ -18,9 +18,9 @@ NmosServer::~NmosServer()
 
 }
 
-response NmosServer::JsonError(int nCode, const std::string& sError, const std::string& sDebug)
+pml::restgoose::response NmosServer::JsonError(int nCode, const std::string& sError, const std::string& sDebug)
 {
-    response resp;
+    pml::restgoose::response resp;
     resp.nHttpCode =nCode;
     resp.jsonData["code"] = nCode;
     resp.jsonData["error"] = sError;
@@ -34,13 +34,13 @@ std::vector<std::string> NmosServer::SplitEndpoint(const endpoint& theEndpoint)
     return SplitString(theEndpoint.Get(), '/');
 }
 
-response NmosServer::ConvertPostDataToJson(const postData& vData)
+pml::restgoose::response NmosServer::ConvertPostDataToJson(const postData& vData)
 {
-    response resp = JsonError(400, "No data sent");
+    pml::restgoose::response resp = JsonError(400, "No data sent");
     if(vData.size() == 1)
     {
         resp.nHttpCode = 200;
-        resp.jsonData = ConvertToJson(vData[0].sData);
+        resp.jsonData = ConvertToJson(vData[0].data.Get());
     }
     else if(vData.size() > 1)
     {
@@ -48,9 +48,9 @@ response NmosServer::ConvertPostDataToJson(const postData& vData)
         resp.jsonData.clear();
         for(size_t i = 0; i < vData.size(); i++)
         {
-            if(vData[i].sName.empty() == false)
+            if(vData[i].name.Get().empty() == false)
             {
-                resp.jsonData[vData[i].sName] = vData[i].sData;
+                resp.jsonData[vData[i].name.Get()] = vData[i].data.Get();
             }
         }
     }

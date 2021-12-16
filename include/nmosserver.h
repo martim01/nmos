@@ -13,10 +13,12 @@ namespace pml
         class EventPoster;
         class NodeApiPrivate;
 
+        using postData = std::vector<pml::restgoose::partData>;
+
         class NmosServer
         {
             public:
-                NmosServer(std::shared_ptr<RestGoose> pServer, const ApiVersion& version, std::shared_ptr<EventPoster> pPoster, NodeApiPrivate& api);
+                NmosServer(std::shared_ptr<pml::restgoose::Server> pServer, const ApiVersion& version, std::shared_ptr<EventPoster> pPoster, NodeApiPrivate& api);
                 virtual ~NmosServer();
 
 
@@ -24,12 +26,12 @@ namespace pml
 
 
                 std::vector<std::string> SplitEndpoint(const endpoint& theEndpoint);
-                response JsonError(int nCode, const std::string& sError, const std::string& sDebug="");
+                pml::restgoose::response JsonError(int nCode, const std::string& sError, const std::string& sDebug="");
 
-                response ConvertPostDataToJson(const std::vector<partData>& vData);
+                pml::restgoose::response ConvertPostDataToJson(const std::vector<pml::restgoose::partData>& vData);
 
 
-                std::shared_ptr<RestGoose> m_pServer;
+                std::shared_ptr<pml::restgoose::Server> m_pServer;
                 ApiVersion m_version;
                 std::shared_ptr<EventPoster> m_pPoster;
                 NodeApiPrivate& m_api;
