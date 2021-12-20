@@ -41,6 +41,7 @@
 					<Add option="-O3" />
 					<Add option="-std=c++14" />
 					<Add option="-pthread" />
+					<Add option="-fPIC" />
 					<Add option="-D__GNU__" />
 				</Compiler>
 				<Linker>
@@ -88,7 +89,6 @@
 				<Option projectCompilerOptionsRelation="-1" />
 				<Option projectLinkerOptionsRelation="-1" />
 				<Option projectIncludeDirsRelation="-1" />
-				<Option projectResourceIncludeDirsRelation="-1" />
 				<Option projectLibDirsRelation="-1" />
 				<MakeCommands>
 					<Build command="" />
@@ -104,6 +104,7 @@
 			<Add option="-Wall" />
 			<Add option="-std=c++1z" />
 			<Add option="-fexceptions" />
+			<Add option="-fPIC" />
 			<Add option="-DNMOS_EXPORT" />
 			<Add option="-DMG_ENABLE_HTTP_STREAMING_MULTIPART" />
 			<Add option="-DNMOS_NODE_API" />
@@ -139,9 +140,6 @@
 		<Unit filename="../src/nodezcposter.cpp" />
 		<Unit filename="../src/resourceholder.cpp" />
 		<Extensions>
-			<code_completion />
-			<envvars />
-			<debugger />
 			<lib_finder disable_auto="1" />
 		</Extensions>
 	</Project>

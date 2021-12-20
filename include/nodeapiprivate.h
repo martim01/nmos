@@ -310,7 +310,7 @@ namespace pml
                 void PostRegisterStatus();
                 long RegisterResource(const std::string& sType, const Json::Value& json);
 
-                void SignalServer(unsigned short nPort, bool bOk, const std::string& sExtra);
+                void SignalServer(unsigned short nPort, const pml::restgoose::response& resp);
 
                 enum enumSignal{SIG_NONE=0, SIG_COMMIT=1, SIG_INSTANCE_FOUND, SIG_INSTANCE_REMOVED, SIG_BROWSE_DONE, SIG_EXIT};
 

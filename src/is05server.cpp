@@ -43,70 +43,70 @@ IS05Server::~IS05Server()
 
 void IS05Server::AddBaseEndpoints()
 {
-    m_pServer->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint("/x-nmos/connection")), std::bind(&IS05Server::GetNmosRoot, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString())), std::bind(&IS05Server::GetNmosVersion, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+BULK)), std::bind(&IS05Server::GetNmosBulk, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+BULK+SENDERS)), std::bind(&IS05Server::GetNmosBulkSenders, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(methodpoint(pml::restgoose::POST,endpoint(ROOT+m_version.GetVersionAsString()+BULK+SENDERS)), std::bind(&IS05Server::PostNmosBulkSenders, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+BULK+RECEIVERS)), std::bind(&IS05Server::GetNmosBulkReceivers, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(methodpoint(pml::restgoose::POST,endpoint(ROOT+m_version.GetVersionAsString()+BULK+RECEIVERS)), std::bind(&IS05Server::PostNmosBulkReceivers, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE)), std::bind(&IS05Server::GetNmosSingle, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS)), std::bind(&IS05Server::GetNmosSingleSenders, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS)), std::bind(&IS05Server::GetNmosSingleReceivers, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint("/x-nmos/connection"), std::bind(&IS05Server::GetNmosRoot, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()), std::bind(&IS05Server::GetNmosVersion, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+BULK), std::bind(&IS05Server::GetNmosBulk, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+BULK+SENDERS), std::bind(&IS05Server::GetNmosBulkSenders, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::POST,endpoint(ROOT+m_version.GetVersionAsString()+BULK+SENDERS), std::bind(&IS05Server::PostNmosBulkSenders, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+BULK+RECEIVERS), std::bind(&IS05Server::GetNmosBulkReceivers, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::POST,endpoint(ROOT+m_version.GetVersionAsString()+BULK+RECEIVERS), std::bind(&IS05Server::PostNmosBulkReceivers, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE), std::bind(&IS05Server::GetNmosSingle, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS), std::bind(&IS05Server::GetNmosSingleSenders, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS), std::bind(&IS05Server::GetNmosSingleReceivers, this, _1,_2,_3,_4));
 }
 
 void IS05Server::AddSenderEndpoint(const std::string& sId)
 {
-    m_pServer->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId)), std::bind(&IS05Server::GetNmosSingleSender, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+CONSTRAINTS)), std::bind(&IS05Server::GetNmosSingleSenderConstraints, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+STAGED)), std::bind(&IS05Server::GetNmosSingleSenderStaged, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+ACTIVE)), std::bind(&IS05Server::GetNmosSingleSenderActive, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTFILE)), std::bind(&IS05Server::GetNmosSingleSenderTransportfile, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId), std::bind(&IS05Server::GetNmosSingleSender, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+CONSTRAINTS), std::bind(&IS05Server::GetNmosSingleSenderConstraints, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+STAGED), std::bind(&IS05Server::GetNmosSingleSenderStaged, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+ACTIVE), std::bind(&IS05Server::GetNmosSingleSenderActive, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTFILE), std::bind(&IS05Server::GetNmosSingleSenderTransportfile, this, _1,_2,_3,_4));
     if(m_version > ApiVersion(1,0))
     {
-        m_pServer->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTTYPE)), std::bind(&IS05Server::GetNmosSingleSenderTransportType, this, _1,_2,_3,_4));
+        m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTTYPE), std::bind(&IS05Server::GetNmosSingleSenderTransportType, this, _1,_2,_3,_4));
     }
-    m_pServer->AddEndpoint(methodpoint(pml::restgoose::PATCH, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+STAGED)), std::bind(&IS05Server::PatchNmosSingleSenderStaged, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::PATCH, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+STAGED), std::bind(&IS05Server::PatchNmosSingleSenderStaged, this, _1,_2,_3,_4));
 }
 
 void IS05Server::AddReceiverEndpoint(const std::string& sId)
 {
-    m_pServer->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId)), std::bind(&IS05Server::GetNmosSingleReceiver, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+CONSTRAINTS)), std::bind(&IS05Server::GetNmosSingleReceiverConstraints, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+STAGED)), std::bind(&IS05Server::GetNmosSingleReceiverStaged, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+ACTIVE)), std::bind(&IS05Server::GetNmosSingleReceiverActive, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId), std::bind(&IS05Server::GetNmosSingleReceiver, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+CONSTRAINTS), std::bind(&IS05Server::GetNmosSingleReceiverConstraints, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+STAGED), std::bind(&IS05Server::GetNmosSingleReceiverStaged, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+ACTIVE), std::bind(&IS05Server::GetNmosSingleReceiverActive, this, _1,_2,_3,_4));
     if(m_version > ApiVersion(1,0))
     {
-        m_pServer->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+TRANSPORTTYPE)), std::bind(&IS05Server::GetNmosSingleReceiverTransportType, this, _1,_2,_3,_4));
+        m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+TRANSPORTTYPE), std::bind(&IS05Server::GetNmosSingleReceiverTransportType, this, _1,_2,_3,_4));
     }
-    m_pServer->AddEndpoint(methodpoint(pml::restgoose::PATCH, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+STAGED)), std::bind(&IS05Server::PatchNmosSingleReceiverStaged, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::PATCH, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+STAGED), std::bind(&IS05Server::PatchNmosSingleReceiverStaged, this, _1,_2,_3,_4));
 }
 
 void IS05Server::RemoveSenderEndpoint(const std::string& sId)
 {
-    m_pServer->DeleteEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId)));
-    m_pServer->DeleteEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+CONSTRAINTS)));
-    m_pServer->DeleteEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+STAGED)));
-    m_pServer->DeleteEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+ACTIVE)));
-    m_pServer->DeleteEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTFILE)));
+    m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId));
+    m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+CONSTRAINTS));
+    m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+STAGED));
+    m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+ACTIVE));
+    m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTFILE));
     if(m_version > ApiVersion(1,0))
     {
-        m_pServer->DeleteEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTTYPE)));
+        m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTTYPE));
     }
-    m_pServer->DeleteEndpoint(methodpoint(pml::restgoose::PATCH, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+STAGED)));
+    m_pServer->DeleteEndpoint(pml::restgoose::PATCH, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+STAGED));
 }
 
 void IS05Server::RemoveReceiverEndpoint(const std::string& sId)
 {
-    m_pServer->DeleteEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId)));
-    m_pServer->DeleteEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+CONSTRAINTS)));
-    m_pServer->DeleteEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+STAGED)));
-    m_pServer->DeleteEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+ACTIVE)));
+    m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId));
+    m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+CONSTRAINTS));
+    m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+STAGED));
+    m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+ACTIVE));
     if(m_version > ApiVersion(1,0))
     {
-        m_pServer->DeleteEndpoint(methodpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+TRANSPORTTYPE)));
+        m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+TRANSPORTTYPE));
     }
-    m_pServer->DeleteEndpoint(methodpoint(pml::restgoose::PATCH, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+STAGED)));
+    m_pServer->DeleteEndpoint(pml::restgoose::PATCH, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+STAGED));
 }
 
 
@@ -252,8 +252,8 @@ pml::restgoose::response IS05Server::GetNmosSingleSenderTransportfile(const quer
         if(pSender->GetActive().GetMasterEnable())
         {
             m_api.CreateSDP(pSender);
-            resp.sContentType = "application/sdp";
-            resp.sData = pSender->GetTransportFile();
+            resp.contentType = headerValue("application/sdp");
+            resp.data = textData(pSender->GetTransportFile());
         }
         else
         {
@@ -439,7 +439,7 @@ pml::restgoose::response IS05Server::PatchSender(std::shared_ptr<Sender> pSender
         m_pServer->Wait();
 
 
-        if(m_pServer->IsOk() && m_api.Stage(conRequest, pSender)) //PATCH the sender
+        if(m_pServer->GetSignalResponse().nHttpCode == 202 && m_api.Stage(conRequest, pSender)) //PATCH the sender
         {
             resp.nHttpCode = 202;
             resp.jsonData = pSender->GetConnectionStagedJson(m_version);
@@ -512,7 +512,7 @@ pml::restgoose::response IS05Server::PatchReceiver(std::shared_ptr<Receiver> pRe
         //Pause the HTTP thread
         m_pServer->Wait();
 
-        if(m_pServer->IsOk() && m_api.Stage(conRequest, pReceiver)) //PATCH the Receiver
+        if(m_pServer->GetSignalResponse().nHttpCode==202 && m_api.Stage(conRequest, pReceiver)) //PATCH the Receiver
         {
             resp.nHttpCode = 202;
             resp.jsonData = pReceiver->GetConnectionStagedJson(m_version);

@@ -245,23 +245,23 @@ void NodeApiPrivate::Init(std::shared_ptr<EventPoster> pPoster, unsigned short n
 
 
     m_lstServers.push_back(std::make_shared<pml::restgoose::Server>());
-    m_lstServers.back()->Init("","",nConnectionPort, "", false);
+    m_lstServers.back()->Init(fileLocation(""),fileLocation(""),nConnectionPort, endpoint(""), false);
 
     m_mDiscoveryServers.insert(std::make_pair(ApiVersion(1,1), make_unique<IS04Server>(m_lstServers.back(), ApiVersion(1,1), m_pPoster,*this)));
     m_mDiscoveryServers.insert(std::make_pair(ApiVersion(1,2), make_unique<IS04Server>(m_lstServers.back(), ApiVersion(1,2), m_pPoster,*this)));
 
 
-    m_lstServers.back()->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint("")), std::bind(&NodeApiPrivate::GetRoot, this,_1,_2,_3,_4));
-    m_lstServers.back()->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint("/x-nmos")), std::bind(&NodeApiPrivate::GetNmosDiscoveryRoot,this, _1,_2,_3,_4));
+    m_lstServers.back()->AddEndpoint(pml::restgoose::GET, endpoint(""), std::bind(&NodeApiPrivate::GetRoot, this,_1,_2,_3,_4));
+    m_lstServers.back()->AddEndpoint(pml::restgoose::GET, endpoint("/x-nmos"), std::bind(&NodeApiPrivate::GetNmosDiscoveryRoot,this, _1,_2,_3,_4));
     m_lstServers.back()->AddNotFoundCallback(std::bind(&NotFound, _1,_2,_3,_4));
 
     //Create another pml::restgoose server if using different ports
     if(m_nConnectionPort != m_nDiscoveryPort)
     {
          m_lstServers.push_back(std::make_shared<pml::restgoose::Server>());
-         m_lstServers.back()->Init("","",nDiscoveryPort, "", false);
-         m_lstServers.back()->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint("")), std::bind(&NodeApiPrivate::GetRoot,this, _1,_2,_3,_4));
-         m_lstServers.back()->AddEndpoint(methodpoint(pml::restgoose::GET, endpoint("/x-nmos")), std::bind(&NodeApiPrivate::GetNmosConnectionRoot, this,_1,_2,_3,_4));
+         m_lstServers.back()->Init(fileLocation(""),fileLocation(""),nDiscoveryPort, endpoint(""), false);
+         m_lstServers.back()->AddEndpoint(pml::restgoose::GET, endpoint(""), std::bind(&NodeApiPrivate::GetRoot,this, _1,_2,_3,_4));
+         m_lstServers.back()->AddEndpoint(pml::restgoose::GET, endpoint("/x-nmos"), std::bind(&NodeApiPrivate::GetNmosConnectionRoot, this,_1,_2,_3,_4));
          m_lstServers.back()->AddNotFoundCallback(std::bind(&NotFound, _1,_2,_3,_4));
     }
 
@@ -520,7 +520,11 @@ void NodeApiPrivate::Signal(enumSignal eSignal)
 
 void NodeApiPrivate::TargetTaken(const std::string& sInterfaceIp, unsigned short nPort, bool bOk)
 {
-    SignalServer(nPort, bOk, sInterfaceIp);
+    pml::restgoose::response resp;
+    resp.nHttpCode = bOk ? 202 : 400;
+    resp.data = textData(sInterfaceIp);
+
+    SignalServer(nPort, resp);
 }
 
 
@@ -539,7 +543,9 @@ void NodeApiPrivate::SenderPatchAllowed(unsigned short nPort, bool bOk, const st
             bOk = false;
         }
     }
-    SignalServer(nPort, bOk, "");
+    pml::restgoose::response resp;
+    resp.nHttpCode = bOk ? 202 : 400;
+    SignalServer(nPort, resp);
 }
 
 void NodeApiPrivate::ReceiverPatchAllowed(unsigned short nPort, bool bOk,const std::string& sId, const std::string& sInterfaceIp)
@@ -556,15 +562,17 @@ void NodeApiPrivate::ReceiverPatchAllowed(unsigned short nPort, bool bOk,const s
             bOk = false;
         }
     }
-    SignalServer(nPort, bOk, "");
+    pml::restgoose::response resp;
+    resp.nHttpCode = bOk ? 202 : 400;
+    SignalServer(nPort, resp);
 }
 
-void NodeApiPrivate::SignalServer(unsigned short nPort, bool bOk, const std::string& sExtra)
+void NodeApiPrivate::SignalServer(unsigned short nPort, const pml::restgoose::response& resp)
 {
     auto itServer = std::find_if(m_lstServers.begin(), m_lstServers.end(), [nPort](std::shared_ptr<pml::restgoose::Server> pGoose){ return pGoose->GetPort() == nPort;});
     if(itServer != m_lstServers.end())
     {
-        (*itServer)->Signal(bOk, sExtra);
+        (*itServer)->Signal(resp);
     }
     else
     {

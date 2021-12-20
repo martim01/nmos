@@ -2,11 +2,14 @@ cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 project(nmosworkspace)
 
 SET(BUILD_TESTS OFF CACHE BOOL "set to ON to build tests")
+
 if(NOT DEFINED BUILD_LOG)
+	message(STATUS "Build pml::log")
         SET(BUILD_LOG ON)
 endif()
 
 if(NOT DEFINED BUILD_DNSSD)
+	message(STATUS "Build pml::dnssd")
         SET(BUILD_DNSSD ON)
 endif()
 
@@ -51,7 +54,7 @@ else()
 	message(STATUS "nmos - pml::log being build elsewhere")
 endif()
 
-SET(BUILD_LOG OFF CACHE BOOL "set to OFF if pml::log built by parent project" FORCE)
+SET(BUILD_LOG OFF)
 if(${BUILD_DNSSD})
 	add_subdirectory(${DIR_DNSSD} ${CMAKE_SOURCE_DIR}/build/dnssd)
 else()

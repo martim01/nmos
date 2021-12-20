@@ -39,6 +39,7 @@
 				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-O3" />
+					<Add option="-fPIC" />
 					<Add option="-std=c++14" />
 					<Add option="-pthread" />
 					<Add option="-D__GNU__" />
@@ -131,9 +132,6 @@
 		<Unit filename="../src/clientposter.cpp" />
 		<Unit filename="../src/clientprivate.cpp" />
 		<Extensions>
-			<code_completion />
-			<envvars />
-			<debugger />
 			<lib_finder disable_auto="1" />
 		</Extensions>
 	</Project>
