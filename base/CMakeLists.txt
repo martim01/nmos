@@ -12,8 +12,8 @@ include_directories(${DIR_LOG}/include)
 
 include_directories("../external/uuid")
 
-# Add a custom command that produces version.cpp, plus a dummy output that's not actually produced, in order to force version.cmake to always be re-run before the build
-execute_process(COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/../version.cmake -- pml::nmos)
+#create the version information
+execute_process(COMMAND ${CMAKE_COMMAND} -DNAMESPACE=nmos -P ${CMAKE_CURRENT_SOURCE_DIR}/../version.cmake)
 
 
 SET(SOURCES "../external/uuid/guid.cpp"

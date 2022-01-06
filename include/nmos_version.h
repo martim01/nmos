@@ -11,6 +11,8 @@ namespace pml
    	    extern const char* GIT_REV;
             extern const char* GIT_BRANCH;
 	    extern const char* GIT_DATE;
+	    extern unsigned long VERSION_MAJOR;
+	    extern unsigned long VERSION_MINOR;
 	}
 }
 #endif
