@@ -12,6 +12,9 @@ include_directories(${DIR_LOG}/include)
 
 include_directories("../external/uuid")
 
+# Add a custom command that produces version.cpp, plus a dummy output that's not actually produced, in order to force version.cmake to always be re-run before the build
+execute_process(COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/../version.cmake -- pml::nmos)
+
 
 SET(SOURCES "../external/uuid/guid.cpp"
  "../external/uuid/md5.cpp"
@@ -44,7 +47,8 @@ SET(SOURCES "../external/uuid/guid.cpp"
  "../src/sourcegeneric.cpp"
  "../src/threadpool.cpp"
  "../src/transportparams.cpp"
- "../src/utils.cpp")
+ "../src/utils.cpp"
+ "../src/version.cpp")
 
 
 #linux specific
