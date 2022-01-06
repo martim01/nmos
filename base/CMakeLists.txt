@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 
-project(nmos_base LANGUAGES CXX)
+project(nmos_base LANGUAGES CXX VERSION)
 
 option(BUILD_SHARED_LIB "Make a shared library" ON)
 
@@ -11,9 +11,6 @@ include_directories(${DIR_JSON}/dist)
 include_directories(${DIR_LOG}/include)
 
 include_directories("../external/uuid")
-
-#create the version information
-execute_process(COMMAND ${CMAKE_COMMAND} -DNAMESPACE=nmos -P ${CMAKE_CURRENT_SOURCE_DIR}/../version.cmake)
 
 
 SET(SOURCES "../external/uuid/guid.cpp"

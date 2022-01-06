@@ -4,10 +4,7 @@ if(NOT NAMESPACE)
     message(FATAL_ERROR "Namespace not set")
 endif()
 
-message(STATUS "Namespace ${NAMESPACE} ")
-
-set(VERSION_MAJOR 1)
-set(VERSION_MINOR 0)
+message(STATUS "Namespace ${NAMESPACE}")
 
 execute_process(COMMAND git log --pretty=format:'%h' -n 1 OUTPUT_VARIABLE GIT_REV ERROR_QUIET)
 execute_process(COMMAND git log --pretty=format:'%ai' -n 1 OUTPUT_VARIABLE GIT_TIME ERROR_QUIET)
@@ -40,8 +37,10 @@ const char* pml::${NAMESPACE}::GIT_REV=\"${GIT_REV}${GIT_DIFF}\";
 const char* pml::${NAMESPACE}::GIT_TAG=\"${GIT_TAG}\";
 const char* pml::${NAMESPACE}::GIT_BRANCH=\"${GIT_BRANCH}\";
 const char* pml::${NAMESPACE}::GIT_DATE=\"${GIT_DATE}\";
-unsigned long pml::${NAMESPACE}::VERSION_MAJOR=${VERSION_MAJOR};
-unsigned long pml::${NAMESPACE}::VERSION_MINOR=${VERSION_MINOR};
+unsigned long pml::${NAMESPACE}::VERSION_MAJOR=${MAJOR};
+unsigned long pml::${NAMESPACE}::VERSION_MINOR=${MINOR};
+unsigned long pml::${NAMESPACE}::VERSION_PATCH=${PATCH};
+const char* pml::${NAMESPACE}::VERSION_STRING=\"${MAJOR}.${MINOR}.${PATCH}-${GIT_REV}${GIT_DIFF}\";
 ")
 
 if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/src/version.cpp)
