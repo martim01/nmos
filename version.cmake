@@ -31,7 +31,7 @@ else()
     string(STRIP "${GIT_DIFF}" GIT_DIFF)
     string(STRIP "${GIT_TAG}" GIT_TAG)
     string(STRIP "${GIT_BRANCH}" GIT_BRANCH)
-    string(SUBSTRING "${GIT_TIME}" 0 11 GIT_DATE)
+    string(SUBSTRING "${GIT_TIME}" 1 10 GIT_DATE)
 endif()
 
 
