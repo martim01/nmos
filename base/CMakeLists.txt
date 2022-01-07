@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 
-project(nmos_base LANGUAGES CXX VERSION)
+project(nmos_base LANGUAGES CXX)
 
 option(BUILD_SHARED_LIB "Make a shared library" ON)
 
