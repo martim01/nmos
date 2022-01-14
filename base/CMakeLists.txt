@@ -45,7 +45,7 @@ SET(SOURCES "../external/uuid/guid.cpp"
  "../src/threadpool.cpp"
  "../src/transportparams.cpp"
  "../src/utils.cpp"
- "../src/version.cpp")
+ ${CMAKE_BINARY_DIR}/src/nmos_version.cpp)
 
 
 #linux specific
@@ -68,6 +68,7 @@ endif()
 
 
 add_library(nmos_base SHARED ${SOURCES} ${OS_SOURCES})
+target_include_directories(nmos_base PUBLIC ${CMAKE_BINARY_DIR}/include)
 
 #add the os specific defines
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
