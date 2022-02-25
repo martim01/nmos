@@ -40,7 +40,6 @@
 				<Option projectCompilerOptionsRelation="-1" />
 				<Option projectLinkerOptionsRelation="-1" />
 				<Option projectIncludeDirsRelation="-1" />
-				<Option projectResourceIncludeDirsRelation="-1" />
 				<Option projectLibDirsRelation="-1" />
 				<MakeCommands>
 					<Build command="" />
@@ -92,12 +91,12 @@
 					<Add option="`pkg-config --libs avahi-client`" />
 					<Add option="`pkg-config --libs libcurl`" />
 					<Add option="`pkg-config --libs uuid`" />
-					<Add library="nmos_node" />
 					<Add library="pthread" />
-					<Add library="restgoose" />
 					<Add library="pml_log" />
-					<Add library="nmos_base" />
+					<Add library="restgoose" />
 					<Add library="pml_dnssd" />
+					<Add library="nmos_base" />
+					<Add library="nmos_node" />
 					<Add directory="../../lib" />
 					<Add directory="../../../Restgoose/lib" />
 					<Add directory="../../../log/lib" />
@@ -114,10 +113,6 @@
 		<Unit filename="main.cpp" />
 		<Unit filename="threadposter.cpp" />
 		<Unit filename="threadposter.h" />
-		<Extensions>
-			<code_completion />
-			<envvars />
-			<debugger />
-		</Extensions>
+		<Extensions />
 	</Project>
 </CodeBlocks_project_file>
