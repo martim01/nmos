@@ -59,7 +59,7 @@ RegistryApi& RegistryApi::Get()
 bool RegistryApi::Start(shared_ptr<Registry> pRegistry, unsigned short nPriority, const std::string& sInterface, unsigned short nPort, bool bSecure)
 {
     m_pRegistry = pRegistry;
-    pmlLog(pml::LOG_INFO) << "RegistryApi: Start" ;
+    pmlLog(pml::LOG_INFO, "pml::nmos") << "RegistryApi: Start" ;
     if(StartPublisher(nPriority, sInterface, nPort, bSecure) && StartServer(nPort))
     {
         m_bRunning = true;
@@ -154,11 +154,11 @@ unsigned short RegistryApi::AddUpdateResource(const string& sType, const Json::V
     //lock_guard<mutex> lg(m_mutex);
     if(m_pRegistry)
     {
-        pmlLog(pml::LOG_INFO) << "FindNmosResource: " << jsData["id"].asString() ;
+        pmlLog(pml::LOG_INFO, "pml::nmos") << "FindNmosResource: " << jsData["id"].asString() ;
         shared_ptr<Resource> pResource = m_pRegistry->FindNmosResource(sType, jsData["id"].asString());
         if(pResource)
         {
-            pmlLog(pml::LOG_INFO) << "Resource already registered!" ;
+            pmlLog(pml::LOG_INFO, "pml::nmos") << "Resource already registered!" ;
             if(UpdateNmosResource(jsData, pResource,sError))
             {
                 return 200;
@@ -167,7 +167,7 @@ unsigned short RegistryApi::AddUpdateResource(const string& sType, const Json::V
         }
         else
         {
-            pmlLog(pml::LOG_INFO) << "Add Resource" ;
+            pmlLog(pml::LOG_INFO, "pml::nmos") << "Add Resource" ;
             return AddResource(sType, jsData,sError);
         }
     }

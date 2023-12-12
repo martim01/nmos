@@ -23,16 +23,19 @@ class TestPoster : public pml::nmos::ClientApiPoster
         void QuerySubscriptionRemoved(const std::string& sSubscriptionId) override;
 
         void RequestTargetResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId) override;
-        void RequestPatchSenderResult(const pml::nmos::curlResponse& resp, const std::experimental::optional<pml::nmos::connectionSender<pml::nmos::activationResponse>>& con, const std::string& sResourceId) override;
-        void RequestPatchReceiverResult(const pml::nmos::curlResponse& resp, const std::experimental::optional<pml::nmos::connectionReceiver<pml::nmos::activationResponse>>& con, const std::string& sResourceId) override;
+        void RequestPatchSenderResult(const pml::restgoose::clientResponse& resp, const std::optional<pml::nmos::connectionSender<pml::nmos::activationResponse>>& con, const std::string& sResourceId) override;
+        void RequestPatchReceiverResult(const pml::restgoose::clientResponse& resp, const std::optional<pml::nmos::connectionReceiver<pml::nmos::activationResponse>>& con, const std::string& sResourceId) override;
         void RequestConnectResult(const std::string& sSenderId, const std::string& sReceiverId, bool bSuccess, const std::string& sResponse) override;
 
-        void RequestGetSenderStagedResult(const pml::nmos::curlResponse& resp, const std::experimental::optional<pml::nmos::connectionSender<pml::nmos::activationResponse>>& con, const std::string& sResourceId) override;
-        void RequestGetSenderActiveResult(const pml::nmos::curlResponse& resp, const std::experimental::optional<pml::nmos::connectionSender<pml::nmos::activationResponse>>& con, const std::string& sResourceId) override;
-        void RequestGetSenderTransportFileResult(const pml::nmos::curlResponse& resp, const std::experimental::optional<std::string>& sTransportFile, const std::string& sResourceId) override;
+        void RequestGetSenderStagedResult(const pml::restgoose::clientResponse& resp, const std::optional<pml::nmos::connectionSender<pml::nmos::activationResponse>>& con, const std::string& sResourceId) override;
+        void RequestGetSenderActiveResult(const pml::restgoose::clientResponse& resp, const std::optional<pml::nmos::connectionSender<pml::nmos::activationResponse>>& con, const std::string& sResourceId) override;
+        void RequestGetSenderTransportFileResult(const pml::restgoose::clientResponse& resp, const std::optional<std::string>& sTransportFile, const std::string& sResourceId) override;
 
-        void RequestGetReceiverStagedResult(const pml::nmos::curlResponse& resp, const std::experimental::optional<pml::nmos::connectionReceiver<pml::nmos::activationResponse>>& con, const std::string& sResourceId) override;
-        void RequestGetReceiverActiveResult(const pml::nmos::curlResponse& resp, const std::experimental::optional<pml::nmos::connectionReceiver<pml::nmos::activationResponse>>& con, const std::string& sResourceId) override;
+        void RequestGetSenderConstraintsResult(const pml::restgoose::clientResponse& resp, const std::vector<pml::nmos::Constraints>& vConstraints, const std::string& sResourceId) override;
+        void RequestGetReceiverConstraintsResult(const pml::restgoose::clientResponse& resp, const std::vector<pml::nmos::Constraints>& vConstraints, const std::string& sResourceId) override;
+
+        void RequestGetReceiverStagedResult(const pml::restgoose::clientResponse& resp, const std::optional<pml::nmos::connectionReceiver<pml::nmos::activationResponse>>& con, const std::string& sResourceId) override;
+        void RequestGetReceiverActiveResult(const pml::restgoose::clientResponse& resp, const std::optional<pml::nmos::connectionReceiver<pml::nmos::activationResponse>>& con, const std::string& sResourceId) override;
 
         void QueryServerChanged(const std::string& sUrl) override;
         void QueryServerFound(const std::string& sUrl, unsigned short nPriority) override;

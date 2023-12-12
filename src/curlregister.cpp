@@ -50,12 +50,12 @@ static curlResponse DoCurl(CURL* pCurl, curl_slist *pHeaders)
     auto res = curl_easy_perform(pCurl);
     curl_easy_getinfo(pCurl, CURLINFO_RESPONSE_CODE, &resp.nCode);
 
-    pmlLog(pml::LOG_TRACE) << resp.sDebug;
+    pmlLog(pml::LOG_TRACE, "pml::nmos") << resp.sDebug;
     /* Check for errors */
     if(res != CURLE_OK)
     {
         resp.sResponse = "{\"error\" : \""+std::string(curl_easy_strerror(res))+"\"}";
-        pmlLog(pml::LOG_ERROR) << "NMOS: " << "CURL Error: " << resp.sResponse ;
+        pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "CURL Error: " << resp.sResponse ;
     }
 
     if(pHeaders)
@@ -124,7 +124,7 @@ curlResponse CurlRegister::Post(const std::string& sUrl, const std::string& sJso
     if(pCurl)
     {
 
-        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "POST: " << sUrl << " payload=" << sJson ;
+        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "POST: " << sUrl << " payload=" << sJson ;
 
         curl_easy_setopt(pCurl, CURLOPT_POST, 1);
 
@@ -167,7 +167,7 @@ curlResponse CurlRegister::Delete(const std::string& sUrl, const std::string& sT
 
     std::stringstream ssUrl;
     ssUrl << sUrl << "/" << sType << "/" << sId;
-    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "DELETE: " << ssUrl.str() ;
+    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "DELETE: " << ssUrl.str() ;
 
     curlResponse resp;
 

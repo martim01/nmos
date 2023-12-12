@@ -5,8 +5,8 @@
 #include <set>
 #include <list>
 #include <algorithm>
-#include "curlregister.h"
-#include "optional.hpp"
+#include "response.h"
+#include <optional>
 #include "connection.h"
 #include "activation.h"
 
@@ -56,15 +56,15 @@ namespace pml
 
 
                 void _RequestTargetResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId);
-                void _RequestPatchSenderResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId);
-                void _RequestPatchReceiverResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId);
-                void _RequestGetSenderStagedResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId);
-                void _RequestGetSenderActiveResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId);
-                void _RequestGetSenderTransportFileResult(const curlResponse& resp, const std::experimental::optional<std::string>& sTransportFile, const std::string& sResourceId);
-                void _RequestGetSenderConstraintsResult(const curlResponse& resp, const std::vector<Constraints>& vConstraints, const std::string& sResourceId);
-                void _RequestGetReceiverStagedResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId);
-                void _RequestGetReceiverActiveResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId);
-                void _RequestGetReceiverConstraintsResult(const curlResponse& resp, const std::vector<Constraints>& vConstraints, const std::string& sResourceId);
+                void _RequestPatchSenderResult(const pml::restgoose::clientResponse& resp, const std::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId);
+                void _RequestPatchReceiverResult(const pml::restgoose::clientResponse& resp, const std::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId);
+                void _RequestGetSenderStagedResult(const pml::restgoose::clientResponse& resp, const std::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId);
+                void _RequestGetSenderActiveResult(const pml::restgoose::clientResponse& resp, const std::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId);
+                void _RequestGetSenderTransportFileResult(const pml::restgoose::clientResponse& resp, const std::optional<std::string>& sTransportFile, const std::string& sResourceId);
+                void _RequestGetSenderConstraintsResult(const pml::restgoose::clientResponse& resp, const std::vector<Constraints>& vConstraints, const std::string& sResourceId);
+                void _RequestGetReceiverStagedResult(const pml::restgoose::clientResponse& resp, const std::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId);
+                void _RequestGetReceiverActiveResult(const pml::restgoose::clientResponse& resp, const std::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId);
+                void _RequestGetReceiverConstraintsResult(const pml::restgoose::clientResponse& resp, const std::vector<Constraints>& vConstraints, const std::string& sResourceId);
 
                 void _RequestConnectResult(const std::string& sSenderId, const std::string& sReceiverId, bool bSuccess, const std::string& sResponse);
 
@@ -148,15 +148,15 @@ namespace pml
                 virtual void RequestTargetResult(unsigned long nResult, const std::string& sResponse, const std::string& sResourceId)=0;
 
 
-                virtual void RequestPatchSenderResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId) = 0;
-                virtual void RequestPatchReceiverResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId) = 0;
-                virtual void RequestGetSenderStagedResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId) = 0;
-                virtual void RequestGetSenderActiveResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId) = 0;
-                virtual void RequestGetSenderConstraintsResult(const curlResponse& resp, const std::vector<Constraints>& vConstraints, const std::string& sResourceId) = 0;
-                virtual void RequestGetSenderTransportFileResult(const curlResponse& resp, const std::experimental::optional<std::string>& sTransportFile, const std::string& sResourceId) = 0;
-                virtual void RequestGetReceiverStagedResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId) = 0;
-                virtual void RequestGetReceiverActiveResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId) = 0;
-                virtual void RequestGetReceiverConstraintsResult(const curlResponse& resp, const std::vector<Constraints>& vConstraints, const std::string& sResourceId) = 0;
+                virtual void RequestPatchSenderResult(const pml::restgoose::clientResponse& resp, const std::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId) = 0;
+                virtual void RequestPatchReceiverResult(const pml::restgoose::clientResponse& resp, const std::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId) = 0;
+                virtual void RequestGetSenderStagedResult(const pml::restgoose::clientResponse& resp, const std::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId) = 0;
+                virtual void RequestGetSenderActiveResult(const pml::restgoose::clientResponse& resp, const std::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId) = 0;
+                virtual void RequestGetSenderConstraintsResult(const pml::restgoose::clientResponse& resp, const std::vector<Constraints>& vConstraints, const std::string& sResourceId) = 0;
+                virtual void RequestGetSenderTransportFileResult(const pml::restgoose::clientResponse& resp, const std::optional<std::string>& sTransportFile, const std::string& sResourceId) = 0;
+                virtual void RequestGetReceiverStagedResult(const pml::restgoose::clientResponse& resp, const std::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId) = 0;
+                virtual void RequestGetReceiverActiveResult(const pml::restgoose::clientResponse& resp, const std::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId) = 0;
+                virtual void RequestGetReceiverConstraintsResult(const pml::restgoose::clientResponse& resp, const std::vector<Constraints>& vConstraints, const std::string& sResourceId) = 0;
 
                 virtual void RequestConnectResult(const std::string& sSenderId, const std::string& sReceiverId, bool bSuccess, const std::string& sResponse)=0;
 

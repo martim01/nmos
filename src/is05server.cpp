@@ -406,14 +406,14 @@ pml::restgoose::response IS05Server::PatchNmosSingleReceiverStaged(const query& 
 
 pml::restgoose::response IS05Server::PatchSender(std::shared_ptr<Sender> pSender, const Json::Value& jsRequest)
 {
-    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchSender: " << pSender->GetId() ;
+    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "PatchSender: " << pSender->GetId() ;
     pml::restgoose::response resp;
 
     auto conRequest = pSender->GetStaged();
     //can we patch a connection from the json?
     if(conRequest.Patch(jsRequest) == false)
     {
-        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchSender: Request does not meet schema." ;
+        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "PatchSender: Request does not meet schema." ;
 
         std::stringstream ssDebug;
         ssDebug << jsRequest;
@@ -424,7 +424,7 @@ pml::restgoose::response IS05Server::PatchSender(std::shared_ptr<Sender> pSender
         std::stringstream ssDebug;
         ssDebug << jsRequest;
         resp = JsonError(400, "Request does not meet sender's constraints.", ssDebug.str());
-        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchSender: Request does not meet sender's constraints." ;
+        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "PatchSender: Request does not meet sender's constraints." ;
     }
     else if(conRequest.GetActivation().GetMode() != activation::ACT_NULL && pSender->IsLocked() == true)
     {   //locked by previous staged activation
@@ -443,7 +443,7 @@ pml::restgoose::response IS05Server::PatchSender(std::shared_ptr<Sender> pSender
         {
             resp.nHttpCode = 202;
             resp.jsonData = pSender->GetConnectionStagedJson(m_version);
-            pmlLog(pml::LOG_DEBUG) << "NMOS: PatchSender: Response1 -" << resp.jsonData ;
+            pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: PatchSender: Response1 -" << resp.jsonData ;
 
             if(conRequest.GetActivation().GetMode() == activation::ACT_NULL)
             {
@@ -452,15 +452,15 @@ pml::restgoose::response IS05Server::PatchSender(std::shared_ptr<Sender> pSender
             else if(conRequest.GetActivation().GetMode() == activation::ACT_NOW)
             {
                 resp.nHttpCode = 200;
-                pmlLog(pml::LOG_DEBUG) << "NMOS: PatchSender: Commit activation";
+                pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: PatchSender: Commit activation";
                 m_api.CommitActivation(pSender);
             }
-            pmlLog(pml::LOG_DEBUG) << "NMOS: PatchSender: Response -" << resp.jsonData ;
+            pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: PatchSender: Response -" << resp.jsonData ;
         }
         else
         {
             resp = JsonError(500, "Sender unable to stage PATCH as activation time invalid.");
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchSender: Sender unable to stage PATCH as activation time invalid." ;
+            pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "PatchSender: Sender unable to stage PATCH as activation time invalid." ;
         }
     }
     else
@@ -469,12 +469,12 @@ pml::restgoose::response IS05Server::PatchSender(std::shared_ptr<Sender> pSender
         {
             resp.nHttpCode = 200;
             resp.jsonData = pSender->GetConnectionStagedJson(m_version);
-            pmlLog(pml::LOG_DEBUG) << "NMOS: : Response -" << resp.jsonData ;
+            pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: : Response -" << resp.jsonData ;
         }
         else
         {
             resp = JsonError(500, "Sender unable to stage PATCH as no EventPoster or activation time invalid.");
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchSender: Sender unable to stage PATCH as no EventPoster or activation time invalid." ;
+            pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "PatchSender: Sender unable to stage PATCH as no EventPoster or activation time invalid." ;
         }
     }
     return resp;
@@ -486,23 +486,23 @@ pml::restgoose::response IS05Server::PatchReceiver(std::shared_ptr<Receiver> pRe
     pml::restgoose::response resp;
 
     auto conRequest = pReceiver->GetStaged();
-    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchJsonReceiver: Staged SenderId = '" << (pReceiver->GetStaged().GetSenderId() ? *pReceiver->GetStaged().GetSenderId() : "")
+    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "PatchJsonReceiver: Staged SenderId = '" << (pReceiver->GetStaged().GetSenderId() ? *pReceiver->GetStaged().GetSenderId() : "")
                             << "' request SenderId = '" << (conRequest.GetSenderId() ? *conRequest.GetSenderId() : "") << "'";
     //can we patch a connection from the json?
     if(conRequest.Patch(jsRequest) == false)
     {
         resp =JsonError(400, "Request does not meet schema.");
-        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchJsonReceiver: Request does not meet schema." ;
+        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "PatchJsonReceiver: Request does not meet schema." ;
     }
     else if(pReceiver->CheckConstraints(conRequest) == false)
     {//does the patched connection meet the Receiver constraints?
         resp =JsonError(400, "Request does not meet Receiver's constraints.");
-        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchJsonReceiver: Request does not meet Receiver's constraints." ;
+        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "PatchJsonReceiver: Request does not meet Receiver's constraints." ;
     }
     else if(conRequest.GetActivation().GetMode() != activation::ACT_NULL && pReceiver->IsLocked() == true)
     {   //locked by previous staged activation
         resp =JsonError(423, "Receiver had pending activation.");
-        pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchJsonReceiver: Receiver had pending activation." ;
+        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "PatchJsonReceiver: Receiver had pending activation." ;
     }
     else if(m_pPoster)
     {   //tell the main thread and wait to see what happens
@@ -525,12 +525,12 @@ pml::restgoose::response IS05Server::PatchReceiver(std::shared_ptr<Receiver> pRe
                 resp.nHttpCode = 200;
                 m_api.CommitActivation(pReceiver);
             }
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << resp.jsonData ;
+            pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << resp.jsonData ;
         }
         else
         {
             resp =JsonError(500, "Receiver unable to stage PATCH as no EventPoster or activation time invalid.");
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchJsonReceiver: Receiver unable to stage PATCH as no EventPoster or activation time invalid." ;
+            pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "PatchJsonReceiver: Receiver unable to stage PATCH as no EventPoster or activation time invalid." ;
         }
     }
     else
@@ -538,12 +538,12 @@ pml::restgoose::response IS05Server::PatchReceiver(std::shared_ptr<Receiver> pRe
         if(m_api.Stage(conRequest, pReceiver)) //PATCH the Receiver
         {
             resp.jsonData = pReceiver->GetConnectionStagedJson(m_version);
-            pmlLog(pml::LOG_DEBUG) << resp.jsonData ;
+            pmlLog(pml::LOG_DEBUG, "pml::nmos") << resp.jsonData ;
         }
         else
         {
             resp =JsonError(500, "Receiver unable to stage PATCH as no EventPoster or activation time invalid.");
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PatchJsonReceiver: Sender unable to stage PATCH as no EventPoster or activation time invalid." ;
+            pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "PatchJsonReceiver: Sender unable to stage PATCH as no EventPoster or activation time invalid." ;
         }
     }
     return resp;
@@ -552,7 +552,7 @@ pml::restgoose::response IS05Server::PatchReceiver(std::shared_ptr<Receiver> pRe
 
 pml::restgoose::response IS05Server::PostJsonSenders(const pml::restgoose::response& request)
 {
-    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "IS05Server::PostJsonSenders:  " << request.jsonData ;
+    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "IS05Server::PostJsonSenders:  " << request.jsonData ;
 
     pml::restgoose::response resp;
 
@@ -582,7 +582,7 @@ pml::restgoose::response IS05Server::PostJsonSenders(const pml::restgoose::respo
                     jsResponse["code"] = 404;
                     jsResponse["error"] = "Resource does not exist.";
                     jsResponse["debug"] = "null";
-                    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PostJsonSenders: Resource does not exist." ;
+                    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "PostJsonSenders: Resource does not exist." ;
                 }
                 else
                 {
@@ -607,7 +607,7 @@ pml::restgoose::response IS05Server::PostJsonSenders(const pml::restgoose::respo
 
 pml::restgoose::response IS05Server::PostJsonReceivers(const pml::restgoose::response& request)
 {
-    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "IS05Server::PostJsonReceivers:  " << request.jsonData ;
+    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "IS05Server::PostJsonReceivers:  " << request.jsonData ;
 
     pml::restgoose::response resp;
 
@@ -638,7 +638,7 @@ pml::restgoose::response IS05Server::PostJsonReceivers(const pml::restgoose::res
                     jsResponse["code"] = 404;
                     jsResponse["error"] = "Resource does not exist.";
                     jsResponse["debug"] = "null";
-                    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "PostJsonReceivers: Resource does not exist." ;
+                    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "PostJsonReceivers: Resource does not exist." ;
                 }
                 else
                 {

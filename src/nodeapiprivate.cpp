@@ -187,7 +187,7 @@ void NodeApiPrivate::Init(std::shared_ptr<EventPoster> pPoster, unsigned short n
         pAddresses = (IP_ADAPTER_ADDRESSES *) malloc(outBufLen);
         if (pAddresses == NULL)
         {
-            pmlLog(pml::LOG_INFO) << "NMOS: " << "Memory allocation failed for IP_ADAPTER_ADDRESSES struct" ;
+            pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Memory allocation failed for IP_ADAPTER_ADDRESSES struct" ;
             return;
         }
         dwRetVal = GetAdaptersAddresses(family, flags, NULL, pAddresses, &outBufLen);
@@ -225,7 +225,7 @@ void NodeApiPrivate::Init(std::shared_ptr<EventPoster> pPoster, unsigned short n
     }
     else
     {
-        pmlLog(pml::LOG_INFO) << "NMOS: " << "Call to GetAdaptersAddresses failed with error: " << dwRetVal ;
+        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Call to GetAdaptersAddresses failed with error: " << dwRetVal ;
     }
     if (pAddresses)
     {
@@ -245,7 +245,7 @@ void NodeApiPrivate::Init(std::shared_ptr<EventPoster> pPoster, unsigned short n
 
 
     m_lstServers.push_back(std::make_shared<pml::restgoose::Server>());
-    m_lstServers.back()->Init(fileLocation(""),fileLocation(""),ipAddress("0.0.0.0"),nConnectionPort, endpoint(""), false);
+    m_lstServers.back()->Init("","",ipAddress("0.0.0.0"),nConnectionPort, endpoint(""), false);
 
     m_mDiscoveryServers.insert(std::make_pair(ApiVersion(1,1), make_unique<IS04Server>(m_lstServers.back(), ApiVersion(1,1), m_pPoster,*this)));
     m_mDiscoveryServers.insert(std::make_pair(ApiVersion(1,2), make_unique<IS04Server>(m_lstServers.back(), ApiVersion(1,2), m_pPoster,*this)));
@@ -259,7 +259,7 @@ void NodeApiPrivate::Init(std::shared_ptr<EventPoster> pPoster, unsigned short n
     if(m_nConnectionPort != m_nDiscoveryPort)
     {
          m_lstServers.push_back(std::make_shared<pml::restgoose::Server>());
-         m_lstServers.back()->Init(fileLocation(""),fileLocation(""),ipAddress("0.0.0.0"),nDiscoveryPort, endpoint(""), false);
+         m_lstServers.back()->Init("","",ipAddress("0.0.0.0"),nDiscoveryPort, endpoint(""), false);
          m_lstServers.back()->AddEndpoint(pml::restgoose::GET, endpoint(""), std::bind(&NodeApiPrivate::GetRoot,this, _1,_2,_3,_4));
          m_lstServers.back()->AddEndpoint(pml::restgoose::GET, endpoint("/x-nmos"), std::bind(&NodeApiPrivate::GetNmosConnectionRoot, this,_1,_2,_3,_4));
          m_lstServers.back()->AddNotFoundCallback(std::bind(&NotFound, _1,_2,_3,_4,_5));
@@ -274,26 +274,26 @@ void NodeApiPrivate::Init(std::shared_ptr<EventPoster> pPoster, unsigned short n
 
 bool NodeApiPrivate::StartHttpServers()
 {
-    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Start Http Servers" ;
+    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "Start Http Servers" ;
 
     for(auto& pServer : m_lstServers)
     {
         pServer->Run(true);
     }
 
-    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "Start Http Servers: Done" ;
+    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "Start Http Servers: Done" ;
     return true;
 
 }
 
 void NodeApiPrivate::StopHttpServers()
 {
-    pmlLog(pml::LOG_DEBUG) << "NMOS: NodeApi - stop http servers";
+    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeApi - stop http servers";
     for(auto pServer : m_lstServers)
     {
         pServer->Stop();
     }
-    pmlLog(pml::LOG_DEBUG) << "NMOS: NodeApi - stop http servers - done";
+    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeApi - stop http servers - done";
 }
 
 bool NodeApiPrivate::StartmDNSPublisher()
@@ -302,10 +302,17 @@ bool NodeApiPrivate::StartmDNSPublisher()
     auto itEndpoint = m_self.GetEndpointsBegin();
     if(itEndpoint != m_self.GetEndpointsEnd())
     {
-        pmlLog(pml::LOG_INFO) << "NMOS: " << "Start mDNS Publisher" ;
-        m_pNodeApiPublisher = std::make_unique<pml::dnssd::Publisher>(CreateGuid(itEndpoint->sHost), "_nmos-node._tcp", itEndpoint->nPort, itEndpoint->sHost);
-        SetmDNSTxt(itEndpoint->bSecure);
-        return m_pNodeApiPublisher->Start();
+        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Start mDNS Publisher" ;
+        m_pNodeApiPublisher = std::make_unique<pml::dnssd::Publisher>();
+
+        if(m_pNodeApiPublisher->Start())
+        {
+            m_sDnsName = CreateGuid(itEndpoint->sHost);
+            m_pNodeApiPublisher->AddService(m_sDnsName, "_nmos-node._tcp", itEndpoint->nPort,{});
+            SetmDNSTxt(itEndpoint->bSecure);
+        
+            return true;
+        }
     }
     return false;
 
@@ -315,7 +322,7 @@ void NodeApiPrivate::StopmDNSPublisher()
 {
     if(m_pNodeApiPublisher)
     {
-        pmlLog(pml::LOG_INFO) << "NMOS: " << "Stop mDNS Publisher" ;
+        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Stop mDNS Publisher" ;
         m_pNodeApiPublisher->Stop();
     }
 }
@@ -416,11 +423,11 @@ void NodeApiPrivate::SetmDNSTxt(bool bSecure)
     {
         if(bSecure)
         {
-            m_pNodeApiPublisher->AddTxt("api_proto", "https", false);
+            m_pNodeApiPublisher->AddTxt(m_sDnsName, "api_proto", "https", false);
         }
         else
         {
-            m_pNodeApiPublisher->AddTxt("api_proto", "http", false);
+            m_pNodeApiPublisher->AddTxt(m_sDnsName, "api_proto", "http", false);
         }
         std::string sVersion;
         for(const auto& pairServer : m_mDiscoveryServers)
@@ -433,27 +440,26 @@ void NodeApiPrivate::SetmDNSTxt(bool bSecure)
 
         }
 
-         m_pNodeApiPublisher->AddTxt("api_ver", sVersion, false);
+         m_pNodeApiPublisher->AddTxt(m_sDnsName, "api_ver", sVersion, false);
 
         if(m_sRegistrationNode.empty())
         {
-            m_pNodeApiPublisher->AddTxt("ver_slf", to_string(m_self.GetDnsVersion()),false);
-            m_pNodeApiPublisher->AddTxt("ver_src", to_string(m_sources.GetVersion()),false);
-            m_pNodeApiPublisher->AddTxt("ver_flw", to_string(m_flows.GetVersion()),false);
-            m_pNodeApiPublisher->AddTxt("ver_dvc", to_string(m_devices.GetVersion()),false);
-            m_pNodeApiPublisher->AddTxt("ver_snd", to_string(m_senders.GetVersion()),false);
-            m_pNodeApiPublisher->AddTxt("ver_rcv", to_string(m_receivers.GetVersion()),false);
+            m_pNodeApiPublisher->AddTxt(m_sDnsName, "ver_slf", to_string(m_self.GetDnsVersion()),false);
+            m_pNodeApiPublisher->AddTxt(m_sDnsName, "ver_src", to_string(m_sources.GetVersion()),false);
+            m_pNodeApiPublisher->AddTxt(m_sDnsName, "ver_flw", to_string(m_flows.GetVersion()),false);
+            m_pNodeApiPublisher->AddTxt(m_sDnsName, "ver_dvc", to_string(m_devices.GetVersion()),false);
+            m_pNodeApiPublisher->AddTxt(m_sDnsName, "ver_snd", to_string(m_senders.GetVersion()),false);
+            m_pNodeApiPublisher->AddTxt(m_sDnsName, "ver_rcv", to_string(m_receivers.GetVersion()),true);
         }
         else
         {
-            m_pNodeApiPublisher->RemoveTxt("ver_slf", false);
-            m_pNodeApiPublisher->RemoveTxt("ver_src", false);
-            m_pNodeApiPublisher->RemoveTxt("ver_flw", false);
-            m_pNodeApiPublisher->RemoveTxt("ver_dvc", false);
-            m_pNodeApiPublisher->RemoveTxt("ver_snd", false);
-            m_pNodeApiPublisher->RemoveTxt("ver_rcv", false);
+            m_pNodeApiPublisher->RemoveTxt(m_sDnsName, "ver_slf", false);
+            m_pNodeApiPublisher->RemoveTxt(m_sDnsName, "ver_src", false);
+            m_pNodeApiPublisher->RemoveTxt(m_sDnsName, "ver_flw", false);
+            m_pNodeApiPublisher->RemoveTxt(m_sDnsName, "ver_dvc", false);
+            m_pNodeApiPublisher->RemoveTxt(m_sDnsName, "ver_snd", false);
+            m_pNodeApiPublisher->RemoveTxt(m_sDnsName, "ver_rcv", true);
         }
-        m_pNodeApiPublisher->Modify();
     }
 }
 
@@ -539,7 +545,7 @@ void NodeApiPrivate::SenderPatchAllowed(unsigned short nPort, bool bOk, const st
         }
         else
         {
-            pmlLog(pml::LOG_ERROR) << "NMOS: " << "No Sender found with id='" << sId << "'" ;
+            pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "No Sender found with id='" << sId << "'" ;
             bOk = false;
         }
     }
@@ -576,19 +582,19 @@ void NodeApiPrivate::SignalServer(unsigned short nPort, const pml::restgoose::re
     }
     else
     {
-        pmlLog(pml::LOG_ERROR) << "NMOS: " << "No server with port " << nPort ;
+        pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "No server with port " << nPort ;
     }
 }
 
 void NodeApiPrivate::StopRegistrationBrowsing()
 {
-    pmlLog(pml::LOG_DEBUG) << "NMOS: NodeApi - stop registration browser";
+    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeApi - stop registration browser";
     for(const auto& pairBrowser : m_mBrowser)
     {
         pairBrowser.second->RemoveService("_nmos-registration._tcp");
     }
 
-    pmlLog(pml::LOG_DEBUG) << "NMOS: NodeApi - stop registration browser - done";
+    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeApi - stop registration browser - done";
 }
 
 void NodeApiPrivate::PostRegisterStatus()
@@ -633,7 +639,7 @@ int NodeApiPrivate::RegisterSimple()
             }
             else if(nResponse != 201)
             {
-                pmlLog(pml::LOG_ERROR) << "NMOS: " << "RegisterResources: Failed" ;
+                pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "RegisterResources: Failed" ;
                 UnregisterSimple();
                 m_nRegistrationStatus = REG_FAILED;
                 PostRegisterStatus();
@@ -642,7 +648,7 @@ int NodeApiPrivate::RegisterSimple()
 
             if(RegisterResources(m_devices) != 201 || RegisterResources(m_sources) != 201 || RegisterResources(m_flows) != 201 || RegisterResources(m_senders) != 201 || RegisterResources(m_receivers) != 201)
             {
-                pmlLog(pml::LOG_ERROR) << "NMOS: " << "RegisterResources: Failed" ;
+                pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "RegisterResources: Failed" ;
                 UnregisterSimple();
                 m_nRegistrationStatus = REG_FAILED;
                 PostRegisterStatus();
@@ -705,17 +711,17 @@ void NodeApiPrivate::HandleInstanceResolved(std::shared_ptr<pml::dnssd::dnsInsta
                             m_pPoster->_RegistrationNodeFound(ssUrl.str(), nPriority, version);
                         }
                     }
-                    pmlLog(pml::LOG_DEBUG) << "NMOS: " << "NodeApi: Found registration node" << ssUrl.str() << " proto=" << itProto->second << " ver=" << itVersion->second << " priority=" << itPriority->second ;
+                    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "NodeApi: Found registration node" << ssUrl.str() << " proto=" << itProto->second << " ver=" << itVersion->second << " priority=" << itPriority->second ;
                 }
             }
             catch(invalid_argument& ia)
             {
-                pmlLog(pml::LOG_WARN) << "NMOS: " << "NodeApi: Registration node -Invalid argument";
+                pmlLog(pml::LOG_WARN, "pml::nmos") << "NMOS: " << "NodeApi: Registration node -Invalid argument";
             }
         }
         else
         {
-            pmlLog(pml::LOG_DEBUG) << "NMOS: " << "NodeApi: Found registration node but api versions different to ours";
+            pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "NodeApi: Found registration node but api versions different to ours";
         }
     }
     else
@@ -767,7 +773,7 @@ bool NodeApiPrivate::FindRegistrationNode()
     {
         if(m_sRegistrationNode.empty() == false)
         {
-            pmlLog(pml::LOG_INFO) << "NMOS: " << "NodeApi: Register: No nmos registration nodes found. Go peer-to-peer" ;
+            pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "NodeApi: Register: No nmos registration nodes found. Go peer-to-peer" ;
             m_sRegistrationNode.clear();
             m_versionRegistration = ApiVersion(0,0);
             nPriority = 0;
@@ -835,7 +841,7 @@ long NodeApiPrivate::RegisterResource(const string& sType, const Json::Value& js
 
 
     auto resp =  CurlRegister::Post(m_sRegistrationNode+m_versionRegistration.GetVersionAsString()+"/resource", sPost);
-    pmlLog(pml::LOG_INFO) << "NMOS: " << "RegisterApi: Register returned [" << resp.nCode << "] " << resp.sResponse ;
+    pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "RegisterApi: Register returned [" << resp.nCode << "] " << resp.sResponse ;
     if(resp.nCode == 500)
     {
         MarkRegNodeAsBad();
@@ -875,7 +881,7 @@ void NodeApiPrivate::MarkRegNodeAsBad()
 
 int NodeApiPrivate::UnregisterSimple()
 {
-    pmlLog(pml::LOG_INFO) << "NMOS: " << "Unregister: " << m_nRegistrationStatus ;
+    pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Unregister: " << m_nRegistrationStatus ;
 
     if(m_sRegistrationNode.empty() == false)
     {
@@ -893,7 +899,7 @@ int NodeApiPrivate::UnregisterSimple()
 bool NodeApiPrivate::UnregisterResource(const string& sType, const std::string& sId)
 {
     auto resp = CurlRegister::Delete(m_sRegistrationNode+m_versionRegistration.GetVersionAsString()+"/resource", sType, sId);
-    pmlLog(pml::LOG_INFO) << "NMOS: " << "RegisterApi:Unregister returned [" << resp.nCode << "] " << resp.sResponse ;
+    pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "RegisterApi:Unregister returned [" << resp.nCode << "] " << resp.sResponse ;
     if(resp.nCode == 500)
     {
         MarkRegNodeAsBad();
@@ -913,12 +919,12 @@ void NodeApiPrivate::StopRun()
 {
     if(m_pThread)
     {
-        pmlLog(pml::LOG_DEBUG) << "NMOS: NodeApi - stop run";
+        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeApi - stop run";
         m_bRun = false;
         Signal(SIG_EXIT);
         m_pThread->join();
         m_pThread = nullptr;
-        pmlLog(pml::LOG_DEBUG) << "NMOS: NodeApi - stop done";
+        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeApi - stop done";
 
         StopRegistrationBrowsing();
     }
@@ -1101,7 +1107,7 @@ bool NodeApiPrivate::AddSender(shared_ptr<Sender> pResource)
             return true;
         }
     }
-    pmlLog(pml::LOG_ERROR) << "NMOS: AddSender - could not find parent device '" << pResource->GetParentResourceId() << "'";
+    pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: AddSender - could not find parent device '" << pResource->GetParentResourceId() << "'";
     return false;
 }
 
@@ -1406,7 +1412,7 @@ bool NodeApiPrivate::Stage(const connectionSender<activationResponse>& conReques
                 }
                 else
                 {
-                    pmlLog(pml::LOG_ERROR) << "NMOS: " << "Stage Sender: Invalid absolute time" ;
+                    pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "Stage Sender: Invalid absolute time" ;
                     bOk = false;
                 }
             }
@@ -1423,7 +1429,7 @@ bool NodeApiPrivate::Stage(const connectionSender<activationResponse>& conReques
                 }
                 else
                 {
-                    pmlLog(pml::LOG_ERROR) << "NMOS: " << "Stage Receiver: Invalid time" ;
+                    pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "Stage Receiver: Invalid time" ;
                     bOk = false;
                 }
 
@@ -1481,7 +1487,7 @@ bool NodeApiPrivate::Stage(const connectionReceiver<activationResponse>& conRequ
                 }
                 else
                 {
-                    pmlLog(pml::LOG_ERROR) << "NMOS: " << "Stage Receiver: Invalid absolute time" ;
+                    pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "Stage Receiver: Invalid absolute time" ;
                     bOk = false;
                 }
             }
@@ -1498,13 +1504,13 @@ bool NodeApiPrivate::Stage(const connectionReceiver<activationResponse>& conRequ
                 }
                 else
                 {
-                    pmlLog(pml::LOG_ERROR) << "NMOS: " << "Stage Receiver: Invalid time" ;
+                    pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "Stage Receiver: Invalid time" ;
                     bOk = false;
                 }
             }
             break;
         default:
-            pmlLog(pml::LOG_ERROR) << "Unexpected patch" ;
+            pmlLog(pml::LOG_ERROR, "pml::nmos") << "Unexpected patch" ;
     }
     return bOk;
 }

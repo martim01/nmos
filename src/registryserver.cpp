@@ -22,7 +22,7 @@ using namespace std;
 
 void RegistryServer::RequestCompleted (void *cls, MHD_Connection* pConnection, void **ptr, enum MHD_RequestTerminationCode toe)
 {
-    pmlLog(pml::LOG_INFO) << "Request completed" ;
+    pmlLog(pml::LOG_INFO, "pml::nmos") << "Request completed" ;
     RegistryInfo *pInfo = reinterpret_cast<RegistryInfo*>(*ptr);
     if (pInfo)
     {
@@ -31,7 +31,7 @@ void RegistryServer::RequestCompleted (void *cls, MHD_Connection* pConnection, v
     }
     else
     {
-        pmlLog(pml::LOG_ERROR) << "Request completed: Failed" ;
+        pmlLog(pml::LOG_ERROR, "pml::nmos") << "Request completed: Failed" ;
     }
 }
 
@@ -40,7 +40,7 @@ int RegistryServer::DoHttpGet(MHD_Connection* pConnection, string sUrl, Registry
     string sResponse, sContentType;
     int nCode = pInfo->pServer->GetJson(sUrl, sResponse, sContentType);
 
-    pmlLog(pml::LOG_INFO) << "Response: " << sResponse ;
+    pmlLog(pml::LOG_INFO, "pml::nmos") << "Response: " << sResponse ;
 
     MHD_Response* pResponse = MHD_create_response_from_buffer (sResponse.length(), (void *) sResponse.c_str(), MHD_RESPMEM_MUST_COPY);
     MHD_add_response_header(pResponse, "Content-Type", sContentType.c_str());
@@ -80,7 +80,7 @@ int RegistryServer::DoHttpDelete(MHD_Connection* pConnection, string sUrl, Regis
     string sResponse;
     int nCode = pInfo->pServer->DeleteJson(sUrl, sResponse);
 
-    pmlLog(pml::LOG_INFO) << "Response: " << sResponse ;
+    pmlLog(pml::LOG_INFO, "pml::nmos") << "Response: " << sResponse ;
 
     MHD_Response* pResponse = MHD_create_response_from_buffer (sResponse.length(), (void *) sResponse.c_str(), MHD_RESPMEM_MUST_COPY);
     MHD_add_response_header(pResponse, "Content-Type", "application/json");
@@ -99,12 +99,12 @@ int RegistryServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, c
     char sAddr[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &(pAddr->sin_addr), sAddr, INET_ADDRSTRLEN);
 
-    pmlLog(pml::LOG_DEBUG) << "AnswerToConnection: " << sAddr ;
+    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "AnswerToConnection: " << sAddr ;
 
     string sMethod(method);
     if (NULL == *ptr)
     {
-        pmlLog(pml::LOG_DEBUG) << "Initial connection" ;
+        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "Initial connection" ;
         RegistryInfo* pInfo = new RegistryInfo();
         if(pInfo == 0)
         {
@@ -113,7 +113,7 @@ int RegistryServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, c
         pInfo->pServer = reinterpret_cast<RegistryServer*>(cls);
         if("POST" == sMethod)
         {
-            pmlLog(pml::LOG_DEBUG) << "Initial connection: " << sMethod ;
+            pmlLog(pml::LOG_DEBUG, "pml::nmos") << "Initial connection: " << sMethod ;
             if("POST" == sMethod)
             {
                 pInfo->nType = RegistryInfo::POST;
@@ -122,34 +122,34 @@ int RegistryServer::AnswerToConnection(void *cls, MHD_Connection* pConnection, c
         else if("DELETE" == sMethod)
         {
             pInfo->nType = RegistryInfo::DEL;
-            pmlLog(pml::LOG_DEBUG) << "Initial connection: " << sMethod ;
+            pmlLog(pml::LOG_DEBUG, "pml::nmos") << "Initial connection: " << sMethod ;
         }
         else
         {
-            pmlLog(pml::LOG_DEBUG) << "Initial connection: GET" ;
+            pmlLog(pml::LOG_DEBUG, "pml::nmos") << "Initial connection: GET" ;
         }
         *ptr = (void *) pInfo;
 
-        pmlLog(pml::LOG_DEBUG) << "Initial connection: return MHD_YES" ;
+        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "Initial connection: return MHD_YES" ;
         return MHD_YES;
     }
 
-    pmlLog(pml::LOG_DEBUG) << "RegistryServer: " << url ;
+    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "RegistryServer: " << url ;
     if("GET" == string(sMethod))
     {
         RegistryInfo* pInfo = reinterpret_cast<RegistryInfo*>(*ptr);
-        pmlLog(pml::LOG_DEBUG) << "Actual connection: GET" ;
+        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "Actual connection: GET" ;
         return DoHttpGet(pConnection, url, pInfo);
     }
     else if("DELETE" == string(sMethod))
     {
         RegistryInfo* pInfo = reinterpret_cast<RegistryInfo*>(*ptr);
-        pmlLog(pml::LOG_DEBUG) << "Actual connection: DELETE" ;
+        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "Actual connection: DELETE" ;
         return DoHttpDelete(pConnection, url, pInfo);
     }
     else if("POST" == string(sMethod))
     {
-        pmlLog(pml::LOG_DEBUG) << "Actual connection: POST" ;
+        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "Actual connection: POST" ;
         RegistryInfo* pInfo = reinterpret_cast<RegistryInfo*>(*ptr);
         if (*upload_data_size != 0)
         {
@@ -182,11 +182,11 @@ bool RegistryServer::Init(unsigned int nPort)
 , nPort, NULL, NULL, &RegistryServer::AnswerToConnection, this, MHD_OPTION_NOTIFY_COMPLETED, RequestCompleted, NULL, MHD_OPTION_THREAD_POOL_SIZE,4, MHD_OPTION_END);
     if(m_pmhd)
     {
-        pmlLog(pml::LOG_INFO) << "RegistryServer: " << nPort << " Init: OK" ;
+        pmlLog(pml::LOG_INFO, "pml::nmos") << "RegistryServer: " << nPort << " Init: OK" ;
     }
     else
     {
-        pmlLog(pml::LOG_INFO) << "RegistryServer: " << nPort << " Init: Failed" ;
+        pmlLog(pml::LOG_INFO, "pml::nmos") << "RegistryServer: " << nPort << " Init: Failed" ;
     }
 
     return (m_pmhd!=0);
@@ -383,7 +383,7 @@ Json::Value RegistryServer::GetJsonError(unsigned long nCode, string sError)
 
 int RegistryServer::PostJson(string sPath, const string& sJson, string& sResponse, std::string& sLocation)
 {
-    pmlLog(pml::LOG_INFO) << "RegistyServer: " << sPath << " " << sJson ;
+    pmlLog(pml::LOG_INFO, "pml::nmos") << "RegistyServer: " << sPath << " " << sJson ;
     //make sure path is correct
     transform(sPath.begin(), sPath.end(), sPath.begin(), ::tolower);
 
@@ -409,7 +409,7 @@ int RegistryServer::PostJson(string sPath, const string& sJson, string& sRespons
         nCode = 405;
         sResponse = ConvertFromJson(GetJsonError(nCode, "Method not allowed here."));
     }
-    pmlLog(pml::LOG_INFO) << "Response: " << sResponse << " Code:" << nCode ;
+    pmlLog(pml::LOG_INFO, "pml::nmos") << "Response: " << sResponse << " Code:" << nCode ;
     return nCode;
 }
 
@@ -431,7 +431,7 @@ int RegistryServer::PostJsonNmosResource(const std::string& sJson, std::string& 
     string sError;
     nCode = RegistryApi::Get().AddUpdateResource(jsRequest["type"].asString(), jsRequest["data"], sError);
 
-    pmlLog(pml::LOG_INFO) << "RESOURCE TYPE: " << jsRequest["type"].asString() ;
+    pmlLog(pml::LOG_INFO, "pml::nmos") << "RESOURCE TYPE: " << jsRequest["type"].asString() ;
 
     if(nCode == 200 || nCode == 201)
     {

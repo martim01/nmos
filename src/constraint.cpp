@@ -409,7 +409,7 @@ bool Constraints::MeetsConstraint(const std::string& sKey, const Json::Value& js
     auto itConstraint = m_mConstraints.find(sKey);
     if(itConstraint != m_mConstraints.end())
     {
-        pmlLog() << sKey << " " << jsCheck.type() << " " << jsCheck.asString();
+        pmlLog(pml::LOG_INFO, "pml::nmos") << sKey << " " << jsCheck.type() << " " << jsCheck.asString();
         switch(jsCheck.type())
         {
             case Json::ValueType::arrayValue:

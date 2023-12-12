@@ -49,23 +49,23 @@ int main()
 
     if(pml::nmos::NodeApi::Get().AddDevice(pDevice) == false)
     {
-        pmlLog(pml::LOG_ERROR) << "FAILED TO ADD DEVICE";
+        pmlLog(pml::LOG_ERROR, "pml::nmos") << "FAILED TO ADD DEVICE";
     }
     if(pml::nmos::NodeApi::Get().AddSource(pSource) == false)
     {
-        pmlLog(pml::LOG_ERROR) << "FAILED TO ADD SOURCE";
+        pmlLog(pml::LOG_ERROR, "pml::nmos") << "FAILED TO ADD SOURCE";
     }
     if(pml::nmos::NodeApi::Get().AddFlow(pFlow) == false)
     {
-        pmlLog(pml::LOG_ERROR) << "FAILED TO ADD FLOW";
+        pmlLog(pml::LOG_ERROR, "pml::nmos") << "FAILED TO ADD FLOW";
     }
     if(pml::nmos::NodeApi::Get().AddReceiver(pReceiver) == false)
     {
-        pmlLog(pml::LOG_ERROR) << "FAILED TO ADD RECEIVER";
+        pmlLog(pml::LOG_ERROR, "pml::nmos") << "FAILED TO ADD RECEIVER";
     }
     if(pml::nmos::NodeApi::Get().AddSender(pSender) == false)
     {
-        pmlLog(pml::LOG_ERROR) << "FAILED TO ADD SENDER";
+        pmlLog(pml::LOG_ERROR, "pml::nmos") << "FAILED TO ADD SENDER";
     }
     pml::nmos::NodeApi::Get().Commit();
 
@@ -81,63 +81,63 @@ int main()
             switch(pPoster->GetReason())
             {
                 case ThreadPoster::CURL_DONE:
-                    pmlLog() << "----------------------------------------";
-                    pmlLog() << "Curl Done";
-                    pmlLog() << "----------------------------------------";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "Curl Done";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
                     break;
                 case ThreadPoster::INSTANCE_RESOLVED:
-                    pmlLog() << "----------------------------------------";
-                    pmlLog() << "Browser: Instance Resolved";
-                    pmlLog() << "----------------------------------------";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "Browser: Instance Resolved";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
                     break;
                 case ThreadPoster::ALLFORNOW:
-                    pmlLog() << "----------------------------------------";
-                    pmlLog() << "Browser: All For Now";
-                    pmlLog() << "----------------------------------------";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "Browser: All For Now";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
                     break;
                 case ThreadPoster::FINISHED:
-                    pmlLog() << "----------------------------------------";
-                    pmlLog() << "Browser: Finished";
-                    pmlLog() << "----------------------------------------";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "Browser: Finished";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
                     break;
                 case ThreadPoster::REGERROR:
-                    pmlLog() << "----------------------------------------";
-                    pmlLog() << "Publisher: Error";
-                    pmlLog() << "----------------------------------------";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "Publisher: Error";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
                     break;
                 case ThreadPoster::INSTANCE_REMOVED:
-                    pmlLog() << "----------------------------------------";
-                    pmlLog() << "Browser: Instance Removed";
-                    pmlLog() << "----------------------------------------";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "Browser: Instance Removed";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
                     break;
                 case ThreadPoster::TARGET:
-                    pmlLog() << "----------------------------------------";
-                    pmlLog() << "NMOS Target: " << pPoster->GetString() << " [" << pPoster->GetSDP() << "]";
-                    pmlLog() << "----------------------------------------";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS Target: " << pPoster->GetString() << " [" << pPoster->GetSDP() << "]";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
                     //getchar();
                     pml::nmos::NodeApi::Get().TargetTaken("192.168.1.113", pPoster->GetPort(), true);
                     break;
                 case ThreadPoster::PATCH_SENDER:
-                    pmlLog() << "----------------------------------------";
-                    pmlLog() << "NMOS Patch Sender: " << pPoster->GetString();
-                    pmlLog() << "----------------------------------------";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS Patch Sender: " << pPoster->GetString();
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
                     pml::nmos::NodeApi::Get().SenderPatchAllowed(pPoster->GetPort(), true, pPoster->GetString(),"","239.192.55.101");
                     break;
                 case ThreadPoster::PATCH_RECEIVER:
-                    pmlLog() << "----------------------------------------";
-                    pmlLog() << "NMOS Patch Receiver: " << pPoster->GetString();
-                    pmlLog() << "----------------------------------------";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS Patch Receiver: " << pPoster->GetString();
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
                     pml::nmos::NodeApi::Get().ReceiverPatchAllowed(pPoster->GetPort(), true, pPoster->GetString(), "192.168.1.113");
                     break;
                 case ThreadPoster::ACTIVATE_SENDER:
-                    pmlLog() << "----------------------------------------";
-                    pmlLog() << "NMOS Sender Activated: " << pPoster->GetString();
-                    pmlLog() << "----------------------------------------";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS Sender Activated: " << pPoster->GetString();
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
                     break;
                 case ThreadPoster::ACTIVATE_RECEIVER:
-                    pmlLog() << "----------------------------------------";
-                    pmlLog() << "NMOS Receiver Activated: " << pPoster->GetString();
-                    pmlLog() << "----------------------------------------";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS Receiver Activated: " << pPoster->GetString();
+                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
                     break;
             }
 

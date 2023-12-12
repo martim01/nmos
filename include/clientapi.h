@@ -4,7 +4,8 @@
 #include <map>
 #include <memory>
 #include "connection.h"
-#include "optional.hpp"
+#include <optional>
+#include "response.h"
 
 namespace pml
 {
@@ -18,7 +19,6 @@ namespace pml
         class Receiver;
         class ClientApiPoster;
         class ClientApiImpl;
-        struct curlResponse;
         class activationRequest;
         class activationResponse;
         template <typename T> class connectionSender;
@@ -81,14 +81,14 @@ namespace pml
                 *   @return <i>bool</i> true if a sender with the given uuIds are found and it the url of is-05 connection api for the sender can be found, otherwise false
                 *   @note the request is performed asynchronoulsy and the user should handle ClientApiPoster::RequestSenderStageResult for the response
                 **/
-                std::pair<curlResponse, std::experimental::optional<connectionSender<activationResponse>>> RequestSenderStaged(const std::string& sSenderId, bool bAsync);
+                std::pair<pml::restgoose::clientResponse, std::optional<connectionSender<activationResponse>>> RequestSenderStaged(const std::string& sSenderId, bool bAsync);
 
                 /** @brief Requests the IS-05 active parameters from the given sender
                 *   @param sSenderId the uuId of the Sender
                 *   @return <i>bool</i> true if a sender with the given uuIds are found and it the url of is-05 connection api for the sender can be found, otherwise false
                 *   @note the request is performed asynchronoulsy and the user should handle ClientApiPoster::RequestSenderActiveResult for the response
                 **/
-                std::pair<curlResponse, std::experimental::optional<connectionSender<activationResponse>>> RequestSenderActive(const std::string& sSenderId, bool bAsync);
+                std::pair<pml::restgoose::clientResponse, std::optional<connectionSender<activationResponse>>> RequestSenderActive(const std::string& sSenderId, bool bAsync);
 
 
                 /** @brief Requests the IS-05 transport file from the given sender
@@ -96,10 +96,10 @@ namespace pml
                 *   @return <i>bool</i> true if a sender with the given uuIds are found and it the url of is-05 connection api for the sender can be found, otherwise false
                 *   @note the request is performed asynchronoulsy and the user should handle ClientApiPoster::RequestSenderTransportFileResult for the response
                 **/
-                 std::pair<curlResponse, std::experimental::optional<std::string>> RequestSenderTransportFile(const std::string& sSenderId, bool bAsync);
+                 std::pair<pml::restgoose::clientResponse, std::optional<std::string>> RequestSenderTransportFile(const std::string& sSenderId, bool bAsync);
 
 
-                std::pair<curlResponse, std::vector<Constraints>> RequestSenderConstraints(const std::string& sSenderId, bool bAsync);
+                std::pair<pml::restgoose::clientResponse, std::vector<Constraints>> RequestSenderConstraints(const std::string& sSenderId, bool bAsync);
 
 
                 /** @brief Requests the IS-05 staged parameters from the given Receiver
@@ -107,7 +107,7 @@ namespace pml
                 *   @return <i>bool</i> true if a Receiver with the given uuIds are found and it the url of is-05 connection api for the Receiver can be found, otherwise false
                 *   @note the request is performed asynchronoulsy and the user should handle ClientApiPoster::RequestReceiverStageResult for the response
                 **/
-                std::pair<curlResponse, std::experimental::optional<connectionReceiver<activationResponse>>>  RequestReceiverStaged(const std::string& sReceiverId, bool bAsync);
+                std::pair<pml::restgoose::clientResponse, std::optional<connectionReceiver<activationResponse>>>  RequestReceiverStaged(const std::string& sReceiverId, bool bAsync);
 
 
 
@@ -116,9 +116,9 @@ namespace pml
                 *   @return <i>bool</i> true if a Receiver with the given uuIds are found and it the url of is-05 connection api for the Receiver can be found, otherwise false
                 *   @note the request is performed asynchronoulsy and the user should handle ClientApiPoster::RequestReceiverActiveResult for the response
                 **/
-                std::pair<curlResponse, std::experimental::optional<connectionReceiver<activationResponse>>>  RequestReceiverActive(const std::string& sReceiverId, bool bAsync);
+                std::pair<pml::restgoose::clientResponse, std::optional<connectionReceiver<activationResponse>>>  RequestReceiverActive(const std::string& sReceiverId, bool bAsync);
 
-                std::pair<curlResponse, std::vector<Constraints>>  RequestReceiverConstraints(const std::string& sReceiverId, bool bAsync);
+                std::pair<pml::restgoose::clientResponse, std::vector<Constraints>>  RequestReceiverConstraints(const std::string& sReceiverId, bool bAsync);
 
 
 
@@ -128,7 +128,7 @@ namespace pml
                 *   @return <i>bool</i> true if a Sender with the given uuIds are found and it the url of is-05 connection api for the Sender can be found, otherwise false
                 *   @note the request is performed asynchronoulsy and the user should handle ClientApiPoster::RequestPatchSenderResult for the response
                 **/
-                std::pair<curlResponse, std::experimental::optional<connectionSender<activationResponse>>> PatchSenderStaged(const std::string& sSenderId, const connectionSender<activationRequest>& aConnection, bool bAsync);
+                std::pair<pml::restgoose::clientResponse, std::optional<connectionSender<activationResponse>>> PatchSenderStaged(const std::string& sSenderId, const connectionSender<activationRequest>& aConnection, bool bAsync);
 
                 /** @brief Attempts to patch a Receiver's staged parameters
                 *   @param sReceiverId the uuId of the Receiver
@@ -136,7 +136,7 @@ namespace pml
                 *   @return <i>bool</i> true if a Receiver with the given uuIds are found and if the url of is-05 connection api for the Receiver can be found, otherwise false
                 *   @note the request is performed asynchronoulsy and the user should handle ClientApiPoster::RequestPatchReceiverResult for the response
                 **/
-                std::pair<curlResponse, std::experimental::optional<connectionReceiver<activationResponse>>> PatchReceiverStaged(const std::string& sReceiverId, const connectionReceiver<activationRequest>& aConnection, bool bAsync);
+                std::pair<pml::restgoose::clientResponse, std::optional<connectionReceiver<activationResponse>>> PatchReceiverStaged(const std::string& sReceiverId, const connectionReceiver<activationRequest>& aConnection, bool bAsync);
 
                 /** @brief Attempts to connect a receiver to a sender using IS-05 connection. This function will stage and activate the sender with the given connection parameters, download the transport file from the sender and stage and activate the given transport file to the receiver.
                 *   @param sSenderId the uuId of the sender

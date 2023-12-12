@@ -41,7 +41,7 @@ bool Device::UpdateFromJson(const Json::Value& jsData)
     {
         m_bIsOk = false;
         m_ssJsonError << "Device json incorrect";
-        pmlLog(pml::LOG_WARN) << "NMOS: Device - json incorrect: " << jsData;
+        pmlLog(pml::LOG_WARN, "pml::nmos") << "NMOS: Device - json incorrect: " << jsData;
     }
 
     if(m_bIsOk)

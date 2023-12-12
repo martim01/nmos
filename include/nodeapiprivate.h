@@ -412,6 +412,7 @@ namespace pml
 
                 std::chrono::system_clock::time_point m_tpHeartbeat;
 
+                std::string m_sDnsName;
 
                 std::list<std::shared_ptr<pml::restgoose::Server>> m_lstServers;
                 std::map<ApiVersion, std::unique_ptr<IS04Server>> m_mDiscoveryServers;

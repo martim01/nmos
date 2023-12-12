@@ -238,7 +238,7 @@ pml::restgoose::response IS04Server::GetNmosReceiver(const query& theQuery, cons
 
 pml::restgoose::response IS04Server::PutNmosReceiver(const query& theQuery, const postData& vData, const endpoint& theEndpoint, const userName& theUser)
 {
-    pmlLog(pml::LOG_DEBUG) << "PutNmosReceiver";
+    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "PutNmosReceiver";
     pml::restgoose::response resp;
     auto vPath = SplitEndpoint(theEndpoint);
     //does the receiver exist?

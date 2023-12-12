@@ -15,9 +15,8 @@
 #include <thread>
 #include <functional>
 #include "clientapiposter.h"
-#include "optional.hpp"
+#include <optional>
 #include "clientemum.h"
-#include "curlregister.h"
 
 
 class WebSocketClient;
@@ -36,12 +35,10 @@ namespace pml
     {
 
         class EventPoster;
-        class CurlRegister;
         class ClientApiPoster;
         class ClientZCPoster;
         class ZCPoster;
-        struct curlResponse;
-        class activationRequest;
+                class activationRequest;
         class activationResponse;
         template<typename T> class ConnectionSender;
         template<typename T> class ConnectionReceiver;
@@ -51,7 +48,7 @@ namespace pml
         {
             public:
                 enum enumMode {MODE_P2P=0, MODE_REGISTRY};
-                enum enumSignal {CLIENT_SIG_NONE=0, CLIENT_SIG_INSTANCE_RESOLVED, CLIENT_SIG_INSTANCE_REMOVED, CLIENT_SIG_NODE_BROWSED, CLIENT_SIG_CURL_DONE, CLIENT_SIG_BROWSE_DONE, THREAD_EXIT};
+                enum enumSignal {CLIENT_SIG_NONE=0, CLIENT_SIG_INSTANCE_RESOLVED, CLIENT_SIG_INSTANCE_REMOVED, CLIENT_SIG_NODE_BROWSED, CLIENT_SIG_HTTP_DONE, CLIENT_SIG_BROWSE_DONE, THREAD_EXIT};
 
                 enum flagResource {NODES=0, DEVICES=1, SOURCES=2, FLOWS=3, SENDERS=4, RECEIVERS=5};
                 static const std::array<std::string, 7> STR_CONNECTION;
@@ -103,11 +100,11 @@ namespace pml
                 void SetInstanceResolved(std::shared_ptr<pml::dnssd::dnsInstance> pInstance);
                 void SetInstanceRemoved(std::shared_ptr<pml::dnssd::dnsInstance> pInstance);
                 void SetAllForNow(const std::string& sService);
-                void SetCurlDone(const curlResponse& resp, unsigned long nType, const std::string& sResourceId);
+                void SetHttpRequestDone(const pml::restgoose::clientResponse& resp, unsigned long nType, const std::string& sResourceId);
                 enumSignal GetSignal();
                 void HandleInstanceResolved();
                 void HandleInstanceRemoved();
-                void HandleCurlDone();
+                void HandleHttpRequestDone();
                 void HandleBrowseDone();
                 void NodeDetailsDone();
                 void GetNodeDetails();
@@ -116,17 +113,17 @@ namespace pml
                 bool Subscribe(const std::string& sSenderId, const std::string& sReceiverId);
                 bool Unsubscribe(const std::string& sReceiverId);
 
-                std::pair<curlResponse, std::experimental::optional<connectionSender<activationResponse>>> RequestSenderStaged(const std::string& sSenderId, bool bAsync);
-                std::pair<curlResponse, std::experimental::optional<connectionSender<activationResponse>>> RequestSenderActive(const std::string& sSenderId, bool bAsync);
-                std::pair<curlResponse, std::experimental::optional<std::string>> RequestSenderTransportFile(const std::string& sSenderId, bool bAsync);
-                std::pair<curlResponse, std::vector<Constraints>> RequestSenderConstraints(const std::string& sSenderId, bool bAsync);
+                std::pair<pml::restgoose::clientResponse, std::optional<connectionSender<activationResponse>>> RequestSenderStaged(const std::string& sSenderId, bool bAsync);
+                std::pair<pml::restgoose::clientResponse, std::optional<connectionSender<activationResponse>>> RequestSenderActive(const std::string& sSenderId, bool bAsync);
+                std::pair<pml::restgoose::clientResponse, std::optional<std::string>> RequestSenderTransportFile(const std::string& sSenderId, bool bAsync);
+                std::pair<pml::restgoose::clientResponse, std::vector<Constraints>> RequestSenderConstraints(const std::string& sSenderId, bool bAsync);
 
-                std::pair<curlResponse, std::experimental::optional<connectionReceiver<activationResponse>>>  RequestReceiverStaged(const std::string& sReceiverId, bool bAsync);
-                std::pair<curlResponse, std::experimental::optional<connectionReceiver<activationResponse>>>  RequestReceiverActive(const std::string& sReceiverId, bool bAsync);
-                std::pair<curlResponse, std::vector<Constraints>> RequestReceiverConstraints(const std::string& sReceiverId, bool bAsync);
+                std::pair<pml::restgoose::clientResponse, std::optional<connectionReceiver<activationResponse>>>  RequestReceiverStaged(const std::string& sReceiverId, bool bAsync);
+                std::pair<pml::restgoose::clientResponse, std::optional<connectionReceiver<activationResponse>>>  RequestReceiverActive(const std::string& sReceiverId, bool bAsync);
+                std::pair<pml::restgoose::clientResponse, std::vector<Constraints>> RequestReceiverConstraints(const std::string& sReceiverId, bool bAsync);
 
-                std::pair<curlResponse, std::experimental::optional<connectionSender<activationResponse>>> PatchSenderStaged(const std::string& sSenderId, const connectionSender<activationRequest>& aConnection, bool bAsync);
-                std::pair<curlResponse, std::experimental::optional<connectionReceiver<activationResponse>>> PatchReceiverStaged(const std::string& sReceiverId, const connectionReceiver<activationRequest>& aConnection, bool bAsync);
+                std::pair<pml::restgoose::clientResponse, std::optional<connectionSender<activationResponse>>> PatchSenderStaged(const std::string& sSenderId, const connectionSender<activationRequest>& aConnection, bool bAsync);
+                std::pair<pml::restgoose::clientResponse, std::optional<connectionReceiver<activationResponse>>> PatchReceiverStaged(const std::string& sReceiverId, const connectionReceiver<activationRequest>& aConnection, bool bAsync);
 
                 bool Connect(const std::string& sSenderId, const std::string& sReceiverId);
                 bool Disconnect(const std::string& sReceiverId);
@@ -189,22 +186,22 @@ namespace pml
                 std::shared_ptr<Sender> GetSender(const std::string& sSenderId);
                 std::shared_ptr<Receiver> GetReceiver(const std::string& sSenderId);
 
-                std::pair<curlResponse, std::experimental::optional<connectionSender<activationResponse>>> RequestSenderConnection(const std::string& sSenderId, enumConnection eType,bool bAsync);
-                std::pair<curlResponse, std::experimental::optional<connectionReceiver<activationResponse>>> RequestReceiverConnection(const std::string& sSenderId, enumConnection eType, bool bAsync);
+                std::pair<pml::restgoose::clientResponse, std::optional<connectionSender<activationResponse>>> RequestSenderConnection(const std::string& sSenderId, enumConnection eType,bool bAsync);
+                std::pair<pml::restgoose::clientResponse, std::optional<connectionReceiver<activationResponse>>> RequestReceiverConnection(const std::string& sSenderId, enumConnection eType, bool bAsync);
 
-                curlResponse RequestSender(const std::string& sSenderId, enumConnection eType, bool bAsync = true, bool bJson=true);
-                curlResponse RequestReceiver(const std::string& sReceiverId, enumConnection eType, bool bAsync = true, bool bJson=true);
+                pml::restgoose::clientResponse RequestSender(const std::string& sSenderId, enumConnection eType, bool bAsync = true, bool bJson=true);
+                pml::restgoose::clientResponse RequestReceiver(const std::string& sReceiverId, enumConnection eType, bool bAsync = true, bool bJson=true);
 
-                void HandleCurlDoneTarget();
-                void HandleCurlDonePatchSender();
-                void HandleCurlDonePatchReceiver();
-                void HandleCurlDoneGetSenderStaged();
-                void HandleCurlDoneGetSenderActive();
-                void HandleCurlDoneGetSenderConstraints();
-                void HandlCurlDoneGetSenderTransportFile();
-                void HandleCurlDoneGetReceiverStaged();
-                void HandleCurlDoneGetReceiverActive();
-                void HandleCurlDoneGetReceiverConstraints();
+                void HandleHttpRequestDoneTarget();
+                void HandleHttpRequestDonePatchSender();
+                void HandleHttpRequestDonePatchReceiver();
+                void HandleHttpRequestDoneGetSenderStaged();
+                void HandleHttpRequestDoneGetSenderActive();
+                void HandleHttpRequestDoneGetSenderConstraints();
+                void HandlHttpRequestDoneGetSenderTransportFile();
+                void HandleHttpRequestDoneGetReceiverStaged();
+                void HandleHttpRequestDoneGetReceiverActive();
+                void HandleHttpRequestDoneGetReceiverConstraints();
 
                 bool AddQuerySubscriptionRegistry(int nResource, const std::string& sQuery, unsigned long nUpdateRate);
                 bool RemoveQuerySubscriptionRegistry(const std::string& sSubscriptionId);
@@ -267,16 +264,16 @@ namespace pml
                 std::mutex m_mutex;
                 std::condition_variable m_cvBrowse; //sync between nmos thread and ServiceBrowser thread
                 enumSignal m_eSignal;
-                unsigned short m_nCurlThreadCount;
+                
 
                 std::shared_ptr<ClientApiPoster> m_pPoster;
 
-                curlResponse m_asyncResponse;
-                unsigned long m_nCurlType;
-                std::string m_sCurlResourceId;
+                pml::restgoose::clientResponse m_asyncResponse;
+                unsigned long m_nHttpRequestType;
+                std::string m_sHttpRequestResourceId;
 
                 std::shared_ptr<ClientZCPoster> m_pClientZCPoster;
-                std::unique_ptr<CurlRegister> m_pCurl;
+
                 std::multimap<unsigned short, std::shared_ptr<pml::dnssd::dnsInstance> > m_mmQueryNodes;
 
                 std::map<std::string, std::unique_ptr<pml::dnssd::Browser>> m_mBrowser;

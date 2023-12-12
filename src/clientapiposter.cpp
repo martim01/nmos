@@ -15,37 +15,37 @@ void ClientApiPoster::_ModeChanged(bool bQueryApi)
 
 void ClientApiPoster::_NodeChanged(const resourcechanges<Self>& changed)
 {
-    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApiPoster::_NodeChanged" ;
+    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: ClientApiPoster::_NodeChanged" ;
     NodeChanged(changed);
 }
 
 void ClientApiPoster::_DeviceChanged(const resourcechanges<Device>& changed)
 {
-    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApiPoster::_DeviceChanged" ;
+    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: ClientApiPoster::_DeviceChanged" ;
     DeviceChanged(changed);
 }
 
 void ClientApiPoster::_SourceChanged(const resourcechanges<Source>& changed)
 {
-    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApiPoster::_SourceChanged" ;
+    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: ClientApiPoster::_SourceChanged" ;
     SourceChanged(changed);
 }
 
 void ClientApiPoster::_FlowChanged(const resourcechanges<Flow>& changed)
 {
-    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApiPoster::_FlowChanged" ;
+    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: ClientApiPoster::_FlowChanged" ;
     FlowChanged(changed);
 }
 
 void ClientApiPoster::_SenderChanged(const resourcechanges<Sender>& changed)
 {
-    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApiPoster::_SenderChanged" ;
+    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: ClientApiPoster::_SenderChanged" ;
     SenderChanged(changed);
 }
 
 void ClientApiPoster::_ReceiverChanged(const resourcechanges<Receiver>& changed)
 {
-    pmlLog(pml::LOG_DEBUG) << "NMOS: ClientApiPoster::_ReceiverChanged" ;
+    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: ClientApiPoster::_ReceiverChanged" ;
     ReceiverChanged(changed);
 }
 
@@ -55,12 +55,12 @@ void ClientApiPoster::_RequestTargetResult(unsigned long nResult, const std::str
     RequestTargetResult(nResult, sResponse, sResourceId);
 }
 
-void ClientApiPoster::_RequestPatchSenderResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId)
+void ClientApiPoster::_RequestPatchSenderResult(const pml::restgoose::clientResponse& resp, const std::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId)
 {
     RequestPatchSenderResult(resp, con, sResourceId);
 }
 
-void ClientApiPoster::_RequestPatchReceiverResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId)
+void ClientApiPoster::_RequestPatchReceiverResult(const pml::restgoose::clientResponse& resp, const std::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId)
 {
     RequestPatchReceiverResult(resp, con, sResourceId);
 }
@@ -71,37 +71,37 @@ void ClientApiPoster::_RequestConnectResult(const std::string& sSenderId, const 
 }
 
 
-void ClientApiPoster::_RequestGetSenderStagedResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId)
+void ClientApiPoster::_RequestGetSenderStagedResult(const pml::restgoose::clientResponse& resp, const std::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId)
 {
     RequestGetSenderStagedResult(resp, con, sResourceId);
 }
 
-void ClientApiPoster::_RequestGetSenderActiveResult(const curlResponse& resp, const std::experimental::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId)
+void ClientApiPoster::_RequestGetSenderActiveResult(const pml::restgoose::clientResponse& resp, const std::optional<connectionSender<activationResponse>>& con, const std::string& sResourceId)
 {
     RequestGetSenderActiveResult(resp, con, sResourceId);
 }
 
-void ClientApiPoster::_RequestGetSenderTransportFileResult(const curlResponse& resp, const std::experimental::optional<std::string>& sTransportFile, const std::string& sResourceId)
+void ClientApiPoster::_RequestGetSenderTransportFileResult(const pml::restgoose::clientResponse& resp, const std::optional<std::string>& sTransportFile, const std::string& sResourceId)
 {
     RequestGetSenderTransportFileResult(resp, sTransportFile, sResourceId);
 }
 
-void ClientApiPoster::_RequestGetReceiverStagedResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId)
+void ClientApiPoster::_RequestGetReceiverStagedResult(const pml::restgoose::clientResponse& resp, const std::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId)
 {
     RequestGetReceiverStagedResult(resp, con, sResourceId);
 }
 
-void ClientApiPoster::_RequestGetReceiverActiveResult(const curlResponse& resp, const std::experimental::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId)
+void ClientApiPoster::_RequestGetReceiverActiveResult(const pml::restgoose::clientResponse& resp, const std::optional<connectionReceiver<activationResponse>>& con, const std::string& sResourceId)
 {
     RequestGetReceiverActiveResult(resp, con, sResourceId);
 }
 
-void ClientApiPoster::_RequestGetSenderConstraintsResult(const curlResponse& resp, const std::vector<Constraints>& vConstraints, const std::string& sResourceId)
+void ClientApiPoster::_RequestGetSenderConstraintsResult(const pml::restgoose::clientResponse& resp, const std::vector<Constraints>& vConstraints, const std::string& sResourceId)
 {
     RequestGetSenderConstraintsResult(resp, vConstraints, sResourceId);
 }
 
-void ClientApiPoster::_RequestGetReceiverConstraintsResult(const curlResponse& resp, const std::vector<Constraints>& vConstraints, const std::string& sResourceId)
+void ClientApiPoster::_RequestGetReceiverConstraintsResult(const pml::restgoose::clientResponse& resp, const std::vector<Constraints>& vConstraints, const std::string& sResourceId)
 {
     RequestGetReceiverConstraintsResult(resp, vConstraints, sResourceId);
 }
