@@ -30,20 +30,20 @@ template<typename T> void connectionReceiver<T>::MasterEnable(bool bEnable)
 }
 
 
-template<typename T> std::experimental::optional<bool> connectionReceiver<T>::GetMasterEnable() const
+template<typename T> std::optional<bool> connectionReceiver<T>::GetMasterEnable() const
 {
     return GetBool(m_json, MASTER_ENABLE);
 }
 
 
 
-template<typename T> std::experimental::optional<bool> connectionSender<T>::GetMasterEnable() const
+template<typename T> std::optional<bool> connectionSender<T>::GetMasterEnable() const
 {
     return GetBool(m_json, MASTER_ENABLE);
 }
 
 
-template<typename T> connectionSender<T>::connectionSender(std::experimental::optional<bool> masterEnable,TransportParamsRTP::flagsTP allowed)
+template<typename T> connectionSender<T>::connectionSender(std::optional<bool> masterEnable,TransportParamsRTP::flagsTP allowed)
 {
     if(masterEnable)
     {
@@ -191,7 +191,7 @@ template<typename T> void connectionSender<T>::SetTPAllowed(int flagsTransport)
     }
 }
 
-template<typename T> connectionReceiver<T>::connectionReceiver(std::experimental::optional<bool> masterEnable, TransportParamsRTP::flagsTP allowed)
+template<typename T> connectionReceiver<T>::connectionReceiver(std::optional<bool> masterEnable, TransportParamsRTP::flagsTP allowed)
 {
     if(masterEnable)
     {
@@ -365,27 +365,27 @@ template<typename T> void connectionReceiver<T>::SetTPAllowed(int flagsTransport
 }
 
 
-template<typename T> std::experimental::optional<std::string> connectionSender<T>::GetReceiverId() const
+template<typename T> std::optional<std::string> connectionSender<T>::GetReceiverId() const
 {
     return GetString(m_json, RECEIVER_ID);
 }
 
-template<typename T> std::experimental::optional<std::string> connectionReceiver<T>::GetSenderId() const
+template<typename T> std::optional<std::string> connectionReceiver<T>::GetSenderId() const
 {
     return GetString(m_json, SENDER_ID);
 }
 
-template<typename T> std::experimental::optional<std::string> connectionReceiver<T>::GetTransportFileType() const
+template<typename T> std::optional<std::string> connectionReceiver<T>::GetTransportFileType() const
 {
     return GetString(m_json[TRANSPORT_FILE], TRANSPORT_FILE_TYPE);
 }
 
-template<typename T> std::experimental::optional<std::string> connectionReceiver<T>::GetTransportFileData() const
+template<typename T> std::optional<std::string> connectionReceiver<T>::GetTransportFileData() const
 {
     return GetString(m_json[TRANSPORT_FILE], TRANSPORT_FILE_DATA);
 }
 
-template<typename T> void connectionReceiver<T>::SetSenderId(const std::experimental::optional<std::string>& id)
+template<typename T> void connectionReceiver<T>::SetSenderId(const std::optional<std::string>& id)
 {
     if(id)
     {
@@ -397,7 +397,7 @@ template<typename T> void connectionReceiver<T>::SetSenderId(const std::experime
     }
 }
 
-template<typename T> void connectionReceiver<T>::SetTransportFile(const std::experimental::optional<std::string>& type, const std::experimental::optional<std::string>& data)
+template<typename T> void connectionReceiver<T>::SetTransportFile(const std::optional<std::string>& type, const std::optional<std::string>& data)
 {
     if(type)
     {

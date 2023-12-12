@@ -6,8 +6,8 @@ option(BUILD_SHARED_LIB "Make a shared library" ON)
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
-include_directories("../common/include")
 include_directories("include")
+include_directories("../common/include")
 include_directories(${DIR_JSON}/dist)
 include_directories(${DIR_LOG}/include)
 
@@ -19,6 +19,7 @@ SET(SOURCES "../external/uuid/guid.cpp"
  "src/activation.cpp"
  "src/connection.cpp"
  "src/constraint.cpp"
+ "src/curlregister.cpp"
  "src/device.cpp"
  "src/flow.cpp"
  "src/flowaudio.cpp"

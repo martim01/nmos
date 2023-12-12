@@ -12,8 +12,8 @@
 #include "log.h"
 #include "eventposter.h"
 #include "utils.h"
-#include "curlregister.h"
-#include "utils.h"
+#include "httpclient.h"
+
 
 
 using namespace std::placeholders;
@@ -265,10 +265,11 @@ pml::restgoose::response IS04Server::PutNmosReceiver(const query& theQuery, cons
                     sSenderId = pRemoteSender->GetId();
                     if(pRemoteSender->GetManifestHref().empty() == false)
                     {
-                        auto curlresp = CurlRegister::Get(pRemoteSender->GetManifestHref());
-                        if(curlresp.nCode == 200)
+                        auto request = pml::restgoose::HttpClient(pml::restgoose::GET, endpoint(pRemoteSender->GetManifestHref()));
+                        auto resp = request.Run();
+                        if(resp.nHttpCode == 200)
                         {
-                            sSdp = curlresp.sResponse;
+                            sSdp = resp.data.Get();
                         }
                     }
                 }

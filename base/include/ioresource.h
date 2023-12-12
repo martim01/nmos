@@ -4,7 +4,7 @@
 #include <set>
 #include <string>
 #include "constraint.h"
-#include "optional.hpp"
+#include <optional>
 
 namespace pml
 {
@@ -37,10 +37,10 @@ namespace pml
                 void AddInterfaceBinding(const std::string& sInterface);
                 void RemoveInterfaceBinding(const std::string& sInterface);
 
-                bool AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
-                                   const std::vector<pairEnum_t>& vEnum, const std::experimental::optional<size_t>& tp);
+                bool AddConstraint(const std::string& sKey, const std::optional<int>& minValue, const std::optional<int>& maxValue, const std::optional<std::string>& pattern,
+                                   const std::vector<pairEnum_t>& vEnum, const std::optional<size_t>& tp);
 
-                bool ClearConstraint(const std::string& sKey, const std::experimental::optional<size_t>& tp);
+                bool ClearConstraint(const std::string& sKey, const std::optional<size_t>& tp);
 
                 Json::Value GetConnectionConstraintsJson(const ApiVersion& version) const;
 

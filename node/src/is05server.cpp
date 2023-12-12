@@ -13,7 +13,6 @@
 #include "log.h"
 #include "eventposter.h"
 #include "utils.h"
-#include "curlregister.h"
 
 using namespace std::placeholders;
 using namespace pml::nmos;

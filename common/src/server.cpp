@@ -12,7 +12,6 @@
 #include "log.h"
 #include "eventposter.h"
 #include "utils.h"
-#include "curlregister.h"
 #include "nmosserver.h"
 #ifdef __GNU__
 #include <netinet/in.h>

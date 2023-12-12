@@ -19,8 +19,7 @@
 #endif
 #include "dnssd.h"
 #include "log.h"
-#include "curlregister.h"
-#include "eventposter.h"
+#include "httpclient.h"
 #include <thread>
 #include <chrono>
 #include "mdns.h"
@@ -46,8 +45,9 @@
 #include "flowdatajson.h"
 #include "flowmux.h"
 #include <algorithm>
-#include "optional.hpp"
+#include <optional>
 #include "threadpool.h"
+#include "eventposter.h"
 
 using namespace pml::nmos;
 using namespace std::placeholders;
@@ -837,16 +837,17 @@ long NodeApiPrivate::RegisterResource(const string& sType, const Json::Value& js
     Json::Value jsonRegister;
     jsonRegister["type"] = sType;
     jsonRegister["data"] = json;
-    string sPost(ConvertFromJson(jsonRegister));
+    
 
+    auto request = pml::restgoose::HttpClient(pml::restgoose::POST, endpoint(m_sRegistrationNode+m_versionRegistration.GetVersionAsString()+"/resource"), jsonRegister);
+    auto resp = request.Run();
 
-    auto resp =  CurlRegister::Post(m_sRegistrationNode+m_versionRegistration.GetVersionAsString()+"/resource", sPost);
-    pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "RegisterApi: Register returned [" << resp.nCode << "] " << resp.sResponse ;
-    if(resp.nCode == 500)
+    pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "RegisterApi: Register returned [" << resp.nHttpCode << "] " << resp.data.Get() ;
+    if(resp.nHttpCode == 500 || resp.nHttpCode < 100)
     {
         MarkRegNodeAsBad();
     }
-    return resp.nCode;
+    return resp.nHttpCode;
 
 }
 
@@ -854,13 +855,14 @@ long NodeApiPrivate::RegistrationHeartbeat()
 {
     m_tpHeartbeat = chrono::system_clock::now() + chrono::milliseconds(m_nHeartbeatTime);
 
-    auto resp = CurlRegister::Post(m_sRegistrationNode+m_versionRegistration.GetVersionAsString()+"/health/nodes/"+m_self.GetId(), "");
+    auto request = pml::restgoose::HttpClient(pml::restgoose::POST, endpoint(m_sRegistrationNode+m_versionRegistration.GetVersionAsString()+"/health/nodes/"+m_self.GetId()));
 
-    if(resp.nCode == 500 || resp.nCode == 0)
+    auto resp = request.Run();
+    if(resp.nHttpCode == 500 || resp.nHttpCode < 100)
     {
         MarkRegNodeAsBad();
     }
-    return resp.nCode;
+    return resp.nHttpCode;
 
 }
 
@@ -898,9 +900,11 @@ int NodeApiPrivate::UnregisterSimple()
 
 bool NodeApiPrivate::UnregisterResource(const string& sType, const std::string& sId)
 {
-    auto resp = CurlRegister::Delete(m_sRegistrationNode+m_versionRegistration.GetVersionAsString()+"/resource", sType, sId);
-    pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "RegisterApi:Unregister returned [" << resp.nCode << "] " << resp.sResponse ;
-    if(resp.nCode == 500)
+    auto request = pml::restgoose::HttpClient(pml::restgoose::HTTP_DELETE, endpoint(m_sRegistrationNode+m_versionRegistration.GetVersionAsString()+"/resource/"+sType+"/"+sId));
+    auto resp = request.Run();
+
+    pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "RegisterApi:Unregister returned [" << resp.nHttpCode << "] " << resp.data.Get() ;
+    if(resp.nHttpCode == 500 || resp.nHttpCode < 100)
     {
         MarkRegNodeAsBad();
         return false;

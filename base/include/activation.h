@@ -3,7 +3,7 @@
 #include "nmosdlldefine.h"
 #include <chrono>
 #include "json/json.h"
-#include "optional.hpp"
+#include <optional>
 
 
 namespace pml
@@ -21,11 +21,11 @@ namespace pml
                 const Json::Value GetJson() const;
 
                 enumActivate GetMode() const;
-                std::experimental::optional<std::string> GetRequestedTime() const;
-                std::experimental::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> GetRequestedTimePoint() const;
+                std::optional<std::string> GetRequestedTime() const;
+                std::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> GetRequestedTimePoint() const;
 
                 void SetMode(enumActivate eMode);
-                void SetRequestedTime(std::experimental::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> when);
+                void SetRequestedTime(std::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> when);
                 virtual void Clear();
 
                 virtual bool Patch(const Json::Value& jsData)=0;
@@ -38,7 +38,7 @@ namespace pml
             public:
                 activationRequest();
                 activationRequest(const Json::Value& jsResponse);
-                void Setup(activation::enumActivate eMode, std::experimental::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> when);
+                void Setup(activation::enumActivate eMode, std::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> when);
 
                 activationRequest(const activationRequest& other);
 
@@ -56,10 +56,10 @@ namespace pml
 
                 bool Patch(const Json::Value& jsData) override;
 
-                std::experimental::optional<std::string> GetActivationTime() const;
-                std::experimental::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> GetActivationTimePoint() const;
+                std::optional<std::string> GetActivationTime() const;
+                std::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> GetActivationTimePoint() const;
 
-                void SetActivationTime(std::experimental::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> when);
+                void SetActivationTime(std::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> when);
 
                 void Clear() override;
 

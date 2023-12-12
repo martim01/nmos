@@ -1,5 +1,4 @@
 #include "senderbase.h"
-#include "eventposter.h"
 #include <thread>
 
 #include "flow.h"
@@ -15,7 +14,7 @@ using namespace pml::nmos;
 
 
 Sender::Sender(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId, const std::string& sInterface,
-               TransportParamsRTP::flagsTP flagsTransport,const std::experimental::optional<std::string>& multicastIp) :
+               TransportParamsRTP::flagsTP flagsTransport,const std::optional<std::string>& multicastIp) :
     IOResource("sender", sLabel, sDescription, eTransport),
     m_sFlowId(sFlowId),
     m_sDeviceId(sDeviceId),
@@ -384,7 +383,7 @@ void Sender::SetStagedActivationTimePoint(const std::chrono::time_point<std::chr
     m_Staged.GetActivation().SetActivationTime(tp);
 }
 
-void Sender::MarkRTPTransmissionAsActive(bool bActive, std::experimental::optional<size_t> tp)
+void Sender::MarkRTPTransmissionAsActive(bool bActive, std::optional<size_t> tp)
 {
 //    if(tp)
 //    {

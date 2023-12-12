@@ -291,7 +291,7 @@ std::string ConvertFromJson(const Json::Value& jsValue)
     return Json::writeString(builder, jsValue);
 }
 
-std::experimental::optional<bool> GetBool(const Json::Value& jsObject, const std::string& sKey)
+std::optional<bool> GetBool(const Json::Value& jsObject, const std::string& sKey)
 {
     if(jsObject.isMember(sKey) && jsObject[sKey].isConvertibleTo(Json::booleanValue))
     {
@@ -300,7 +300,7 @@ std::experimental::optional<bool> GetBool(const Json::Value& jsObject, const std
     return {};
 }
 
-std::experimental::optional<std::string> GetString(const Json::Value& jsObject, const std::string& sKey)
+std::optional<std::string> GetString(const Json::Value& jsObject, const std::string& sKey)
 {
     if(jsObject.isMember(sKey) && jsObject[sKey].isConvertibleTo(Json::stringValue))
     {
@@ -309,7 +309,7 @@ std::experimental::optional<std::string> GetString(const Json::Value& jsObject, 
     return {};
 }
 
-std::experimental::optional<uint32_t> GetUInt(const Json::Value& jsObject, const std::string& sKey)
+std::optional<uint32_t> GetUInt(const Json::Value& jsObject, const std::string& sKey)
 {
     if(jsObject.isMember(sKey) && jsObject[sKey].isConvertibleTo(Json::uintValue))
     {
@@ -318,7 +318,7 @@ std::experimental::optional<uint32_t> GetUInt(const Json::Value& jsObject, const
     return {};
 }
 
-std::experimental::optional<int32_t> GetInt(const Json::Value& jsObject, const std::string& sKey)
+std::optional<int32_t> GetInt(const Json::Value& jsObject, const std::string& sKey)
 {
     if(jsObject.isMember(sKey) && jsObject[sKey].isConvertibleTo(Json::intValue))
     {
@@ -326,7 +326,7 @@ std::experimental::optional<int32_t> GetInt(const Json::Value& jsObject, const s
     }
     return {};
 }
-std::experimental::optional<uint64_t> GetUInt64(const Json::Value& jsObject, const std::string& sKey)
+std::optional<uint64_t> GetUInt64(const Json::Value& jsObject, const std::string& sKey)
 {
     if(jsObject.isMember(sKey) && jsObject[sKey].isConvertibleTo(Json::uintValue))
     {
@@ -335,7 +335,7 @@ std::experimental::optional<uint64_t> GetUInt64(const Json::Value& jsObject, con
     return {};
 }
 
-std::experimental::optional<int64_t> GetInt64(const Json::Value& jsObject, const std::string& sKey)
+std::optional<int64_t> GetInt64(const Json::Value& jsObject, const std::string& sKey)
 {
     if(jsObject.isMember(sKey) && jsObject[sKey].isConvertibleTo(Json::intValue))
     {
@@ -344,7 +344,7 @@ std::experimental::optional<int64_t> GetInt64(const Json::Value& jsObject, const
     return {};
 }
 
-std::experimental::optional<double> GetDouble(const Json::Value& jsObject, const std::string& sKey)
+std::optional<double> GetDouble(const Json::Value& jsObject, const std::string& sKey)
 {
     if(jsObject.isMember(sKey) && jsObject[sKey].isConvertibleTo(Json::realValue))
     {
@@ -355,7 +355,7 @@ std::experimental::optional<double> GetDouble(const Json::Value& jsObject, const
 
 
 
-std::experimental::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> ConvertTaiStringToTimePoint(const std::string& sTai)
+std::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> ConvertTaiStringToTimePoint(const std::string& sTai)
 {
     std::istringstream f(sTai);
     std::string sSeconds;

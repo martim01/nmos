@@ -6,22 +6,24 @@ option(BUILD_SHARED_LIB "Make a shared library" ON)
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
-include_directories("../include")
+include_directories("../base/include")
+include_directories("../common/include")
+include_directories("include")
 include_directories(${DIR_JSON}/dist)
 include_directories(${DIR_LOG}/include)
 include_directories("../external/uuid")
 include_directories(${DIR_RESTGOOSE}/include)
 
-SET(SOURCES "../src/activator.cpp"
- "../src/eventposter.cpp"
- "../src/is04server.cpp"
- "../src/is05server.cpp"
- "../src/nmosserver.cpp"
- "../src/nmosthread.cpp"
- "../src/nodeapi.cpp"
- "../src/nodeapiprivate.cpp"
- "../src/nodezcposter.cpp"
- "../src/resourceholder.cpp")
+SET(SOURCES "src/activator.cpp"
+ "src/eventposter.cpp"
+ "src/is04server.cpp"
+ "src/is05server.cpp"
+ "src/nmosserver.cpp"
+ "src/nmosthread.cpp"
+ "src/nodeapi.cpp"
+ "src/nodeapiprivate.cpp"
+ "src/nodezcposter.cpp"
+ "src/resourceholder.cpp")
 
 
 link_directories(${CMAKE_SOURCE_DIR}/lib)

@@ -14,7 +14,7 @@ namespace pml
             template<typename T> class NMOS_EXPOSE connectionSender
             {
                 public:
-                    connectionSender(std::experimental::optional<bool> masterEnable, TransportParamsRTP::flagsTP allowed);
+                    connectionSender(std::optional<bool> masterEnable, TransportParamsRTP::flagsTP allowed);
                     connectionSender(const connectionSender& conReq);
                     connectionSender& operator=(const connectionSender& other);
 
@@ -28,14 +28,14 @@ namespace pml
 
                     void Actualize(const std::string& sSourceIp, const std::string& sDestinationIp);
 
-                    std::experimental::optional<std::string> GetReceiverId() const;
+                    std::optional<std::string> GetReceiverId() const;
 
                     void SetDestinationDetails(const std::string& sIp, unsigned short nPort);
 
                     void Uninitialise();
 
                     static bool CheckJson(const Json::Value& jsData);
-                    std::experimental::optional<bool> GetMasterEnable() const;
+                    std::optional<bool> GetMasterEnable() const;
                     void MasterEnable(bool bEnable);
 
                     T& GetActivation() { return m_activation; }
@@ -60,7 +60,7 @@ namespace pml
             template<typename T> class NMOS_EXPOSE connectionReceiver
             {
                 public:
-                    connectionReceiver(std::experimental::optional<bool> masterEnable, TransportParamsRTP::flagsTP allowed);
+                    connectionReceiver(std::optional<bool> masterEnable, TransportParamsRTP::flagsTP allowed);
                     connectionReceiver(const connectionReceiver& conReq);
 
                     connectionReceiver(int flagProperties);
@@ -68,7 +68,7 @@ namespace pml
                     connectionReceiver(const Json::Value& jsResponse);
 
 
-                    std::experimental::optional<bool> GetMasterEnable() const;
+                    std::optional<bool> GetMasterEnable() const;
                     void MasterEnable(bool bEnable);
 
                     T& GetActivation() { return m_activation; }
@@ -82,12 +82,12 @@ namespace pml
 
                     bool Patch(const Json::Value& jsData);
 
-                    std::experimental::optional<std::string> GetSenderId() const;
-                    std::experimental::optional<std::string> GetTransportFileType() const;
-                    std::experimental::optional<std::string> GetTransportFileData() const;
+                    std::optional<std::string> GetSenderId() const;
+                    std::optional<std::string> GetTransportFileType() const;
+                    std::optional<std::string> GetTransportFileData() const;
 
-                    void SetSenderId(const std::experimental::optional<std::string>& id);
-                    void SetTransportFile(const std::experimental::optional<std::string>& type, const std::experimental::optional<std::string>& data);
+                    void SetSenderId(const std::optional<std::string>& id);
+                    void SetTransportFile(const std::optional<std::string>& type, const std::optional<std::string>& data);
 
                     void Uninitialise();
 

@@ -6,18 +6,20 @@ option(BUILD_SHARED_LIB "Make a shared library" ON)
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
-include_directories("../include")
+include_directories("../base/include")
+include_directories("../common/include")
+include_directories("include")
 include_directories(${DIR_JSON}/dist)
 include_directories(${DIR_LOG}/include)
 include_directories("../external/uuid")
 include_directories(${DIR_RESTGOOSE}/include)
 
-SET(SOURCES "../src/clientapi.cpp" 
- "../src/clientapiposter.cpp"
- "../src/clientenum.cpp"
- "../src/clientholder.cpp"
- "../src/clientposter.cpp"
- "../src/clientprivate.cpp")
+SET(SOURCES "src/clientapi.cpp" 
+ "src/clientapiposter.cpp"
+ "src/clientenum.cpp"
+ "src/clientholder.cpp"
+ "src/clientposter.cpp"
+ "src/clientprivate.cpp")
 
 
 

@@ -1,7 +1,6 @@
 #include "receiverbase.h"
 #include "senderbase.h"
 #include <chrono>
-#include "eventposter.h"
 #include "connection.h"
 #include <algorithm>
 #include "log.h"

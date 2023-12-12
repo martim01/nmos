@@ -2,7 +2,7 @@
 #include <string>
 #include "json/json.h"
 #include "nmosapiversion.h"
-#include "optional.hpp"
+#include <optional>
 #include "constraint.h"
 
 namespace pml
@@ -47,15 +47,15 @@ namespace pml
 
                 bool IsRtpEnabled() const;
 
-                std::experimental::optional<bool> IsFecEnabled() const;
-                std::experimental::optional<std::string> GetFecDestinationIp() const;
-                std::experimental::optional<std::string> GetFecMode() const;
-                std::experimental::optional<uint32_t> GetFec1DDestinationPort() const;
-                std::experimental::optional<uint32_t> GetFec2DDestinationPort() const;
+                std::optional<bool> IsFecEnabled() const;
+                std::optional<std::string> GetFecDestinationIp() const;
+                std::optional<std::string> GetFecMode() const;
+                std::optional<uint32_t> GetFec1DDestinationPort() const;
+                std::optional<uint32_t> GetFec2DDestinationPort() const;
 
-                std::experimental::optional<bool> IsRtcpEnabled() const;
-                std::experimental::optional<std::string> GetRtcpDestinationIp() const;
-                std::experimental::optional<uint32_t> GetRtcpDestinationPort() const;
+                std::optional<bool> IsRtcpEnabled() const;
+                std::optional<std::string> GetRtcpDestinationIp() const;
+                std::optional<uint32_t> GetRtcpDestinationPort() const;
 
 
                 void EnableRtp(bool bEnable);
@@ -111,7 +111,7 @@ namespace pml
 
                 void Actualize(const std::string& sInterfaceIp);
 
-                std::experimental::optional<std::string> GetMulticastIp() const;
+                std::optional<std::string> GetMulticastIp() const;
                 std::string GetInterfaceIp() const;
                 void SetSourceIp(const std::string& sAddress);
 
@@ -143,13 +143,13 @@ namespace pml
 
                 void SetDestinationIp(const std::string& sAddress);
 
-                std::experimental::optional<std::string> GetFecType() const;
-                std::experimental::optional<uint32_t> GetFecBlockWidth() const;
-                std::experimental::optional<uint32_t> GetFecBlockHeight() const;
-                std::experimental::optional<uint32_t> GetFec1DSourcePort() const;
-                std::experimental::optional<uint32_t> GetFec2DSourcePort() const;
+                std::optional<std::string> GetFecType() const;
+                std::optional<uint32_t> GetFecBlockWidth() const;
+                std::optional<uint32_t> GetFecBlockHeight() const;
+                std::optional<uint32_t> GetFec1DSourcePort() const;
+                std::optional<uint32_t> GetFec2DSourcePort() const;
 
-                std::experimental::optional<uint32_t> GetRtcpSourcePort() const;
+                std::optional<uint32_t> GetRtcpSourcePort() const;
 
                 static bool CheckJson(const Json::Value&  jsPatch);
 

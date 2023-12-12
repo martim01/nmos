@@ -19,7 +19,7 @@ namespace pml
         {
             public:
                 Sender(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId,
-                const std::string& sInterface, TransportParamsRTP::flagsTP flagsTransport=TransportParamsRTP::CORE, const std::experimental::optional<std::string>& multicastIp={});
+                const std::string& sInterface, TransportParamsRTP::flagsTP flagsTransport=TransportParamsRTP::CORE, const std::optional<std::string>& multicastIp={});
 
                 static std::shared_ptr<Sender> Create(const Json::Value& jsResponse);
                 Sender();
@@ -65,7 +65,7 @@ namespace pml
                 void MasterEnable(bool bEnable);
                 void SetTransportFile(const std::string& sSDP);
 
-                void MarkRTPTransmissionAsActive(bool bActive, std::experimental::optional<size_t> tp);
+                void MarkRTPTransmissionAsActive(bool bActive, std::optional<size_t> tp);
 
                 void SetDestinationDetails(const std::string& sDestinationIp, unsigned short nDestinationPort);
 

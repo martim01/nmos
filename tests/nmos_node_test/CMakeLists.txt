@@ -8,7 +8,9 @@ SET(DIR_LOG ${DIR_BASE}/log CACHE STRING "location of pml log")
 
 include_directories(${DIR_LOG}/include)
 include_directories(${DIR_PTPMONKEY}/include)
-include_directories("../../include")
+include_directories("../../common/include")
+include_directories("../../node/include")
+include_directories("../../base/include")
 include_directories(${DIR_JSON}/dist)
 
 link_directories(${CMAKE_SOURCE_DIR}/lib)

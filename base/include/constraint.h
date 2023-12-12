@@ -4,7 +4,7 @@
 #include <vector>
 #include "nmosapiversion.h"
 #include "utils.h"
-#include "optional.hpp"
+#include <optional>
 
 namespace pml
 {
@@ -48,9 +48,9 @@ namespace pml
             private:
 
                 std::string m_sDescription;
-                std::experimental::optional<int> m_minimum; // @todo min constraint can be a double as well
-                std::experimental::optional<int> m_maximum; // @todo min constraint can be a double as well
-                std::experimental::optional<std::string> m_pattern;
+                std::optional<int> m_minimum; // @todo min constraint can be a double as well
+                std::optional<int> m_maximum; // @todo min constraint can be a double as well
+                std::optional<std::string> m_pattern;
                 std::vector<pairEnum_t> m_vEnum;
 
 
@@ -69,7 +69,7 @@ namespace pml
 
                 bool MeetsConstraint(const std::string& sKey, const Json::Value& jsCheck) const;
 
-                bool AddConstraint(const std::string& sKey, const std::experimental::optional<int>& minValue, const std::experimental::optional<int>& maxValue, const std::experimental::optional<std::string>& pattern,
+                bool AddConstraint(const std::string& sKey, const std::optional<int>& minValue, const std::optional<int>& maxValue, const std::optional<std::string>& pattern,
                                    const std::vector<pairEnum_t>& vEnum);
                 bool ClearConstraint(const std::string& sKey);
 

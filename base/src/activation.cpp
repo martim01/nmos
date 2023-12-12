@@ -45,7 +45,7 @@ void activation::SetMode(enumActivate eMode)
 
 }
 
-void activation::SetRequestedTime(std::experimental::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> when)
+void activation::SetRequestedTime(std::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> when)
 {
     if(when)
     {
@@ -70,7 +70,7 @@ void activationResponse::Clear()
     SetActivationTime({});
 }
 
-void activationResponse::SetActivationTime(std::experimental::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> when)
+void activationResponse::SetActivationTime(std::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> when)
 {
     if(when)
     {
@@ -103,12 +103,12 @@ activation::enumActivate activation::GetMode() const
     return ACT_NULL;
 }
 
-std::experimental::optional<std::string> activation::GetRequestedTime() const
+std::optional<std::string> activation::GetRequestedTime() const
 {
     return GetString(m_json, REQUESTED_TIME);
 }
 
-std::experimental::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> activation::GetRequestedTimePoint() const
+std::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> activation::GetRequestedTimePoint() const
 {
     auto sTime = GetString(m_json, REQUESTED_TIME);
     if(sTime)
@@ -123,7 +123,7 @@ activationRequest::activationRequest() : activation()
 
 }
 
-void activationRequest::Setup(activation::enumActivate eMode, std::experimental::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> when)
+void activationRequest::Setup(activation::enumActivate eMode, std::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> when)
 {
     SetMode(eMode);
     SetRequestedTime(when);
@@ -179,12 +179,12 @@ bool activationResponse::Patch(const Json::Value& jsData)
     return true;
 }
 
-std::experimental::optional<std::string> activationResponse::GetActivationTime() const
+std::optional<std::string> activationResponse::GetActivationTime() const
 {
     return GetString(m_json, ACTIVATED_TIME);
 }
 
-std::experimental::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> activationResponse::GetActivationTimePoint() const
+std::optional<std::chrono::time_point<std::chrono::high_resolution_clock>> activationResponse::GetActivationTimePoint() const
 {
     auto Time = GetString(m_json, ACTIVATED_TIME);
     if(Time)
