@@ -353,7 +353,9 @@ namespace pml
 
                 bool StartmDNSPublisher();
                 void StopmDNSPublisher();
-                void SetmDNSTxt(bool bSecure);
+
+                std::map<std::string, std::string> CreatemDNSTxt(bool bSecure);
+                void SetmDNSTxt(const std::map<std::string, std::string>& mTxt);
 
 
                 void StopRegistrationBrowsing();

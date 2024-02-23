@@ -308,9 +308,7 @@ bool NodeApiPrivate::StartmDNSPublisher()
         if(m_pNodeApiPublisher->Start())
         {
             m_sDnsName = CreateGuid(itEndpoint->sHost);
-            m_pNodeApiPublisher->AddService(m_sDnsName, "_nmos-node._tcp", itEndpoint->nPort,{});
-            SetmDNSTxt(itEndpoint->bSecure);
-        
+            m_pNodeApiPublisher->AddService(m_sDnsName, "_nmos-node._tcp", itEndpoint->nPort,CreatemDNSTxt(itEndpoint->bSecure));      
             return true;
         }
     }
@@ -411,58 +409,55 @@ void NodeApiPrivate::ModifyTxtRecords()
     auto itEndpoint = m_self.GetEndpointsBegin();
     if(itEndpoint != m_self.GetEndpointsEnd())
     {
-        SetmDNSTxt(itEndpoint->bSecure);
+        SetmDNSTxt(CreatemDNSTxt(itEndpoint->bSecure));
     }
 }
 
 
-void NodeApiPrivate::SetmDNSTxt(bool bSecure)
+
+std::map<std::string, std::string> NodeApiPrivate::CreatemDNSTxt(bool bSecure)
+{
+    std::map<std::string, std::string> mTxtAdd;
+    if(bSecure)
+    {
+        mTxtAdd.try_emplace("api_proto", "https");
+    }
+    else
+    {
+        mTxtAdd.try_emplace("api_proto", "http");
+    }
+    std::string sVersion;
+    for(const auto& pairServer : m_mDiscoveryServers)
+    {
+        if(sVersion.empty() == false)
+        {
+            sVersion += ',';
+        }
+        sVersion += pairServer.first.GetVersionAsString();
+    }
+
+    mTxtAdd.try_emplace("api_ver", sVersion);
+
+    if(m_sRegistrationNode.empty())
+    {
+        mTxtAdd.try_emplace("ver_slf", to_string(m_self.GetDnsVersion()));
+        mTxtAdd.try_emplace("ver_src", to_string(m_sources.GetVersion()));
+        mTxtAdd.try_emplace("ver_flw", to_string(m_flows.GetVersion()));
+        mTxtAdd.try_emplace("ver_dvc", to_string(m_devices.GetVersion()));
+        mTxtAdd.try_emplace("ver_snd", to_string(m_senders.GetVersion()));
+        mTxtAdd.try_emplace("ver_rcv", to_string(m_receivers.GetVersion()));
+    }
+    return mTxtAdd;
+}
+
+void NodeApiPrivate::SetmDNSTxt(const std::map<std::string, std::string>& mTxt)
 {
     lock_guard<mutex> guard(m_mutex);
     if(m_pNodeApiPublisher)
     {
-        if(bSecure)
-        {
-            m_pNodeApiPublisher->AddTxt(m_sDnsName, "api_proto", "https", false);
-        }
-        else
-        {
-            m_pNodeApiPublisher->AddTxt(m_sDnsName, "api_proto", "http", false);
-        }
-        std::string sVersion;
-        for(const auto& pairServer : m_mDiscoveryServers)
-        {
-            if(sVersion.empty() == false)
-            {
-                sVersion += ',';
-            }
-            sVersion += pairServer.first.GetVersionAsString();
-
-        }
-
-         m_pNodeApiPublisher->AddTxt(m_sDnsName, "api_ver", sVersion, false);
-
-        if(m_sRegistrationNode.empty())
-        {
-            m_pNodeApiPublisher->AddTxt(m_sDnsName, "ver_slf", to_string(m_self.GetDnsVersion()),false);
-            m_pNodeApiPublisher->AddTxt(m_sDnsName, "ver_src", to_string(m_sources.GetVersion()),false);
-            m_pNodeApiPublisher->AddTxt(m_sDnsName, "ver_flw", to_string(m_flows.GetVersion()),false);
-            m_pNodeApiPublisher->AddTxt(m_sDnsName, "ver_dvc", to_string(m_devices.GetVersion()),false);
-            m_pNodeApiPublisher->AddTxt(m_sDnsName, "ver_snd", to_string(m_senders.GetVersion()),false);
-            m_pNodeApiPublisher->AddTxt(m_sDnsName, "ver_rcv", to_string(m_receivers.GetVersion()),true);
-        }
-        else
-        {
-            m_pNodeApiPublisher->RemoveTxt(m_sDnsName, "ver_slf", false);
-            m_pNodeApiPublisher->RemoveTxt(m_sDnsName, "ver_src", false);
-            m_pNodeApiPublisher->RemoveTxt(m_sDnsName, "ver_flw", false);
-            m_pNodeApiPublisher->RemoveTxt(m_sDnsName, "ver_dvc", false);
-            m_pNodeApiPublisher->RemoveTxt(m_sDnsName, "ver_snd", false);
-            m_pNodeApiPublisher->RemoveTxt(m_sDnsName, "ver_rcv", true);
-        }
+        m_pNodeApiPublisher->SetTxt(m_sDnsName, mTxt);
     }
 }
-
 
 bool NodeApiPrivate::BrowseForRegistrationNode()
 {
