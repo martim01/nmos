@@ -61,7 +61,7 @@ void IS05Server::AddSenderEndpoint(const std::string& sId)
     m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+STAGED), std::bind(&IS05Server::GetNmosSingleSenderStaged, this, _1,_2,_3,_4));
     m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+ACTIVE), std::bind(&IS05Server::GetNmosSingleSenderActive, this, _1,_2,_3,_4));
     m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTFILE), std::bind(&IS05Server::GetNmosSingleSenderTransportfile, this, _1,_2,_3,_4));
-    if(m_version > ApiVersion(1,0))
+    if(m_version > ApiVersion(1,1))
     {
         m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTTYPE), std::bind(&IS05Server::GetNmosSingleSenderTransportType, this, _1,_2,_3,_4));
     }
@@ -74,7 +74,7 @@ void IS05Server::AddReceiverEndpoint(const std::string& sId)
     m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+CONSTRAINTS), std::bind(&IS05Server::GetNmosSingleReceiverConstraints, this, _1,_2,_3,_4));
     m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+STAGED), std::bind(&IS05Server::GetNmosSingleReceiverStaged, this, _1,_2,_3,_4));
     m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+ACTIVE), std::bind(&IS05Server::GetNmosSingleReceiverActive, this, _1,_2,_3,_4));
-    if(m_version > ApiVersion(1,0))
+    if(m_version > ApiVersion(1,1))
     {
         m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+TRANSPORTTYPE), std::bind(&IS05Server::GetNmosSingleReceiverTransportType, this, _1,_2,_3,_4));
     }
@@ -88,7 +88,7 @@ void IS05Server::RemoveSenderEndpoint(const std::string& sId)
     m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+STAGED));
     m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+ACTIVE));
     m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTFILE));
-    if(m_version > ApiVersion(1,0))
+    if(m_version > ApiVersion(1,1))
     {
         m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+SENDERS+"/"+sId+TRANSPORTTYPE));
     }
@@ -101,7 +101,7 @@ void IS05Server::RemoveReceiverEndpoint(const std::string& sId)
     m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+CONSTRAINTS));
     m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+STAGED));
     m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+ACTIVE));
-    if(m_version > ApiVersion(1,0))
+    if(m_version > ApiVersion(1,1))
     {
         m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SINGLE+RECEIVERS+"/"+sId+TRANSPORTTYPE));
     }
@@ -184,7 +184,7 @@ pml::restgoose::response IS05Server::GetNmosSingleSender(const query& theQuery, 
         resp.jsonData.append("staged/");
         resp.jsonData.append("active/");
         resp.jsonData.append("transportfile/");
-        if(m_version > ApiVersion(1,0))
+        if(m_version > ApiVersion(1,1))
         {
             resp.jsonData.append("transporttype/");
         }
@@ -310,7 +310,7 @@ pml::restgoose::response IS05Server::GetNmosSingleReceiver(const query& theQuery
         resp.jsonData.append("constraints/");
         resp.jsonData.append("staged/");
         resp.jsonData.append("active/");
-        if(m_version > ApiVersion(1,0))
+        if(m_version > ApiVersion(1,1))
         {
             resp.jsonData.append("transporttype/");
         }

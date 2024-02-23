@@ -249,6 +249,7 @@ void NodeApiPrivate::Init(std::shared_ptr<EventPoster> pPoster, unsigned short n
 
     m_mDiscoveryServers.insert(std::make_pair(ApiVersion(1,1), make_unique<IS04Server>(m_lstServers.back(), ApiVersion(1,1), m_pPoster,*this)));
     m_mDiscoveryServers.insert(std::make_pair(ApiVersion(1,2), make_unique<IS04Server>(m_lstServers.back(), ApiVersion(1,2), m_pPoster,*this)));
+    m_mDiscoveryServers.insert(std::make_pair(ApiVersion(1,3), make_unique<IS04Server>(m_lstServers.back(), ApiVersion(1,3), m_pPoster,*this)));
 
 
     m_lstServers.back()->AddEndpoint(pml::restgoose::GET, endpoint(""), std::bind(&NodeApiPrivate::GetRoot, this,_1,_2,_3,_4));
