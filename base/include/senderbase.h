@@ -19,7 +19,8 @@ namespace pml
         {
             public:
                 Sender(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId,
-                const std::string& sInterface, TransportParamsRTP::flagsTP flagsTransport=TransportParamsRTP::CORE, const std::optional<std::string>& multicastIp={});
+                const std::vector<std::string>& vInterface, TransportParamsRTP::flagsTP flagsTransport=TransportParamsRTP::CORE, const std::optional<std::string>& multicastIp={}
+                , const std::optional<std::string>& multicastIpR={});
 
                 static std::shared_ptr<Sender> Create(const Json::Value& jsResponse);
                 Sender();
@@ -30,6 +31,7 @@ namespace pml
                 **/
                 bool UpdateFromJson(const Json::Value& jsData) override;
 
+                size_t GetNumberOfStreams() const { return m_vSourceDestIp.size();}
 
                 void SetManifestHref(const std::string& sHref);
                 const std::string& GetManifestHref() const;
@@ -53,7 +55,7 @@ namespace pml
 
                 bool IsLocked();
                 bool IsActivateAllowed() const;
-                const std::string GetDestinationIp() const {return m_sDestinationIp;}
+                const std::string& GetDestinationIp(bool bRedundant) const;
 
                 bool IsActiveMasterEnabled() const { return (m_Active.GetMasterEnable() && *(m_Active.GetMasterEnable()));}
                 bool IsStagedMasterEnabled() const { return (m_Staged.GetMasterEnable() && *(m_Staged.GetMasterEnable()));}
@@ -78,10 +80,10 @@ namespace pml
 
                 activation::enumActivate Stage(const connectionSender<activationResponse>& conRequest);
                 void CommitActivation();
-                void Activate(const std::string& sSourceIp);
+                void Activate(const std::vector<std::string>& vSourceIp);
 
 
-                void SetupActivation(const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP);
+                void SetupActivation(const std::vector<std::pair<std::string, std::string>>& vSourceDestIp, const std::string& sSDP);
                 void SetStagedActivationTime(const std::string& sTime);
                 void SetStagedActivationTimePoint(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp);
                 void RemoveStagedActivationTime();
@@ -89,7 +91,7 @@ namespace pml
 
 
 
-                void ActualizeUnitialisedActive(const std::string& sSourceIp);
+                void ActualizeUnitialisedActive(const std::vector<std::string>& vSourceIp);
 
                 std::string m_sFlowId;
                 std::string m_sDeviceId;
@@ -104,8 +106,8 @@ namespace pml
                 std::string m_sTransportFile;
                 bool m_bActivateAllowed;
 
-                std::string m_sSourceIp;
-                std::string m_sDestinationIp;
+                std::vector<std::pair<std::string, std::string>> m_vSourceDestIp;
+                
                 std::string m_sSDP;
 
 

@@ -1,5 +1,5 @@
 #include "ioresource.h"
-
+#include <algorithm>
 using namespace pml::nmos;
 
 const std::array<std::string,6> IOResource::STR_TRANSPORT = {"urn:x-nmos:transport:rtp", "urn:x-nmos:transport:rtp.ucast", "urn:x-nmos:transport:rtp.mcast","urn:x-nmos:transport:dash", "urn:x-nmos:transport:mqtt", "urn:x-nmos:transport:websocket"};
@@ -7,13 +7,14 @@ const std::array<std::string,6> IOResource::STR_TRANSPORT = {"urn:x-nmos:transpo
 
 void IOResource::AddInterfaceBinding(const std::string& sInterface)
 {
-    m_setInterfaces.insert(sInterface);
+    m_vInterfaces.push_back(sInterface);
     UpdateVersionTime();
 }
 
 void IOResource::RemoveInterfaceBinding(const std::string& sInterface)
 {
-    m_setInterfaces.erase(sInterface);
+    m_vInterfaces.erase(std::remove_if(m_vInterfaces.begin(), m_vInterfaces.end(), [&](const std::string& sInt)-> bool{return sInt == sInterface;}));
+
     UpdateVersionTime();
 }
 

@@ -167,11 +167,14 @@ template<typename T> Json::Value connectionSender<T>::GetJson() const
     return jsConnect;
 }
 
-template<typename T> void connectionSender<T>::Actualize(const std::string& sSourceIp, const std::string& sDestinationIp)
+template<typename T> void connectionSender<T>::Actualize(const std::vector<std::pair<std::string, std::string>>& vSourceDestIp)
 {
-    for(auto& tpSender : m_vTransportParams)
+    if(vSourceDestIp.size() == m_vTransportParams.size())
     {
-        tpSender.Actualize(sSourceIp, sDestinationIp);
+        for(size_t nStream  = 0; nStream < m_vTransportParams.size(); ++nStream)
+        {
+            m_vTransportParams[nStream].Actualize(vSourceDestIp[nStream].first, vSourceDestIp[nStream].second);
+        }
     }
 }
 

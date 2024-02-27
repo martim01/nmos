@@ -44,7 +44,7 @@ namespace pml
 
                 Json::Value GetConnectionConstraintsJson(const ApiVersion& version) const;
 
-                const std::set<std::string>& GetInterfaces() const { return m_setInterfaces;}
+                const std::vector<std::string>& GetInterfaces() const { return m_vInterfaces;}
 
 
             protected:
@@ -56,7 +56,7 @@ namespace pml
                 void CreateConstraints(const Json::Value& jsonStaged);
 
                 enumTransport m_eTransport;
-                std::set<std::string> m_setInterfaces;
+                std::vector<std::string> m_vInterfaces;
 
                 std::vector<Constraints> m_vConstraints;
 

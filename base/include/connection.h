@@ -26,7 +26,7 @@ namespace pml
 
                     bool Patch(const Json::Value& jsData);
 
-                    void Actualize(const std::string& sSourceIp, const std::string& sDestinationIp);
+                    void Actualize(const std::vector<std::pair<std::string, std::string>>& vSourceDestIp);
 
                     std::optional<std::string> GetReceiverId() const;
 

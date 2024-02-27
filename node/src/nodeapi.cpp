@@ -128,9 +128,9 @@ void NodeApi::TargetTaken(const std::string& sInterfaceIp, unsigned short nPort,
     m_pImpl->TargetTaken(sInterfaceIp, nPort, bOk);
 }
 
-void NodeApi::SenderPatchAllowed(unsigned short nPort, bool bOk, const std::string& sId, const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP)
+void NodeApi::SenderPatchAllowed(unsigned short nPort, bool bOk, const std::string& sId, const std::vector<std::pair<std::string, std::string>>& vSourceDestIp, const std::string& sSDP)
 {
-    m_pImpl->SenderPatchAllowed(nPort, bOk, sId, sSourceIp, sDestinationIp, sSDP);
+    m_pImpl->SenderPatchAllowed(nPort, bOk, sId, vSourceDestIp, sSDP);
 }
 
 void NodeApi::ReceiverPatchAllowed(unsigned short nPort, bool bOk, const std::string& sId, const std::string& sInterfaceIp)

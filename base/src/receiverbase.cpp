@@ -222,7 +222,7 @@ bool Receiver::UpdateFromJson(const Json::Value& jsData)
             }
             else
             {
-                m_setInterfaces.insert(jsData["interface_bindings"][ai].asString());
+                AddInterfaceBinding(jsData["interface_bindings"][ai].asString());
             }
         }
         if(!bFound)
@@ -328,16 +328,16 @@ bool Receiver::Commit(const ApiVersion& version)
         m_json["format"] = STR_TYPE[m_eType];
 
         m_json["interface_bindings"] = Json::Value(Json::arrayValue);
-        for(std::set<std::string>::iterator itInterface = m_setInterfaces.begin(); itInterface != m_setInterfaces.end(); ++itInterface)
+        for(const auto& sInterface : m_vInterfaces)
         {
-            m_json["interface_bindings"].append((*itInterface));
+            m_json["interface_bindings"].append((sInterface));
         }
 
         m_json["caps"] = Json::Value(Json::objectValue);
         m_json["caps"]["media_types"] = Json::Value(Json::arrayValue);
-        for(std::set<std::string>::iterator itCap = m_setCaps.begin(); itCap != m_setCaps.end(); ++itCap)
+        for(const auto& sCap : m_setCaps)
         {
-            m_json["caps"]["media_types"].append((*itCap));
+            m_json["caps"]["media_types"].append((sCap));
         }
 
 

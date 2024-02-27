@@ -13,8 +13,7 @@ using namespace pml::nmos;
 
 
 
-Sender::Sender(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId, const std::string& sInterface,
-               TransportParamsRTP::flagsTP flagsTransport,const std::optional<std::string>& multicastIp) :
+Sender::Sender(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId, const std::vector<std::string>& vInterface, TransportParamsRTP::flagsTP flagsTransport, const std::optional<std::string>& multicastIp, const std::optional<std::string>& multicastIpR) :
     IOResource("sender", sLabel, sDescription, eTransport),
     m_sFlowId(sFlowId),
     m_sDeviceId(sDeviceId),
@@ -24,13 +23,32 @@ Sender::Sender(const std::string& sLabel, const std::string& sDescription, const
     m_Active(true, flagsTransport),
     m_bActivateAllowed(false)
 {
-    AddInterfaceBinding(sInterface);
+    for(const auto& sInterface : vInterface)
+    {
+        AddInterfaceBinding(sInterface);
+    }
 
     CreateConstraints(m_Staged.GetJson());
 
-    if((m_eTransport & enumTransport::RTP_MCAST) && multicastIp)
+    if((flagsTransport & TransportParamsRTP::flagsTP::REDUNDANT))
     {
-        m_sDestinationIp = *multicastIp;
+        m_vSourceDestIp.resize(2);
+    }
+    else
+    {
+        m_vSourceDestIp.resize(1);
+    }
+
+    if((m_eTransport & enumTransport::RTP_MCAST))
+    {
+        if(multicastIp)
+        {
+            m_vSourceDestIp[0].second = *multicastIp;
+        }
+        if((flagsTransport & TransportParamsRTP::flagsTP::REDUNDANT) && multicastIpR)
+        {
+            m_vSourceDestIp[1].second = *multicastIpR;
+        }
     }
 }
 
@@ -132,7 +150,7 @@ bool Sender::UpdateFromJson(const Json::Value& jsData)
         {
             if(jsData["interface_bindings"][n].isString())
             {
-                m_setInterfaces.insert(jsData["interface_bindings"][n].asString());
+                AddInterfaceBinding(jsData["interface_bindings"][n].asString());
             }
             else
             {
@@ -228,7 +246,7 @@ bool Sender::IsActivateAllowed() const
 }
 
 
-void Sender::Activate(const std::string& sSourceIp)
+void Sender::Activate(const std::vector<std::string>& vSourceIp)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
 
@@ -236,13 +254,19 @@ void Sender::Activate(const std::string& sSourceIp)
     //move the staged parameters to active parameters
     m_Active = m_Staged;
 
-    if(m_sSourceIp.empty())
+    if(vSourceIp.size() == m_vSourceDestIp.size())
     {
-        m_sSourceIp = sSourceIp;
+        for(size_t nStream = 0; nStream < vSourceIp.size(); ++nStream)
+        {
+            if(m_vSourceDestIp[nStream].first.empty())
+            {
+                m_vSourceDestIp[nStream].first = vSourceIp[nStream];
+            }
+        }
     }
 
     //Change auto settings to what they actually are
-    m_Active.Actualize(m_sSourceIp, m_sDestinationIp);
+    m_Active.Actualize(m_vSourceDestIp);
 
     //@todo Set the flow to be whatever the flow is...
 
@@ -280,6 +304,19 @@ void Sender::CommitActivation()
 
 }
 
+const std::string& Sender::GetDestinationIp(bool bRedundant) const
+{
+    if(bRedundant && m_vSourceDestIp.size() == 2)
+    {
+        return m_vSourceDestIp[1].second;
+    }
+    else
+    {
+        return m_vSourceDestIp[0].second;
+    }
+}
+
+
 bool Sender::Commit(const ApiVersion& version)
 {
     if(Resource::Commit(version))
@@ -297,9 +334,9 @@ bool Sender::Commit(const ApiVersion& version)
         m_json["transport"] = STR_TRANSPORT[m_eTransport];
 
         m_json["interface_bindings"] = Json::Value(Json::arrayValue);
-        for(std::set<std::string>::iterator itInterface = m_setInterfaces.begin(); itInterface != m_setInterfaces.end(); ++itInterface)
+        for(const auto& sInterface : m_vInterfaces)
         {
-            m_json["interface_bindings"].append((*itInterface));
+            m_json["interface_bindings"].append((sInterface));
         }
 
         m_json["subscription"] = Json::Value(Json::objectValue);
@@ -326,17 +363,25 @@ bool Sender::Commit(const ApiVersion& version)
     return false;
 }
 
-void Sender::SetupActivation(const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP)
+void Sender::SetupActivation(const std::vector<std::pair<std::string, std::string>>& vSourceDestIp, const std::string& sSDP)
 {
-    m_sSourceIp = sSourceIp;
-    m_sDestinationIp = sDestinationIp;
+    if(vSourceDestIp.size() == m_vSourceDestIp.size())
+    {
+        m_vSourceDestIp = vSourceDestIp;
+    }
     m_sSDP = sSDP;
 }
 
-void Sender::ActualizeUnitialisedActive(const std::string& sSourceIp)
+void Sender::ActualizeUnitialisedActive(const std::vector<std::string>& vSourceIp)
 {
-    m_sSourceIp = sSourceIp;
-    m_Active.Actualize(m_sSourceIp, m_sDestinationIp);
+    if(vSourceIp.size() == m_vSourceDestIp.size())
+    {
+        for(size_t nStream = 0; nStream < vSourceIp.size(); ++nStream)
+        {
+            m_vSourceDestIp[nStream].first = vSourceIp[nStream];
+        }
+        m_Active.Actualize(m_vSourceDestIp);
+    }
 }
 
 

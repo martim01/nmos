@@ -530,14 +530,14 @@ void NodeApiPrivate::TargetTaken(const std::string& sInterfaceIp, unsigned short
 }
 
 
-void NodeApiPrivate::SenderPatchAllowed(unsigned short nPort, bool bOk, const std::string& sId, const std::string& sSourceIp, const std::string& sDestinationIp, const std::string& sSDP)
+void NodeApiPrivate::SenderPatchAllowed(unsigned short nPort, bool bOk, const std::string& sId, const std::vector<std::pair<std::string, std::string>>& vSourceDestIp, const std::string& sSDP)
 {
     if(bOk)
     {
         auto pSender = GetSender(sId);
         if(pSender)
         {
-            pSender->SetupActivation(sSourceIp, sDestinationIp, sSDP);
+            pSender->SetupActivation(vSourceDestIp, sSDP);
         }
         else
         {
@@ -1062,6 +1062,21 @@ bool NodeApiPrivate::AddReceiver(shared_ptr<Receiver> pResource)
     return false;
 }
 
+std::vector<std::string> NodeApiPrivate::GetSourceIp(std::shared_ptr<Sender> pResource)
+{
+    std::vector<std::string> vSourceIp;
+    vSourceIp.reserve(pResource->GetNumberOfStreams());
+
+    for(const auto& sInterface : pResource->GetInterfaces())
+    {
+        auto itInterface = m_self.FindInterface(sInterface);
+        if(itInterface != m_self.GetInterfaceEnd())
+        {
+            vSourceIp.push_back(itInterface->second.sMainIpAddress);
+        }
+    }
+    return vSourceIp;
+}
 bool NodeApiPrivate::AddSender(shared_ptr<Sender> pResource)
 {
     auto pDevice = m_devices.GetStagedResource(pResource->GetParentResourceId());
@@ -1079,13 +1094,10 @@ bool NodeApiPrivate::AddSender(shared_ptr<Sender> pResource)
                 sstr << pResource->GetId() << "/transportfile";
                 pResource->SetManifestHref(sstr.str());
             }
+            
             //actualize the sender for IS05
-            auto itInterface = m_self.GetInterfaceBegin();
-            if(itInterface != m_self.GetInterfaceEnd())
-            {
-                // @todo should we create an SDP for those that need one??
-                pResource->ActualizeUnitialisedActive(itInterface->second.sMainIpAddress);
-            }
+            
+            pResource->ActualizeUnitialisedActive(GetSourceIp(pResource));
 
             //constrain the source_ip to those that we have
             std::vector<pairEnum_t> vEnum;
@@ -1398,17 +1410,7 @@ void NodeApiPrivate::Activate(bool bCommit, std::shared_ptr<IOResource> pResourc
 void NodeApiPrivate::Activate(bool bCommit, std::shared_ptr<Sender> pSender)
 {
     //get the bound to interface source address
-    std::string sSourceIp;
-    for(auto sInterface : pSender->GetInterfaces())
-    {
-        auto itDetails = GetSelf().FindInterface(sInterface);
-        if(itDetails != GetSelf().GetInterfaceEnd())
-        {
-            sSourceIp = itDetails->second.sMainIpAddress;
-            break;
-        }
-    }
-    pSender->Activate(sSourceIp);
+    pSender->Activate(GetSourceIp(pSender));
 
     // create the SDP
     if(pSender->IsActiveMasterEnabled())
