@@ -13,7 +13,7 @@ using namespace pml::nmos;
 
 
 
-Sender::Sender(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId, const std::vector<std::string>& vInterface, TransportParamsRTP::flagsTP flagsTransport, const std::optional<std::string>& multicastIp, const std::optional<std::string>& multicastIpR) :
+Sender::Sender(const std::string& sLabel, const std::string& sDescription, const std::string& sFlowId, enumTransport eTransport, const std::string& sDeviceId, const std::vector<std::string>& vInterface, TransportParamsRTP::flagsTP flagsTransport, const std::vector<std::string>& vMulticastIp) :
     IOResource("sender", sLabel, sDescription, eTransport),
     m_sFlowId(sFlowId),
     m_sDeviceId(sDeviceId),
@@ -41,13 +41,13 @@ Sender::Sender(const std::string& sLabel, const std::string& sDescription, const
 
     if((m_eTransport & enumTransport::RTP_MCAST))
     {
-        if(multicastIp)
+        if(vMulticastIp.empty() == false)
         {
-            m_vSourceDestIp[0].second = *multicastIp;
+            m_vSourceDestIp[0].second = vMulticastIp[0]
         }
-        if((flagsTransport & TransportParamsRTP::flagsTP::REDUNDANT) && multicastIpR)
+        if((flagsTransport & TransportParamsRTP::flagsTP::REDUNDANT) && vMulticastIp.size() == 2)
         {
-            m_vSourceDestIp[1].second = *multicastIpR;
+            m_vSourceDestIp[1].second = vMulticastIp[1];
         }
     }
 }

@@ -39,7 +39,7 @@ int main()
     pFlow->SetPacketTime(pml::nmos::FlowAudioRaw::US_125);
     pFlow->SetMediaClkOffset(0);
 
-    auto pSender = make_shared<pml::nmos::Sender>("MattTest/Sender/Audio", "Description", pFlow->GetId(), pml::nmos::Sender::RTP_MCAST, pDevice->GetId(), {"eth0", "eth1"}, pml::nmos::TransportParamsRTP::REDUNDANT, std::string("239.100.1.20"), std::string("239.100.2.20"));
+    auto pSender = make_shared<pml::nmos::Sender>("MattTest/Sender/Audio", "Description", pFlow->GetId(), pml::nmos::Sender::RTP_MCAST, pDevice->GetId(), {"eth0", "eth1"}, pml::nmos::TransportParamsRTP::REDUNDANT, {"239.100.1.20", "239.100.2.20"});
     pSender->MasterEnable(true);
 
     auto pReceiver = make_shared<pml::nmos::Receiver>("MattTest/Receiver/Audio", "TestDescription", pml::nmos::Receiver::RTP_MCAST, pDevice->GetId(), pml::nmos::Receiver::AUDIO,
