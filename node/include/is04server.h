@@ -31,6 +31,8 @@ namespace pml
                 void AddSenderEndpoint(const std::string& sId);
                 void AddReceiverEndpoint(const std::string& sId);
 
+                void RemoveSourceEndpoint(const std::string& sId);
+                void RemoveFlowEndpoint(const std::string& sId);
                 void RemoveSenderEndpoint(const std::string& sId);
                 void RemoveReceiverEndpoint(const std::string& sId);
 

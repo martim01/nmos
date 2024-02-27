@@ -108,6 +108,11 @@ void NodeApi::RemoveReceiver(const std::string& sId)
     m_pImpl->RemoveReceiver(sId);
 }
 
+void NodeApi::RemoveSource(const std::string& sId)
+{
+    m_pImpl->RemoveSource(sId);
+}
+
 std::shared_ptr<Receiver> NodeApi::GetReceiver(const std::string& sId)
 {
     return m_pImpl->GetReceiver(sId);

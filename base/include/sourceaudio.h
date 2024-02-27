@@ -20,9 +20,9 @@ namespace pml
                 SourceAudio();
                 virtual bool UpdateFromJson(const Json::Value& jsData);
                 void AddChannels(const std::map<channelSymbol, channelLabel>& mChannels);
-                void AddChannel(const channelSymbol& symbol, const channelLabel& label);
+                void AddChannel(const channelSymbol& symbol, const channelLabel& label, bool UpdateVersion);
                 void RemoveChannel(const channelSymbol& symbol);
-
+                void ClearChannels(bool bUpdateVersion);
 
                 bool Commit(const ApiVersion& version);
 

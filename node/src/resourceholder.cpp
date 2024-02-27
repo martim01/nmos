@@ -175,6 +175,21 @@ template<class T> bool ResourceHolder<T>::ResourceExists(const std::string& sUui
 }
 
 
+template<class T> void ResourceHolder<T>::RemoveResources(const std::function<bool(std::shared_ptr<T>)>& funcRemove)
+{
+    for(auto itResource = m_mResourceStaging.begin(); itResource != m_mResourceStaging.end();)
+    {
+        if(funcRemove(itResource->second))
+        {
+            itResource = m_mResourceStaging.erase(itResource);
+        }
+        else
+        {
+            ++itResource;
+        }
+    }
+}
+
 template class ResourceHolder<Self>;
 template class ResourceHolder<Sender>;
 template class ResourceHolder<Receiver>;

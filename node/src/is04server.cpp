@@ -82,6 +82,16 @@ void IS04Server::RemoveSenderEndpoint(const std::string& sId)
     m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SENDERS+"/"+sId));
 }
 
+void IS04Server::RemoveSourceEndpoint(const std::string& sId)
+{
+    m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SOURCES+"/"+sId));
+}
+
+void IS04Server::RemoveFlowEndpoint(const std::string& sId)
+{
+    m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+FLOWS+"/"+sId));
+}
+
 void IS04Server::RemoveReceiverEndpoint(const std::string& sId)
 {
     m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+RECEIVERS+"/"+sId));

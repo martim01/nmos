@@ -5,6 +5,8 @@
 #include "nmosapiversion.h"
 #include <set>
 #include <list>
+#include <functional>
+
 namespace pml
 {
     namespace nmos
@@ -32,6 +34,7 @@ namespace pml
                 void RemoveResource(std::shared_ptr<T> pResource);
                 void RemoveResource(std::string sUuid);
 
+                void RemoveResources(const std::function<bool(std::shared_ptr<T>)>& funcRemove);
                 void RemoveAllResources();
 
                 virtual typename std::list<std::shared_ptr<Resource>> Commit(const std::set<ApiVersion>& setVersion);

@@ -1156,6 +1156,60 @@ void NodeApiPrivate::RemoveReceiver(const std::string& sId)
     }
 }
 
+void NodeApiPrivate::RemoveSource(const std::string& sId)
+{
+    auto pSource = GetSource(sId);
+    if(pSource)
+    {
+        auto pDevice = m_devices.GetStagedResource(pSource->GetParentResourceId());
+        if(pDevice)
+        {
+            pDevice->RemoveSender(sId);
+        }
+
+        for(const auto& [uidFlow, pFlow] : m_flows.GetResources())
+        {
+            if(pFlow->GetSourceId() == sId)
+            {
+                m_senders.RemoveResources([this, uidFlow](std::shared_ptr<Sender> pSender)
+                {
+                    if(pSender->GetFlowId() == uidFlow)
+                    {
+                        for(const auto& pairServer : m_mDiscoveryServers)
+                        {
+                            pairServer.second->RemoveSenderEndpoint(pSender->GetId());
+                        }
+                        for(const auto& pairServer : m_mConnectionServers)
+                        {
+                            pairServer.second->RemoveSenderEndpoint(pSender->GetId());
+                        }
+                        return true;
+                    }
+                    return false;
+                });
+            }
+        }
+        m_flows.RemoveResources([this, sId](std::shared_ptr<Flow> pFlow)
+        {
+            if(pFlow->GetSourceId() == sId)
+            {
+                for(const auto& pairServer : m_mDiscoveryServers)
+                {
+                    pairServer.second->RemoveFlowEndpoint(pFlow->GetId());
+                }
+                return true;
+            }
+            return false;
+        });
+    }
+
+    m_sources.RemoveResource(sId);
+
+    for(const auto& pairServer : m_mDiscoveryServers)
+    {
+        pairServer.second->RemoveSourceEndpoint(sId);
+    }
+}
 
 unsigned short NodeApiPrivate::GetConnectionPort() const
 {

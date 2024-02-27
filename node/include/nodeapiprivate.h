@@ -167,6 +167,7 @@ namespace pml
 
                 void RemoveSender(const std::string& sId);
                 void RemoveReceiver(const std::string& sId);
+                void RemoveSource(const std::string& sId);
 
 
                 /** @brief Returns a pointer to the receiver with the given id if one exists or null.

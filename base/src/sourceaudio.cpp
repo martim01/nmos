@@ -22,16 +22,28 @@ void SourceAudio::AddChannels(const std::map<channelSymbol, channelLabel>& mChan
     m_mChannel.insert(mChannels.begin(), mChannels.end());
 }
 
-void SourceAudio::AddChannel(const channelSymbol& symbol, const channelLabel& label)
+void SourceAudio::AddChannel(const channelSymbol& symbol, const channelLabel& label, bool bUpdateVersion)
 {
     m_mChannel.insert(make_pair(symbol, label));
-    UpdateVersionTime();
+    if(bUpdateVersion)
+    {
+        UpdateVersionTime();
+    }
 }
 
 void SourceAudio::RemoveChannel(const channelSymbol& symbol)
 {
     m_mChannel.erase(symbol);
     UpdateVersionTime();
+}
+
+void SourceAudio::ClearChannels(bool bUpdateVersion)
+{
+    m_mChannel.clear();
+    if(bUpdateVersion)
+    {
+        UpdateVersionTime();
+    }
 }
 
 
