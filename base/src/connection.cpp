@@ -421,12 +421,15 @@ template<typename T> void connectionReceiver<T>::SetTransportFile(const std::opt
     }
 }
 
-template<typename T>void connectionSender<T>::SetDestinationDetails(const std::string& sIp, unsigned short nPort)
+template<typename T>void connectionSender<T>::SetDestinationDetails(const std::vector<std::pair<std::string, unsigned short>>& vDestinations)
 {
-    for(auto& tpSender : m_vTransportParams)
+    for(size_t i = 0; i < m_vTransportParams.size(); ++i)
     {
-        tpSender.SetDestinationIp(sIp);
-        tpSender.SetDestinationPort(nPort);
+        if(i < vDestinations.size())
+        {
+            m_vTransportParams[i].SetDestinationIp(vDestinations[i].first);
+            m_vTransportParams[i].SetDestinationPort(vDestinations[i].second);
+        }
     }
 }
 

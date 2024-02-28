@@ -68,7 +68,7 @@ namespace pml
 
                 void MarkRTPTransmissionAsActive(bool bActive, std::optional<size_t> tp);
 
-                void SetDestinationDetails(const std::string& sDestinationIp, unsigned short nDestinationPort);
+                void SetDestinationDetails(const std::vector<std::pair<std::string, unsigned short>>& vDestinations);
 
             protected:
 

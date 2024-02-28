@@ -33,6 +33,8 @@ namespace pml
             public:
                 enum flagsTP { CORE, FEC=1, RTCP=2, MULTICAST=4, REDUNDANT=8};
 
+                
+
                 TransportParamsRTP();
                 TransportParamsRTP(const TransportParamsRTP& tp);
                 TransportParamsRTP& operator=(const TransportParamsRTP& other);
@@ -154,6 +156,11 @@ namespace pml
                 static bool CheckJson(const Json::Value&  jsPatch);
 
         };
+
+        inline TransportParamsRTP::flagsTP operator|(TransportParamsRTP::flagsTP a, TransportParamsRTP::flagsTP b)
+        {
+            return static_cast<TransportParamsRTP::flagsTP>(static_cast<int>(a) | static_cast<int>(b));
+        }
     };
 };
 

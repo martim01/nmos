@@ -388,10 +388,10 @@ void Sender::ActualizeUnitialisedActive(const std::vector<std::string>& vSourceI
 }
 
 
-void Sender::SetDestinationDetails(const std::string& sDestinationIp, unsigned short nDestinationPort)
+void Sender::SetDestinationDetails(const std::vector<std::pair<std::string, unsigned short>>& vDestinations)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_Active.SetDestinationDetails(sDestinationIp, nDestinationPort);
+    m_Active.SetDestinationDetails(vDestinations);
 
     UpdateVersionTime();
 }

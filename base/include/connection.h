@@ -30,7 +30,7 @@ namespace pml
 
                     std::optional<std::string> GetReceiverId() const;
 
-                    void SetDestinationDetails(const std::string& sIp, unsigned short nPort);
+                    void SetDestinationDetails(const std::vector<std::pair<std::string, unsigned short>>& vDestinations);
 
                     void Uninitialise();
 
