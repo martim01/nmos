@@ -217,7 +217,7 @@ namespace pml
                 *   @note sSourceIp and sDestinationIp should be set to be the same as the Sender's staged parameters unless they are set to auto. In which case the main program logic should choose them.
                 *   @note EventPoster::PatchSender is called on the request of the Sender being patched whatever the activation mode is. This function should be called by the main thread to allow the server to respond.
                 **/
-                void SenderPatchAllowed(unsigned short nPort, bool bOk, const std::string& sId, const std::vector<std::pair<std::string, std::string>>& vSourceDestIp, const std::string& sSDP="");
+                void SenderPatchAllowed(unsigned short nPort, bool bOk, const std::string& sId, const std::vector<std::string>& vDestIp, const std::string& sSDP="");
 
                 /** @brief To be called by the main thread when an IS-05 Receiver Patch is being maded
                 *   @param nPort the port of the Server that is being used for IS-04

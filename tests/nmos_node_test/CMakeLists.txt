@@ -27,7 +27,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 
 
-list(APPEND flags "-fPIC" "-Wall" "-fpermissive" "-O3")
+list(APPEND flags "-fPIC" "-Wall" "-fpermissive" "-O3" "-lstdc++fs")
 target_compile_options(nmos_node_test PRIVATE ${flags})
 
 list(APPEND definitions "NDEBUG" "NO_OPENSSL")
@@ -43,8 +43,10 @@ target_link_libraries(nmos_node_test restgoose)
 target_link_libraries(nmos_node_test nmos_base)
 target_link_libraries(nmos_node_test nmos_node)
 target_link_libraries(nmos_node_test pthread)
+target_link_libraries(nmos_node_test stdc++fs)
 
-set_target_properties(nmos_node_test PROPERTIES CXX_STANDARD 17
+set_target_properties(nmos_node_test PROPERTIES 
+	CXX_STANDARD 17
 	CXX_EXTENSIONS OFF
 	CXX_STANDARD_REQUIRED ON
 	POSITION_INDEPENDENT_CODE 1

@@ -39,11 +39,14 @@ int main()
     pFlow->SetPacketTime(pml::nmos::FlowAudioRaw::US_125);
     pFlow->SetMediaClkOffset(0);
 
-    auto pSender = make_shared<pml::nmos::Sender>("MattTest/Sender/Audio", "Description", pFlow->GetId(), pml::nmos::Sender::RTP_MCAST, pDevice->GetId(), {"eth0", "eth1"}, pml::nmos::TransportParamsRTP::REDUNDANT, {"239.100.1.20", "239.100.2.20"});
+    std::vector<std::string> vInterfaces{"eth0", "eth1"};
+    std::vector<std::string> vMulticast{"239.100.1.20", "239.100.2.20"};
+    auto pSender = make_shared<pml::nmos::Sender>("MattTest/Sender/Audio", "Description", pFlow->GetId(), pml::nmos::Sender::RTP_MCAST, pDevice->GetId(), vInterfaces, pml::nmos::TransportParamsRTP::REDUNDANT, vMulticast);
+
+
     pSender->MasterEnable(true);
 
-    auto pReceiver = make_shared<pml::nmos::Receiver>("MattTest/Receiver/Audio", "TestDescription", pml::nmos::Receiver::RTP_MCAST, pDevice->GetId(), pml::nmos::Receiver::AUDIO,
-    pml::nmos::TransportParamsRTP::MULTICAST));
+    auto pReceiver = make_shared<pml::nmos::Receiver>("MattTest/Receiver/Audio", "TestDescription", pml::nmos::Receiver::RTP_MCAST, pDevice->GetId(), pml::nmos::Receiver::AUDIO, pml::nmos::TransportParamsRTP::MULTICAST);
     pReceiver->AddCaps({"audio/L24","audio/L20","audio/L16"});
     pReceiver->AddInterfaceBinding("eth0");
 
@@ -121,7 +124,7 @@ int main()
                     pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
                     pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS Patch Sender: " << pPoster->GetString();
                     pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
-                    pml::nmos::NodeApi::Get().SenderPatchAllowed(pPoster->GetPort(), true, pPoster->GetString(),"","239.192.55.101");
+                    pml::nmos::NodeApi::Get().SenderPatchAllowed(pPoster->GetPort(), true, pPoster->GetString(),vMulticast);
                     break;
                 case ThreadPoster::PATCH_RECEIVER:
                     pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";

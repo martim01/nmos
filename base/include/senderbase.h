@@ -82,7 +82,7 @@ namespace pml
                 void Activate(const std::vector<std::string>& vSourceIp);
 
 
-                void SetupActivation(const std::vector<std::pair<std::string, std::string>>& vSourceDestIp, const std::string& sSDP);
+                void SetupActivation(const std::vector<std::string>& vDestIp, const std::string& sSDP);
                 void SetStagedActivationTime(const std::string& sTime);
                 void SetStagedActivationTimePoint(const std::chrono::time_point<std::chrono::high_resolution_clock>& tp);
                 void RemoveStagedActivationTime();

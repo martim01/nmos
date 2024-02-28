@@ -530,14 +530,14 @@ void NodeApiPrivate::TargetTaken(const std::string& sInterfaceIp, unsigned short
 }
 
 
-void NodeApiPrivate::SenderPatchAllowed(unsigned short nPort, bool bOk, const std::string& sId, const std::vector<std::pair<std::string, std::string>>& vSourceDestIp, const std::string& sSDP)
+void NodeApiPrivate::SenderPatchAllowed(unsigned short nPort, bool bOk, const std::string& sId, const std::vector<std::string>& vDestIp, const std::string& sSDP)
 {
     if(bOk)
     {
         auto pSender = GetSender(sId);
         if(pSender)
         {
-            pSender->SetupActivation(vSourceDestIp, sSDP);
+            pSender->SetupActivation(vDestIp, sSDP);
         }
         else
         {

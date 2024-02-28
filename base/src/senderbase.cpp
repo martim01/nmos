@@ -43,7 +43,7 @@ Sender::Sender(const std::string& sLabel, const std::string& sDescription, const
     {
         if(vMulticastIp.empty() == false)
         {
-            m_vSourceDestIp[0].second = vMulticastIp[0]
+            m_vSourceDestIp[0].second = vMulticastIp[0];
         }
         if((flagsTransport & TransportParamsRTP::flagsTP::REDUNDANT) && vMulticastIp.size() == 2)
         {
@@ -363,11 +363,14 @@ bool Sender::Commit(const ApiVersion& version)
     return false;
 }
 
-void Sender::SetupActivation(const std::vector<std::pair<std::string, std::string>>& vSourceDestIp, const std::string& sSDP)
+void Sender::SetupActivation(const std::vector<std::string>& vDestIp, const std::string& sSDP)
 {
-    if(vSourceDestIp.size() == m_vSourceDestIp.size())
+    if(vDestIp.size() == m_vSourceDestIp.size())
     {
-        m_vSourceDestIp = vSourceDestIp;
+        for(size_t nChannel = 0; nChannel < m_vSourceDestIp.size(); ++nChannel)
+        {
+            m_vSourceDestIp[nChannel].second = vDestIp[nChannel];
+        }
     }
     m_sSDP = sSDP;
 }
