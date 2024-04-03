@@ -834,11 +834,11 @@ long NodeApiPrivate::RegisterResource(const string& sType, const Json::Value& js
     jsonRegister["type"] = sType;
     jsonRegister["data"] = json;
     
-
+    pmlLog(pml::LOG_INFO, "pml::nmos") << "Register " << jsonRegister;
     auto request = pml::restgoose::HttpClient(pml::restgoose::POST, endpoint(m_sRegistrationNode+m_versionRegistration.GetVersionAsString()+"/resource"), jsonRegister);
     auto resp = request.Run();
 
-    pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "RegisterApi: Register returned [" << resp.nHttpCode << "] " << resp.data.Get() ;
+    pmlLog(pml::LOG_INFO, "pml::nmos") << "RegisterApi: Register returned [" << resp.nHttpCode << "] " << resp.data.Get() ;
     if(resp.nHttpCode == 500 || resp.nHttpCode < 100)
     {
         MarkRegNodeAsBad();

@@ -170,8 +170,7 @@ namespace pml
                 *   @param nPort the port of the Server that is being used for IS-04
                 *   @param bOk true if the Sender is allowed to take the patch.
                 *   @param sId the uuid of the Sender
-                *   @param sId the uuid of the Sender
-                *   @param vSourceDestIp vector of source IP address from which RTP packets will be sent (IP address of interface bound to this output) and IP address to which RTP packets.will be sent. Can be a multicast address. Should be 2 entries for 2022-7 and otherwise 1
+                *   @param vDestIp vector of destination IP address from which RTP packets will be sent (IP address of interface bound to this output) and IP address to which RTP packets.will be sent. Can be a multicast address. Should be 2 entries for 2022-7 and otherwise 1
                 *   @param sSDP the transport file that the sender should serve. This should be created by the main program logic from the staged transport parameters and associated flow etc. If empty then the Sender will create it's own from the connection parameters
                 *   @note sSourceIp and sDestinationIp should be set to be the same as the Sender's staged parameters unless they are set to auto. In which case the main program logic should choose them.
                 *   @note EventPoster::PatchSender is called on the request of the Sender being patched whatever the activation mode is. This function should be called by the main thread to allow the server to respond.
