@@ -439,23 +439,16 @@ void Sender::MarkRTPTransmissionAsActive(bool bActive, std::optional<size_t> tp)
 {
     if(tp)
     {
-        if(*tp < m_Staged.GetTransportParams().size())
-        {
-            m_Staged.GetTransportParams()[*tp].EnableRtp(bActive);
-             m_Active.GetTransportParams()[*tp].EnableRtp(bActive);
-        }
+        m_Staged.EnableTransport(*tp, bActive);
+        m_Active.EnableTransport(*tp, bActive);
     }
     else
     {
-        for(auto& stream : m_Staged.GetTransportParams())
+        for(size_t i = 0; i < m_Staged.GetTransportParams().size(); ++i)
         {
-            stream.EnableRtp(bActive);
+            m_Staged.EnableTransport(i, bActive);
+            m_Active.EnableTransport(i, bActive);
         }
-        for(auto& stream : m_Active.GetTransportParams())
-        {
-            stream.EnableRtp(bActive);
-        }
-
     }
 
 }
