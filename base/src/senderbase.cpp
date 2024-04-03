@@ -437,21 +437,21 @@ void Sender::SetStagedActivationTimePoint(const std::chrono::time_point<std::chr
 
 void Sender::MarkRTPTransmissionAsActive(bool bActive, std::optional<size_t> tp)
 {
-//    if(tp)
-//    {
-//        if(*tp < m_Staged.GetTransportParams().size())
-//        {
-//             m_Staged.GetTransportParams()[*tp].EnableRtp(bActive);
-//             m_Active.GetTransportParams()[*tp].EnableRtp(bActive);
-//        }
-//    }
-//    else
-//    {
-//        for(size_t i = 0; i < m_Staged.GetTransportParams().size())
-//        {
-//            m_Staged.GetTransportParams()[i].EnableRtp(bActive);
-//            m_Active.GetTransportParams()[i].EnableRtp(bActive);
-//        }
-//    }
+    if(tp)
+    {
+        if(*tp < m_Staged.GetTransportParams().size())
+        {
+            m_Staged.GetTransportParams()[*tp].EnableRtp(bActive);
+             m_Active.GetTransportParams()[*tp].EnableRtp(bActive);
+        }
+    }
+    else
+    {
+        for(size_t i = 0; i < m_Staged.GetTransportParams().size())
+        {
+            m_Staged.GetTransportParams()[i].EnableRtp(bActive);
+            m_Active.GetTransportParams()[i].EnableRtp(bActive);
+       }
+    }
 
 }
