@@ -250,7 +250,10 @@ pml::restgoose::response IS05Server::GetNmosSingleSenderTransportfile(const quer
     {
         if(pSender->GetActive().GetMasterEnable())
         {
-            m_api.CreateSDP(pSender);
+            if(!pSender->UsingExternalSdp())
+            {
+                m_api.CreateSDP(pSender);
+            }
             resp.contentType = headerValue("application/sdp");
             resp.data = textData(pSender->GetTransportFile());
         }

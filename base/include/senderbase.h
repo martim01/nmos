@@ -8,6 +8,7 @@
 #include "constraint.h"
 #include "ioresource.h"
 #include "activation.h"
+#include <functional>
 
 namespace pml
 {
@@ -50,7 +51,7 @@ namespace pml
 
                 connectionSender<activationResponse> GetStaged() const;
                 connectionSender<activationResponse> GetActive() const;
-                const std::string& GetTransportFile() const;
+                std::string GetTransportFile() const;
 
                 bool IsLocked();
                 bool IsActivateAllowed() const;
@@ -69,6 +70,10 @@ namespace pml
                 void MarkRTPTransmissionAsActive(bool bActive, std::optional<size_t> tp);
 
                 void SetDestinationDetails(const std::vector<std::pair<std::string, unsigned short>>& vDestinations);
+
+
+                void UseExternalSdp(const std::function<std::string()>& pFunction) { m_pGetSdp = pFunction;}
+                bool UsingExternalSdp() const { return m_pGetSdp != nullptr;}
 
             protected:
 
@@ -108,6 +113,8 @@ namespace pml
                 std::vector<std::pair<std::string, std::string>> m_vSourceDestIp;
                 
                 std::string m_sSDP;
+
+                std::function<std::string()> m_pGetSdp = nullptr;
 
 
         };

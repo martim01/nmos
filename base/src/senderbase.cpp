@@ -221,8 +221,12 @@ connectionSender<activationResponse> Sender::GetActive()  const
 
 
 
-const std::string& Sender::GetTransportFile() const
+std::string Sender::GetTransportFile() const
 {
+    if(m_pGetSdp)
+    {
+        return m_pGetSdp();
+    }
     return m_sTransportFile;
 }
 
