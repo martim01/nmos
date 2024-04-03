@@ -387,7 +387,7 @@ std::string SdpManager::TransportParamsToSdp(const Self& self, std::shared_ptr<c
             }
             sGroup += "S"+std::to_string(nStream);
         }
-        sSDP = "a=group:DUP "+sGroup+"\r\n";
+        sSDP += "a=group:DUP "+sGroup+"\r\n";
     }
 
     auto nStream = 1;
