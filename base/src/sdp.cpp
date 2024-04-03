@@ -376,7 +376,21 @@ std::string SdpManager::TransportParamsToSdp(const Self& self, std::shared_ptr<c
     std::string sSDP = CreateOriginLine(active.GetTransportParams()[0]);    //@todo what should we use for the origin address??
     sSDP += CreateSessionLines(pSender);
 
+    if(active.GetTransportParams().size() > 1)
+    {
+        std::string sGroup;
+        for(size_t nStream = 1; nStream <= active.GetTransportParams().size(); ++nStream)
+        {
+            if(sGroup.empty() == false)
+            {
+                sGroup += " ";
+            }
+            sGroup += "S"+std::to_string(nStream);
+        }
+        sSDP = "a=group:DUP "+sGroup+"\r\n";
+    }
 
+    auto nStream = 1;
     for(const auto& tpSender: active.GetTransportParams())
     {
         sSDP += CreateMediaLine(pFlow, tpSender.GetDestinationPort());
@@ -384,6 +398,13 @@ std::string SdpManager::TransportParamsToSdp(const Self& self, std::shared_ptr<c
         sSDP += CreateClockLine(self, pSource, tpSender);
         sSDP += CreateAttributeLines(pFlow, pSource);
         sSDP += CreateRtcpLines(tpSender);
+
+        if(active.GetTransportParams().size() > 1)
+        {
+            sSDP += "a=mid:S"+std::to_string(nStream)+"\r\n";
+            ++nStream;
+        }
+        
     }
     return sSDP;
 }
