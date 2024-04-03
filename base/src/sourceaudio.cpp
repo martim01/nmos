@@ -17,29 +17,44 @@ SourceAudio::SourceAudio() : Source(Source::AUDIO)
 
 }
 
-void SourceAudio::AddChannels(const std::map<channelSymbol, channelLabel>& mChannels)
+void SourceAudio::AddChannels(const std::vector<std::pair<channelSymbol, channelLabel>>& vChannels)
 {
-    m_mChannel.insert(mChannels.begin(), mChannels.end());
+    m_vChannel.insert(m_vChannel.end(), vChannels.begin(), vChannels.end());
 }
 
 void SourceAudio::AddChannel(const channelSymbol& symbol, const channelLabel& label, bool bUpdateVersion)
 {
-    m_mChannel.insert(make_pair(symbol, label));
+    m_vChannel.push_back({symbol, label});
     if(bUpdateVersion)
     {
         UpdateVersionTime();
     }
 }
 
-void SourceAudio::RemoveChannel(const channelSymbol& symbol)
+void SourceAudio::SetChannel(size_t nChannel, const channelSymbol& symbol, const channelLabel& label, bool UpdateVersion)
 {
-    m_mChannel.erase(symbol);
+    if(nChannel < m_vChannel.size())
+    {
+        m_vChannel[nChannel] = {symbol, label};
+    }
+    if(UpdateVersion)
+    {
+        UpdateVersionTime();
+    }
+}
+
+void SourceAudio::RemoveChannel(size_t nChannel)
+{
+    if(nChannel < m_vChannel.size())
+    {
+        m_vChannel.erase(m_vChannel.begin()+nChannel);
+    }
     UpdateVersionTime();
 }
 
 void SourceAudio::ClearChannels(bool bUpdateVersion)
 {
-    m_mChannel.clear();
+    m_vChannel.clear();
     if(bUpdateVersion)
     {
         UpdateVersionTime();
@@ -62,6 +77,8 @@ bool SourceAudio::UpdateFromJson(const Json::Value& jsData)
     }
     if(m_bIsOk)
     {
+        m_vChannel.clear();
+        m_vChannel.resize(jsData["channels"].size());
         for(Json::ArrayIndex ai = 0; ai < jsData["channels"].size(); ++ai)
         {
             if(jsData["channels"][ai].isObject() == false)
@@ -85,7 +102,7 @@ bool SourceAudio::UpdateFromJson(const Json::Value& jsData)
             else
             {
                 // @todo should we check the channel symbol is valid??
-                m_mChannel.insert(make_pair(channelSymbol(jsData["channels"][ai]["symbol"].asString()), channelLabel(jsData["channels"][ai]["label"].asString())));
+                m_vChannel[ai] = std::make_pair(channelSymbol(jsData["channels"][ai]["symbol"].asString()), channelLabel(jsData["channels"][ai]["label"].asString()));
             }
         }
     }
@@ -98,15 +115,15 @@ bool SourceAudio::Commit(const ApiVersion& version)
     {
         m_json["channels"] = Json::Value(Json::arrayValue);
 
-        for(const auto& pairChannel : m_mChannel)
+        for(const auto& [symbol, label] : m_vChannel)
         {
             Json::Value jsChannel;
-            jsChannel["label"] = pairChannel.second.Get();
-            jsChannel["symbol"] =  pairChannel.first.Get();
+            jsChannel["label"] = label.Get();
+            jsChannel["symbol"] =  symbol.Get();
 
             m_json["channels"].append(jsChannel);
         }
-        m_nCommitedChannelCount = m_mChannel.size();
+        m_nCommitedChannelCount = m_vChannel.size();
         return true;
     }
     return false;

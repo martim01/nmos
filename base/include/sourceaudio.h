@@ -19,9 +19,10 @@ namespace pml
                 static std::shared_ptr<SourceAudio> Create(const Json::Value& jsResponse);
                 SourceAudio();
                 virtual bool UpdateFromJson(const Json::Value& jsData);
-                void AddChannels(const std::map<channelSymbol, channelLabel>& mChannels);
+                void AddChannels(const std::vector<std::pair<channelSymbol, channelLabel>>& vChannels);
                 void AddChannel(const channelSymbol& symbol, const channelLabel& label, bool UpdateVersion);
-                void RemoveChannel(const channelSymbol& symbol);
+                void SetChannel(size_t nChannel, const channelSymbol& symbol, const channelLabel& label, bool UpdateVersion);
+                void RemoveChannel(size_t nChannel);
                 void ClearChannels(bool bUpdateVersion);
 
                 bool Commit(const ApiVersion& version);
@@ -33,7 +34,7 @@ namespace pml
 
             private:
 
-                std::map<channelSymbol, channelLabel> m_mChannel;
+                std::vector<std::pair<channelSymbol, channelLabel>> m_vChannel;
                 size_t m_nCommitedChannelCount;
         };
     };
