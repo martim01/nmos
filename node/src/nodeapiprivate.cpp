@@ -329,7 +329,10 @@ void NodeApiPrivate::StopmDNSPublisher()
 
 bool NodeApiPrivate::StartServices()
 {
-    m_pThread = std::make_unique<std::thread>(&NodeApiPrivate::Run, this);
+    if(m_pThread == nullptr)
+    {
+        m_pThread = std::make_unique<std::thread>(&NodeApiPrivate::Run, this);
+    }
 
     return true;
 }
