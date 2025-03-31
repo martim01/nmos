@@ -252,8 +252,8 @@ void NodeApiPrivate::Init(std::shared_ptr<EventPoster> pPoster, unsigned short n
     m_mDiscoveryServers.insert(std::make_pair(ApiVersion(1,3), make_unique<IS04Server>(m_lstServers.back(), ApiVersion(1,3), m_pPoster,*this)));
 
 
-    m_lstServers.back()->AddEndpoint(pml::restgoose::GET, endpoint(""), std::bind(&NodeApiPrivate::GetRoot, this,_1,_2,_3,_4));
-    m_lstServers.back()->AddEndpoint(pml::restgoose::GET, endpoint("/x-nmos"), std::bind(&NodeApiPrivate::GetNmosDiscoveryRoot,this, _1,_2,_3,_4));
+    m_lstServers.back()->AddEndpoint(pml::restgoose::kGet, endpoint(""), std::bind(&NodeApiPrivate::GetRoot, this,_1,_2,_3,_4));
+    m_lstServers.back()->AddEndpoint(pml::restgoose::kGet, endpoint("/x-nmos"), std::bind(&NodeApiPrivate::GetNmosDiscoveryRoot,this, _1,_2,_3,_4));
     m_lstServers.back()->AddNotFoundCallback(std::bind(&NotFound, _1,_2,_3,_4,_5));
 
     //Create another pml::restgoose server if using different ports
@@ -261,8 +261,8 @@ void NodeApiPrivate::Init(std::shared_ptr<EventPoster> pPoster, unsigned short n
     {
          m_lstServers.push_back(std::make_shared<pml::restgoose::Server>());
          m_lstServers.back()->Init("","",ipAddress("0.0.0.0"),nDiscoveryPort, endpoint(""), false);
-         m_lstServers.back()->AddEndpoint(pml::restgoose::GET, endpoint(""), std::bind(&NodeApiPrivate::GetRoot,this, _1,_2,_3,_4));
-         m_lstServers.back()->AddEndpoint(pml::restgoose::GET, endpoint("/x-nmos"), std::bind(&NodeApiPrivate::GetNmosConnectionRoot, this,_1,_2,_3,_4));
+         m_lstServers.back()->AddEndpoint(pml::restgoose::kGet, endpoint(""), std::bind(&NodeApiPrivate::GetRoot,this, _1,_2,_3,_4));
+         m_lstServers.back()->AddEndpoint(pml::restgoose::kGet, endpoint("/x-nmos"), std::bind(&NodeApiPrivate::GetNmosConnectionRoot, this,_1,_2,_3,_4));
          m_lstServers.back()->AddNotFoundCallback(std::bind(&NotFound, _1,_2,_3,_4,_5));
     }
 
@@ -838,7 +838,7 @@ long NodeApiPrivate::RegisterResource(const string& sType, const Json::Value& js
     jsonRegister["data"] = json;
     
     pmlLog(pml::LOG_INFO, "pml::nmos") << "Register " << jsonRegister;
-    auto request = pml::restgoose::HttpClient(pml::restgoose::POST, endpoint(m_sRegistrationNode+m_versionRegistration.GetVersionAsString()+"/resource"), jsonRegister);
+    auto request = pml::restgoose::HttpClient(pml::restgoose::kPost, endpoint(m_sRegistrationNode+m_versionRegistration.GetVersionAsString()+"/resource"), jsonRegister);
     auto resp = request.Run();
 
     pmlLog(pml::LOG_INFO, "pml::nmos") << "RegisterApi: Register returned [" << resp.nHttpCode << "] " << resp.data.Get() ;
@@ -854,7 +854,7 @@ long NodeApiPrivate::RegistrationHeartbeat()
 {
     m_tpHeartbeat = chrono::system_clock::now() + chrono::milliseconds(m_nHeartbeatTime);
 
-    auto request = pml::restgoose::HttpClient(pml::restgoose::POST, endpoint(m_sRegistrationNode+m_versionRegistration.GetVersionAsString()+"/health/nodes/"+m_self.GetId()));
+    auto request = pml::restgoose::HttpClient(pml::restgoose::kPost, endpoint(m_sRegistrationNode+m_versionRegistration.GetVersionAsString()+"/health/nodes/"+m_self.GetId()));
 
     auto resp = request.Run();
     if(resp.nHttpCode == 500 || resp.nHttpCode < 100)
@@ -899,7 +899,7 @@ int NodeApiPrivate::UnregisterSimple()
 
 bool NodeApiPrivate::UnregisterResource(const string& sType, const std::string& sId)
 {
-    auto request = pml::restgoose::HttpClient(pml::restgoose::HTTP_DELETE, endpoint(m_sRegistrationNode+m_versionRegistration.GetVersionAsString()+"/resource/"+sType+"/"+sId));
+    auto request = pml::restgoose::HttpClient(pml::restgoose::kDelete, endpoint(m_sRegistrationNode+m_versionRegistration.GetVersionAsString()+"/resource/"+sType+"/"+sId));
     auto resp = request.Run();
 
     pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "RegisterApi:Unregister returned [" << resp.nHttpCode << "] " << resp.data.Get() ;
@@ -924,7 +924,7 @@ void NodeApiPrivate::StopRun()
     {
         pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeApi - stop run";
         m_bRun = false;
-        Signal(SIG_EXIT);
+        //Signal(SIG_EXIT);
         m_pThread->join();
         m_pThread = nullptr;
         pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeApi - stop done";

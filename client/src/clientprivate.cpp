@@ -151,7 +151,7 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<pml::dnssd::dnsInst
                 {
                     pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeBrowser ver_slf changed" ;
 
-                    pml::restgoose::HttpClient client(pml::restgoose::GET, endpoint(std::string(ss.str()+"self")));
+                    pml::restgoose::HttpClient client(pml::restgoose::kGet, endpoint(std::string(ss.str()+"self")));
                     auto changed = pApi->AddNode(pInstance->sHostIP, ConvertToJson(client.Run().data.Get()));
 
                     if(pApi->RunQuery(changed, ClientApiImpl::NODES))
@@ -172,7 +172,7 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<pml::dnssd::dnsInst
                     //store the devices this ip address currently provides
                     pApi->StoreDevices(pInstance->sHostIP);
 
-                    pml::restgoose::HttpClient client(pml::restgoose::GET, endpoint(std::string(ss.str()+"devices")));                   
+                    pml::restgoose::HttpClient client(pml::restgoose::kGet, endpoint(std::string(ss.str()+"devices")));                   
                     //add or update all devices on this ip address
                     auto changed = pApi->AddDevices(pInstance->sHostIP, ConvertToJson(client.Run().data.Get()));
                     //remove any devices that we previously stored but didn;t update. i.e. ones that no longer exist
@@ -193,7 +193,7 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<pml::dnssd::dnsInst
                 if(VersionChanged(pInstance, "ver_src"))
                 {
                     pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeBrowser ver_src changed" ;
-                    pml::restgoose::HttpClient client(pml::restgoose::GET, endpoint(std::string(ss.str()+"sources")));
+                    pml::restgoose::HttpClient client(pml::restgoose::kGet, endpoint(std::string(ss.str()+"sources")));
 
                     pApi->StoreSources(pInstance->sHostIP);
                     auto changed = pApi->AddSources(pInstance->sHostIP, ConvertToJson(client.Run().data.Get()));
@@ -215,7 +215,7 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<pml::dnssd::dnsInst
                 if(VersionChanged(pInstance, "ver_flw"))
                 {
                     pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeBrowser ver_flw changed" ;
-                    pml::restgoose::HttpClient client(pml::restgoose::GET, endpoint(std::string(ss.str()+"flows")));
+                    pml::restgoose::HttpClient client(pml::restgoose::kGet, endpoint(std::string(ss.str()+"flows")));
 
 
                     pApi->StoreFlows(pInstance->sHostIP);
@@ -238,7 +238,7 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<pml::dnssd::dnsInst
                 if(VersionChanged(pInstance, "ver_snd"))
                 {
                     pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeBrowser ver_snd changed" ;
-                    pml::restgoose::HttpClient client(pml::restgoose::GET, endpoint(std::string(ss.str()+"senders")));
+                    pml::restgoose::HttpClient client(pml::restgoose::kGet, endpoint(std::string(ss.str()+"senders")));
                     
 
 
@@ -261,7 +261,7 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<pml::dnssd::dnsInst
                 if(VersionChanged(pInstance, "ver_rcv"))
                 {
                     pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeBrowser ver_rcv changed" ;
-                    pml::restgoose::HttpClient client(pml::restgoose::GET, endpoint(std::string(ss.str()+"receivers")));
+                    pml::restgoose::HttpClient client(pml::restgoose::kGet, endpoint(std::string(ss.str()+"receivers")));
 
                     pApi->StoreReceivers(pInstance->sHostIP);
                     auto changed = pApi->AddReceivers(pInstance->sHostIP, ConvertToJson(client.Run().data.Get()));
@@ -294,7 +294,7 @@ void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std:
 
     //get the constraints
 
-    auto getSender = pml::restgoose::HttpClient(pml::restgoose::GET, endpoint(sSenderUrl + "/single/senders/"+sSenderId+"/"+ClientApiImpl::STR_CONNECTION[enumConnection::SENDER_CONSTRAINTS]));
+    auto getSender = pml::restgoose::HttpClient(pml::restgoose::kGet, endpoint(sSenderUrl + "/single/senders/"+sSenderId+"/"+ClientApiImpl::STR_CONNECTION[enumConnection::SENDER_CONSTRAINTS]));
     auto resp = getSender.Run();
     if(resp.nHttpCode != 200)
     {
@@ -309,7 +309,7 @@ void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std:
     }
 
 
-    auto getReceiver = pml::restgoose::HttpClient(pml::restgoose::GET, endpoint("/single/receivers/"+sReceiverId+"/"+ClientApiImpl::STR_CONNECTION[enumConnection::RECEIVER_CONSTRAINTS]));
+    auto getReceiver = pml::restgoose::HttpClient(pml::restgoose::kGet, endpoint("/single/receivers/"+sReceiverId+"/"+ClientApiImpl::STR_CONNECTION[enumConnection::RECEIVER_CONSTRAINTS]));
     auto respReceiver = getReceiver.Run();
     if(respReceiver.nHttpCode != 200)
     {
@@ -339,7 +339,7 @@ void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std:
     auto sReceiverStageUrl = sReceiverUrl + "/single/receivers/"+sReceiverId+"/"+ClientApiImpl::STR_CONNECTION[enumConnection::RECEIVER_STAGED];
 
 
-    auto patchSender = pml::restgoose::HttpClient(pml::restgoose::PATCH, endpoint(sSenderStageUrl), aCon.GetJson());
+    auto patchSender = pml::restgoose::HttpClient(pml::restgoose::kPatch, endpoint(sSenderStageUrl), aCon.GetJson());
     auto respPatchSender = patchSender.Run();
 
     if(respPatchSender.nHttpCode != 200)
@@ -349,7 +349,7 @@ void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std:
     }
     else
     {
-        auto getTransport = pml::restgoose::HttpClient(pml::restgoose::GET, endpoint(sSenderTransportUrl));
+        auto getTransport = pml::restgoose::HttpClient(pml::restgoose::kGet, endpoint(sSenderTransportUrl));
         auto respGetTransport = getTransport.Run();
         if(respGetTransport.nHttpCode != 200)
         {
@@ -370,7 +370,7 @@ void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std:
 
             std::string sData(ConvertFromJson(aConR.GetJson()));
 
-            auto patchReceiver = pml::restgoose::HttpClient(pml::restgoose::PATCH, endpoint(sReceiverStageUrl), aConR.GetJson());
+            auto patchReceiver = pml::restgoose::HttpClient(pml::restgoose::kPatch, endpoint(sReceiverStageUrl), aConR.GetJson());
             auto respReceiver = patchReceiver.Run();
             if(respReceiver.nHttpCode != 200)
             {
@@ -395,7 +395,7 @@ void DisconnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const s
         connectionSender<activationRequest> aCon(true, TransportParamsRTP::CORE);
         aCon.GetActivation().SetMode(activation::enumActivate::ACT_NOW);
 
-        auto patchSender = pml::restgoose::HttpClient(pml::restgoose::PATCH, endpoint(sSenderStage), aCon.GetJson());
+        auto patchSender = pml::restgoose::HttpClient(pml::restgoose::kPatch, endpoint(sSenderStage), aCon.GetJson());
         if(auto respPatchSender = patchSender.Run(); respPatchSender.nHttpCode != 200)
         {
             pApi->HandleConnect(sSenderId, sReceiverId, false, respPatchSender.data.Get());
@@ -412,7 +412,7 @@ void DisconnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const s
 //    aConR.sTransportFileType = "application/sdp";
 //    aConR.sTransportFileData = "";
 
-    auto patchReceiver = pml::restgoose::HttpClient(pml::restgoose::PATCH, endpoint(sReceiverStage), aConR.GetJson());
+    auto patchReceiver = pml::restgoose::HttpClient(pml::restgoose::kPatch, endpoint(sReceiverStage), aConR.GetJson());
     auto respPatchReceiver = patchReceiver.Run();
     if(respPatchReceiver.nHttpCode != 200)
     {
@@ -1538,7 +1538,7 @@ bool ClientApiImpl::Subscribe(const std::string& sSenderId, const std::string& s
     if(sUrl.empty() == false)
     {
         //do a PUT to the correct place on the URL
-        auto client = pml::restgoose::HttpClient(pml::restgoose::PUT, endpoint(sUrl), pSender->GetJson(version));
+        auto client = pml::restgoose::HttpClient(pml::restgoose::kPut, endpoint(sUrl), pSender->GetJson(version));
         client.Run(std::bind(&ClientApiImpl::SetHttpRequestDone, this, _1,_2,_3), static_cast<long>(enumConnection::TARGET), pReceiver->GetId());
         
         pmlLog(pml::LOG_DEBUG, "pml::nmos") << "TARGET: " << sUrl ;
@@ -1563,7 +1563,7 @@ bool ClientApiImpl::Unsubscribe(const std::string& sReceiverId)
     {
         pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "TARGET: " << sUrl ;
         //do a PUT to the correct place on the URL
-        auto client = pml::restgoose::HttpClient(pml::restgoose::PUT, endpoint(sUrl), Json::Value(Json::objectValue));
+        auto client = pml::restgoose::HttpClient(pml::restgoose::kPut, endpoint(sUrl), Json::Value(Json::objectValue));
         client.Run(std::bind(&ClientApiImpl::SetHttpRequestDone, this, _1,_2,_3), static_cast<long>(enumConnection::TARGET), pReceiver->GetId());
 
         return true;
@@ -1675,7 +1675,7 @@ std::string ClientApiImpl::GetConnectionUrl(std::shared_ptr<Resource> pResource)
             if(CheckSubnet(ipAddress(vSplit[1].substr(0, vSplit[1].find(':'))), pairInterface.first, pairInterface.second) && setTried.insert(itControl->second).second)
             {
                 //we should be able to connect on this
-                auto getControl = pml::restgoose::HttpClient(pml::restgoose::GET, endpoint(itControl->second.Get()));
+                auto getControl = pml::restgoose::HttpClient(pml::restgoose::kGet, endpoint(itControl->second.Get()));
                 auto resp = getControl.Run();
                 if(resp.nHttpCode == 200)
                 {
@@ -1693,7 +1693,7 @@ std::string ClientApiImpl::GetConnectionUrl(std::shared_ptr<Resource> pResource)
         //same subnet mask and not tried this ip address before
         if(setTried.insert(itControl->second).second)
         {
-            auto getControl = pml::restgoose::HttpClient(pml::restgoose::GET, endpoint(itControl->second.Get()));
+            auto getControl = pml::restgoose::HttpClient(pml::restgoose::kGet, endpoint(itControl->second.Get()));
             auto resp = getControl.Run();
             if(resp.nHttpCode == 200)
             {
@@ -1736,14 +1736,14 @@ pml::restgoose::clientResponse ClientApiImpl::RequestSender(const std::string& s
     if(bAsync)
     {
         
-        auto client = pml::restgoose::HttpClient(pml::restgoose::GET, endpoint(sConnectionUrl));
+        auto client = pml::restgoose::HttpClient(pml::restgoose::kGet, endpoint(sConnectionUrl));
         client.Run(std::bind(&ClientApiImpl::SetHttpRequestDone, this, _1,_2,_3), (long)eType, "");
 
         return CreateHttpResponse(202, "Request actioned");
     }
     else
     {
-        auto request = pml::restgoose::HttpClient(pml::restgoose::GET, endpoint(sConnectionUrl));
+        auto request = pml::restgoose::HttpClient(pml::restgoose::kGet, endpoint(sConnectionUrl));
         return request.Run();
     }
 }
@@ -1765,14 +1765,14 @@ pml::restgoose::clientResponse ClientApiImpl::RequestReceiver(const std::string&
 
     if(bAsync)
     {
-        auto client = pml::restgoose::HttpClient(pml::restgoose::GET, endpoint(sConnectionUrl));
+        auto client = pml::restgoose::HttpClient(pml::restgoose::kGet, endpoint(sConnectionUrl));
         client.Run(std::bind(&ClientApiImpl::SetHttpRequestDone, this, _1,_2,_3), (long)eType, "");
 
         return CreateHttpResponse(202, "Request actioned");
     }
     else
     {
-        auto request = pml::restgoose::HttpClient(pml::restgoose::GET, endpoint(sConnectionUrl));
+        auto request = pml::restgoose::HttpClient(pml::restgoose::kGet, endpoint(sConnectionUrl));
         return request.Run();
     }
 }
@@ -1877,14 +1877,14 @@ std::pair<pml::restgoose::clientResponse, std::optional<connectionSender<activat
 
     if(bAsync)
     {
-        auto client = pml::restgoose::HttpClient(pml::restgoose::PATCH, endpoint(sConnectionUrl), aConnection.GetJson());
+        auto client = pml::restgoose::HttpClient(pml::restgoose::kPatch, endpoint(sConnectionUrl), aConnection.GetJson());
         client.Run(std::bind(&ClientApiImpl::SetHttpRequestDone, this, _1,_2,_3), static_cast<long>(enumConnection::SENDER_PATCH), sSenderId);
 
         return {CreateHttpResponse(202, "Request actioned"), {}};
     }
     else
     {
-        auto request = pml::restgoose::HttpClient(pml::restgoose::PATCH, endpoint(sConnectionUrl), aConnection.GetJson());
+        auto request = pml::restgoose::HttpClient(pml::restgoose::kPatch, endpoint(sConnectionUrl), aConnection.GetJson());
         auto resp = request.Run();
         if(resp.nHttpCode != 200)
         {
@@ -1914,14 +1914,14 @@ std::pair<pml::restgoose::clientResponse, std::optional<connectionReceiver<activ
 
     if(bAsync)
     {
-        auto client = pml::restgoose::HttpClient(pml::restgoose::PATCH, endpoint(sConnectionUrl), aConnection.GetJson());
+        auto client = pml::restgoose::HttpClient(pml::restgoose::kPatch, endpoint(sConnectionUrl), aConnection.GetJson());
         client.Run(std::bind(&ClientApiImpl::SetHttpRequestDone, this, _1,_2,_3), static_cast<long>(enumConnection::RECEIVER_PATCH), sReceiverId);
 
         return {CreateHttpResponse(202, "Request actioned"), {}};
     }
     else
     {
-        auto request = pml::restgoose::HttpClient(pml::restgoose::PATCH, endpoint(sConnectionUrl), aConnection.GetJson());
+        auto request = pml::restgoose::HttpClient(pml::restgoose::kPatch, endpoint(sConnectionUrl), aConnection.GetJson());
         auto resp = request.Run();
         if(resp.nHttpCode != 200)
         {
@@ -2152,7 +2152,7 @@ bool ClientApiImpl::RemoveQuerySubscriptionRegistry(const std::string& sSubscrip
                 //if a persitent query then we need to send a delete to the server
                 if(pairQuery.second.jsSubscription["persist"].isBool() && pairQuery.second.jsSubscription["persist"].asBool())
                 {
-                    auto request = pml::restgoose::HttpClient(pml::restgoose::HTTP_DELETE, endpoint(urlServer.Get()+"/subscriptions/"+pairQuery.second.jsSubscription["id"].asString()));
+                    auto request = pml::restgoose::HttpClient(pml::restgoose::kDelete, endpoint(urlServer.Get()+"/subscriptions/"+pairQuery.second.jsSubscription["id"].asString()));
                     auto resp = request.Run();
                     if(resp.nHttpCode == 204)
                     {
@@ -2423,7 +2423,7 @@ bool ClientApiImpl::QueryQueryServer(const endpoint& theUrl, ClientApiImpl::quer
     }
     jsQuery["params"] = jsParams;
 
-    auto request = pml::restgoose::HttpClient(pml::restgoose::POST, endpoint(theUrl.Get()+"/subscriptions"), jsQuery);
+    auto request = pml::restgoose::HttpClient(pml::restgoose::kPost, endpoint(theUrl.Get()+"/subscriptions"), jsQuery);
     auto resp = request.Run();
 
 

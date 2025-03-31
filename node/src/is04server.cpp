@@ -41,61 +41,61 @@ IS04Server::~IS04Server()
 
 void IS04Server::AddBaseEndpoints()
 {
-    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint("/x-nmos/node"), std::bind(&IS04Server::GetNmosRoot, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()), std::bind(&IS04Server::GetNmosVersion, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SELF), std::bind(&IS04Server::GetNmosNode, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SOURCES), std::bind(&IS04Server::GetNmosSources, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+FLOWS), std::bind(&IS04Server::GetNmosFlows, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+DEVICES), std::bind(&IS04Server::GetNmosDevices, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SENDERS), std::bind(&IS04Server::GetNmosSenders, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+RECEIVERS), std::bind(&IS04Server::GetNmosReceivers, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::kGet, endpoint("/x-nmos/node"), std::bind(&IS04Server::GetNmosRoot, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::kGet, endpoint(ROOT+m_version.GetVersionAsString()), std::bind(&IS04Server::GetNmosVersion, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::kGet, endpoint(ROOT+m_version.GetVersionAsString()+SELF), std::bind(&IS04Server::GetNmosNode, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::kGet, endpoint(ROOT+m_version.GetVersionAsString()+SOURCES), std::bind(&IS04Server::GetNmosSources, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::kGet, endpoint(ROOT+m_version.GetVersionAsString()+FLOWS), std::bind(&IS04Server::GetNmosFlows, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::kGet, endpoint(ROOT+m_version.GetVersionAsString()+DEVICES), std::bind(&IS04Server::GetNmosDevices, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::kGet, endpoint(ROOT+m_version.GetVersionAsString()+SENDERS), std::bind(&IS04Server::GetNmosSenders, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::kGet, endpoint(ROOT+m_version.GetVersionAsString()+RECEIVERS), std::bind(&IS04Server::GetNmosReceivers, this, _1,_2,_3,_4));
 }
 
 void IS04Server::AddSourceEndpoint(const std::string& sId)
 {
-    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SOURCES+"/"+sId), std::bind(&IS04Server::GetNmosSource,this,  _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::kGet, endpoint(ROOT+m_version.GetVersionAsString()+SOURCES+"/"+sId), std::bind(&IS04Server::GetNmosSource,this,  _1,_2,_3,_4));
 }
 
 void IS04Server::AddFlowEndpoint(const std::string& sId)
 {
-    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+FLOWS+"/"+sId), std::bind(&IS04Server::GetNmosFlow, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::kGet, endpoint(ROOT+m_version.GetVersionAsString()+FLOWS+"/"+sId), std::bind(&IS04Server::GetNmosFlow, this, _1,_2,_3,_4));
 }
 
 void IS04Server::AddDeviceEndpoint(const std::string& sId)
 {
-    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+DEVICES+"/"+sId), std::bind(&IS04Server::GetNmosDevice, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::kGet, endpoint(ROOT+m_version.GetVersionAsString()+DEVICES+"/"+sId), std::bind(&IS04Server::GetNmosDevice, this, _1,_2,_3,_4));
 }
 
 void IS04Server::AddSenderEndpoint(const std::string& sId)
 {
-    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SENDERS+"/"+sId), std::bind(&IS04Server::GetNmosSender, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::kGet, endpoint(ROOT+m_version.GetVersionAsString()+SENDERS+"/"+sId), std::bind(&IS04Server::GetNmosSender, this, _1,_2,_3,_4));
 }
 
 void IS04Server::AddReceiverEndpoint(const std::string& sId)
 {
-    m_pServer->AddEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+RECEIVERS+"/"+sId), std::bind(&IS04Server::GetNmosReceiver, this, _1,_2,_3,_4));
-    m_pServer->AddEndpoint(pml::restgoose::PUT, endpoint(ROOT+m_version.GetVersionAsString()+RECEIVERS+"/"+sId+"/target"), std::bind(&IS04Server::PutNmosReceiver, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::kGet, endpoint(ROOT+m_version.GetVersionAsString()+RECEIVERS+"/"+sId), std::bind(&IS04Server::GetNmosReceiver, this, _1,_2,_3,_4));
+    m_pServer->AddEndpoint(pml::restgoose::kPut, endpoint(ROOT+m_version.GetVersionAsString()+RECEIVERS+"/"+sId+"/target"), std::bind(&IS04Server::PutNmosReceiver, this, _1,_2,_3,_4));
 }
 
 void IS04Server::RemoveSenderEndpoint(const std::string& sId)
 {
-    m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SENDERS+"/"+sId));
+    m_pServer->DeleteEndpoint(pml::restgoose::kGet, endpoint(ROOT+m_version.GetVersionAsString()+SENDERS+"/"+sId));
 }
 
 void IS04Server::RemoveSourceEndpoint(const std::string& sId)
 {
-    m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+SOURCES+"/"+sId));
+    m_pServer->DeleteEndpoint(pml::restgoose::kGet, endpoint(ROOT+m_version.GetVersionAsString()+SOURCES+"/"+sId));
 }
 
 void IS04Server::RemoveFlowEndpoint(const std::string& sId)
 {
-    m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+FLOWS+"/"+sId));
+    m_pServer->DeleteEndpoint(pml::restgoose::kGet, endpoint(ROOT+m_version.GetVersionAsString()+FLOWS+"/"+sId));
 }
 
 void IS04Server::RemoveReceiverEndpoint(const std::string& sId)
 {
-    m_pServer->DeleteEndpoint(pml::restgoose::GET, endpoint(ROOT+m_version.GetVersionAsString()+RECEIVERS+"/"+sId));
-    m_pServer->DeleteEndpoint(pml::restgoose::PUT, endpoint(ROOT+m_version.GetVersionAsString()+RECEIVERS+"/"+sId+"/target"));
+    m_pServer->DeleteEndpoint(pml::restgoose::kGet, endpoint(ROOT+m_version.GetVersionAsString()+RECEIVERS+"/"+sId));
+    m_pServer->DeleteEndpoint(pml::restgoose::kPut, endpoint(ROOT+m_version.GetVersionAsString()+RECEIVERS+"/"+sId+"/target"));
 }
 
 
@@ -275,7 +275,7 @@ pml::restgoose::response IS04Server::PutNmosReceiver(const query& theQuery, cons
                     sSenderId = pRemoteSender->GetId();
                     if(pRemoteSender->GetManifestHref().empty() == false)
                     {
-                        auto request = pml::restgoose::HttpClient(pml::restgoose::GET, endpoint(pRemoteSender->GetManifestHref()));
+                        auto request = pml::restgoose::HttpClient(pml::restgoose::kGet, endpoint(pRemoteSender->GetManifestHref()));
                         auto resp = request.Run();
                         if(resp.nHttpCode == 200)
                         {
