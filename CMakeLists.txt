@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 project(nmosworkspace VERSION 1.0.1)
 
 message(STATUS "----pml/nmos ----")
@@ -10,67 +10,17 @@ SET(BUILD_TESTS OFF CACHE BOOL "set to ON to build tests")
 
 
 #default expected locations for libraries
-SET(DIR_BASE $ENV{HOME} CACHE STRING "base location for libraries")
-SET(DIR_JSON ${DIR_BASE}/jsoncpp CACHE STRING "location of jsoncpp")
-SET(DIR_LOG ${DIR_BASE}/log CACHE STRING "location of pml log")
-SET(DIR_RESTGOOSE ${DIR_BASE}/Restgoose CACHE STRING "location of Restgoose")
-SET(DIR_DNSSD ${DIR_BASE}/dnssd CACHE STRING "location of pml dnssd")
+SET(DIR_BASE ${CMAKE_SOURCE_DIR} CACHE STRING "base location for external libraries' source")
+SET(DIR_JSON ${DIR_BASE}/external/jsoncpp CACHE STRING "location of jsoncpp")
+SET(DIR_LOG ${DIR_BASE}/external/log CACHE STRING "location of pml log")
+SET(DIR_RESTGOOSE ${DIR_BASE}/external/restgoose CACHE STRING "location of Restgoose")
+SET(DIR_DNSSD ${DIR_BASE}/external/dnssd CACHE STRING "location of pml dnssd")
 
 
-if(NOT DEFINED BUILD_LOG)
-	SET(BUILD_LOG ON)
-	add_subdirectory(${DIR_LOG} ${CMAKE_SOURCE_DIR}/build/log)
-else()
-	message(STATUS "nmos - pml::log being build elsewhere")
-endif()
-
-#Get Restgoose
-if(NOT DEFINED BUILD_RESTGOOSE)
-	SET(BUILD_RESTGOOSE ON)
-	find_path(NMOS_TEMP_DIR NAMES "CMakeLists.txt" PATHS ${DIR_RESTGOOSE} NO_CACHE)
-	if((NOT NMOS_TEMP_DIR) OR (NOT EXISTS ${NMOS_TEMP_DIR}))
-		message(STATUS "Restgoose not found - clone from GitHub")
-		execute_process(COMMAND git clone https://github.com/martim01/Restgoose ${DIR_RESTGOOSE})
-
-		find_path(NMOS_TEMP_DIR2 NAMES "CMakeLists.txt" PATHS ${DIR_RESTGOOSE} NO_CACHE)
-		if((NOT NMOS_TEMP_DIR2) OR (NOT EXISTS ${NMOS_TEMP_DIR2}))
-			message(FATAL_ERROR "Failed to clone Restgoose")
-		endif()
-		unset(NMOS_TEMP_DIR2)
-	else()
-		message(STATUS "restgoose found - update to latest version")
-	    execute_process(COMMAND git -C ${DIR_RESTGOOSE} pull --no-rebase)
-	endif()
-	unset(NMOS_TEMP_DIR)
-	add_subdirectory(${DIR_RESTGOOSE} ${CMAKE_SOURCE_DIR}/build/restgoose)
-else()
-	message(STATUS "nmos - pml::restgoose being built elsewhere")
-endif()
-
-
-#Get dnssd
-if(NOT DEFINED BUILD_DNSSD)
-	SET(BUILD_DNSSD ON)
-	find_path(NMOS_TEMP_DIR NAMES "CMakeLists.txt" PATHS ${DIR_DNSSD} NO_CACHE)
-	if((NOT NMOS_TEMP_DIR) OR (NOT EXISTS ${NMOS_TEMP_DIR}))
-		message(STATUS "pml::dnssd not found - clone from GitHub")
-		execute_process(COMMAND git clone https://github.com/martim01/dnssd ${DIR_DNSSD})
-
-		find_path(NMOS_TEMP_DIR2 NAMES "CMakeLists.txt" PATHS ${DIR_DNSSD} NO_CACHE)
-		if((NOT NMOS_TEMP_DIR2) OR (NOT EXISTS ${NMOS_TEMP_DIR2}))
-			message(FATAL_ERROR "Failed to clone dnssd")
-		endif()
-		unset(NMOS_TEMP_DIR2)
-	else()
-		message(STATUS "pml::dnssd found - update to latest version")
-		execute_process(COMMAND git -C ${DIR_DNSSD} pull --no-rebase)
-	endif()
-	unset(NMOS_TEMP_DIR)
-	add_subdirectory(${DIR_DNSSD} ${CMAKE_SOURCE_DIR}/build/dnssd)
-else()
-	message(STATUS "nmos - pml::dnssd being built elsewhere")
-endif()
-
+FetchContent_Declare(log GIT_REPOSITORY "https://github.com/martim01/log.git"  SOURCE_DIR ${DIR_LOG})
+FetchContent_Declare(jsoncpp GIT_REPOSITORY "https://github.com/open-source-parsers/jsoncpp" SOURCE_DIR ${DIR_JSON})
+FetchContent_Declare(restgoose GIT_REPOSITORY "https://github.com/martim01/restgoose.git"  GIT_TAG "origin/main" SOURCE_DIR ${DIR_RESTGOOSE})
+FetchContent_Declare(dnssd GIT_REPOSITORY "https://github.com/martim01/dnssd.git"  SOURCE_DIR ${DIR_DNSSD})
 
 message(STATUS "Configure nmos_base")
 add_subdirectory(base)

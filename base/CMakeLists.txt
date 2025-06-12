@@ -8,7 +8,7 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 include_directories("../common/include")
 include_directories("include")
-include_directories(${DIR_JSON}/dist)
+include_directories(${DIR_JSON}/include)
 include_directories(${DIR_LOG}/include)
 
 include_directories("../external/uuid")
