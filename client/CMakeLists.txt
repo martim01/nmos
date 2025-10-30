@@ -13,6 +13,7 @@ include_directories(${DIR_JSON}/include)
 include_directories(${DIR_LOG}/include)
 include_directories("../external/uuid")
 include_directories(${DIR_RESTGOOSE}/include)
+include_directories(${DIR_DNSSD}/include)
 
 SET(SOURCES "src/clientapi.cpp" 
  "src/clientapiposter.cpp"
