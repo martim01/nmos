@@ -4,7 +4,7 @@ project(nmosworkspace VERSION 1.0.1)
 message(STATUS "----pml/nmos ----")
 
 #create the version information
-execute_process(COMMAND ${CMAKE_COMMAND} -DNAMESPACE=nmos -DMAJOR=${PROJECT_VERSION_MAJOR} -DMINOR=${PROJECT_VERSION_MINOR} -DPATCH=${PROJECT_VERSION_PATCH} -P ${CMAKE_CURRENT_SOURCE_DIR}/version.cmake)
+execute_process(COMMAND ${CMAKE_COMMAND} -DNAMESPACE=nmos -DMAJOR=${PROJECT_VERSION_MAJOR} -DMINOR=${PROJECT_VERSION_MINOR} -DPATCH=${PROJECT_VERSION_PATCH} -DOUTPUT=${CMAKE_BINARY_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/version.cmake)
 
 SET(BUILD_TESTS OFF CACHE BOOL "set to ON to build tests")
 
@@ -21,6 +21,8 @@ FetchContent_Declare(log GIT_REPOSITORY "https://github.com/martim01/log.git"  S
 FetchContent_Declare(jsoncpp GIT_REPOSITORY "https://github.com/open-source-parsers/jsoncpp" SOURCE_DIR ${DIR_JSON})
 FetchContent_Declare(restgoose GIT_REPOSITORY "https://github.com/martim01/restgoose.git"  GIT_TAG "origin/main" SOURCE_DIR ${DIR_RESTGOOSE})
 FetchContent_Declare(dnssd GIT_REPOSITORY "https://github.com/martim01/dnssd.git"  SOURCE_DIR ${DIR_DNSSD})
+
+FetchContent_MakeAvailable(log jsoncpp restgoose dnssd)
 
 message(STATUS "Configure nmos_base")
 add_subdirectory(base)
