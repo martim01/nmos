@@ -133,14 +133,14 @@ template<class T> std::shared_ptr<T> ClientHolder<T>::UpdateResource(const Json:
     {
         m_setStored.erase(jsData["id"].asString());   //resource still exists so make sure we don't remove it later
 
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << jsData["id"].asString() << " found already " ;
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << jsData["id"].asString() << " found already " ;
         if(pResource->UpdateFromJson(jsData))
         {
-            pmlLog(pml::LOG_INFO, "pml::nmos") <<  "NMOS: " << jsData["id"].asString() << " updated " ;
+            pml::log::log(pml::log::Level::kInfo, "pml::nmos") <<  "NMOS: " << jsData["id"].asString() << " updated " ;
         }
         else
         {
-            pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Found node but json data incorrect: " << pResource->GetJsonParseError() ;
+            pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Found node but json data incorrect: " << pResource->GetJsonParseError() ;
         }
     }
     return pResource;

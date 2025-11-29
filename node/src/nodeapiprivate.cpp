@@ -187,7 +187,7 @@ void NodeApiPrivate::Init(std::shared_ptr<EventPoster> pPoster, unsigned short n
         pAddresses = (IP_ADAPTER_ADDRESSES *) malloc(outBufLen);
         if (pAddresses == NULL)
         {
-            pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Memory allocation failed for IP_ADAPTER_ADDRESSES struct" ;
+            pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Memory allocation failed for IP_ADAPTER_ADDRESSES struct" ;
             return;
         }
         dwRetVal = GetAdaptersAddresses(family, flags, NULL, pAddresses, &outBufLen);
@@ -225,7 +225,7 @@ void NodeApiPrivate::Init(std::shared_ptr<EventPoster> pPoster, unsigned short n
     }
     else
     {
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Call to GetAdaptersAddresses failed with error: " << dwRetVal ;
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Call to GetAdaptersAddresses failed with error: " << dwRetVal ;
     }
     if (pAddresses)
     {
@@ -275,26 +275,26 @@ void NodeApiPrivate::Init(std::shared_ptr<EventPoster> pPoster, unsigned short n
 
 bool NodeApiPrivate::StartHttpServers()
 {
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "Start Http Servers" ;
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << "Start Http Servers" ;
 
     for(auto& pServer : m_lstServers)
     {
         pServer->Run(true);
     }
 
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "Start Http Servers: Done" ;
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << "Start Http Servers: Done" ;
     return true;
 
 }
 
 void NodeApiPrivate::StopHttpServers()
 {
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeApi - stop http servers";
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: NodeApi - stop http servers";
     for(auto pServer : m_lstServers)
     {
         pServer->Stop();
     }
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeApi - stop http servers - done";
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: NodeApi - stop http servers - done";
 }
 
 bool NodeApiPrivate::StartmDNSPublisher()
@@ -303,7 +303,7 @@ bool NodeApiPrivate::StartmDNSPublisher()
     auto itEndpoint = m_self.GetEndpointsBegin();
     if(itEndpoint != m_self.GetEndpointsEnd())
     {
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Start mDNS Publisher" ;
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Start mDNS Publisher" ;
         m_pNodeApiPublisher = std::make_unique<pml::dnssd::Publisher>();
 
         if(m_pNodeApiPublisher->Start())
@@ -321,7 +321,7 @@ void NodeApiPrivate::StopmDNSPublisher()
 {
     if(m_pNodeApiPublisher)
     {
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Stop mDNS Publisher" ;
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Stop mDNS Publisher" ;
         m_pNodeApiPublisher->Stop();
     }
 }
@@ -544,7 +544,7 @@ void NodeApiPrivate::SenderPatchAllowed(unsigned short nPort, bool bOk, const st
         }
         else
         {
-            pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "No Sender found with id='" << sId << "'" ;
+            pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: " << "No Sender found with id='" << sId << "'" ;
             bOk = false;
         }
     }
@@ -581,19 +581,19 @@ void NodeApiPrivate::SignalServer(unsigned short nPort, const pml::restgoose::re
     }
     else
     {
-        pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "No server with port " << nPort ;
+        pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: " << "No server with port " << nPort ;
     }
 }
 
 void NodeApiPrivate::StopRegistrationBrowsing()
 {
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeApi - stop registration browser";
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: NodeApi - stop registration browser";
     for(const auto& pairBrowser : m_mBrowser)
     {
         pairBrowser.second->RemoveService("_nmos-registration._tcp");
     }
 
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeApi - stop registration browser - done";
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: NodeApi - stop registration browser - done";
 }
 
 void NodeApiPrivate::PostRegisterStatus()
@@ -638,7 +638,7 @@ int NodeApiPrivate::RegisterSimple()
             }
             else if(nResponse != 201)
             {
-                pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "RegisterResources: Failed" ;
+                pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: " << "RegisterResources: Failed" ;
                 UnregisterSimple();
                 m_nRegistrationStatus = REG_FAILED;
                 PostRegisterStatus();
@@ -647,7 +647,7 @@ int NodeApiPrivate::RegisterSimple()
 
             if(RegisterResources(m_devices) != 201 || RegisterResources(m_sources) != 201 || RegisterResources(m_flows) != 201 || RegisterResources(m_senders) != 201 || RegisterResources(m_receivers) != 201)
             {
-                pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "RegisterResources: Failed" ;
+                pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: " << "RegisterResources: Failed" ;
                 UnregisterSimple();
                 m_nRegistrationStatus = REG_FAILED;
                 PostRegisterStatus();
@@ -710,17 +710,17 @@ void NodeApiPrivate::HandleInstanceResolved(std::shared_ptr<pml::dnssd::dnsInsta
                             m_pPoster->_RegistrationNodeFound(ssUrl.str(), nPriority, version);
                         }
                     }
-                    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "NodeApi: Found registration node" << ssUrl.str() << " proto=" << itProto->second << " ver=" << itVersion->second << " priority=" << itPriority->second ;
+                    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << "NodeApi: Found registration node" << ssUrl.str() << " proto=" << itProto->second << " ver=" << itVersion->second << " priority=" << itPriority->second ;
                 }
             }
             catch(invalid_argument& ia)
             {
-                pmlLog(pml::LOG_WARN, "pml::nmos") << "NMOS: " << "NodeApi: Registration node -Invalid argument";
+                pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "NMOS: " << "NodeApi: Registration node -Invalid argument";
             }
         }
         else
         {
-            pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "NodeApi: Found registration node but api versions different to ours";
+            pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << "NodeApi: Found registration node but api versions different to ours";
         }
     }
     else
@@ -772,7 +772,7 @@ bool NodeApiPrivate::FindRegistrationNode()
     {
         if(m_sRegistrationNode.empty() == false)
         {
-            pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "NodeApi: Register: No nmos registration nodes found. Go peer-to-peer" ;
+            pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "NodeApi: Register: No nmos registration nodes found. Go peer-to-peer" ;
             m_sRegistrationNode.clear();
             m_versionRegistration = ApiVersion(0,0);
             nPriority = 0;
@@ -837,11 +837,11 @@ long NodeApiPrivate::RegisterResource(const string& sType, const Json::Value& js
     jsonRegister["type"] = sType;
     jsonRegister["data"] = json;
     
-    pmlLog(pml::LOG_INFO, "pml::nmos") << "Register " << jsonRegister;
+    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "Register " << jsonRegister;
     auto request = pml::restgoose::HttpClient(pml::restgoose::kPost, endpoint(m_sRegistrationNode+m_versionRegistration.GetVersionAsString()+"/resource"), jsonRegister);
     auto resp = request.Run();
 
-    pmlLog(pml::LOG_INFO, "pml::nmos") << "RegisterApi: Register returned [" << resp.nHttpCode << "] " << resp.data.Get() ;
+    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "RegisterApi: Register returned [" << resp.nHttpCode << "] " << resp.data.Get() ;
     if(resp.nHttpCode == 500 || resp.nHttpCode < 100)
     {
         MarkRegNodeAsBad();
@@ -882,7 +882,7 @@ void NodeApiPrivate::MarkRegNodeAsBad()
 
 int NodeApiPrivate::UnregisterSimple()
 {
-    pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Unregister: " << m_nRegistrationStatus ;
+    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Unregister: " << m_nRegistrationStatus ;
 
     if(m_sRegistrationNode.empty() == false)
     {
@@ -902,7 +902,7 @@ bool NodeApiPrivate::UnregisterResource(const string& sType, const std::string& 
     auto request = pml::restgoose::HttpClient(pml::restgoose::kDelete, endpoint(m_sRegistrationNode+m_versionRegistration.GetVersionAsString()+"/resource/"+sType+"/"+sId));
     auto resp = request.Run();
 
-    pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "RegisterApi:Unregister returned [" << resp.nHttpCode << "] " << resp.data.Get() ;
+    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "RegisterApi:Unregister returned [" << resp.nHttpCode << "] " << resp.data.Get() ;
     if(resp.nHttpCode == 500 || resp.nHttpCode < 100)
     {
         MarkRegNodeAsBad();
@@ -922,12 +922,12 @@ void NodeApiPrivate::StopRun()
 {
     if(m_pThread)
     {
-        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeApi - stop run";
+        pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: NodeApi - stop run";
         m_bRun = false;
         //Signal(SIG_EXIT);
         m_pThread->join();
         m_pThread = nullptr;
-        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeApi - stop done";
+        pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: NodeApi - stop done";
 
         StopRegistrationBrowsing();
     }
@@ -1122,7 +1122,7 @@ bool NodeApiPrivate::AddSender(shared_ptr<Sender> pResource)
             return true;
         }
     }
-    pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: AddSender - could not find parent device '" << pResource->GetParentResourceId() << "'";
+    pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: AddSender - could not find parent device '" << pResource->GetParentResourceId() << "'";
     return false;
 }
 
@@ -1471,7 +1471,7 @@ bool NodeApiPrivate::Stage(const connectionSender<activationResponse>& conReques
                 }
                 else
                 {
-                    pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "Stage Sender: Invalid absolute time" ;
+                    pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: " << "Stage Sender: Invalid absolute time" ;
                     bOk = false;
                 }
             }
@@ -1488,7 +1488,7 @@ bool NodeApiPrivate::Stage(const connectionSender<activationResponse>& conReques
                 }
                 else
                 {
-                    pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "Stage Receiver: Invalid time" ;
+                    pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: " << "Stage Receiver: Invalid time" ;
                     bOk = false;
                 }
 
@@ -1546,7 +1546,7 @@ bool NodeApiPrivate::Stage(const connectionReceiver<activationResponse>& conRequ
                 }
                 else
                 {
-                    pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "Stage Receiver: Invalid absolute time" ;
+                    pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: " << "Stage Receiver: Invalid absolute time" ;
                     bOk = false;
                 }
             }
@@ -1563,13 +1563,13 @@ bool NodeApiPrivate::Stage(const connectionReceiver<activationResponse>& conRequ
                 }
                 else
                 {
-                    pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "Stage Receiver: Invalid time" ;
+                    pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: " << "Stage Receiver: Invalid time" ;
                     bOk = false;
                 }
             }
             break;
         default:
-            pmlLog(pml::LOG_ERROR, "pml::nmos") << "Unexpected patch" ;
+            pml::log::log(pml::log::Level::kError, "pml::nmos") << "Unexpected patch" ;
     }
     return bOk;
 }

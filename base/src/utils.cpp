@@ -196,12 +196,12 @@ namespace pml::nmos
             auto itAllowed = mAllowed.find(itObject.key().asString()) ;
             if(itAllowed == mAllowed.end())
             {
-                pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: CheckJsonAllowed: " << itObject.key().asString() << " not allowed";
+                pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: CheckJsonAllowed: " << itObject.key().asString() << " not allowed";
                 return false;
             }
             else if(CheckJsonType(*itObject, itAllowed->second) == false)
             {   //key allowed but not if this type
-                pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: CheckJsonAllowed: " << itObject.key().asString() << " allowed but wrong type";
+                pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: CheckJsonAllowed: " << itObject.key().asString() << " allowed but wrong type";
                 return false;
             }
         }
@@ -278,7 +278,7 @@ namespace pml::nmos
         }
         catch(const Json::RuntimeError& e)
         {
-            pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "Unable to convert '" << str << "' to JSON: " << e.what();
+            pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: " << "Unable to convert '" << str << "' to JSON: " << e.what();
         }
 
         return jsData;

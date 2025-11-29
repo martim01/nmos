@@ -65,7 +65,7 @@ void Receiver::SetSender(const std::string& sSenderId, const std::string& sSdp, 
 {
     if(sSenderId.empty() == false)
     {
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "Receiver subscribe to sender " << sSenderId ;
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "Receiver subscribe to sender " << sSenderId ;
         m_sSenderId = sSenderId;
 
         // need to update the IS-05 stage and active connection settings to match
@@ -78,7 +78,7 @@ void Receiver::SetSender(const std::string& sSenderId, const std::string& sSdp, 
     }
     else
     {   //this means unsubscribe
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "Receiver unssubscribe " ;
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "Receiver unssubscribe " ;
         m_sSenderId.clear();
 
         // need to update the IS-05 stage and active connection settings to match

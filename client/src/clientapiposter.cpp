@@ -15,37 +15,37 @@ void ClientApiPoster::_ModeChanged(bool bQueryApi)
 
 void ClientApiPoster::_NodeChanged(const resourcechanges<Self>& changed)
 {
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: ClientApiPoster::_NodeChanged" ;
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: ClientApiPoster::_NodeChanged" ;
     NodeChanged(changed);
 }
 
 void ClientApiPoster::_DeviceChanged(const resourcechanges<Device>& changed)
 {
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: ClientApiPoster::_DeviceChanged" ;
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: ClientApiPoster::_DeviceChanged" ;
     DeviceChanged(changed);
 }
 
 void ClientApiPoster::_SourceChanged(const resourcechanges<Source>& changed)
 {
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: ClientApiPoster::_SourceChanged" ;
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: ClientApiPoster::_SourceChanged" ;
     SourceChanged(changed);
 }
 
 void ClientApiPoster::_FlowChanged(const resourcechanges<Flow>& changed)
 {
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: ClientApiPoster::_FlowChanged" ;
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: ClientApiPoster::_FlowChanged" ;
     FlowChanged(changed);
 }
 
 void ClientApiPoster::_SenderChanged(const resourcechanges<Sender>& changed)
 {
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: ClientApiPoster::_SenderChanged" ;
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: ClientApiPoster::_SenderChanged" ;
     SenderChanged(changed);
 }
 
 void ClientApiPoster::_ReceiverChanged(const resourcechanges<Receiver>& changed)
 {
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: ClientApiPoster::_ReceiverChanged" ;
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: ClientApiPoster::_ReceiverChanged" ;
     ReceiverChanged(changed);
 }
 
