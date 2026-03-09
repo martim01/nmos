@@ -112,8 +112,8 @@ template<typename T> connectionSender<T>::connectionSender(const Json::Value& js
 
 template<typename T> bool connectionSender<T>::Patch(const Json::Value& jsData)
 {
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "Patch: connectionSender: NOW" ;
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << jsData;
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << "Patch: connectionSender: NOW" ;
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << jsData;
 
     if(connectionSender<T>::CheckJson(jsData) == false)
     {
@@ -184,7 +184,7 @@ template<typename T> void connectionSender<T>::SetTPAllowed(int flagsTransport)
     {
         if(flagsTransport & TransportParamsRTP::FEC)
         {
-            pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: ConnectionSender: Gec Allowed";
+            pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: ConnectionSender: Gec Allowed";
             tpSender.FecAllowed();
         }
         if(flagsTransport & TransportParamsRTP::RTCP)
@@ -207,7 +207,7 @@ template<typename T> connectionReceiver<T>::connectionReceiver(std::optional<boo
     m_vTransportParams.push_back(TransportParamsRTPReceiver(allowed));
     if((allowed & TransportParamsRTP::REDUNDANT))
     {
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: connectionReceiver: Redundant stream";
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: connectionReceiver: Redundant stream";
         m_vTransportParams.push_back(TransportParamsRTPReceiver(allowed));
     }
     SetTPAllowed(allowed);
@@ -265,12 +265,12 @@ template<typename T> connectionReceiver<T>::connectionReceiver(const Json::Value
 
 template<typename T> bool connectionReceiver<T>::Patch(const Json::Value& jsData)
 {
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "Patch: connectionReceiver: NOW" ;
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << jsData;
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << "Patch: connectionReceiver: NOW" ;
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << jsData;
 
     if(connectionReceiver<T>::CheckJson(jsData) == false)
     {
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "CheckJson failed";
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "CheckJson failed";
         return false;
     }
 
@@ -302,14 +302,14 @@ template<typename T> bool connectionReceiver<T>::Patch(const Json::Value& jsData
     {
         if(jsData[TRANSPORT_PARAMS].size() != m_vTransportParams.size())
         {
-            pmlLog(pml::LOG_INFO, "pml::nmos") << "Transport param array";
+            pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "Transport param array";
             return false;
         }
         for(Json::ArrayIndex i = 0; i < jsData[TRANSPORT_PARAMS].size(); i++)
         {
             if(m_vTransportParams[i].Patch(jsData[TRANSPORT_PARAMS][i]) == false)
             {
-                pmlLog(pml::LOG_INFO, "pml::nmos") << "Transport param patch failed";
+                pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "Transport param patch failed";
                 return false;
             }
         }

@@ -52,23 +52,23 @@ int main()
 
     if(pml::nmos::NodeApi::Get().AddDevice(pDevice) == false)
     {
-        pmlLog(pml::LOG_ERROR, "pml::nmos") << "FAILED TO ADD DEVICE";
+        pml::log::log(pml::log::Level::kError, "pml::nmos") << "FAILED TO ADD DEVICE";
     }
     if(pml::nmos::NodeApi::Get().AddSource(pSource) == false)
     {
-        pmlLog(pml::LOG_ERROR, "pml::nmos") << "FAILED TO ADD SOURCE";
+        pml::log::log(pml::log::Level::kError, "pml::nmos") << "FAILED TO ADD SOURCE";
     }
     if(pml::nmos::NodeApi::Get().AddFlow(pFlow) == false)
     {
-        pmlLog(pml::LOG_ERROR, "pml::nmos") << "FAILED TO ADD FLOW";
+        pml::log::log(pml::log::Level::kError, "pml::nmos") << "FAILED TO ADD FLOW";
     }
     if(pml::nmos::NodeApi::Get().AddReceiver(pReceiver) == false)
     {
-        pmlLog(pml::LOG_ERROR, "pml::nmos") << "FAILED TO ADD RECEIVER";
+        pml::log::log(pml::log::Level::kError, "pml::nmos") << "FAILED TO ADD RECEIVER";
     }
     if(pml::nmos::NodeApi::Get().AddSender(pSender) == false)
     {
-        pmlLog(pml::LOG_ERROR, "pml::nmos") << "FAILED TO ADD SENDER";
+        pml::log::log(pml::log::Level::kError, "pml::nmos") << "FAILED TO ADD SENDER";
     }
     pml::nmos::NodeApi::Get().Commit();
 
@@ -84,63 +84,63 @@ int main()
             switch(pPoster->GetReason())
             {
                 case ThreadPoster::CURL_DONE:
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "Curl Done";
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "----------------------------------------";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "Curl Done";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "----------------------------------------";
                     break;
                 case ThreadPoster::INSTANCE_RESOLVED:
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "Browser: Instance Resolved";
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "----------------------------------------";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "Browser: Instance Resolved";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "----------------------------------------";
                     break;
                 case ThreadPoster::ALLFORNOW:
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "Browser: All For Now";
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "----------------------------------------";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "Browser: All For Now";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "----------------------------------------";
                     break;
                 case ThreadPoster::FINISHED:
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "Browser: Finished";
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "----------------------------------------";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "Browser: Finished";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "----------------------------------------";
                     break;
                 case ThreadPoster::REGERROR:
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "Publisher: Error";
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "----------------------------------------";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "Publisher: Error";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "----------------------------------------";
                     break;
                 case ThreadPoster::INSTANCE_REMOVED:
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "Browser: Instance Removed";
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "----------------------------------------";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "Browser: Instance Removed";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "----------------------------------------";
                     break;
                 case ThreadPoster::TARGET:
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS Target: " << pPoster->GetString() << " [" << pPoster->GetSDP() << "]";
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "----------------------------------------";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS Target: " << pPoster->GetString() << " [" << pPoster->GetSDP() << "]";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "----------------------------------------";
                     //getchar();
                     pml::nmos::NodeApi::Get().TargetTaken("192.168.1.113", pPoster->GetPort(), true);
                     break;
                 case ThreadPoster::PATCH_SENDER:
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS Patch Sender: " << pPoster->GetString();
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "----------------------------------------";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS Patch Sender: " << pPoster->GetString();
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "----------------------------------------";
                     pml::nmos::NodeApi::Get().SenderPatchAllowed(pPoster->GetPort(), true, pPoster->GetString(),vMulticast);
                     break;
                 case ThreadPoster::PATCH_RECEIVER:
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS Patch Receiver: " << pPoster->GetString();
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "----------------------------------------";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS Patch Receiver: " << pPoster->GetString();
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "----------------------------------------";
                     pml::nmos::NodeApi::Get().ReceiverPatchAllowed(pPoster->GetPort(), true, pPoster->GetString(), "192.168.1.113");
                     break;
                 case ThreadPoster::ACTIVATE_SENDER:
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS Sender Activated: " << pPoster->GetString();
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "----------------------------------------";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS Sender Activated: " << pPoster->GetString();
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "----------------------------------------";
                     break;
                 case ThreadPoster::ACTIVATE_RECEIVER:
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS Receiver Activated: " << pPoster->GetString();
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "----------------------------------------";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "----------------------------------------";
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS Receiver Activated: " << pPoster->GetString();
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "----------------------------------------";
                     break;
             }
 

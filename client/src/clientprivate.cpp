@@ -136,7 +136,7 @@ bool VersionChanged(std::shared_ptr<pml::dnssd::dnsInstance> pInstance, const st
 //NodeBrowse Thread  - started within main ClientThread
 static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<pml::dnssd::dnsInstance> pInstance)
 {
-    pmlLog(pml::LOG_INFO, "pml::nmos") << "NODEBROWSER";
+    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NODEBROWSER";
     if(pApi->GetMode() == ClientApiImpl::MODE_P2P)
     {
         auto itVersion = pInstance->mTxt.find("api_ver");
@@ -149,7 +149,7 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<pml::dnssd::dnsInst
 
                 if(VersionChanged(pInstance, "ver_slf"))
                 {
-                    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeBrowser ver_slf changed" ;
+                    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: NodeBrowser ver_slf changed" ;
 
                     pml::restgoose::HttpClient client(pml::restgoose::kGet, endpoint(std::string(ss.str()+"self")));
                     auto changed = pApi->AddNode(pInstance->sHostIP, ConvertToJson(client.Run().data.Get()));
@@ -163,12 +163,12 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<pml::dnssd::dnsInst
                     }
                     else
                     {
-                        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeBrowser Node does not meet query" ;
+                        pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: NodeBrowser Node does not meet query" ;
                     }
                 }
                 if(VersionChanged(pInstance, "ver_dvc"))
                 {
-                    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeBrowser ver_dvc changed" ;
+                    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: NodeBrowser ver_dvc changed" ;
                     //store the devices this ip address currently provides
                     pApi->StoreDevices(pInstance->sHostIP);
 
@@ -187,12 +187,12 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<pml::dnssd::dnsInst
                     }
                     else
                     {
-                        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeBrowser Device does not meet query" ;
+                        pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: NodeBrowser Device does not meet query" ;
                     }
                 }
                 if(VersionChanged(pInstance, "ver_src"))
                 {
-                    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeBrowser ver_src changed" ;
+                    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: NodeBrowser ver_src changed" ;
                     pml::restgoose::HttpClient client(pml::restgoose::kGet, endpoint(std::string(ss.str()+"sources")));
 
                     pApi->StoreSources(pInstance->sHostIP);
@@ -201,7 +201,7 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<pml::dnssd::dnsInst
 
                     if(pApi->RunQuery(changed, ClientApiImpl::SOURCES))
                     {
-                        pmlLog(pml::LOG_INFO, "pml::nmos") << "AddSources: " << changed.lstAdded.size() << ", " << changed.lstUpdated.size();
+                        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "AddSources: " << changed.lstAdded.size() << ", " << changed.lstUpdated.size();
                         if(pApi->GetPoster())
                         {
                             pApi->GetPoster()->_SourceChanged(changed);
@@ -209,22 +209,22 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<pml::dnssd::dnsInst
                     }
                     else
                     {
-                        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeBrowser source does not meet query" ;
+                        pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: NodeBrowser source does not meet query" ;
                     }
                 }
                 if(VersionChanged(pInstance, "ver_flw"))
                 {
-                    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeBrowser ver_flw changed" ;
+                    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: NodeBrowser ver_flw changed" ;
                     pml::restgoose::HttpClient client(pml::restgoose::kGet, endpoint(std::string(ss.str()+"flows")));
 
 
                     pApi->StoreFlows(pInstance->sHostIP);
                     auto changed = pApi->AddFlows(pInstance->sHostIP, ConvertToJson(client.Run().data.Get()));
                     changed += pApi->RemoveStaleFlows();
-                    pmlLog(pml::LOG_INFO, "pml::nmos") << "Flows: " << changed.lstAdded.size() << "," << changed.lstUpdated.size() << "," << changed.lstRemoved.size();
+                    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "Flows: " << changed.lstAdded.size() << "," << changed.lstUpdated.size() << "," << changed.lstRemoved.size();
                     if(pApi->RunQuery(changed, ClientApiImpl::FLOWS))
                     {
-                        pmlLog(pml::LOG_INFO, "pml::nmos") << "Flows: " << changed.lstAdded.size() << "," << changed.lstUpdated.size() << "," << changed.lstRemoved.size();
+                        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "Flows: " << changed.lstAdded.size() << "," << changed.lstUpdated.size() << "," << changed.lstRemoved.size();
                         if(pApi->GetPoster())
                         {
                             pApi->GetPoster()->_FlowChanged(changed);
@@ -232,12 +232,12 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<pml::dnssd::dnsInst
                     }
                     else
                     {
-                        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeBrowser Flow does not meet query" ;
+                        pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: NodeBrowser Flow does not meet query" ;
                     }
                 }
                 if(VersionChanged(pInstance, "ver_snd"))
                 {
-                    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeBrowser ver_snd changed" ;
+                    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: NodeBrowser ver_snd changed" ;
                     pml::restgoose::HttpClient client(pml::restgoose::kGet, endpoint(std::string(ss.str()+"senders")));
                     
 
@@ -255,12 +255,12 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<pml::dnssd::dnsInst
                     }
                     else
                     {
-                        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeBrowser Sender does not meet query" ;
+                        pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: NodeBrowser Sender does not meet query" ;
                     }
                 }
                 if(VersionChanged(pInstance, "ver_rcv"))
                 {
-                    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeBrowser ver_rcv changed" ;
+                    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: NodeBrowser ver_rcv changed" ;
                     pml::restgoose::HttpClient client(pml::restgoose::kGet, endpoint(std::string(ss.str()+"receivers")));
 
                     pApi->StoreReceivers(pInstance->sHostIP);
@@ -276,7 +276,7 @@ static void NodeBrowser(ClientApiImpl* pApi, std::shared_ptr<pml::dnssd::dnsInst
                     }
                     else
                     {
-                        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: NodeBrowser Receiver does not meet query" ;
+                        pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: NodeBrowser Receiver does not meet query" ;
                     }
                 }
 
@@ -298,13 +298,13 @@ void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std:
     auto resp = getSender.Run();
     if(resp.nHttpCode != 200)
     {
-        pmlLog(pml::LOG_WARN, "pml::nmos") << "NMOS: Connect - failed to get sender " << sSenderId << " constraints";
+        pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "NMOS: Connect - failed to get sender " << sSenderId << " constraints";
         pApi->HandleConnect(sSenderId, sReceiverId, false, resp.data.Get());
     }
     auto vSenderConstraints = CreateConstraints(ConvertToJson(resp.data.Get()));
     if(vSenderConstraints.empty())
     {
-        pmlLog(pml::LOG_WARN, "pml::nmos") << "NMOS: Connect - failed to parse sender " << sSenderId << " constraints";
+        pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "NMOS: Connect - failed to parse sender " << sSenderId << " constraints";
         pApi->HandleConnect(sSenderId, sReceiverId, false, resp.data.Get());
     }
 
@@ -313,13 +313,13 @@ void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std:
     auto respReceiver = getReceiver.Run();
     if(respReceiver.nHttpCode != 200)
     {
-        pmlLog(pml::LOG_WARN, "pml::nmos") << "NMOS: Connect - failed to get receiver " << sReceiverId << " constraints";
+        pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "NMOS: Connect - failed to get receiver " << sReceiverId << " constraints";
         pApi->HandleConnect(sSenderId, sReceiverId, false, respReceiver.data.Get());
     }
     auto vReceiverConstraints = CreateConstraints(ConvertToJson(respReceiver.data.Get()));
     if(vReceiverConstraints.empty())
     {
-        pmlLog(pml::LOG_WARN, "pml::nmos") << "NMOS: Connect - failed to parse receiver " << sReceiverId << " constraints";
+        pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "NMOS: Connect - failed to parse receiver " << sReceiverId << " constraints";
         pApi->HandleConnect(sSenderId, sReceiverId, false, respReceiver.data.Get());
     }
 
@@ -344,7 +344,7 @@ void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std:
 
     if(respPatchSender.nHttpCode != 200)
     {
-        pmlLog(pml::LOG_WARN, "pml::nmos") << "NMOS: ConnectThread Patch Sender failed: " << respPatchSender.nHttpCode << " " << respPatchSender.data.Get();
+        pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "NMOS: ConnectThread Patch Sender failed: " << respPatchSender.nHttpCode << " " << respPatchSender.data.Get();
         pApi->HandleConnect(sSenderId, sReceiverId, false, respPatchSender.data.Get());
     }
     else
@@ -353,7 +353,7 @@ void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std:
         auto respGetTransport = getTransport.Run();
         if(respGetTransport.nHttpCode != 200)
         {
-            pmlLog(pml::LOG_WARN, "pml::nmos") << "NMOS: ConnectThread Get SDP failed: " << respGetTransport.nHttpCode << " " << respGetTransport.data.Get();
+            pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "NMOS: ConnectThread Get SDP failed: " << respGetTransport.nHttpCode << " " << respGetTransport.data.Get();
             pApi->HandleConnect(sSenderId, sReceiverId, false, respGetTransport.data.Get());
         }
         else
@@ -374,7 +374,7 @@ void ConnectThread(ClientApiImpl* pApi, const std::string& sSenderId, const std:
             auto respReceiver = patchReceiver.Run();
             if(respReceiver.nHttpCode != 200)
             {
-                pmlLog(pml::LOG_WARN, "pml::nmos") << "NMOS: ConnectThread Patch Receiver failed: " << respReceiver.nHttpCode << " " << respReceiver.data.Get();
+                pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "NMOS: ConnectThread Patch Receiver failed: " << respReceiver.nHttpCode << " " << respReceiver.data.Get();
                 pApi->HandleConnect(sSenderId, sReceiverId, false, respReceiver.data.Get());
             }
             else
@@ -467,7 +467,7 @@ ClientApiImpl::ClientApiImpl() :
     GetSubnetMasks();
     for(auto pairMask : m_mSubnetMasks)
     {
-        pmlLog(pml::LOG_INFO, "pml::nmos") << pairMask.first << "=" << pairMask.second;
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << pairMask.first << "=" << pairMask.second;
     }
 }
 
@@ -574,7 +574,7 @@ void ClientApiImpl::Signal(enumSignal eSignal)
 void ClientApiImpl::HandleBrowseDone()
 {
     std::lock_guard<std::mutex> lg(m_mutex);
-    pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Browsing for '" << m_sService << "' done for now." ;
+    pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Browsing for '" << m_sService << "' done for now." ;
     if(m_sService == "_nmos-query._tcp")
     {
         m_bDoneQueryBrowse = true;
@@ -590,7 +590,7 @@ void ClientApiImpl::HandleInstanceResolved()
     {
         if(m_pInstance->sService == "_nmos-query._tcp")
         {
-            pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Query node found: " << m_pInstance->sName ;
+            pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Query node found: " << m_pInstance->sName ;
             m_lstResolve.clear();
 
             //add the node to our priority sorted list of query servers
@@ -621,7 +621,7 @@ void ClientApiImpl::HandleInstanceResolved()
                 }
                 catch(std::invalid_argument& ia)
                 {
-                    pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "Priority '" << itTxt->second << "' invalid" ;
+                    pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: " << "Priority '" << itTxt->second << "' invalid" ;
                 }
             }
         }
@@ -629,12 +629,12 @@ void ClientApiImpl::HandleInstanceResolved()
         {
             if(m_pInstance->nUpdate == 0)
             {
-                pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Nmos node found" ;
+                pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Nmos node found" ;
                 m_lstResolve.push_back(m_pInstance);
             }
             else
             {
-                pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Nmos node updated" ;
+                pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Nmos node updated" ;
                 m_lstResolve.push_back(m_pInstance);
             }
         }
@@ -648,7 +648,7 @@ void ClientApiImpl::HandleInstanceRemoved()
     {
         if(m_pInstance->sService == "_nmos_query._tcp")
         {
-            pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Query node: " << m_pInstance->sName << "removed" ;
+            pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Query node: " << m_pInstance->sName << "removed" ;
 
             bool bSubscribeAgain(true);
 
@@ -688,7 +688,7 @@ void ClientApiImpl::HandleInstanceRemoved()
         }
         else if(m_pInstance->sService == "_nmos-node._tcp" && m_eMode == MODE_P2P)
         {
-            pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "node Removed: " << m_pInstance->sName ;
+            pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "node Removed: " << m_pInstance->sName ;
             m_lstResolve.remove_if([this](std::shared_ptr<pml::dnssd::dnsInstance> pInstance) { return pInstance == m_pInstance;});
             RemoveResources(m_pInstance->sHostIP);
         }
@@ -754,18 +754,18 @@ void ClientApiImpl::HandleHttpRequestDoneTarget()
     Json::Value jsData = ConvertToJson(m_asyncResponse.data.Get());
     if(202 == m_asyncResponse.nHttpCode && jsData["id"].isString())
     {
-        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << m_asyncResponse.nHttpCode << ": " << jsData["id"].asString() ;
+        pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << m_asyncResponse.nHttpCode << ": " << jsData["id"].asString() ;
         m_pPoster->_RequestTargetResult(202, jsData["id"].asString(), m_sHttpRequestResourceId);
         return;
     }
 
     if(jsData["error"].isString())
     {
-        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << m_asyncResponse.nHttpCode << ": " << jsData["error"].asString() ;
+        pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << m_asyncResponse.nHttpCode << ": " << jsData["error"].asString() ;
         m_pPoster->_RequestTargetResult(m_asyncResponse.nHttpCode, jsData["error"].asString(), m_sHttpRequestResourceId);
         return;
     }
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << m_asyncResponse.nHttpCode << ": " << m_asyncResponse.data.Get() ;
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << m_asyncResponse.nHttpCode << ": " << m_asyncResponse.data.Get() ;
     m_pPoster->_RequestTargetResult(m_asyncResponse.nHttpCode, m_asyncResponse.data.Get(), m_sHttpRequestResourceId);
 }
 
@@ -891,7 +891,7 @@ void ClientApiImpl::GetNodeDetails()
 {
     if(m_lstResolve.empty() == false)
     {
-        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: ClientApiImpl::GetNodeDetails" ;
+        pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: ClientApiImpl::GetNodeDetails" ;
 
         //need to get all the node details.
         //lets launch a thread that will ask for self, devices, sources, flows, senders, receivers
@@ -927,11 +927,11 @@ resourcechanges<Self> ClientApiImpl::AddNode(const std::string& sIpAddress, cons
                 m_nodes.AddResource(sIpAddress, pSelf);
                 changed.lstAdded.push_back(pSelf);
 
-                pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Node: " << pSelf->GetId() << " found at " << sIpAddress ;
+                pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Node: " << pSelf->GetId() << " found at " << sIpAddress ;
             }
             else
             {
-                pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Found node but json data incorrect: " << jsData;
+                pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Found node but json data incorrect: " << jsData;
             }
         }
         else
@@ -941,7 +941,7 @@ resourcechanges<Self> ClientApiImpl::AddNode(const std::string& sIpAddress, cons
     }
     else
     {
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Reply from " << sIpAddress << "but not valid JSON - id not correct" ;
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Reply from " << sIpAddress << "but not valid JSON - id not correct" ;
     }
     return changed;
 }
@@ -961,13 +961,13 @@ resourcechanges<Device> ClientApiImpl::AddDevices(const std::string& sIpAddress,
             }
             else
             {
-                pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not an array of objects" ;
+                pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not an array of objects" ;
             }
         }
     }
     else
     {
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not array" ;
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not array" ;
     }
     return changed;
 }
@@ -983,11 +983,11 @@ resourcechanges<Device> ClientApiImpl::AddDevice(const std::string& sIpAddress,c
         {
             m_devices.AddResource(sIpAddress, pResource);
             changed.lstAdded.push_back(pResource);
-            pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Device: " << pResource->GetId() << " found at " << sIpAddress ;
+            pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Device: " << pResource->GetId() << " found at " << sIpAddress ;
         }
         else
         {
-            pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Found device but json data incorrect: " << jsData;
+            pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Found device but json data incorrect: " << jsData;
         }
     }
     else
@@ -1012,13 +1012,13 @@ resourcechanges<Source> ClientApiImpl::AddSources(const std::string& sIpAddress,
             }
             else
             {
-                pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Reply from " << sIpAddress << "but not JSON 'format' is ill defined" ;
+                pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Reply from " << sIpAddress << "but not JSON 'format' is ill defined" ;
             }
         }
     }
     else
     {
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not array" ;
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not array" ;
     }
 
     return changed;
@@ -1037,11 +1037,11 @@ resourcechanges<Source> ClientApiImpl::AddSource(const std::string& sIpAddress, 
             {
                 m_sources.AddResource(sIpAddress, pResource);
                 changed.lstAdded.push_back(pResource);
-                pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "SourceAudio: " << pResource->GetId() << " found at " << sIpAddress ;
+                pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "SourceAudio: " << pResource->GetId() << " found at " << sIpAddress ;
             }
             else
             {
-                pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Found Source but json data incorrect: " << jsData;
+                pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Found Source but json data incorrect: " << jsData;
             }
         }
         else
@@ -1052,11 +1052,11 @@ resourcechanges<Source> ClientApiImpl::AddSource(const std::string& sIpAddress, 
                 m_sources.AddResource(sIpAddress, pResource);
 
                 changed.lstAdded.push_back(pResource);
-                pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "SourceGeneric: " << pResource->GetId() << " found at " << sIpAddress ;
+                pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "SourceGeneric: " << pResource->GetId() << " found at " << sIpAddress ;
             }
             else
             {
-                pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Found Source but json data incorrect: " << jsData;
+                pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Found Source but json data incorrect: " << jsData;
             }
         }
     }
@@ -1083,13 +1083,13 @@ resourcechanges<Flow> ClientApiImpl::AddFlows(const std::string& sIpAddress, con
             }
             else
             {
-                pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Reply from " << sIpAddress << "but not JSON 'format' is ill defined" ;
+                pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Reply from " << sIpAddress << "but not JSON 'format' is ill defined" ;
             }
         }
     }
     else
     {
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not array" ;
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not array" ;
     }
     return changed;
 }
@@ -1136,7 +1136,7 @@ std::shared_ptr<const Flow> ClientApiImpl::CreateFlow(const Json::Value& jsData,
     }
     else
     {
-        pmlLog(pml::LOG_WARN, "pml::nmos") << "NMOS: ClientApi: Unknown flow format: " << jsData["format"].asString();
+        pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "NMOS: ClientApi: Unknown flow format: " << jsData["format"].asString();
         return nullptr;
     }
 
@@ -1164,12 +1164,12 @@ std::shared_ptr<const Flow> ClientApiImpl::CreateFlowAudioCoded(const Json::Valu
     if(pResource)
     {
         m_flows.AddResource(sIpAddress, pResource);
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "FlowAudioCoded: " << pResource->GetId() << " found at " << sIpAddress ;
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "FlowAudioCoded: " << pResource->GetId() << " found at " << sIpAddress ;
         return pResource;
     }
     else
     {
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Found Flow but json data incorrect: " << jsData;
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Found Flow but json data incorrect: " << jsData;
         return nullptr;
     }
 }
@@ -1180,12 +1180,12 @@ std::shared_ptr<const Flow> ClientApiImpl::CreateFlowAudioRaw(const Json::Value&
     if(pResource)
     {
         m_flows.AddResource(sIpAddress, pResource);
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "FlowAudioRaw: " << pResource->GetId() << " found at " << sIpAddress ;
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "FlowAudioRaw: " << pResource->GetId() << " found at " << sIpAddress ;
         return pResource;
     }
     else
     {
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Found Flow but json data incorrect: " << jsData;
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Found Flow but json data incorrect: " << jsData;
         return nullptr;
     }
 
@@ -1213,12 +1213,12 @@ std::shared_ptr<const Flow> ClientApiImpl::CreateFlowVideoRaw(const Json::Value&
     if(pResource)
     {
         m_flows.AddResource(sIpAddress, pResource);
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "FlowVideoRaw: " << pResource->GetId() << " found at " << sIpAddress ;
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "FlowVideoRaw: " << pResource->GetId() << " found at " << sIpAddress ;
         return pResource;
     }
     else
     {
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Found Flow but json data incorrect: " << jsData;
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Found Flow but json data incorrect: " << jsData;
         return nullptr;
     }
 }
@@ -1229,12 +1229,12 @@ std::shared_ptr<const Flow> ClientApiImpl::CreateFlowVideoCoded(const Json::Valu
     if(pResource)
     {
         m_flows.AddResource(sIpAddress, pResource);
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "FlowVideoCoded: " << pResource->GetId() << " found at " << sIpAddress ;
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "FlowVideoCoded: " << pResource->GetId() << " found at " << sIpAddress ;
         return pResource;
     }
     else
     {
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Found Flow but json data incorrect: " << jsData;
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Found Flow but json data incorrect: " << jsData;
         return nullptr;
     }
 }
@@ -1247,12 +1247,12 @@ std::shared_ptr<const Flow> ClientApiImpl::CreateFlowData(const Json::Value& jsD
         if(pResource)
         {
             m_flows.AddResource(sIpAddress, pResource);
-            pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "FlowDataSdiAnc: " << pResource->GetId() << " found at " << sIpAddress ;
+            pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "FlowDataSdiAnc: " << pResource->GetId() << " found at " << sIpAddress ;
             return pResource;
         }
         else
         {
-            pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Found Flow but json data incorrect: " << jsData;
+            pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Found Flow but json data incorrect: " << jsData;
             return nullptr;
         }
     }
@@ -1262,12 +1262,12 @@ std::shared_ptr<const Flow> ClientApiImpl::CreateFlowData(const Json::Value& jsD
         if(pResource)
         {
             m_flows.AddResource(sIpAddress, pResource);
-            pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "FlowDataSdiAnc: " << pResource->GetId() << " found at " << sIpAddress ;
+            pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "FlowDataSdiAnc: " << pResource->GetId() << " found at " << sIpAddress ;
             return pResource;
         }
         else
         {
-            pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Found Flow but json data incorrect: " << jsData;
+            pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Found Flow but json data incorrect: " << jsData;
             return nullptr;
         }
     }
@@ -1284,12 +1284,12 @@ std::shared_ptr<const Flow> ClientApiImpl::CreateFlowMux(const Json::Value& jsDa
     if(pResource)
     {
         m_flows.AddResource(sIpAddress, pResource);
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "FlowMux: " << pResource->GetId() << " found at " << sIpAddress ;
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "FlowMux: " << pResource->GetId() << " found at " << sIpAddress ;
         return pResource;
     }
     else
     {
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Found Flow but json data incorrect: " << jsData;
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Found Flow but json data incorrect: " << jsData;
         return nullptr;
     }
 }
@@ -1309,13 +1309,13 @@ resourcechanges<Sender> ClientApiImpl::AddSenders(const std::string& sIpAddress,
             }
             else
             {
-                pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not an array of objects" ;
+                pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not an array of objects" ;
             }
         }
     }
     else
     {
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not array" ;
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not array" ;
     }
     return changed;
 }
@@ -1331,11 +1331,11 @@ resourcechanges<Sender> ClientApiImpl::AddSender(const std::string& sIpAddress, 
         {
             m_senders.AddResource(sIpAddress, pResource);
             changed.lstAdded.push_back(pResource);
-            pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Sender: " << pResource->GetId() << " found at " << sIpAddress ;
+            pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Sender: " << pResource->GetId() << " found at " << sIpAddress ;
         }
         else
         {
-            pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Found Sender but json data incorrect: " << jsData ;
+            pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Found Sender but json data incorrect: " << jsData ;
         }
     }
     else
@@ -1359,13 +1359,13 @@ resourcechanges<Receiver> ClientApiImpl::AddReceivers(const std::string& sIpAddr
             }
             else
             {
-                pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not an array of objects" ;
+                pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not an array of objects" ;
             }
         }
     }
     else
     {
-        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not array" ;
+        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Reply from " << sIpAddress << "but not JSON is not array" ;
     }
     return changed;
 }
@@ -1381,11 +1381,11 @@ resourcechanges<Receiver> ClientApiImpl::AddReceiver(const std::string& sIpAddre
         {
             m_receivers.AddResource(sIpAddress, pResource);
             changed.lstAdded.push_back(pResource);
-            pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Receiver: " << pResource->GetId() << " found at " << sIpAddress ;
+            pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Receiver: " << pResource->GetId() << " found at " << sIpAddress ;
         }
         else
         {
-            pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Found Receiver but json data incorrect: " << jsData ;
+            pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Found Receiver but json data incorrect: " << jsData ;
         }
     }
     else
@@ -1541,10 +1541,10 @@ bool ClientApiImpl::Subscribe(const std::string& sSenderId, const std::string& s
         auto client = pml::restgoose::HttpClient(pml::restgoose::kPut, endpoint(sUrl), pSender->GetJson(version));
         client.Run(std::bind(&ClientApiImpl::SetHttpRequestDone, this, _1,_2,_3), static_cast<long>(enumConnection::TARGET), pReceiver->GetId());
         
-        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "TARGET: " << sUrl ;
+        pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "TARGET: " << sUrl ;
         return true;
     }
-    pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "Couldn't create target endpoint" ;
+    pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: " << "Couldn't create target endpoint" ;
     return false;
 }
 
@@ -1561,7 +1561,7 @@ bool ClientApiImpl::Unsubscribe(const std::string& sReceiverId)
     std::string sUrl(GetTargetUrl(pReceiver, version));
     if(sUrl.empty() == false)
     {
-        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "TARGET: " << sUrl ;
+        pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << "TARGET: " << sUrl ;
         //do a PUT to the correct place on the URL
         auto client = pml::restgoose::HttpClient(pml::restgoose::kPut, endpoint(sUrl), Json::Value(Json::objectValue));
         client.Run(std::bind(&ClientApiImpl::SetHttpRequestDone, this, _1,_2,_3), static_cast<long>(enumConnection::TARGET), pReceiver->GetId());
@@ -1577,14 +1577,14 @@ std::string ClientApiImpl::GetTargetUrl(std::shared_ptr<Receiver> pReceiver, Api
     auto itDevice =  m_devices.FindNmosResource(pReceiver->GetParentResourceId());
     if(itDevice == m_devices.GetResources().end())
     {
-        pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "Device: " << pReceiver->GetParentResourceId() << " not found" ;
+        pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: " << "Device: " << pReceiver->GetParentResourceId() << " not found" ;
         return std::string();
     }
 
     auto itNode =  m_nodes.FindNmosResource(itDevice->second->GetParentResourceId());
     if(itNode == m_nodes.GetResources().end())
     {
-        pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "Node: " << itDevice->second->GetParentResourceId() << " not found" ;
+        pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: " << "Node: " << itDevice->second->GetParentResourceId() << " not found" ;
         return std::string();
     }
 
@@ -1593,7 +1593,7 @@ std::string ClientApiImpl::GetTargetUrl(std::shared_ptr<Receiver> pReceiver, Api
 
     for(auto aVersion : itNode->second->GetApiVersions())
     {
-        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << aVersion.GetVersionAsString() ;
+        pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << aVersion.GetVersionAsString() ;
         if(aVersion.GetMajor() == 1)
         {
             version = aVersion;
@@ -1605,7 +1605,7 @@ std::string ClientApiImpl::GetTargetUrl(std::shared_ptr<Receiver> pReceiver, Api
     }
     if(version.GetMajor() == 0)
     {
-        pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "Version 1.x not found" ;
+        pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: " << "Version 1.x not found" ;
         return std::string();
     }
     //get the endpoint to use... for now the first non https one @todo deciding on endpoint should probably work in a better way
@@ -1620,7 +1620,7 @@ std::string ClientApiImpl::GetTargetUrl(std::shared_ptr<Receiver> pReceiver, Api
 //    }
     if(itEndpoint == itNode->second->GetEndpointsEnd())
     {
-        pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "Non-secure endpoint not found" ;
+        pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: " << "Non-secure endpoint not found" ;
         return std::string();
     }
 
@@ -1650,7 +1650,7 @@ std::string ClientApiImpl::GetConnectionUrl(std::shared_ptr<Resource> pResource)
     auto itDevice =  m_devices.FindNmosResource(pResource->GetParentResourceId());
     if(itDevice == m_devices.GetResources().end())
     {
-        pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "Device: " << pResource->GetParentResourceId() << " not found" ;
+        pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: " << "Device: " << pResource->GetParentResourceId() << " not found" ;
         return std::string();
     }
 
@@ -1941,7 +1941,7 @@ std::shared_ptr<Sender> ClientApiImpl::GetSender(const std::string& sSenderId)
     auto itSender = m_senders.FindNmosResource(sSenderId);
     if(itSender == m_senders.GetResources().end())
     {
-        pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "Sender: " << sSenderId << " not found." ;
+        pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: " << "Sender: " << sSenderId << " not found." ;
         return 0;
     }
     return itSender->second;
@@ -1952,7 +1952,7 @@ std::shared_ptr<Receiver> ClientApiImpl::GetReceiver(const std::string& sReceive
     auto itReceiver = m_receivers.FindNmosResource(sReceiverId);
     if(itReceiver == m_receivers.GetResources().end())
     {
-        pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "Receiver: " << sReceiverId << " not found." ;
+        pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: " << "Receiver: " << sReceiverId << " not found." ;
         return 0;
     }
     return itReceiver->second;
@@ -2029,7 +2029,7 @@ bool ClientApiImpl::Connect(const std::string& sSenderId, const std::string& sRe
         return false;
     }
 
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "ClientApiImpl::Connect Sender: " << sSenderId;
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << "ClientApiImpl::Connect Sender: " << sSenderId;
 
     auto sSenderUrl = GetConnectionUrl(pSender);
     if(sSenderUrl.empty())
@@ -2052,11 +2052,11 @@ bool ClientApiImpl::Connect(const std::string& sSenderId, const std::string& sRe
 bool ClientApiImpl::Disconnect( const std::string& sReceiverId)
 {
     std::lock_guard<std::mutex> lg(m_mutex);
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "ClientApiImpl::Disconnect " << sReceiverId ;
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << "ClientApiImpl::Disconnect " << sReceiverId ;
     auto pReceiver = GetReceiver(sReceiverId);
     if(!pReceiver)
     {
-        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "ClientApiImpl::Disconnect No Receiver" ;
+        pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << "ClientApiImpl::Disconnect No Receiver" ;
         return false;
     }
 
@@ -2064,7 +2064,7 @@ bool ClientApiImpl::Disconnect( const std::string& sReceiverId)
     auto pSender = GetSender(pReceiver->GetSender());
     if(!pSender)
     {
-        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "ClientApiImpl::Disconnect No Sender: " << pReceiver->GetSender();
+        pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << "ClientApiImpl::Disconnect No Sender: " << pReceiver->GetSender();
         return false;
     }
 
@@ -2075,7 +2075,7 @@ bool ClientApiImpl::Disconnect( const std::string& sReceiverId)
 
     if(sSenderStageUrl.empty() || sSenderTransportUrl.empty() || sReceiverStageUrl.empty())
     {
-        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "ClientApiImpl::Disconnect No URLS" ;
+        pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << "ClientApiImpl::Disconnect No URLS" ;
         return false;
     }
 
@@ -2165,7 +2165,7 @@ bool ClientApiImpl::RemoveQuerySubscriptionRegistry(const std::string& sSubscrip
                     }
                     else
                     {
-                        pmlLog(pml::LOG_WARN, "pml::nmos") << "Failed to remove query subscription " << sSubscriptionId << ": code: " << resp.nHttpCode << " '" << resp.data.Get() << "'";
+                        pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "Failed to remove query subscription " << sSubscriptionId << ": code: " << resp.nHttpCode << " '" << resp.data.Get() << "'";
                         return false;
                     }
                 }
@@ -2304,7 +2304,7 @@ template<class T> bool ClientApiImpl::RunQuery(std::list<std::shared_ptr<const T
     }
     else
     {
-        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "ClientApiImpl::RunQuery - No poster" ;
+        pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << "ClientApiImpl::RunQuery - No poster" ;
     }
     return false;
 }
@@ -2317,7 +2317,7 @@ template<class T> bool ClientApiImpl::RunQuery(std::list<std::shared_ptr<const T
     }
     if(m_mmQuery.empty())
     {
-        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "ClientApiImpl::RunQuery - m_mmQuery empty" ;
+        pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << "ClientApiImpl::RunQuery - m_mmQuery empty" ;
     }
 
     for(auto itResource = lstCheck.begin(); itResource != lstCheck.end(); )
@@ -2338,7 +2338,7 @@ template<class T> bool ClientApiImpl::RunQuery(std::list<std::shared_ptr<const T
         }
         else
         {
-            pmlLog(pml::LOG_INFO, "pml::nmos") << nResource << " queries not met";
+            pml::log::log(pml::log::Level::kInfo, "pml::nmos") << nResource << " queries not met";
             itResource = lstCheck.erase(itResource);
         }
     }
@@ -2380,11 +2380,11 @@ endpoint ClientApiImpl::GetQueryServer(const ApiVersion& version)
 
 void ClientApiImpl::SubscribeToQueryServer()
 {
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: ClientApi: SubscribeToQueryServer";
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: ClientApi: SubscribeToQueryServer";
     if(m_mmQueryNodes.empty() == false)
     {
         endpoint urlQuery = GetQueryServer();
-        pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "QUERY URL: " << urlQuery;
+        pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << "QUERY URL: " << urlQuery;
 
         //we run through all our queries and post them to the query server asking for the websocket
         for(auto& pairQuery : m_mmQuery)
@@ -2427,7 +2427,7 @@ bool ClientApiImpl::QueryQueryServer(const endpoint& theUrl, ClientApiImpl::quer
     auto resp = request.Run();
 
 
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: ClientApi - query QueryServer: " << theUrl << ": " << theQuery.nResource << " " << ConvertFromJson(jsQuery);
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: ClientApi - query QueryServer: " << theUrl << ": " << theQuery.nResource << " " << ConvertFromJson(jsQuery);
 
     theQuery.jsSubscription = ConvertToJson(resp.data.Get());
     HandleQuerySubscriptionResponse(resp.nHttpCode, theQuery);
@@ -2443,31 +2443,31 @@ void ClientApiImpl::HandleQuerySubscriptionResponse(unsigned short nCode, const 
     }
     else if(nCode == 400)
     {
-        pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: Could not subscribe to query server " << theQuery.jsSubscription["error"].asString();
+        pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: Could not subscribe to query server " << theQuery.jsSubscription["error"].asString();
     }
     else if(nCode == 501)
     {
-        pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: Query server does not suppory query " << theQuery.jsSubscription["error"].asString();
+        pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: Query server does not suppory query " << theQuery.jsSubscription["error"].asString();
     }
     else
     {
-        pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: Unknown error attempting to subscribe to query server";
+        pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: Unknown error attempting to subscribe to query server";
     }
 }
 
 void ClientApiImpl::HandleSuccessfulQuerySubscription(const ClientApiImpl::query& theQuery)
 {
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: Successful query subscription  - now create websocket connection";
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: Successful query subscription  - now create websocket connection";
 
     if(theQuery.jsSubscription["ws_href"].isString() && theQuery.jsSubscription["id"].isString())
     {
         if(m_pWebSocket->Connect(endpoint(theQuery.jsSubscription["ws_href"].asString())))
         {
-            pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: Attempting websocket connection to " << theQuery.jsSubscription["ws_href"].asString();
+            pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: Attempting websocket connection to " << theQuery.jsSubscription["ws_href"].asString();
         }
         else
         {
-            pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: Failed in websocket connection to " << theQuery.jsSubscription["ws_href"].asString();
+            pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: Failed in websocket connection to " << theQuery.jsSubscription["ws_href"].asString();
         }
     }
 }
@@ -2510,13 +2510,13 @@ bool ClientApiImpl::RemoveBrowseDomain(const std::string& sDomain)
 
 bool ClientApiImpl::WebsocketConnected(const endpoint& theUrl)
 {
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: ClientApi Websocket connected to " << theUrl;
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: ClientApi Websocket connected to " << theUrl;
     return true;
 }
 
 bool ClientApiImpl::WebsocketMessage(const endpoint& theUrl, const std::string& sMessage)
 {
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: ClientApi: Message: " << sMessage;
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: ClientApi: Message: " << sMessage;
     auto jsGrain = ConvertToJson(sMessage);
     //check requirements
     if(!CheckJson(jsGrain, {{"grain_type",{jsondatatype::_STRING}},
@@ -2529,7 +2529,7 @@ bool ClientApiImpl::WebsocketMessage(const endpoint& theUrl, const std::string& 
                                     {"duration",{jsondatatype::_OBJECT}},
                                     {"grain",{jsondatatype::_OBJECT}}}))
     {
-        pmlLog(pml::LOG_WARN, "pml::nmos") << "NMOS: ClientApi - websocket invalid message received '" << sMessage << "'";
+        pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "NMOS: ClientApi - websocket invalid message received '" << sMessage << "'";
     }
     else if(jsGrain["grain_type"].asString() == "event")
     {
@@ -2537,7 +2537,7 @@ bool ClientApiImpl::WebsocketMessage(const endpoint& theUrl, const std::string& 
     }
     else
     {
-        pmlLog(pml::LOG_WARN, "pml::nmos") << "NMOS: ClientApi - unknown grain type'" << jsGrain["grain_type"].asString() << "'";
+        pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "NMOS: ClientApi - unknown grain type'" << jsGrain["grain_type"].asString() << "'";
     }
     return true;
 }
@@ -2557,12 +2557,12 @@ void ClientApiImpl::HandleGrainEvent(const std::string& sSourceId, const Json::V
             }
             else
             {
-                pmlLog(pml::LOG_WARN, "pml::nmos") << "No grain handler";
+                pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "No grain handler";
             }
         }
         else
         {
-            pmlLog(pml::LOG_WARN, "pml::nmos") << "NMOS: ClientApi - unknown grain urn'" << jsGrain["type"].asString() << "'";
+            pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "NMOS: ClientApi - unknown grain urn'" << jsGrain["type"].asString() << "'";
         }
     }
 }
@@ -2613,7 +2613,7 @@ void ClientApiImpl::GrainUpdateNode(const std::string& sSourceId, const Json::Va
                 }
                 break;
             case enumGrain::UNKNOWN:
-                pmlLog(pml::LOG_WARN, "pml::nmos") << "Unknown grain action";
+                pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "Unknown grain action";
                 break;
         }
     }
@@ -2647,7 +2647,7 @@ void ClientApiImpl::GrainUpdateDevice(const std::string& sSourceId, const Json::
                 }
                 break;
             case enumGrain::UNKNOWN:
-                pmlLog(pml::LOG_WARN, "pml::nmos") << "Unknown grain action";
+                pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "Unknown grain action";
                 break;
         }
     }
@@ -2681,7 +2681,7 @@ void ClientApiImpl::GrainUpdateSource(const std::string& sSourceId, const Json::
                 }
                 break;
             case enumGrain::UNKNOWN:
-                pmlLog(pml::LOG_WARN, "pml::nmos") << "Unknown grain action";
+                pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "Unknown grain action";
                 break;
         }
     }
@@ -2696,7 +2696,7 @@ void ClientApiImpl::GrainUpdateFlow(const std::string& sSourceId, const Json::Va
 {
     resourcechanges<Flow> changed;
 
-    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: ClientApi: GrainUpdateFlow: ";
+    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: ClientApi: GrainUpdateFlow: ";
     for(Json::ArrayIndex ai = 0; ai < jsData.size(); ai++)
     {
         switch(WorkoutAction(jsData[ai]))
@@ -2716,7 +2716,7 @@ void ClientApiImpl::GrainUpdateFlow(const std::string& sSourceId, const Json::Va
                 }
                 break;
             case enumGrain::UNKNOWN:
-                pmlLog(pml::LOG_WARN, "pml::nmos") << "Unknown grain action";
+                pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "Unknown grain action";
                 break;
         }
     }
@@ -2750,7 +2750,7 @@ void ClientApiImpl::GrainUpdateSender(const std::string& sSourceId, const Json::
                 }
                 break;
             case enumGrain::UNKNOWN:
-                pmlLog(pml::LOG_WARN, "pml::nmos") << "Unknown grain action";
+                pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "Unknown grain action";
                 break;
         }
     }
@@ -2784,7 +2784,7 @@ void ClientApiImpl::GrainUpdateReceiver(const std::string& sSourceId, const Json
                 }
                 break;
             case enumGrain::UNKNOWN:
-                pmlLog(pml::LOG_WARN, "pml::nmos") << "Unknown grain action";
+                pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "Unknown grain action";
                 break;
         }
     }

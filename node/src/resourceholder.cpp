@@ -78,7 +78,7 @@ template<class T> std::list<std::shared_ptr<Resource>> ResourceHolder<T>::Commit
         {
             if(pairResource.second->Commit(version))
             {
-                pmlLog(pml::LOG_DEBUG, "pml::nmos") << "++++++++++ Commit " << m_sType << ": " << pairResource.first << " +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++";
+                pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "++++++++++ Commit " << m_sType << ": " << pairResource.first << " +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++";
                 lstChanged.push_back(pairResource.second);
             }
             m_json.append(pairResource.second->GetJson(version));

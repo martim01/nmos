@@ -84,7 +84,7 @@ bool NodeApiPrivate::RegisteredOperation()
                     //    UpdateRegisterSimple();
                     //    break;
                     case NodeApiPrivate::SIG_INSTANCE_REMOVED: //this means our reg node has gone
-                        pmlLog(pml::LOG_INFO, "pml::nmos") << "NMOS: " << "Registration server gone" ;
+                        pml::log::log(pml::log::Level::kInfo, "pml::nmos") << "NMOS: " << "Registration server gone" ;
                         m_nRegistrationStatus = REG_FAILED;
                         PostRegisterStatus();
                         return false;
@@ -112,14 +112,14 @@ bool NodeApiPrivate::HandleHeartbeatResponse(unsigned int nResponse)
     bool bRegistryOk(true);
     if(nResponse == 0 || nResponse >= 500)
     {   //registry error
-        pmlLog(pml::LOG_WARN, "pml::nmos") << "NMOS: " << "Registration server gone" ;
+        pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "NMOS: " << "Registration server gone" ;
         bRegistryOk = false;
         m_nRegistrationStatus = REG_FAILED;
         PostRegisterStatus();
     }
     else if(nResponse == 404)
     { //not known about re-register
-        pmlLog(pml::LOG_WARN, "pml::nmos") << "NMOS: " << "Registration server forgotten node. Reregister" ;
+        pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "NMOS: " << "Registration server forgotten node. Reregister" ;
         m_nRegistrationStatus = REG_FAILED;
         PostRegisterStatus();
 
@@ -132,7 +132,7 @@ bool NodeApiPrivate::HandleHeartbeatResponse(unsigned int nResponse)
     }
     else if(nResponse == 409)
     {  //already registered with different  - deregister and re-register
-       pmlLog(pml::LOG_WARN, "pml::nmos") << "NMOS: " << "Registered with different . Deregister and reregister." ;
+       pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "NMOS: " << "Registered with different . Deregister and reregister." ;
        UnregisterSimple();
        if(RegisterSimple() != NodeApiPrivate::REG_DONE)
        {
@@ -143,7 +143,7 @@ bool NodeApiPrivate::HandleHeartbeatResponse(unsigned int nResponse)
     }
     else if(nResponse >= 400)
     { //probably validation failure
-        pmlLog(pml::LOG_ERROR, "pml::nmos") << "NMOS: " << "Registry validation error!";
+        pml::log::log(pml::log::Level::kError, "pml::nmos") << "NMOS: " << "Registry validation error!";
         bRegistryOk = false;
         m_nRegistrationStatus = REG_FAILED;
         PostRegisterStatus();

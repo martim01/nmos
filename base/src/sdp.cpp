@@ -36,21 +36,21 @@ bool SdpManager::SdpToTransportParams(const std::string& sSdp, std::vector<Trans
             case 'o':
                 if(ParseOriginLine(sLine, tpReceivers) == false)
                 {
-                    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "SdpManager:: ParseOriginLine failed";
+                    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << "SdpManager:: ParseOriginLine failed";
                     return false;
                 }
                 break;
             case 'c':
                 if(ParseConnectionLine(sLine, tpReceivers,nMedia) == false)
                 {
-                    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "SdpManager:: ParseConnectionLine failed";
+                    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << "SdpManager:: ParseConnectionLine failed";
                     return false;
                 }
                 break;
             case 'a':
                 if(ParseAttributeLine(sLine, tpReceivers,nMedia) == false)
                 {
-                    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "SdpManager:: ParseAttributeLine failed";
+                    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << "SdpManager:: ParseAttributeLine failed";
                     return false;
                 }
                 break;
@@ -58,7 +58,7 @@ bool SdpManager::SdpToTransportParams(const std::string& sSdp, std::vector<Trans
                 ++nMedia;
                 if(nMedia < tpReceivers.size() && ParseMediaLine(sLine, tpReceivers,nMedia) == false)
                 {
-                    pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "SdpManager:: ParseMediaLine failed";
+                    pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << "SdpManager:: ParseMediaLine failed";
                     return false;
                 }
 
@@ -292,7 +292,7 @@ bool SdpManager::ParseSourceFilter(const std::string& sLine, std::vector<Transpo
         }
         else
         {
-            pmlLog(pml::LOG_DEBUG, "pml::nmos") << "NMOS: " << "SdpManager::ParseSourceFilter failed: " << sLine;
+            pml::log::log(pml::log::Level::kDebug, "pml::nmos") << "NMOS: " << "SdpManager::ParseSourceFilter failed: " << sLine;
         }
     }
 
@@ -475,7 +475,7 @@ std::string SdpManager::CreateConnectionLine(const TransportParamsRTPSender& tpS
             sLine += "a=source-filter: incl IN IP6 " + tpSender.GetDestinationIp() + " " + tpSender.GetSourceIp() + "\r\n";
             break;
         case SdpManager::SdpManager::IP_INVALID:
-            pmlLog(pml::LOG_WARN, "pml::nmos") << "NMOS: Sender can't create SDP - destination IP invalid '" << tpSender.GetDestinationIp() << "'";
+            pml::log::log(pml::log::Level::kWarning, "pml::nmos") << "NMOS: Sender can't create SDP - destination IP invalid '" << tpSender.GetDestinationIp() << "'";
             break;
     }
     return sLine;
