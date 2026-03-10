@@ -18,7 +18,7 @@ SET(DIR_DNSSD ${DIR_BASE}/external/dnssd CACHE STRING "location of pml dnssd")
 
 add_external_library(pml_log ${DIR_LOG} "martim01/log" "" FALSE "CMakeLists.txt")
 add_external_library(restgoose ${DIR_RESTGOOSE} "martim01/restgoose" "origin/main" FALSE "CMakeLists.txt")
-add_external_library(dnssd ${DIR_DNSSD} "martim01/dnssd" "origin/main" FALSE "CMakeLists.txt")
+add_external_library(pml_dnssd ${DIR_DNSSD} "martim01/dnssd" "origin/main" FALSE "CMakeLists.txt")
 	
 add_external_library(jsoncpp ${DIR_JSON} "open-source-parsers/jsoncpp" "" FALSE "CMakeLists.txt")
 if(EXISTS ${DIR_JSON}/amalgamate.py)
