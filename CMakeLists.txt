@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 project(nmosworkspace VERSION 1.0.1)
+include(GNUInstallDirs)
 include(addexternal.cmake)
 message(STATUS "----pml/nmos ----")
 

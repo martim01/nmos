@@ -73,5 +73,5 @@ set_target_properties(nmos_node PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOUR
 
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-        install(TARGETS nmos_node LIBRARY DESTINATION /usr/local/lib)
+	install(TARGETS nmos_node LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endif()
